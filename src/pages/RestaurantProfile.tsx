@@ -13,6 +13,10 @@ const RestaurantProfile = () => {
     navigate('/results');
   };
   
+  const handleGoHome = () => {
+    navigate('/');
+  };
+  
   // Sample restaurant data - this will be replaced with actual data from your database
   const restaurantData = {
     id: id,
@@ -54,7 +58,12 @@ const RestaurantProfile = () => {
               <ArrowLeft className="w-4 h-4" />
               <span>Back to Results</span>
             </Button>
-            <h1 className="text-2xl font-bold text-gray-900">Happy.Hour</h1>
+            <h1 
+              className="text-2xl font-bold text-gray-900 cursor-pointer hover:text-orange-500 transition-colors"
+              onClick={handleGoHome}
+            >
+              Happy.Hour
+            </h1>
           </div>
         </div>
       </div>
