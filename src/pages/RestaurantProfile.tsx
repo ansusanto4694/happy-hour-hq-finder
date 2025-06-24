@@ -24,6 +24,7 @@ const RestaurantProfile = () => {
     logo: "/placeholder.svg",
     address: "123 Main St, Downtown",
     phone: "(555) 123-4567",
+    website: "www.thegoldentap.com",
     happyHours: {
       monday: "4:00 PM - 7:00 PM",
       tuesday: "4:00 PM - 7:00 PM",
@@ -126,6 +127,12 @@ const RestaurantProfile = () => {
                       <span className="text-gray-700">{restaurantData.happyHours.sunday}</span>
                     </div>
                   </div>
+                </div>
+
+                {/* Website */}
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900 mb-2">Website</h2>
+                  <p className="text-gray-700">{restaurantData.website}</p>
                 </div>
               </div>
 
