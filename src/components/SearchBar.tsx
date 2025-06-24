@@ -1,19 +1,21 @@
-
 import React, { useState } from 'react';
 import { Search, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TimeDropdown } from './TimeDropdown';
+import { useNavigate } from 'react-router-dom';
 
 export const SearchBar = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [zipCode, setZipCode] = useState('');
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
+  const navigate = useNavigate();
 
   const handleSearch = () => {
     console.log('Searching for:', searchTerm, 'in zip code:', zipCode, 'start time:', startTime, 'end time:', endTime);
-    // TODO: Implement search functionality
+    // Navigate to results page
+    navigate('/results');
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
