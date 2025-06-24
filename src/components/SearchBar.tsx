@@ -3,13 +3,16 @@ import React, { useState } from 'react';
 import { Search, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { TimeDropdown } from './TimeDropdown';
 
 export const SearchBar = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [zipCode, setZipCode] = useState('');
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
 
   const handleSearch = () => {
-    console.log('Searching for:', searchTerm, 'in zip code:', zipCode);
+    console.log('Searching for:', searchTerm, 'in zip code:', zipCode, 'start time:', startTime, 'end time:', endTime);
     // TODO: Implement search functionality
   };
 
@@ -20,8 +23,8 @@ export const SearchBar = () => {
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto">
-      <div className="bg-white rounded-2xl shadow-2xl p-2 flex flex-col md:flex-row gap-2">
+    <div className="w-full max-w-5xl mx-auto">
+      <div className="bg-white rounded-2xl shadow-2xl p-2 flex flex-col lg:flex-row gap-2">
         {/* Search input */}
         <div className="flex-1 relative">
           <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -36,10 +39,34 @@ export const SearchBar = () => {
         </div>
         
         {/* Divider */}
-        <div className="hidden md:block w-px bg-gray-200 my-2"></div>
+        <div className="hidden lg:block w-px bg-gray-200 my-2"></div>
+        
+        {/* Starting time dropdown */}
+        <div className="lg:w-40">
+          <TimeDropdown
+            placeholder="Starting at..."
+            value={startTime}
+            onChange={setStartTime}
+          />
+        </div>
+        
+        {/* Divider */}
+        <div className="hidden lg:block w-px bg-gray-200 my-2"></div>
+        
+        {/* Ending time dropdown */}
+        <div className="lg:w-40">
+          <TimeDropdown
+            placeholder="Ending at..."
+            value={endTime}
+            onChange={setEndTime}
+          />
+        </div>
+        
+        {/* Divider */}
+        <div className="hidden lg:block w-px bg-gray-200 my-2"></div>
         
         {/* Zip code input */}
-        <div className="md:w-48 relative">
+        <div className="lg:w-48 relative">
           <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
           <Input
             type="text"
