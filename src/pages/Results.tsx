@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FilterSection } from '../components/FilterSection';
 import { SearchResults } from '../components/SearchResults';
 import { ResultsMap } from '../components/ResultsMap';
@@ -9,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
 const Results = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [zipCode, setZipCode] = useState('');
   const [startTime, setStartTime] = useState('');
@@ -24,12 +26,21 @@ const Results = () => {
     }
   };
 
+  const handleGoHome = () => {
+    navigate('/');
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header with company name and search bar */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Happy.Hour</h1>
+          <h1 
+            className="text-2xl font-bold text-gray-900 mb-4 cursor-pointer hover:text-orange-500 transition-colors"
+            onClick={handleGoHome}
+          >
+            Happy.Hour
+          </h1>
           
           {/* Search bar in header */}
           <div className="w-full max-w-5xl mx-auto">
