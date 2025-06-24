@@ -3,6 +3,7 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft } from 'lucide-react';
 
 const RestaurantProfile = () => {
@@ -43,6 +44,25 @@ const RestaurantProfile = () => {
       sunday: "No Happy Hour"
     }
   };
+
+  const happyHourDeals = `Buy 1 Get 1 Cocktail $15
+Old Fashioned
+Manhattan
+Margarita
+Lychee Martini
+
+Beer $6
+Sapporo Asahi
+Tiger
+
+House Hot/Cold Sake Combo
+Fried Spring Roll (2 piece) $13
+Truffle Fries $15
+Crispy Wings (3 piece) $18
+
+House Wine $7/Glass
+Chardonay
+Sauvignon Blanc`;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -168,6 +188,16 @@ const RestaurantProfile = () => {
                     <span className="text-gray-700">{restaurantData.happyHours.sunday}</span>
                   </div>
                 </div>
+              </div>
+
+              {/* Happy Hour Deals */}
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 mb-2">Happy Hour Deals</h2>
+                <Textarea
+                  value={happyHourDeals}
+                  readOnly
+                  className="min-h-[300px] font-mono text-sm bg-gray-50 border-gray-300"
+                />
               </div>
             </div>
           </CardContent>
