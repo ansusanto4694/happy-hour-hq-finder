@@ -1,9 +1,7 @@
-
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft } from 'lucide-react';
 
 const RestaurantProfile = () => {
@@ -44,25 +42,6 @@ const RestaurantProfile = () => {
       sunday: "No Happy Hour"
     }
   };
-
-  const happyHourDeals = `Buy 1 Get 1 Cocktail $15
-Old Fashioned
-Manhattan
-Margarita
-Lychee Martini
-
-Beer $6
-Sapporo Asahi
-Tiger
-
-House Hot/Cold Sake Combo
-Fried Spring Roll (2 piece) $13
-Truffle Fries $15
-Crispy Wings (3 piece) $18
-
-House Wine $7/Glass
-Chardonay
-Sauvignon Blanc`;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -193,11 +172,36 @@ Sauvignon Blanc`;
               {/* Happy Hour Deals */}
               <div>
                 <h2 className="text-lg font-semibold text-gray-900 mb-2">Happy Hour Deals</h2>
-                <Textarea
-                  value={happyHourDeals}
-                  readOnly
-                  className="min-h-[300px] font-mono text-sm bg-gray-50 border-gray-300"
-                />
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <div className="space-y-3">
+                    <div>
+                      <p className="font-bold text-gray-900">Buy 1 Get 1 Cocktail $15</p>
+                      <p className="text-gray-700 ml-4">Old Fashioned</p>
+                      <p className="text-gray-700 ml-4">Manhattan</p>
+                      <p className="text-gray-700 ml-4">Margarita</p>
+                      <p className="text-gray-700 ml-4">Lychee Martini</p>
+                    </div>
+                    
+                    <div>
+                      <p className="font-bold text-gray-900">Beer $6</p>
+                      <p className="text-gray-700 ml-4">Sapporo Asahi</p>
+                      <p className="text-gray-700 ml-4">Tiger</p>
+                    </div>
+                    
+                    <div>
+                      <p className="font-bold text-gray-900">House Hot/Cold Sake Combo</p>
+                      <p className="text-gray-700 ml-4">Fried Spring Roll (2 piece) $13</p>
+                      <p className="text-gray-700 ml-4">Truffle Fries $15</p>
+                      <p className="text-gray-700 ml-4">Crispy Wings (3 piece) $18</p>
+                    </div>
+                    
+                    <div>
+                      <p className="font-bold text-gray-900">House Wine $7/Glass</p>
+                      <p className="text-gray-700 ml-4">Chardonay</p>
+                      <p className="text-gray-700 ml-4">Sauvignon Blanc</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </CardContent>
