@@ -24,15 +24,6 @@ const RestaurantProfile = () => {
     logo: "/placeholder.svg",
     address: "123 Main St, Downtown",
     phone: "(555) 123-4567",
-    businessHours: {
-      monday: "11:00 AM - 11:00 PM",
-      tuesday: "11:00 AM - 11:00 PM", 
-      wednesday: "11:00 AM - 11:00 PM",
-      thursday: "11:00 AM - 11:00 PM",
-      friday: "11:00 AM - 12:00 AM",
-      saturday: "11:00 AM - 12:00 AM",
-      sunday: "12:00 PM - 10:00 PM"
-    },
     happyHours: {
       monday: "4:00 PM - 7:00 PM",
       tuesday: "4:00 PM - 7:00 PM",
@@ -86,91 +77,59 @@ const RestaurantProfile = () => {
               </div>
             </div>
 
-            {/* Restaurant Details */}
-            <div className="space-y-6">
-              {/* Address */}
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-2">Address</h2>
-                <p className="text-gray-700">{restaurantData.address}</p>
-              </div>
+            {/* Two Column Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Left Column */}
+              <div className="space-y-6">
+                {/* Address */}
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900 mb-2">Address</h2>
+                  <p className="text-gray-700">{restaurantData.address}</p>
+                </div>
 
-              {/* Phone Number */}
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-2">Phone Number</h2>
-                <p className="text-gray-700">{restaurantData.phone}</p>
-              </div>
+                {/* Phone Number */}
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900 mb-2">Phone Number</h2>
+                  <p className="text-gray-700">{restaurantData.phone}</p>
+                </div>
 
-              {/* Business Hours */}
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-2">Business Hours</h2>
-                <div className="space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Monday:</span>
-                    <span className="text-gray-700">{restaurantData.businessHours.monday}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Tuesday:</span>
-                    <span className="text-gray-700">{restaurantData.businessHours.tuesday}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Wednesday:</span>
-                    <span className="text-gray-700">{restaurantData.businessHours.wednesday}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Thursday:</span>
-                    <span className="text-gray-700">{restaurantData.businessHours.thursday}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Friday:</span>
-                    <span className="text-gray-700">{restaurantData.businessHours.friday}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Saturday:</span>
-                    <span className="text-gray-700">{restaurantData.businessHours.saturday}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Sunday:</span>
-                    <span className="text-gray-700">{restaurantData.businessHours.sunday}</span>
+                {/* Happy Hours */}
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900 mb-2">Happy Hours</h2>
+                  <div className="space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Monday:</span>
+                      <span className="text-gray-700">{restaurantData.happyHours.monday}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Tuesday:</span>
+                      <span className="text-gray-700">{restaurantData.happyHours.tuesday}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Wednesday:</span>
+                      <span className="text-gray-700">{restaurantData.happyHours.wednesday}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Thursday:</span>
+                      <span className="text-gray-700">{restaurantData.happyHours.thursday}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Friday:</span>
+                      <span className="text-gray-700">{restaurantData.happyHours.friday}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Saturday:</span>
+                      <span className="text-gray-700">{restaurantData.happyHours.saturday}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Sunday:</span>
+                      <span className="text-gray-700">{restaurantData.happyHours.sunday}</span>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Happy Hours */}
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-2">Happy Hours</h2>
-                <div className="space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Monday:</span>
-                    <span className="text-gray-700">{restaurantData.happyHours.monday}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Tuesday:</span>
-                    <span className="text-gray-700">{restaurantData.happyHours.tuesday}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Wednesday:</span>
-                    <span className="text-gray-700">{restaurantData.happyHours.wednesday}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Thursday:</span>
-                    <span className="text-gray-700">{restaurantData.happyHours.thursday}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Friday:</span>
-                    <span className="text-gray-700">{restaurantData.happyHours.friday}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Saturday:</span>
-                    <span className="text-gray-700">{restaurantData.happyHours.saturday}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Sunday:</span>
-                    <span className="text-gray-700">{restaurantData.happyHours.sunday}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Happy Hour Deals */}
+              {/* Right Column - Happy Hour Deals */}
               <div>
                 <h2 className="text-lg font-semibold text-gray-900 mb-2">Happy Hour Deals</h2>
                 <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
