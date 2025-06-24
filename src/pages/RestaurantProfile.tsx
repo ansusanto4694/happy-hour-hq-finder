@@ -1,0 +1,117 @@
+
+import React from 'react';
+import { useParams } from 'react-router-dom';
+import { Card, CardContent } from '@/components/ui/card';
+
+const RestaurantProfile = () => {
+  const { id } = useParams();
+  
+  // Sample restaurant data - this will be replaced with actual data from your database
+  const restaurantData = {
+    id: id,
+    name: "The Golden Tap",
+    logo: "/placeholder.svg",
+    address: "123 Main St, Downtown",
+    phone: "(555) 123-4567",
+    businessHours: {
+      monday: "11:00 AM - 11:00 PM",
+      tuesday: "11:00 AM - 11:00 PM", 
+      wednesday: "11:00 AM - 11:00 PM",
+      thursday: "11:00 AM - 11:00 PM",
+      friday: "11:00 AM - 12:00 AM",
+      saturday: "11:00 AM - 12:00 AM",
+      sunday: "12:00 PM - 10:00 PM"
+    },
+    happyHours: "4:00 PM - 7:00 PM Monday - Friday"
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <h1 className="text-2xl font-bold text-gray-900">Happy.Hour</h1>
+        </div>
+      </div>
+
+      {/* Restaurant Profile Content */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Card className="bg-white shadow-lg">
+          <CardContent className="p-8">
+            {/* Restaurant Logo and Name */}
+            <div className="flex items-center space-x-6 mb-8">
+              <img 
+                src={restaurantData.logo} 
+                alt={`${restaurantData.name} logo`}
+                className="w-24 h-24 rounded-lg object-cover bg-gray-200"
+              />
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">
+                  {restaurantData.name}
+                </h1>
+              </div>
+            </div>
+
+            {/* Restaurant Details */}
+            <div className="space-y-6">
+              {/* Address */}
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 mb-2">Address</h2>
+                <p className="text-gray-700">{restaurantData.address}</p>
+              </div>
+
+              {/* Phone Number */}
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 mb-2">Phone Number</h2>
+                <p className="text-gray-700">{restaurantData.phone}</p>
+              </div>
+
+              {/* Business Hours */}
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 mb-2">Business Hours</h2>
+                <div className="space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Monday:</span>
+                    <span className="text-gray-700">{restaurantData.businessHours.monday}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Tuesday:</span>
+                    <span className="text-gray-700">{restaurantData.businessHours.tuesday}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Wednesday:</span>
+                    <span className="text-gray-700">{restaurantData.businessHours.wednesday}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Thursday:</span>
+                    <span className="text-gray-700">{restaurantData.businessHours.thursday}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Friday:</span>
+                    <span className="text-gray-700">{restaurantData.businessHours.friday}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Saturday:</span>
+                    <span className="text-gray-700">{restaurantData.businessHours.saturday}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Sunday:</span>
+                    <span className="text-gray-700">{restaurantData.businessHours.sunday}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Happy Hours */}
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 mb-2">Happy Hours</h2>
+                <p className="text-gray-700">{restaurantData.happyHours}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+export default RestaurantProfile;

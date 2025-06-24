@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
@@ -32,6 +33,12 @@ const sampleResults = [
 ];
 
 export const SearchResults = () => {
+  const navigate = useNavigate();
+
+  const handleRestaurantClick = (restaurantId: number) => {
+    navigate(`/restaurant/${restaurantId}`);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -45,7 +52,11 @@ export const SearchResults = () => {
       
       <div className="space-y-3">
         {sampleResults.map((result) => (
-          <Card key={result.id} className="hover:shadow-md transition-shadow cursor-pointer">
+          <Card 
+            key={result.id} 
+            className="hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => handleRestaurantClick(result.id)}
+          >
             <CardContent className="p-4">
               <div className="flex items-start space-x-4">
                 {/* Logo */}
