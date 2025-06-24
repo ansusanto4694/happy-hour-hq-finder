@@ -77,41 +77,6 @@ const RestaurantProfile = () => {
               </div>
             </div>
 
-            {/* Happy Hour Deals - Moved to Top */}
-            <div className="mb-8">
-              <h2 className="text-lg font-semibold text-gray-900 mb-2">Happy Hour Deals</h2>
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <div className="space-y-3">
-                  <div>
-                    <p className="font-bold text-gray-900">Buy 1 Get 1 Cocktail $15</p>
-                    <p className="text-gray-700 ml-4">Old Fashioned</p>
-                    <p className="text-gray-700 ml-4">Manhattan</p>
-                    <p className="text-gray-700 ml-4">Margarita</p>
-                    <p className="text-gray-700 ml-4">Lychee Martini</p>
-                  </div>
-                  
-                  <div>
-                    <p className="font-bold text-gray-900">Beer $6</p>
-                    <p className="text-gray-700 ml-4">Sapporo Asahi</p>
-                    <p className="text-gray-700 ml-4">Tiger</p>
-                  </div>
-                  
-                  <div>
-                    <p className="font-bold text-gray-900">House Hot/Cold Sake Combo</p>
-                    <p className="text-gray-700 ml-4">Fried Spring Roll (2 piece) $13</p>
-                    <p className="text-gray-700 ml-4">Truffle Fries $15</p>
-                    <p className="text-gray-700 ml-4">Crispy Wings (3 piece) $18</p>
-                  </div>
-                  
-                  <div>
-                    <p className="font-bold text-gray-900">House Wine $7/Glass</p>
-                    <p className="text-gray-700 ml-4">Chardonay</p>
-                    <p className="text-gray-700 ml-4">Sauvignon Blanc</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {/* Two Column Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Left Column */}
@@ -127,39 +92,74 @@ const RestaurantProfile = () => {
                   <h2 className="text-lg font-semibold text-gray-900 mb-2">Phone Number</h2>
                   <p className="text-gray-700">{restaurantData.phone}</p>
                 </div>
+
+                {/* Happy Hours */}
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900 mb-2">Happy Hours</h2>
+                  <div className="space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Monday:</span>
+                      <span className="text-gray-700">{restaurantData.happyHours.monday}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Tuesday:</span>
+                      <span className="text-gray-700">{restaurantData.happyHours.tuesday}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Wednesday:</span>
+                      <span className="text-gray-700">{restaurantData.happyHours.wednesday}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Thursday:</span>
+                      <span className="text-gray-700">{restaurantData.happyHours.thursday}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Friday:</span>
+                      <span className="text-gray-700">{restaurantData.happyHours.friday}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Saturday:</span>
+                      <span className="text-gray-700">{restaurantData.happyHours.saturday}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Sunday:</span>
+                      <span className="text-gray-700">{restaurantData.happyHours.sunday}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              {/* Right Column - Happy Hours */}
+              {/* Right Column - Happy Hour Deals */}
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-2">Happy Hours</h2>
-                <div className="space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Monday:</span>
-                    <span className="text-gray-700">{restaurantData.happyHours.monday}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Tuesday:</span>
-                    <span className="text-gray-700">{restaurantData.happyHours.tuesday}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Wednesday:</span>
-                    <span className="text-gray-700">{restaurantData.happyHours.wednesday}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Thursday:</span>
-                    <span className="text-gray-700">{restaurantData.happyHours.thursday}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Friday:</span>
-                    <span className="text-gray-700">{restaurantData.happyHours.friday}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Saturday:</span>
-                    <span className="text-gray-700">{restaurantData.happyHours.saturday}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Sunday:</span>
-                    <span className="text-gray-700">{restaurantData.happyHours.sunday}</span>
+                <h2 className="text-lg font-semibold text-gray-900 mb-2">Happy Hour Deals</h2>
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <div className="space-y-3">
+                    <div>
+                      <p className="font-bold text-gray-900">Buy 1 Get 1 Cocktail $15</p>
+                      <p className="text-gray-700 ml-4">Old Fashioned</p>
+                      <p className="text-gray-700 ml-4">Manhattan</p>
+                      <p className="text-gray-700 ml-4">Margarita</p>
+                      <p className="text-gray-700 ml-4">Lychee Martini</p>
+                    </div>
+                    
+                    <div>
+                      <p className="font-bold text-gray-900">Beer $6</p>
+                      <p className="text-gray-700 ml-4">Sapporo Asahi</p>
+                      <p className="text-gray-700 ml-4">Tiger</p>
+                    </div>
+                    
+                    <div>
+                      <p className="font-bold text-gray-900">House Hot/Cold Sake Combo</p>
+                      <p className="text-gray-700 ml-4">Fried Spring Roll (2 piece) $13</p>
+                      <p className="text-gray-700 ml-4">Truffle Fries $15</p>
+                      <p className="text-gray-700 ml-4">Crispy Wings (3 piece) $18</p>
+                    </div>
+                    
+                    <div>
+                      <p className="font-bold text-gray-900">House Wine $7/Glass</p>
+                      <p className="text-gray-700 ml-4">Chardonay</p>
+                      <p className="text-gray-700 ml-4">Sauvignon Blanc</p>
+                    </div>
                   </div>
                 </div>
               </div>
