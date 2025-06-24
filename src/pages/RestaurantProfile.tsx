@@ -97,32 +97,32 @@ const RestaurantProfile = () => {
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900 mb-2">Happy Hours</h2>
                   <div className="space-y-1">
-                    <div className="flex gap-4">
-                      <span className="text-gray-600 w-20">Monday:</span>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Monday:</span>
                       <span className="text-gray-700">{restaurantData.happyHours.monday}</span>
                     </div>
-                    <div className="flex gap-4">
-                      <span className="text-gray-600 w-20">Tuesday:</span>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Tuesday:</span>
                       <span className="text-gray-700">{restaurantData.happyHours.tuesday}</span>
                     </div>
-                    <div className="flex gap-4">
-                      <span className="text-gray-600 w-20">Wednesday:</span>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Wednesday:</span>
                       <span className="text-gray-700">{restaurantData.happyHours.wednesday}</span>
                     </div>
-                    <div className="flex gap-4">
-                      <span className="text-gray-600 w-20">Thursday:</span>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Thursday:</span>
                       <span className="text-gray-700">{restaurantData.happyHours.thursday}</span>
                     </div>
-                    <div className="flex gap-4">
-                      <span className="text-gray-600 w-20">Friday:</span>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Friday:</span>
                       <span className="text-gray-700">{restaurantData.happyHours.friday}</span>
                     </div>
-                    <div className="flex gap-4">
-                      <span className="text-gray-600 w-20">Saturday:</span>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Saturday:</span>
                       <span className="text-gray-700">{restaurantData.happyHours.saturday}</span>
                     </div>
-                    <div className="flex gap-4">
-                      <span className="text-gray-600 w-20">Sunday:</span>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Sunday:</span>
                       <span className="text-gray-700">{restaurantData.happyHours.sunday}</span>
                     </div>
                   </div>
