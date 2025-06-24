@@ -1,10 +1,17 @@
 
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 
 const RestaurantProfile = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  
+  const handleBackToResults = () => {
+    navigate('/results');
+  };
   
   // Sample restaurant data - this will be replaced with actual data from your database
   const restaurantData = {
@@ -38,7 +45,17 @@ const RestaurantProfile = () => {
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <h1 className="text-2xl font-bold text-gray-900">Happy.Hour</h1>
+          <div className="flex items-center space-x-4">
+            <Button
+              variant="ghost"
+              onClick={handleBackToResults}
+              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back to Results</span>
+            </Button>
+            <h1 className="text-2xl font-bold text-gray-900">Happy.Hour</h1>
+          </div>
         </div>
       </div>
 
