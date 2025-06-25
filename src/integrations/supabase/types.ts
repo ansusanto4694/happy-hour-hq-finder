@@ -9,7 +9,83 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      restaurant_happy_hour: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          happy_hour_end: string
+          happy_hour_start: string
+          id: string
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          happy_hour_end: string
+          happy_hour_start: string
+          id?: string
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          happy_hour_end?: string
+          happy_hour_start?: string
+          id?: string
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_happy_hour_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      restaurants: {
+        Row: {
+          city: string
+          created_at: string
+          id: string
+          phone_number: string | null
+          restaurant_name: string
+          state: string
+          street_address: string
+          street_address_line_2: string | null
+          updated_at: string
+          zip_code: string
+        }
+        Insert: {
+          city: string
+          created_at?: string
+          id?: string
+          phone_number?: string | null
+          restaurant_name: string
+          state: string
+          street_address: string
+          street_address_line_2?: string | null
+          updated_at?: string
+          zip_code: string
+        }
+        Update: {
+          city?: string
+          created_at?: string
+          id?: string
+          phone_number?: string | null
+          restaurant_name?: string
+          state?: string
+          street_address?: string
+          street_address_line_2?: string | null
+          updated_at?: string
+          zip_code?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

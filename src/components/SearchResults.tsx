@@ -1,43 +1,95 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/integrations/supabase/client';
 
-// Sample data for demonstration
-const sampleResults = [
-  {
-    id: 1,
-    name: "The Golden Tap",
-    logo: "/placeholder.svg",
-    address: "123 Main St, Downtown",
-    phone: "(555) 123-4567",
-    happyHour: "4:00 PM - 7:00 PM"
-  },
-  {
-    id: 2,
-    name: "Sunset Grill",
-    logo: "/placeholder.svg",
-    address: "456 Oak Avenue, Midtown",
-    phone: "(555) 987-6543",
-    happyHour: "3:00 PM - 6:00 PM"
-  },
-  {
-    id: 3,
-    name: "Harbor View Bar",
-    logo: "/placeholder.svg",
-    address: "789 Waterfront Dr, Harbor District",
-    phone: "(555) 456-7890",
-    happyHour: "5:00 PM - 8:00 PM"
+// Helper function to get day name from day number
+const getDayName = (dayNumber: number): string => {
+  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  return days[dayNumber] || '';
+};
+
+// Helper function to format time
+const formatTime = (timeString: string): string => {
+  const time = new Date(`1970-01-01T${timeString}`);
+  return time.toLocaleTimeString('en-US', { 
+    hour: 'numeric', 
+    minute: '2-digit',
+    hour12: true 
+  });
+};
+
+// Helper function to get today's happy hour
+const getTodaysHappyHour = (happyHours: any[]): string => {
+  const today = new Date().getDay();
+  // Convert Sunday (0) to our format (6), and adjust other days
+  const adjustedToday = today === 0 ? 6 : today - 1;
+  
+  const todaysHour = happyHours.find(hh => hh.day_of_week === adjustedToday);
+  if (todaysHour) {
+    return `${formatTime(todaysHour.happy_hour_start)} - ${formatTime(todaysHour.happy_hour_end)}`;
   }
-];
+  return 'No Happy Hour Today';
+};
 
 export const SearchResults = () => {
   const navigate = useNavigate();
 
-  const handleRestaurantClick = (restaurantId: number) => {
+  const { data: restaurants, isLoading, error } = useQuery({
+    queryKey: ['restaurants-with-happy-hours'],
+    queryFn: async () => {
+      const { data: restaurantsData, error: restaurantsError } = await supabase
+        .from('restaurants')
+        .select(`
+          *,
+          restaurant_happy_hour (
+            day_of_week,
+            happy_hour_start,
+            happy_hour_end
+          )
+        `);
+
+      if (restaurantsError) {
+        console.error('Error fetching restaurants:', restaurantsError);
+        throw restaurantsError;
+      }
+
+      return restaurantsData;
+    },
+  });
+
+  const handleRestaurantClick = (restaurantId: string) => {
     navigate(`/restaurant/${restaurantId}`);
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold text-gray-900">Loading restaurants...</h2>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold text-gray-900">Error loading restaurants</h2>
+        <p className="text-red-600">Please try again later.</p>
+      </div>
+    );
+  }
+
+  if (!restaurants || restaurants.length === 0) {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold text-gray-900">No restaurants found</h2>
+        <p className="text-gray-600">No restaurants are available at this time.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -46,26 +98,24 @@ export const SearchResults = () => {
           Happy Hour Results
         </h2>
         <p className="text-gray-500">
-          {sampleResults.length} results found
+          {restaurants.length} results found
         </p>
       </div>
       
       <div className="space-y-3">
-        {sampleResults.map((result) => (
+        {restaurants.map((restaurant) => (
           <Card 
-            key={result.id} 
+            key={restaurant.id} 
             className="hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => handleRestaurantClick(result.id)}
+            onClick={() => handleRestaurantClick(restaurant.id)}
           >
             <CardContent className="p-4">
               <div className="flex items-start space-x-4">
-                {/* Logo */}
+                {/* Logo placeholder */}
                 <div className="flex-shrink-0">
-                  <img 
-                    src={result.logo} 
-                    alt={`${result.name} logo`}
-                    className="w-16 h-16 rounded-lg object-cover bg-gray-200"
-                  />
+                  <div className="w-16 h-16 rounded-lg bg-gray-200 flex items-center justify-center">
+                    <span className="text-gray-500 text-xs">Logo</span>
+                  </div>
                 </div>
                 
                 {/* Restaurant details */}
@@ -73,18 +123,20 @@ export const SearchResults = () => {
                   <div className="flex items-start justify-between">
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 truncate">
-                        {result.name}
+                        {restaurant.restaurant_name}
                       </h3>
                       <p className="text-gray-600 text-sm mt-1">
-                        {result.address}
+                        {restaurant.street_address}, {restaurant.city}, {restaurant.state} {restaurant.zip_code}
                       </p>
-                      <p className="text-gray-600 text-sm">
-                        {result.phone}
-                      </p>
+                      {restaurant.phone_number && (
+                        <p className="text-gray-600 text-sm">
+                          {restaurant.phone_number}
+                        </p>
+                      )}
                     </div>
                     
                     <Badge variant="secondary" className="ml-2 flex-shrink-0">
-                      {result.happyHour}
+                      {getTodaysHappyHour(restaurant.restaurant_happy_hour || [])}
                     </Badge>
                   </div>
                 </div>

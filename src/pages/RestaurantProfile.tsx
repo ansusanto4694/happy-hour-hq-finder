@@ -1,13 +1,59 @@
 
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+
+// Helper function to get day name from day number
+const getDayName = (dayNumber: number): string => {
+  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  return days[dayNumber] || '';
+};
+
+// Helper function to format time
+const formatTime = (timeString: string): string => {
+  const time = new Date(`1970-01-01T${timeString}`);
+  return time.toLocaleTimeString('en-US', { 
+    hour: 'numeric', 
+    minute: '2-digit',
+    hour12: true 
+  });
+};
 
 const RestaurantProfile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  
+  const { data: restaurant, isLoading, error } = useQuery({
+    queryKey: ['restaurant', id],
+    queryFn: async () => {
+      if (!id) throw new Error('Restaurant ID is required');
+      
+      const { data, error } = await supabase
+        .from('restaurants')
+        .select(`
+          *,
+          restaurant_happy_hour (
+            day_of_week,
+            happy_hour_start,
+            happy_hour_end
+          )
+        `)
+        .eq('id', id)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching restaurant:', error);
+        throw error;
+      }
+
+      return data;
+    },
+    enabled: !!id,
+  });
   
   const handleBackToResults = () => {
     navigate('/results');
@@ -16,25 +62,32 @@ const RestaurantProfile = () => {
   const handleGoHome = () => {
     navigate('/');
   };
-  
-  // Sample restaurant data - this will be replaced with actual data from your database
-  const restaurantData = {
-    id: id,
-    name: "The Golden Tap",
-    logo: "/placeholder.svg",
-    address: "123 Main St, Downtown",
-    phone: "(555) 123-4567",
-    website: "www.thegoldentap.com",
-    happyHours: {
-      monday: "4:00 PM - 7:00 PM",
-      tuesday: "4:00 PM - 7:00 PM",
-      wednesday: "4:00 PM - 7:00 PM",
-      thursday: "4:00 PM - 7:00 PM",
-      friday: "3:00 PM - 8:00 PM",
-      saturday: "3:00 PM - 8:00 PM",
-      sunday: "No Happy Hour"
-    }
-  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900">Loading restaurant...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !restaurant) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900">Restaurant not found</h2>
+          <Button onClick={handleBackToResults} className="mt-4">
+            Back to Results
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Sort happy hours by day of week for display
+  const sortedHappyHours = (restaurant.restaurant_happy_hour || []).sort((a, b) => a.day_of_week - b.day_of_week);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -66,14 +119,12 @@ const RestaurantProfile = () => {
           <CardContent className="p-8">
             {/* Restaurant Logo and Name */}
             <div className="flex items-center space-x-6 mb-8">
-              <img 
-                src={restaurantData.logo} 
-                alt={`${restaurantData.name} logo`}
-                className="w-24 h-24 rounded-lg object-cover bg-gray-200"
-              />
+              <div className="w-24 h-24 rounded-lg bg-gray-200 flex items-center justify-center">
+                <span className="text-gray-500">Logo</span>
+              </div>
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">
-                  {restaurantData.name}
+                  {restaurant.restaurant_name}
                 </h1>
               </div>
             </div>
@@ -85,89 +136,48 @@ const RestaurantProfile = () => {
                 {/* Address */}
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900 mb-2">Address</h2>
-                  <p className="text-gray-700">{restaurantData.address}</p>
+                  <div className="text-gray-700">
+                    <p>{restaurant.street_address}</p>
+                    {restaurant.street_address_line_2 && (
+                      <p>{restaurant.street_address_line_2}</p>
+                    )}
+                    <p>{restaurant.city}, {restaurant.state} {restaurant.zip_code}</p>
+                  </div>
                 </div>
 
                 {/* Phone Number */}
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900 mb-2">Phone Number</h2>
-                  <p className="text-gray-700">{restaurantData.phone}</p>
-                </div>
+                {restaurant.phone_number && (
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-2">Phone Number</h2>
+                    <p className="text-gray-700">{restaurant.phone_number}</p>
+                  </div>
+                )}
 
                 {/* Happy Hours */}
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900 mb-2">Happy Hours</h2>
                   <div className="space-y-1">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Monday:</span>
-                      <span className="text-gray-700">{restaurantData.happyHours.monday}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Tuesday:</span>
-                      <span className="text-gray-700">{restaurantData.happyHours.tuesday}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Wednesday:</span>
-                      <span className="text-gray-700">{restaurantData.happyHours.wednesday}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Thursday:</span>
-                      <span className="text-gray-700">{restaurantData.happyHours.thursday}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Friday:</span>
-                      <span className="text-gray-700">{restaurantData.happyHours.friday}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Saturday:</span>
-                      <span className="text-gray-700">{restaurantData.happyHours.saturday}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Sunday:</span>
-                      <span className="text-gray-700">{restaurantData.happyHours.sunday}</span>
-                    </div>
+                    {sortedHappyHours.length > 0 ? (
+                      sortedHappyHours.map((happyHour) => (
+                        <div key={happyHour.day_of_week} className="flex justify-between">
+                          <span className="text-gray-600">{getDayName(happyHour.day_of_week)}:</span>
+                          <span className="text-gray-700">
+                            {formatTime(happyHour.happy_hour_start)} - {formatTime(happyHour.happy_hour_end)}
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-gray-500 italic">No happy hour information available</p>
+                    )}
                   </div>
-                </div>
-
-                {/* Website */}
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900 mb-2">Website</h2>
-                  <p className="text-gray-700">{restaurantData.website}</p>
                 </div>
               </div>
 
-              {/* Right Column - Happy Hour Deals */}
+              {/* Right Column - Happy Hour Deals Placeholder */}
               <div>
                 <h2 className="text-lg font-semibold text-gray-900 mb-2">Happy Hour Deals</h2>
                 <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <div className="space-y-3">
-                    <div>
-                      <p className="font-bold text-gray-900">Buy 1 Get 1 Cocktail $15</p>
-                      <p className="text-gray-700 ml-4">Old Fashioned</p>
-                      <p className="text-gray-700 ml-4">Manhattan</p>
-                      <p className="text-gray-700 ml-4">Margarita</p>
-                      <p className="text-gray-700 ml-4">Lychee Martini</p>
-                    </div>
-                    
-                    <div>
-                      <p className="font-bold text-gray-900">Beer $6</p>
-                      <p className="text-gray-700 ml-4">Sapporo Asahi</p>
-                      <p className="text-gray-700 ml-4">Tiger</p>
-                    </div>
-                    
-                    <div>
-                      <p className="font-bold text-gray-900">House Hot/Cold Sake Combo</p>
-                      <p className="text-gray-700 ml-4">Fried Spring Roll (2 piece) $13</p>
-                      <p className="text-gray-700 ml-4">Truffle Fries $15</p>
-                      <p className="text-gray-700 ml-4">Crispy Wings (3 piece) $18</p>
-                    </div>
-                    
-                    <div>
-                      <p className="font-bold text-gray-900">House Wine $7/Glass</p>
-                      <p className="text-gray-700 ml-4">Chardonay</p>
-                      <p className="text-gray-700 ml-4">Sauvignon Blanc</p>
-                    </div>
-                  </div>
+                  <p className="text-gray-500 italic">Happy hour deals information will be available soon.</p>
                 </div>
               </div>
             </div>
