@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -6,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { RestaurantEventsFeed } from '@/components/RestaurantEventsFeed';
 
 // Helper function to get day name from day number
 const getDayName = (dayNumber: number): string => {
@@ -118,74 +118,80 @@ const RestaurantProfile = () => {
 
       {/* Restaurant Profile Content */}
       <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
-        <Card className="bg-white shadow-lg">
-          <CardContent className="p-8">
-            {/* Restaurant Logo and Name */}
-            <div className="flex items-center space-x-6 mb-8">
-              <div className="w-24 h-24 rounded-lg bg-gray-200 flex items-center justify-center">
-                <span className="text-gray-500">Logo</span>
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">
-                  {restaurant.restaurant_name}
-                </h1>
-              </div>
-            </div>
-
-            {/* Two Column Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Left Column */}
-              <div className="space-y-6">
-                {/* Address */}
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900 mb-2">Address</h2>
-                  <div className="text-gray-700">
-                    <p>{restaurant.street_address}</p>
-                    {restaurant.street_address_line_2 && (
-                      <p>{restaurant.street_address_line_2}</p>
-                    )}
-                    <p>{restaurant.city}, {restaurant.state} {restaurant.zip_code}</p>
-                  </div>
+        <div className="max-w-6xl mx-auto space-y-8">
+          {/* Restaurant Basic Info Card */}
+          <Card className="bg-white shadow-lg">
+            <CardContent className="p-8">
+              {/* Restaurant Logo and Name */}
+              <div className="flex items-center space-x-6 mb-8">
+                <div className="w-24 h-24 rounded-lg bg-gray-200 flex items-center justify-center">
+                  <span className="text-gray-500">Logo</span>
                 </div>
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">
+                    {restaurant.restaurant_name}
+                  </h1>
+                </div>
+              </div>
 
-                {/* Phone Number */}
-                {restaurant.phone_number && (
+              {/* Two Column Layout */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Left Column */}
+                <div className="space-y-6">
+                  {/* Address */}
                   <div>
-                    <h2 className="text-lg font-semibold text-gray-900 mb-2">Phone Number</h2>
-                    <p className="text-gray-700">{restaurant.phone_number}</p>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-2">Address</h2>
+                    <div className="text-gray-700">
+                      <p>{restaurant.street_address}</p>
+                      {restaurant.street_address_line_2 && (
+                        <p>{restaurant.street_address_line_2}</p>
+                      )}
+                      <p>{restaurant.city}, {restaurant.state} {restaurant.zip_code}</p>
+                    </div>
                   </div>
-                )}
 
-                {/* Happy Hours */}
+                  {/* Phone Number */}
+                  {restaurant.phone_number && (
+                    <div>
+                      <h2 className="text-lg font-semibold text-gray-900 mb-2">Phone Number</h2>
+                      <p className="text-gray-700">{restaurant.phone_number}</p>
+                    </div>
+                  )}
+
+                  {/* Happy Hours */}
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-2">Happy Hours</h2>
+                    <div className="space-y-1">
+                      {sortedHappyHours.length > 0 ? (
+                        sortedHappyHours.map((happyHour) => (
+                          <div key={happyHour.day_of_week} className="flex justify-between">
+                            <span className="text-gray-600">{getDayName(happyHour.day_of_week)}:</span>
+                            <span className="text-gray-700">
+                              {formatTime(happyHour.happy_hour_start)} - {formatTime(happyHour.happy_hour_end)}
+                            </span>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-gray-500 italic">No happy hour information available</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column - Happy Hour Deals */}
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900 mb-2">Happy Hours</h2>
-                  <div className="space-y-1">
-                    {sortedHappyHours.length > 0 ? (
-                      sortedHappyHours.map((happyHour) => (
-                        <div key={happyHour.day_of_week} className="flex justify-between">
-                          <span className="text-gray-600">{getDayName(happyHour.day_of_week)}:</span>
-                          <span className="text-gray-700">
-                            {formatTime(happyHour.happy_hour_start)} - {formatTime(happyHour.happy_hour_end)}
-                          </span>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-gray-500 italic">No happy hour information available</p>
-                    )}
+                  <h2 className="text-lg font-semibold text-gray-900 mb-2">Happy Hour Deals</h2>
+                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <p className="text-gray-500 italic">Happy hour deals information will be available soon.</p>
                   </div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
 
-              {/* Right Column - Happy Hour Deals Placeholder */}
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-2">Happy Hour Deals</h2>
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <p className="text-gray-500 italic">Happy hour deals information will be available soon.</p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          {/* Restaurant Events Feed */}
+          <RestaurantEventsFeed restaurantId={restaurant.id} />
+        </div>
       </div>
     </div>
   );
