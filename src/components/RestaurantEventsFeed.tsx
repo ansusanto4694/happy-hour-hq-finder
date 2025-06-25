@@ -3,7 +3,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock } from 'lucide-react';
+import { Calendar, Clock, Share } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface RestaurantEventsFeedProps {
@@ -66,6 +66,19 @@ export const RestaurantEventsFeed: React.FC<RestaurantEventsFeedProps> = ({ rest
     },
   });
 
+  const handleShare = (event: any) => {
+    if (navigator.share) {
+      navigator.share({
+        title: event.title,
+        text: event.description,
+        url: window.location.href,
+      });
+    } else {
+      // Fallback for browsers that don't support Web Share API
+      navigator.clipboard.writeText(`${event.title} - ${window.location.href}`);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -127,6 +140,15 @@ export const RestaurantEventsFeed: React.FC<RestaurantEventsFeedProps> = ({ rest
                       <p className="text-sm text-gray-500">{getTimeSincePosted(event.created_at)}</p>
                     </div>
                   </div>
+                  
+                  {/* Share Button */}
+                  <button
+                    onClick={() => handleShare(event)}
+                    className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                    title="Share event"
+                  >
+                    <Share className="w-5 h-5 text-gray-600" />
+                  </button>
                 </div>
 
                 {/* Event Title */}
@@ -143,7 +165,7 @@ export const RestaurantEventsFeed: React.FC<RestaurantEventsFeedProps> = ({ rest
 
                 {/* Event Date and Time */}
                 {event.event_date && (
-                  <div className="flex flex-wrap gap-2 mb-4">
+                  <div className="flex flex-wrap gap-2">
                     <Badge variant="secondary" className="flex items-center space-x-1">
                       <Calendar className="w-3 h-3" />
                       <span>{formatEventDate(event.event_date)}</span>
@@ -154,29 +176,6 @@ export const RestaurantEventsFeed: React.FC<RestaurantEventsFeedProps> = ({ rest
                     </Badge>
                   </div>
                 )}
-
-                {/* Social Media Style Engagement Section */}
-                <div className="border-t border-gray-100 pt-4 mt-4">
-                  <div className="flex items-center justify-between text-sm text-gray-500">
-                    <span>💖 👍 😍 12 reactions</span>
-                    <span>3 comments • 8 shares</span>
-                  </div>
-                  
-                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                    <button className="flex-1 flex items-center justify-center space-x-2 py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors">
-                      <span>👍</span>
-                      <span className="font-medium">Like</span>
-                    </button>
-                    <button className="flex-1 flex items-center justify-center space-x-2 py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors">
-                      <span>💬</span>
-                      <span className="font-medium">Comment</span>
-                    </button>
-                    <button className="flex-1 flex items-center justify-center space-x-2 py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors">
-                      <span>📤</span>
-                      <span className="font-medium">Share</span>
-                    </button>
-                  </div>
-                </div>
               </div>
             </CardContent>
           </Card>
