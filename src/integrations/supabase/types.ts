@@ -16,7 +16,7 @@ export type Database = {
           happy_hour_end: string
           happy_hour_start: string
           id: string
-          store_id: string
+          store_id: number
           updated_at: string
         }
         Insert: {
@@ -25,7 +25,7 @@ export type Database = {
           happy_hour_end: string
           happy_hour_start: string
           id?: string
-          store_id: string
+          store_id: number
           updated_at?: string
         }
         Update: {
@@ -34,7 +34,7 @@ export type Database = {
           happy_hour_end?: string
           happy_hour_start?: string
           id?: string
-          store_id?: string
+          store_id?: number
           updated_at?: string
         }
         Relationships: [
@@ -51,7 +51,7 @@ export type Database = {
         Row: {
           city: string
           created_at: string
-          id: string
+          id: number
           phone_number: string | null
           restaurant_name: string
           state: string
@@ -63,7 +63,7 @@ export type Database = {
         Insert: {
           city: string
           created_at?: string
-          id?: string
+          id?: number
           phone_number?: string | null
           restaurant_name: string
           state: string
@@ -75,7 +75,7 @@ export type Database = {
         Update: {
           city?: string
           created_at?: string
-          id?: string
+          id?: number
           phone_number?: string | null
           restaurant_name?: string
           state?: string

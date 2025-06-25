@@ -61,7 +61,7 @@ export const SearchResults = () => {
     },
   });
 
-  const handleRestaurantClick = (restaurantId: string) => {
+  const handleRestaurantClick = (restaurantId: number) => {
     navigate(`/restaurant/${restaurantId}`);
   };
 

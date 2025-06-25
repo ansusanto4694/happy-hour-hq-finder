@@ -32,6 +32,9 @@ const RestaurantProfile = () => {
     queryFn: async () => {
       if (!id) throw new Error('Restaurant ID is required');
       
+      const restaurantId = parseInt(id, 10);
+      if (isNaN(restaurantId)) throw new Error('Invalid restaurant ID');
+      
       const { data, error } = await supabase
         .from('restaurants')
         .select(`
@@ -42,7 +45,7 @@ const RestaurantProfile = () => {
             happy_hour_end
           )
         `)
-        .eq('id', id)
+        .eq('id', restaurantId)
         .maybeSingle();
 
       if (error) {
