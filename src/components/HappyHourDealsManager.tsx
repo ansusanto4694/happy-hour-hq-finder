@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -306,46 +305,50 @@ export const HappyHourDealsManager: React.FC<HappyHourDealsManagerProps> = ({ re
                             <div
                               ref={provided.innerRef}
                               {...provided.draggableProps}
-                              className={`border rounded-lg bg-white p-3 ${
-                                snapshot.isDragging ? 'shadow-lg' : 'shadow-sm'
+                              className={`relative border rounded-lg bg-white ${
+                                snapshot.isDragging ? 'shadow-lg z-10' : 'shadow-sm'
                               }`}
                             >
-                              <div className="flex items-start gap-3">
+                              <div className="flex items-start">
                                 <div
                                   {...provided.dragHandleProps}
-                                  className="flex-shrink-0 mt-1 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing"
+                                  className="flex-shrink-0 p-3 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing border-r border-gray-200"
                                 >
                                   <GripVertical className="w-4 h-4" />
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <h4 className="font-medium text-gray-900 truncate">{deal.deal_title}</h4>
-                                    <Badge variant={deal.active ? "default" : "secondary"} className="flex-shrink-0">
-                                      {deal.active ? "Active" : "Inactive"}
-                                    </Badge>
+                                <div className="flex-1 p-3">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <h4 className="font-medium text-gray-900 truncate">{deal.deal_title}</h4>
+                                        <Badge variant={deal.active ? "default" : "secondary"} className="flex-shrink-0">
+                                          {deal.active ? "Active" : "Inactive"}
+                                        </Badge>
+                                      </div>
+                                      {deal.deal_description && (
+                                        <p className="text-sm text-gray-600 whitespace-pre-line">{deal.deal_description}</p>
+                                      )}
+                                    </div>
+                                    <div className="flex gap-1 ml-3 flex-shrink-0">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleEdit(deal)}
+                                        className="h-8 w-8 p-0"
+                                      >
+                                        <Edit className="w-4 h-4" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleDelete(deal.id)}
+                                        disabled={deleteDealMutation.isPending}
+                                        className="h-8 w-8 p-0"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                    </div>
                                   </div>
-                                  {deal.deal_description && (
-                                    <p className="text-sm text-gray-600 whitespace-pre-line">{deal.deal_description}</p>
-                                  )}
-                                </div>
-                                <div className="flex gap-1 flex-shrink-0">
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleEdit(deal)}
-                                    className="h-8 w-8 p-0"
-                                  >
-                                    <Edit className="w-4 h-4" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleDelete(deal.id)}
-                                    disabled={deleteDealMutation.isPending}
-                                    className="h-8 w-8 p-0"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
                                 </div>
                               </div>
                             </div>
