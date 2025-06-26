@@ -59,7 +59,7 @@ export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ re
             <div className="flex-1">
               <h3 className="font-semibold text-gray-900 mb-1">{deal.deal_title}</h3>
               {deal.deal_description && (
-                <p className="text-gray-700 text-sm">{deal.deal_description}</p>
+                <p className="text-gray-700 text-sm whitespace-pre-line">{deal.deal_description}</p>
               )}
             </div>
             <Badge variant="secondary" className="ml-3 bg-orange-100 text-orange-800">
