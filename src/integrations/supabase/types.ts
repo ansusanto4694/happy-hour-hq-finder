@@ -9,6 +9,44 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      happy_hour_deals: {
+        Row: {
+          active: boolean
+          created_at: string
+          deal_description: string | null
+          deal_title: string
+          id: string
+          restaurant_id: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          deal_description?: string | null
+          deal_title: string
+          id?: string
+          restaurant_id: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          deal_description?: string | null
+          deal_title?: string
+          id?: string
+          restaurant_id?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "happy_hour_deals_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurant_events: {
         Row: {
           created_at: string

@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { RestaurantEventsFeed } from '@/components/RestaurantEventsFeed';
+import { HappyHourDealsManager } from '@/components/HappyHourDealsManager';
+import { HappyHourDealsDisplay } from '@/components/HappyHourDealsDisplay';
 
 // Helper function to get day name from day number
 const getDayName = (dayNumber: number): string => {
@@ -180,10 +182,11 @@ const RestaurantProfile = () => {
 
                 {/* Right Column - Happy Hour Deals */}
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900 mb-2">Happy Hour Deals</h2>
-                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <p className="text-gray-500 italic">Happy hour deals information will be available soon.</p>
+                  <div className="flex items-center justify-between mb-2">
+                    <h2 className="text-lg font-semibold text-gray-900">Happy Hour Deals</h2>
+                    <HappyHourDealsManager restaurantId={restaurant.id} />
                   </div>
+                  <HappyHourDealsDisplay restaurantId={restaurant.id} />
                 </div>
               </div>
             </CardContent>
