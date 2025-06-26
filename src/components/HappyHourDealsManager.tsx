@@ -143,16 +143,21 @@ export const HappyHourDealsManager: React.FC<HappyHourDealsManagerProps> = ({ re
   // Reorder deals mutation
   const reorderDealsMutation = useMutation({
     mutationFn: async (reorderedDeals: HappyHourDeal[]) => {
-      const updates = reorderedDeals.map((deal, index) => ({
-        id: deal.id,
-        display_order: index + 1
-      }));
+      // Update each deal's display_order individually
+      const updatePromises = reorderedDeals.map((deal, index) => 
+        supabase
+          .from('happy_hour_deals')
+          .update({ display_order: index + 1 })
+          .eq('id', deal.id)
+      );
 
-      const { error } = await supabase
-        .from('happy_hour_deals')
-        .upsert(updates.map(update => ({ id: update.id, display_order: update.display_order })));
-
-      if (error) throw error;
+      const results = await Promise.all(updatePromises);
+      
+      // Check if any updates failed
+      const errors = results.filter(result => result.error);
+      if (errors.length > 0) {
+        throw new Error('Failed to update some deals');
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['happy-hour-deals', restaurantId] });
