@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -305,19 +306,19 @@ export const HappyHourDealsManager: React.FC<HappyHourDealsManagerProps> = ({ re
                             <div
                               ref={provided.innerRef}
                               {...provided.draggableProps}
-                              className={`border rounded-lg bg-white ${
-                                snapshot.isDragging ? 'shadow-lg rotate-2 transform' : 'shadow-sm'
+                              className={`border rounded-lg bg-white p-3 ${
+                                snapshot.isDragging ? 'shadow-lg' : 'shadow-sm'
                               }`}
                             >
-                              <div className="flex items-start p-3">
+                              <div className="flex items-start gap-3">
                                 <div
                                   {...provided.dragHandleProps}
-                                  className="flex-shrink-0 mr-3 mt-1 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing"
+                                  className="flex-shrink-0 mt-1 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing"
                                 >
                                   <GripVertical className="w-4 h-4" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <div className="flex items-center space-x-2 mb-1">
+                                  <div className="flex items-center gap-2 mb-1">
                                     <h4 className="font-medium text-gray-900 truncate">{deal.deal_title}</h4>
                                     <Badge variant={deal.active ? "default" : "secondary"} className="flex-shrink-0">
                                       {deal.active ? "Active" : "Inactive"}
@@ -327,7 +328,7 @@ export const HappyHourDealsManager: React.FC<HappyHourDealsManagerProps> = ({ re
                                     <p className="text-sm text-gray-600 whitespace-pre-line">{deal.deal_description}</p>
                                   )}
                                 </div>
-                                <div className="flex space-x-1 ml-3 flex-shrink-0">
+                                <div className="flex gap-1 flex-shrink-0">
                                   <Button
                                     variant="ghost"
                                     size="sm"
