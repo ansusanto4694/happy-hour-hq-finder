@@ -34,16 +34,23 @@ export const DealItem: React.FC<DealItemProps> = ({
       ref={provided.innerRef}
       {...provided.draggableProps}
       className={`bg-white border rounded-lg shadow-sm p-4 ${
-        snapshot.isDragging ? 'shadow-lg rotate-2' : ''
+        snapshot.isDragging ? 'shadow-lg rotate-2 cursor-grabbing' : ''
       }`}
+      style={{
+        ...provided.draggableProps.style,
+        transform: snapshot.isDragging 
+          ? `${provided.draggableProps.style?.transform} rotate(2deg)` 
+          : provided.draggableProps.style?.transform,
+      }}
     >
       <div className="flex items-start gap-3">
-        <div
+        <button
           {...provided.dragHandleProps}
-          className="flex-shrink-0 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing pt-1"
+          className="flex-shrink-0 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing pt-1 p-1 -m-1 rounded transition-colors"
+          type="button"
         >
           <GripVertical className="w-4 h-4" />
-        </div>
+        </button>
         
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
