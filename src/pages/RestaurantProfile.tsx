@@ -23,6 +23,7 @@ const RestaurantProfile = () => {
         .select(`
           *,
           restaurant_happy_hour (
+            id,
             day_of_week,
             happy_hour_start,
             happy_hour_end

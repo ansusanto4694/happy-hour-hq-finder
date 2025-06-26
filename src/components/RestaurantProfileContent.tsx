@@ -28,6 +28,15 @@ interface RestaurantProfileContentProps {
 }
 
 export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> = ({ restaurant }) => {
+  // Transform the restaurant_happy_hour data to include IDs for the editor
+  const restaurantWithIds = {
+    ...restaurant,
+    restaurant_happy_hour: restaurant.restaurant_happy_hour.map(hh => ({
+      ...hh,
+      id: `${restaurant.id}-${hh.day_of_week}`, // Create a unique ID
+    }))
+  };
+
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
       <div className="max-w-6xl mx-auto space-y-8">
@@ -52,8 +61,8 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
                 <RestaurantHappyHours happyHours={restaurant.restaurant_happy_hour || []} />
               </div>
 
-              {/* Right Column - Happy Hour Deals */}
-              <RestaurantDealsSection restaurantId={restaurant.id} />
+              {/* Right Column - Restaurant Profile Editor and Happy Hour Deals */}
+              <RestaurantDealsSection restaurantId={restaurant.id} restaurant={restaurantWithIds} />
             </div>
           </CardContent>
         </Card>
