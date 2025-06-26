@@ -15,6 +15,7 @@ export type Database = {
           created_at: string
           deal_description: string | null
           deal_title: string
+          display_order: number | null
           id: string
           restaurant_id: number
           updated_at: string
@@ -24,6 +25,7 @@ export type Database = {
           created_at?: string
           deal_description?: string | null
           deal_title: string
+          display_order?: number | null
           id?: string
           restaurant_id: number
           updated_at?: string
@@ -33,6 +35,7 @@ export type Database = {
           created_at?: string
           deal_description?: string | null
           deal_title?: string
+          display_order?: number | null
           id?: string
           restaurant_id?: number
           updated_at?: string

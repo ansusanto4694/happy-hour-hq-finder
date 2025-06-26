@@ -24,6 +24,7 @@ export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ re
         .select('id, deal_title, deal_description, active')
         .eq('restaurant_id', restaurantId)
         .eq('active', true)
+        .order('display_order', { ascending: true })
         .order('created_at', { ascending: false });
 
       if (error) {
