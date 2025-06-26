@@ -33,11 +33,11 @@ export const DealItem: React.FC<DealItemProps> = ({
     <div
       ref={provided.innerRef}
       {...provided.draggableProps}
-      className={`bg-white border rounded-lg shadow-sm ${
-        snapshot.isDragging ? 'shadow-lg z-10' : ''
+      className={`bg-white border rounded-lg shadow-sm p-4 ${
+        snapshot.isDragging ? 'shadow-lg rotate-2' : ''
       }`}
     >
-      <div className="flex items-start p-4 gap-3">
+      <div className="flex items-start gap-3">
         <div
           {...provided.dragHandleProps}
           className="flex-shrink-0 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing pt-1"
