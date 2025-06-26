@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -306,21 +305,21 @@ export const HappyHourDealsManager: React.FC<HappyHourDealsManagerProps> = ({ re
                             <div
                               ref={provided.innerRef}
                               {...provided.draggableProps}
-                              className={`flex items-start justify-between p-3 border rounded-lg ${
-                                snapshot.isDragging ? 'shadow-lg bg-white' : 'bg-white'
+                              className={`border rounded-lg bg-white ${
+                                snapshot.isDragging ? 'shadow-lg rotate-2 transform' : 'shadow-sm'
                               }`}
                             >
-                              <div className="flex items-start space-x-3 flex-1">
+                              <div className="flex items-start p-3">
                                 <div
                                   {...provided.dragHandleProps}
-                                  className="mt-1 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing"
+                                  className="flex-shrink-0 mr-3 mt-1 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing"
                                 >
                                   <GripVertical className="w-4 h-4" />
                                 </div>
-                                <div className="flex-1">
+                                <div className="flex-1 min-w-0">
                                   <div className="flex items-center space-x-2 mb-1">
-                                    <h4 className="font-medium">{deal.deal_title}</h4>
-                                    <Badge variant={deal.active ? "default" : "secondary"}>
+                                    <h4 className="font-medium text-gray-900 truncate">{deal.deal_title}</h4>
+                                    <Badge variant={deal.active ? "default" : "secondary"} className="flex-shrink-0">
                                       {deal.active ? "Active" : "Inactive"}
                                     </Badge>
                                   </div>
@@ -328,23 +327,25 @@ export const HappyHourDealsManager: React.FC<HappyHourDealsManagerProps> = ({ re
                                     <p className="text-sm text-gray-600 whitespace-pre-line">{deal.deal_description}</p>
                                   )}
                                 </div>
-                              </div>
-                              <div className="flex space-x-1 ml-3">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleEdit(deal)}
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleDelete(deal.id)}
-                                  disabled={deleteDealMutation.isPending}
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
+                                <div className="flex space-x-1 ml-3 flex-shrink-0">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleEdit(deal)}
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDelete(deal.id)}
+                                    disabled={deleteDealMutation.isPending}
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </div>
                               </div>
                             </div>
                           )}
