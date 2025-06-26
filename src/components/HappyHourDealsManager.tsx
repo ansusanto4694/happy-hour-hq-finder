@@ -1,172 +1,36 @@
+
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { DropResult } from 'react-beautiful-dnd';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Edit, Plus, Trash2, GripVertical } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
+import { Edit } from 'lucide-react';
+import { useHappyHourDeals } from './happy-hour-deals/hooks/useHappyHourDeals';
+import { DealForm } from './happy-hour-deals/DealForm';
+import { DealsList } from './happy-hour-deals/DealsList';
+import { HappyHourDeal, DealFormData } from './happy-hour-deals/types';
 
 interface HappyHourDealsManagerProps {
   restaurantId: number;
 }
 
-interface HappyHourDeal {
-  id: string;
-  restaurant_id: number;
-  deal_title: string;
-  deal_description: string | null;
-  active: boolean;
-  display_order: number | null;
-  created_at: string;
-  updated_at: string;
-}
-
 export const HappyHourDealsManager: React.FC<HappyHourDealsManagerProps> = ({ restaurantId }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [editingDeal, setEditingDeal] = useState<HappyHourDeal | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<DealFormData>({
     deal_title: '',
     deal_description: '',
     active: true
   });
   
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-
-  // Fetch happy hour deals for this restaurant
-  const { data: deals, isLoading } = useQuery({
-    queryKey: ['happy-hour-deals', restaurantId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('happy_hour_deals')
-        .select('*')
-        .eq('restaurant_id', restaurantId)
-        .order('display_order', { ascending: true })
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching happy hour deals:', error);
-        throw error;
-      }
-
-      return data as HappyHourDeal[];
-    },
-  });
-
-  // Create deal mutation
-  const createDealMutation = useMutation({
-    mutationFn: async (newDeal: { deal_title: string; deal_description: string; active: boolean }) => {
-      // Get the highest display_order for this restaurant
-      const { data: maxOrderData } = await supabase
-        .from('happy_hour_deals')
-        .select('display_order')
-        .eq('restaurant_id', restaurantId)
-        .order('display_order', { ascending: false })
-        .limit(1);
-
-      const nextOrder = (maxOrderData && maxOrderData[0]?.display_order ? maxOrderData[0].display_order : 0) + 1;
-
-      const { data, error } = await supabase
-        .from('happy_hour_deals')
-        .insert([{
-          restaurant_id: restaurantId,
-          display_order: nextOrder,
-          ...newDeal
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['happy-hour-deals', restaurantId] });
-      toast({ title: 'Success', description: 'Deal created successfully!' });
-      resetForm();
-    },
-    onError: (error) => {
-      console.error('Error creating deal:', error);
-      toast({ title: 'Error', description: 'Failed to create deal. Please try again.' });
-    }
-  });
-
-  // Update deal mutation
-  const updateDealMutation = useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: Partial<HappyHourDeal> }) => {
-      const { data, error } = await supabase
-        .from('happy_hour_deals')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['happy-hour-deals', restaurantId] });
-      toast({ title: 'Success', description: 'Deal updated successfully!' });
-      resetForm();
-    },
-    onError: (error) => {
-      console.error('Error updating deal:', error);
-      toast({ title: 'Error', description: 'Failed to update deal. Please try again.' });
-    }
-  });
-
-  // Delete deal mutation
-  const deleteDealMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('happy_hour_deals')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['happy-hour-deals', restaurantId] });
-      toast({ title: 'Success', description: 'Deal deleted successfully!' });
-    },
-    onError: (error) => {
-      console.error('Error deleting deal:', error);
-      toast({ title: 'Error', description: 'Failed to delete deal. Please try again.' });
-    }
-  });
-
-  // Reorder deals mutation
-  const reorderDealsMutation = useMutation({
-    mutationFn: async (reorderedDeals: HappyHourDeal[]) => {
-      // Update each deal's display_order individually
-      const updatePromises = reorderedDeals.map((deal, index) => 
-        supabase
-          .from('happy_hour_deals')
-          .update({ display_order: index + 1 })
-          .eq('id', deal.id)
-      );
-
-      const results = await Promise.all(updatePromises);
-      
-      // Check if any updates failed
-      const errors = results.filter(result => result.error);
-      if (errors.length > 0) {
-        throw new Error('Failed to update some deals');
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['happy-hour-deals', restaurantId] });
-      toast({ title: 'Success', description: 'Deals reordered successfully!' });
-    },
-    onError: (error) => {
-      console.error('Error reordering deals:', error);
-      toast({ title: 'Error', description: 'Failed to reorder deals. Please try again.' });
-    }
-  });
+  const {
+    deals,
+    isLoading,
+    createDealMutation,
+    updateDealMutation,
+    deleteDealMutation,
+    reorderDealsMutation,
+    queryClient
+  } = useHappyHourDeals(restaurantId);
 
   const resetForm = () => {
     setFormData({ deal_title: '', deal_description: '', active: true });
@@ -182,28 +46,23 @@ export const HappyHourDealsManager: React.FC<HappyHourDealsManagerProps> = ({ re
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.deal_title.trim()) {
-      toast({ title: 'Error', description: 'Deal title is required.' });
-      return;
-    }
-
+  const handleSubmit = (data: DealFormData) => {
     if (editingDeal) {
       updateDealMutation.mutate({
         id: editingDeal.id,
-        updates: formData
+        updates: data
+      }, {
+        onSuccess: resetForm
       });
     } else {
-      createDealMutation.mutate(formData);
+      createDealMutation.mutate(data, {
+        onSuccess: resetForm
+      });
     }
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this deal?')) {
-      deleteDealMutation.mutate(id);
-    }
+    deleteDealMutation.mutate(id);
   };
 
   const handleDragEnd = (result: DropResult) => {
@@ -234,133 +93,25 @@ export const HappyHourDealsManager: React.FC<HappyHourDealsManagerProps> = ({ re
         </DialogHeader>
         
         <div className="space-y-6">
-          {/* Add/Edit Form */}
-          <form onSubmit={handleSubmit} className="space-y-4 p-4 border rounded-lg bg-gray-50">
-            <h3 className="font-semibold">
-              {editingDeal ? 'Edit Deal' : 'Add New Deal'}
-            </h3>
-            
-            <div>
-              <label className="block text-sm font-medium mb-1">Deal Title *</label>
-              <Input
-                value={formData.deal_title}
-                onChange={(e) => setFormData({ ...formData, deal_title: e.target.value })}
-                placeholder="e.g., 50% off appetizers"
-                required
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium mb-1">Description</label>
-              <Textarea
-                value={formData.deal_description}
-                onChange={(e) => setFormData({ ...formData, deal_description: e.target.value })}
-                placeholder="Additional details about the deal..."
-                rows={3}
-              />
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Switch
-                checked={formData.active}
-                onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
-              />
-              <label className="text-sm font-medium">Active</label>
-            </div>
-            
-            <div className="flex space-x-2">
-              <Button
-                type="submit"
-                disabled={createDealMutation.isPending || updateDealMutation.isPending}
-              >
-                {editingDeal ? 'Update Deal' : 'Add Deal'}
-              </Button>
-              {editingDeal && (
-                <Button type="button" variant="outline" onClick={resetForm}>
-                  Cancel
-                </Button>
-              )}
-            </div>
-          </form>
+          <DealForm
+            formData={formData}
+            setFormData={setFormData}
+            editingDeal={editingDeal}
+            onSubmit={handleSubmit}
+            onCancel={resetForm}
+            isLoading={createDealMutation.isPending || updateDealMutation.isPending}
+          />
 
-          {/* Existing Deals List */}
           <div>
             <h3 className="font-semibold mb-3">Current Deals (Drag to reorder)</h3>
-            {isLoading ? (
-              <div className="text-gray-500">Loading deals...</div>
-            ) : !deals || deals.length === 0 ? (
-              <div className="text-gray-500 italic">No deals created yet.</div>
-            ) : (
-              <DragDropContext onDragEnd={handleDragEnd}>
-                <Droppable droppableId="deals">
-                  {(provided) => (
-                    <div
-                      {...provided.droppableProps}
-                      ref={provided.innerRef}
-                      className="space-y-3"
-                    >
-                      {deals.map((deal, index) => (
-                        <Draggable key={deal.id} draggableId={deal.id} index={index}>
-                          {(provided, snapshot) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              className={`relative border rounded-lg bg-white ${
-                                snapshot.isDragging ? 'shadow-lg z-10' : 'shadow-sm'
-                              }`}
-                            >
-                              <div className="flex items-start">
-                                <div
-                                  {...provided.dragHandleProps}
-                                  className="flex-shrink-0 p-3 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing border-r border-gray-200"
-                                >
-                                  <GripVertical className="w-4 h-4" />
-                                </div>
-                                <div className="flex-1 p-3">
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex items-center gap-2 mb-1">
-                                        <h4 className="font-medium text-gray-900 truncate">{deal.deal_title}</h4>
-                                        <Badge variant={deal.active ? "default" : "secondary"} className="flex-shrink-0">
-                                          {deal.active ? "Active" : "Inactive"}
-                                        </Badge>
-                                      </div>
-                                      {deal.deal_description && (
-                                        <p className="text-sm text-gray-600 whitespace-pre-line">{deal.deal_description}</p>
-                                      )}
-                                    </div>
-                                    <div className="flex gap-1 ml-3 flex-shrink-0">
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => handleEdit(deal)}
-                                        className="h-8 w-8 p-0"
-                                      >
-                                        <Edit className="w-4 h-4" />
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => handleDelete(deal.id)}
-                                        disabled={deleteDealMutation.isPending}
-                                        className="h-8 w-8 p-0"
-                                      >
-                                        <Trash2 className="w-4 h-4" />
-                                      </Button>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
-                    </div>
-                  )}
-                </Droppable>
-              </DragDropContext>
-            )}
+            <DealsList
+              deals={deals || []}
+              isLoading={isLoading}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onDragEnd={handleDragEnd}
+              isDeleting={deleteDealMutation.isPending}
+            />
           </div>
         </div>
       </DialogContent>
