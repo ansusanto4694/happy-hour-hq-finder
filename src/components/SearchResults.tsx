@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -48,7 +47,7 @@ const convertTo24Hour = (time12h: string): string => {
   return `${hours.padStart(2, '0')}:${minutes}:00`;
 };
 
-// Helper function to check if search time range is completely within restaurant's happy hour
+// Helper function to check if restaurant's happy hour falls within search time range
 const isHappyHourInTimeRange = (happyHours: any[], startTime: string, endTime: string): boolean => {
   if (!startTime || !endTime) return true; // If no time filter, show all
 
@@ -63,9 +62,9 @@ const isHappyHourInTimeRange = (happyHours: any[], startTime: string, endTime: s
   const happyStart = todaysHour.happy_hour_start;
   const happyEnd = todaysHour.happy_hour_end;
 
-  // Check if the search time range is completely within the happy hour
-  // Happy hour start must be <= search start AND happy hour end must be >= search end
-  return happyStart <= searchStart && happyEnd >= searchEnd;
+  // Check if the restaurant's happy hour falls within the search time range
+  // Happy hour start must be >= search start AND happy hour end must be <= search end
+  return happyStart >= searchStart && happyEnd <= searchEnd;
 };
 
 interface SearchResultsProps {
