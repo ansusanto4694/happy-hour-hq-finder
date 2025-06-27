@@ -2,7 +2,6 @@
 import React from 'react';
 import { HappyHourDealsManager } from '@/components/HappyHourDealsManager';
 import { HappyHourDealsDisplay } from '@/components/HappyHourDealsDisplay';
-import { RestaurantProfileEditor } from '@/components/RestaurantProfileEditor';
 
 interface Restaurant {
   id: number;
@@ -29,16 +28,12 @@ interface RestaurantDealsSectionProps {
 export const RestaurantDealsSection: React.FC<RestaurantDealsSectionProps> = ({ restaurantId, restaurant }) => {
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-900">Restaurant Profile</h2>
-        <div className="flex gap-2">
-          <RestaurantProfileEditor restaurant={restaurant} />
-          <HappyHourDealsManager restaurantId={restaurantId} />
-        </div>
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-lg font-semibold text-gray-900">Happy Hour Deals</h3>
+        <HappyHourDealsManager restaurantId={restaurantId} />
       </div>
       
-      <div className="mb-4">
-        <h3 className="text-md font-medium text-gray-800 mb-2">Happy Hour Deals</h3>
+      <div>
         <HappyHourDealsDisplay restaurantId={restaurantId} />
       </div>
     </div>

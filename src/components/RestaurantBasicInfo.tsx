@@ -1,21 +1,40 @@
 
 import React from 'react';
 
-interface RestaurantBasicInfoProps {
-  restaurantName: string;
+interface Restaurant {
+  id: number;
+  restaurant_name: string;
+  street_address: string;
+  street_address_line_2?: string | null;
+  city: string;
+  state: string;
+  zip_code: string;
+  phone_number?: string | null;
+  merchant_happy_hour: Array<{
+    id: string;
+    day_of_week: number;
+    happy_hour_start: string;
+    happy_hour_end: string;
+  }>;
 }
 
-export const RestaurantBasicInfo: React.FC<RestaurantBasicInfoProps> = ({ restaurantName }) => {
+interface RestaurantBasicInfoProps {
+  restaurantName: string;
+  restaurant?: Restaurant;
+}
+
+export const RestaurantBasicInfo: React.FC<RestaurantBasicInfoProps> = ({ 
+  restaurantName, 
+  restaurant 
+}) => {
   return (
-    <div className="flex items-center space-x-6 mb-8">
-      <div className="w-24 h-24 rounded-lg bg-gray-200 flex items-center justify-center">
-        <span className="text-gray-500">Logo</span>
-      </div>
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">
-          {restaurantName}
-        </h1>
-      </div>
+    <div className="flex items-center justify-between mb-8">
+      <h1 className="text-3xl font-bold text-gray-900">{restaurantName}</h1>
+      {restaurant && (
+        <div className="flex items-center">
+          {/* The RestaurantProfileEditor will be rendered here */}
+        </div>
+      )}
     </div>
   );
 };

@@ -6,6 +6,7 @@ import { RestaurantContactInfo } from '@/components/RestaurantContactInfo';
 import { RestaurantHappyHours } from '@/components/RestaurantHappyHours';
 import { RestaurantDealsSection } from '@/components/RestaurantDealsSection';
 import { RestaurantEventsFeed } from '@/components/RestaurantEventsFeed';
+import { RestaurantProfileEditor } from '@/components/RestaurantProfileEditor';
 
 interface Restaurant {
   id: number;
@@ -43,7 +44,11 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
         {/* Restaurant Basic Info Card */}
         <Card className="bg-white shadow-lg">
           <CardContent className="p-8">
-            <RestaurantBasicInfo restaurantName={restaurant.restaurant_name} />
+            {/* Header with Restaurant Name and Edit Button */}
+            <div className="flex items-center justify-between mb-8">
+              <h1 className="text-3xl font-bold text-gray-900">{restaurant.restaurant_name}</h1>
+              <RestaurantProfileEditor restaurant={restaurantWithIds} />
+            </div>
 
             {/* Two Column Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -61,7 +66,7 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
                 <RestaurantHappyHours happyHours={restaurant.merchant_happy_hour || []} />
               </div>
 
-              {/* Right Column - Restaurant Profile Editor and Happy Hour Deals */}
+              {/* Right Column - Happy Hour Deals aligned with Address */}
               <RestaurantDealsSection restaurantId={restaurant.id} restaurant={restaurantWithIds} />
             </div>
           </CardContent>
