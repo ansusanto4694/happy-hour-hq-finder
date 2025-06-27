@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -94,15 +95,16 @@ const isHappyHourInTimeRange = (happyHours: any[], startTime: string, endTime: s
 interface SearchResultsProps {
   startTime?: string;
   endTime?: string;
+  zipCode?: string;
 }
 
-export const SearchResults: React.FC<SearchResultsProps> = ({ startTime, endTime }) => {
+export const SearchResults: React.FC<SearchResultsProps> = ({ startTime, endTime, zipCode }) => {
   const navigate = useNavigate();
 
   const { data: restaurants, isLoading, error } = useQuery({
-    queryKey: ['restaurants-with-happy-hours', startTime, endTime],
+    queryKey: ['restaurants-with-happy-hours', startTime, endTime, zipCode],
     queryFn: async () => {
-      const { data: restaurantsData, error: restaurantsError } = await supabase
+      let query = supabase
         .from('Merchant')
         .select(`
           *,
@@ -112,6 +114,13 @@ export const SearchResults: React.FC<SearchResultsProps> = ({ startTime, endTime
             happy_hour_end
           )
         `);
+
+      // Add zip code filter if provided
+      if (zipCode) {
+        query = query.eq('zip_code', zipCode);
+      }
+
+      const { data: restaurantsData, error: restaurantsError } = await query;
 
       if (restaurantsError) {
         console.error('Error fetching restaurants:', restaurantsError);
@@ -154,8 +163,8 @@ export const SearchResults: React.FC<SearchResultsProps> = ({ startTime, endTime
         <h2 className="text-xl font-semibold text-gray-900">No restaurants found</h2>
         <p className="text-gray-600">
           {startTime && endTime 
-            ? `No restaurants found with happy hours that overlap with ${startTime} - ${endTime} today.`
-            : 'No restaurants are available at this time.'
+            ? `No restaurants found with happy hours that overlap with ${startTime} - ${endTime} today${zipCode ? ` in zip code ${zipCode}` : ''}.`
+            : `No restaurants are available${zipCode ? ` in zip code ${zipCode}` : ''} at this time.`
           }
         </p>
       </div>
@@ -167,11 +176,13 @@ export const SearchResults: React.FC<SearchResultsProps> = ({ startTime, endTime
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold text-gray-900">
           Happy Hour Results
-          {startTime && endTime && (
+          {(startTime && endTime) || zipCode ? (
             <span className="text-base font-normal text-gray-600 ml-2">
-              ({startTime} - {endTime} today)
+              ({startTime && endTime ? `${startTime} - ${endTime} today` : ''}
+              {startTime && endTime && zipCode ? ', ' : ''}
+              {zipCode ? `zip code ${zipCode}` : ''})
             </span>
-          )}
+          ) : null}
         </h2>
         <p className="text-gray-500">
           {restaurants.length} results found
