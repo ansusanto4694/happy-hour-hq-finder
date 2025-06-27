@@ -14,8 +14,16 @@ export const SearchBar = () => {
 
   const handleSearch = () => {
     console.log('Searching for:', searchTerm, 'in zip code:', zipCode, 'start time:', startTime, 'end time:', endTime);
-    // Navigate to results page
-    navigate('/results');
+    
+    // Create URL search parameters
+    const params = new URLSearchParams();
+    if (searchTerm) params.set('search', searchTerm);
+    if (zipCode) params.set('zip', zipCode);
+    if (startTime) params.set('startTime', startTime);
+    if (endTime) params.set('endTime', endTime);
+    
+    // Navigate to results page with parameters
+    navigate(`/results?${params.toString()}`);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

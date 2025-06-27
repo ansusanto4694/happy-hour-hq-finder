@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { FilterSection } from '../components/FilterSection';
 import { SearchResults } from '../components/SearchResults';
 import { ResultsMap } from '../components/ResultsMap';
@@ -11,13 +11,33 @@ import { Button } from '@/components/ui/button';
 
 const Results = () => {
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [zipCode, setZipCode] = useState('');
-  const [startTime, setStartTime] = useState('');
-  const [endTime, setEndTime] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Initialize state from URL parameters
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+  const [zipCode, setZipCode] = useState(searchParams.get('zip') || '');
+  const [startTime, setStartTime] = useState(searchParams.get('startTime') || '');
+  const [endTime, setEndTime] = useState(searchParams.get('endTime') || '');
+
+  // Update state when URL parameters change
+  useEffect(() => {
+    setSearchTerm(searchParams.get('search') || '');
+    setZipCode(searchParams.get('zip') || '');
+    setStartTime(searchParams.get('startTime') || '');
+    setEndTime(searchParams.get('endTime') || '');
+  }, [searchParams]);
 
   const handleSearch = () => {
     console.log('Searching for:', searchTerm, 'in zip code:', zipCode, 'start time:', startTime, 'end time:', endTime);
+    
+    // Update URL parameters
+    const params = new URLSearchParams();
+    if (searchTerm) params.set('search', searchTerm);
+    if (zipCode) params.set('zip', zipCode);
+    if (startTime) params.set('startTime', startTime);
+    if (endTime) params.set('endTime', endTime);
+    
+    setSearchParams(params);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
