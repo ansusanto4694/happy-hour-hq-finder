@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -57,27 +56,39 @@ const isHappyHourInTimeRange = (happyHours: any[], startTime: string, endTime: s
   const today = new Date().getDay();
   const adjustedToday = today === 0 ? 6 : today - 1;
   
-  const todaysHour = happyHours.find(hh => hh.day_of_week === adjustedToday);
-  if (!todaysHour) return false; // No happy hour today
+  // Get ALL happy hours for today (not just the first one)
+  const todaysHours = happyHours.filter(hh => hh.day_of_week === adjustedToday);
+  if (todaysHours.length === 0) return false; // No happy hours today
 
   const searchStart = convertTo24Hour(startTime);
   const searchEnd = convertTo24Hour(endTime);
-  const happyStart = todaysHour.happy_hour_start;
-  const happyEnd = todaysHour.happy_hour_end;
 
-  // Check for overlap: happy hour overlaps with search time if:
-  // happy hour start < search end AND happy hour end > search start
-  const hasOverlap = happyStart < searchEnd && happyEnd > searchStart;
+  // Check if ANY of today's happy hours overlap with the search time
+  const hasAnyOverlap = todaysHours.some(todaysHour => {
+    const happyStart = todaysHour.happy_hour_start;
+    const happyEnd = todaysHour.happy_hour_end;
+    
+    // Check for overlap: happy hour overlaps with search time if:
+    // happy hour start < search end AND happy hour end > search start
+    const hasOverlap = happyStart < searchEnd && happyEnd > searchStart;
 
-  console.log('Comparing times for restaurant:', {
-    searchStart,
-    searchEnd,
-    happyStart,
-    happyEnd,
-    hasOverlap
+    console.log('Checking happy hour period:', {
+      searchStart,
+      searchEnd,
+      happyStart,
+      happyEnd,
+      hasOverlap
+    });
+
+    return hasOverlap;
   });
 
-  return hasOverlap;
+  console.log('Final result for restaurant:', {
+    todaysHoursCount: todaysHours.length,
+    hasAnyOverlap
+  });
+
+  return hasAnyOverlap;
 };
 
 interface SearchResultsProps {
