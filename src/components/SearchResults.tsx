@@ -38,12 +38,14 @@ const getTodaysHappyHour = (happyHours: any[]): string => {
 const convertTo24Hour = (time12h: string): string => {
   const [time, modifier] = time12h.split(' ');
   let [hours, minutes] = time.split(':');
-  if (hours === '12') {
+  
+  // Convert to 24-hour format
+  if (modifier === 'AM' && hours === '12') {
     hours = '00';
-  }
-  if (modifier === 'PM') {
+  } else if (modifier === 'PM' && hours !== '12') {
     hours = (parseInt(hours, 10) + 12).toString();
   }
+  
   return `${hours.padStart(2, '0')}:${minutes}:00`;
 };
 
@@ -61,6 +63,14 @@ const isHappyHourInTimeRange = (happyHours: any[], startTime: string, endTime: s
   const searchEnd = convertTo24Hour(endTime);
   const happyStart = todaysHour.happy_hour_start;
   const happyEnd = todaysHour.happy_hour_end;
+
+  console.log('Comparing times for restaurant:', {
+    searchStart,
+    searchEnd,
+    happyStart,
+    happyEnd,
+    result: happyStart >= searchStart && happyEnd <= searchEnd
+  });
 
   // Check if the restaurant's happy hour falls within the search time range
   // Happy hour start must be >= search start AND happy hour end must be <= search end
