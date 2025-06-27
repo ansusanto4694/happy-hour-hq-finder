@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
@@ -52,7 +51,7 @@ export const RestaurantEventsFeed: React.FC<RestaurantEventsFeedProps> = ({ rest
     queryKey: ['restaurant-events', restaurantId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('restaurant_events')
+        .from('merchant_events')
         .select('*')
         .eq('restaurant_id', restaurantId)
         .order('created_at', { ascending: false });

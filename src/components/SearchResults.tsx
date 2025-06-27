@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -42,10 +41,10 @@ export const SearchResults = () => {
     queryKey: ['restaurants-with-happy-hours'],
     queryFn: async () => {
       const { data: restaurantsData, error: restaurantsError } = await supabase
-        .from('restaurants')
+        .from('Merchant')
         .select(`
           *,
-          restaurant_happy_hour (
+          merchant_happy_hour (
             day_of_week,
             happy_hour_start,
             happy_hour_end
@@ -136,7 +135,7 @@ export const SearchResults = () => {
                     </div>
                     
                     <Badge variant="secondary" className="ml-2 flex-shrink-0">
-                      {getTodaysHappyHour(restaurant.restaurant_happy_hour || [])}
+                      {getTodaysHappyHour(restaurant.merchant_happy_hour || [])}
                     </Badge>
                   </div>
                 </div>

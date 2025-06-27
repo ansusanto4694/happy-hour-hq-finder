@@ -19,10 +19,10 @@ const RestaurantProfile = () => {
       if (isNaN(restaurantId)) throw new Error('Invalid restaurant ID');
       
       const { data, error } = await supabase
-        .from('restaurants')
+        .from('Merchant')
         .select(`
           *,
-          restaurant_happy_hour (
+          merchant_happy_hour (
             id,
             day_of_week,
             happy_hour_start,

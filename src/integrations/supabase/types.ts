@@ -45,91 +45,12 @@ export type Database = {
             foreignKeyName: "happy_hour_deals_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
-            referencedRelation: "restaurants"
+            referencedRelation: "Merchant"
             referencedColumns: ["id"]
           },
         ]
       }
-      restaurant_events: {
-        Row: {
-          created_at: string
-          description: string | null
-          event_date: string | null
-          id: number
-          image_url: string | null
-          restaurant_id: number
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          event_date?: string | null
-          id?: number
-          image_url?: string | null
-          restaurant_id: number
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          event_date?: string | null
-          id?: number
-          image_url?: string | null
-          restaurant_id?: number
-          title?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "restaurant_events_restaurant_id_fkey"
-            columns: ["restaurant_id"]
-            isOneToOne: false
-            referencedRelation: "restaurants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      restaurant_happy_hour: {
-        Row: {
-          created_at: string
-          day_of_week: number
-          happy_hour_end: string
-          happy_hour_start: string
-          id: string
-          store_id: number
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          day_of_week: number
-          happy_hour_end: string
-          happy_hour_start: string
-          id?: string
-          store_id: number
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          day_of_week?: number
-          happy_hour_end?: string
-          happy_hour_start?: string
-          id?: string
-          store_id?: number
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "restaurant_happy_hour_store_id_fkey"
-            columns: ["store_id"]
-            isOneToOne: false
-            referencedRelation: "restaurants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      restaurants: {
+      Merchant: {
         Row: {
           city: string
           created_at: string
@@ -167,6 +88,85 @@ export type Database = {
           zip_code?: string
         }
         Relationships: []
+      }
+      merchant_events: {
+        Row: {
+          created_at: string
+          description: string | null
+          event_date: string | null
+          id: number
+          image_url: string | null
+          restaurant_id: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          event_date?: string | null
+          id?: number
+          image_url?: string | null
+          restaurant_id: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          event_date?: string | null
+          id?: number
+          image_url?: string | null
+          restaurant_id?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_events_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "Merchant"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_happy_hour: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          happy_hour_end: string
+          happy_hour_start: string
+          id: string
+          store_id: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          happy_hour_end: string
+          happy_hour_start: string
+          id?: string
+          store_id: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          happy_hour_end?: string
+          happy_hour_start?: string
+          id?: string
+          store_id?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_happy_hour_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "Merchant"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

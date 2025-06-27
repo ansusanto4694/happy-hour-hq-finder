@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -18,7 +17,7 @@ interface Restaurant {
   state: string;
   zip_code: string;
   phone_number?: string | null;
-  restaurant_happy_hour: Array<{
+  merchant_happy_hour: Array<{
     id: string;
     day_of_week: number;
     happy_hour_start: string;
@@ -50,7 +49,7 @@ export const RestaurantProfileEditor: React.FC<RestaurantProfileEditorProps> = (
   });
 
   const [happyHours, setHappyHours] = useState(
-    restaurant.restaurant_happy_hour.map(hh => ({
+    restaurant.merchant_happy_hour.map(hh => ({
       id: hh.id,
       day_of_week: hh.day_of_week,
       happy_hour_start: hh.happy_hour_start,
@@ -61,7 +60,7 @@ export const RestaurantProfileEditor: React.FC<RestaurantProfileEditorProps> = (
   const updateRestaurantMutation = useMutation({
     mutationFn: async (updates: typeof formData) => {
       const { error } = await supabase
-        .from('restaurants')
+        .from('Merchant')
         .update(updates)
         .eq('id', restaurant.id);
       
@@ -88,14 +87,14 @@ export const RestaurantProfileEditor: React.FC<RestaurantProfileEditorProps> = (
     mutationFn: async (updates: typeof happyHours) => {
       // First, delete existing happy hours
       await supabase
-        .from('restaurant_happy_hour')
+        .from('merchant_happy_hour')
         .delete()
         .eq('store_id', restaurant.id);
 
       // Then insert the updated ones
       if (updates.length > 0) {
         const { error } = await supabase
-          .from('restaurant_happy_hour')
+          .from('merchant_happy_hour')
           .insert(
             updates.map(hh => ({
               store_id: restaurant.id,

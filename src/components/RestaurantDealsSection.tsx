@@ -13,7 +13,7 @@ interface Restaurant {
   state: string;
   zip_code: string;
   phone_number?: string | null;
-  restaurant_happy_hour: Array<{
+  merchant_happy_hour: Array<{
     id: string;
     day_of_week: number;
     happy_hour_start: string;

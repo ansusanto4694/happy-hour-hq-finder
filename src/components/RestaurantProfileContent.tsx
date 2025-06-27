@@ -16,7 +16,7 @@ interface Restaurant {
   state: string;
   zip_code: string;
   phone_number?: string | null;
-  restaurant_happy_hour: Array<{
+  merchant_happy_hour: Array<{
     day_of_week: number;
     happy_hour_start: string;
     happy_hour_end: string;
@@ -28,10 +28,10 @@ interface RestaurantProfileContentProps {
 }
 
 export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> = ({ restaurant }) => {
-  // Transform the restaurant_happy_hour data to include IDs for the editor
+  // Transform the merchant_happy_hour data to include IDs for the editor
   const restaurantWithIds = {
     ...restaurant,
-    restaurant_happy_hour: restaurant.restaurant_happy_hour.map(hh => ({
+    merchant_happy_hour: restaurant.merchant_happy_hour.map(hh => ({
       ...hh,
       id: `${restaurant.id}-${hh.day_of_week}`, // Create a unique ID
     }))
@@ -58,7 +58,7 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
                   phoneNumber={restaurant.phone_number}
                 />
 
-                <RestaurantHappyHours happyHours={restaurant.restaurant_happy_hour || []} />
+                <RestaurantHappyHours happyHours={restaurant.merchant_happy_hour || []} />
               </div>
 
               {/* Right Column - Restaurant Profile Editor and Happy Hour Deals */}
