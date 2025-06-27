@@ -124,7 +124,7 @@ const Results = () => {
           
           {/* Search results - middle */}
           <div className="xl:col-span-6 order-2">
-            <SearchResults />
+            <SearchResults startTime={startTime} endTime={endTime} />
           </div>
           
           {/* Map - right */}

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -34,11 +35,48 @@ const getTodaysHappyHour = (happyHours: any[]): string => {
   return 'No Happy Hour Today';
 };
 
-export const SearchResults = () => {
+// Helper function to convert 12-hour time to 24-hour time for comparison
+const convertTo24Hour = (time12h: string): string => {
+  const [time, modifier] = time12h.split(' ');
+  let [hours, minutes] = time.split(':');
+  if (hours === '12') {
+    hours = '00';
+  }
+  if (modifier === 'PM') {
+    hours = (parseInt(hours, 10) + 12).toString();
+  }
+  return `${hours.padStart(2, '0')}:${minutes}:00`;
+};
+
+// Helper function to check if restaurant's happy hour overlaps with search time
+const isHappyHourInTimeRange = (happyHours: any[], startTime: string, endTime: string): boolean => {
+  if (!startTime || !endTime) return true; // If no time filter, show all
+
+  const today = new Date().getDay();
+  const adjustedToday = today === 0 ? 6 : today - 1;
+  
+  const todaysHour = happyHours.find(hh => hh.day_of_week === adjustedToday);
+  if (!todaysHour) return false; // No happy hour today
+
+  const searchStart = convertTo24Hour(startTime);
+  const searchEnd = convertTo24Hour(endTime);
+  const happyStart = todaysHour.happy_hour_start;
+  const happyEnd = todaysHour.happy_hour_end;
+
+  // Check if the happy hour overlaps with the search time range
+  return happyStart <= searchEnd && happyEnd >= searchStart;
+};
+
+interface SearchResultsProps {
+  startTime?: string;
+  endTime?: string;
+}
+
+export const SearchResults: React.FC<SearchResultsProps> = ({ startTime, endTime }) => {
   const navigate = useNavigate();
 
   const { data: restaurants, isLoading, error } = useQuery({
-    queryKey: ['restaurants-with-happy-hours'],
+    queryKey: ['restaurants-with-happy-hours', startTime, endTime],
     queryFn: async () => {
       const { data: restaurantsData, error: restaurantsError } = await supabase
         .from('Merchant')
@@ -56,7 +94,12 @@ export const SearchResults = () => {
         throw restaurantsError;
       }
 
-      return restaurantsData;
+      // Filter restaurants based on time range if provided
+      const filteredRestaurants = restaurantsData?.filter(restaurant => 
+        isHappyHourInTimeRange(restaurant.merchant_happy_hour || [], startTime || '', endTime || '')
+      ) || [];
+
+      return filteredRestaurants;
     },
   });
 
@@ -85,7 +128,12 @@ export const SearchResults = () => {
     return (
       <div className="space-y-4">
         <h2 className="text-xl font-semibold text-gray-900">No restaurants found</h2>
-        <p className="text-gray-600">No restaurants are available at this time.</p>
+        <p className="text-gray-600">
+          {startTime && endTime 
+            ? `No restaurants found with happy hours between ${startTime} and ${endTime} today.`
+            : 'No restaurants are available at this time.'
+          }
+        </p>
       </div>
     );
   }
@@ -95,6 +143,11 @@ export const SearchResults = () => {
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold text-gray-900">
           Happy Hour Results
+          {startTime && endTime && (
+            <span className="text-base font-normal text-gray-600 ml-2">
+              ({startTime} - {endTime} today)
+            </span>
+          )}
         </h2>
         <p className="text-gray-500">
           {restaurants.length} results found
