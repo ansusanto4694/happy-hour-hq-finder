@@ -48,7 +48,7 @@ const convertTo24Hour = (time12h: string): string => {
   return `${hours.padStart(2, '0')}:${minutes}:00`;
 };
 
-// Helper function to check if restaurant's happy hour overlaps with search time
+// Helper function to check if restaurant's happy hour contains the search time range
 const isHappyHourInTimeRange = (happyHours: any[], startTime: string, endTime: string): boolean => {
   if (!startTime || !endTime) return true; // If no time filter, show all
 
@@ -63,8 +63,9 @@ const isHappyHourInTimeRange = (happyHours: any[], startTime: string, endTime: s
   const happyStart = todaysHour.happy_hour_start;
   const happyEnd = todaysHour.happy_hour_end;
 
-  // Check if the happy hour overlaps with the search time range
-  return happyStart <= searchEnd && happyEnd >= searchStart;
+  // Check if the happy hour completely contains the search time range
+  // Happy hour start must be <= search start AND happy hour end must be >= search end
+  return happyStart <= searchStart && happyEnd >= searchEnd;
 };
 
 interface SearchResultsProps {
@@ -130,7 +131,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({ startTime, endTime
         <h2 className="text-xl font-semibold text-gray-900">No restaurants found</h2>
         <p className="text-gray-600">
           {startTime && endTime 
-            ? `No restaurants found with happy hours between ${startTime} and ${endTime} today.`
+            ? `No restaurants found with happy hours that cover the entire ${startTime} - ${endTime} time range today.`
             : 'No restaurants are available at this time.'
           }
         </p>
