@@ -136,19 +136,20 @@ const Results = () => {
 
       {/* Main content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 min-h-[calc(100vh-200px)]">
-          {/* Filters sidebar - left */}
-          <div className="xl:col-span-3 order-1">
-            <FilterSection />
-          </div>
-          
-          {/* Search results - middle */}
-          <div className="xl:col-span-6 order-2">
+        {/* Filters section moved to top */}
+        <div className="mb-6">
+          <FilterSection />
+        </div>
+        
+        {/* Results and Map layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-[calc(100vh-300px)]">
+          {/* Search results - left side */}
+          <div className="order-1">
             <SearchResults startTime={startTime} endTime={endTime} zipCode={zipCode} />
           </div>
           
-          {/* Map - right */}
-          <div className="xl:col-span-3 order-3">
+          {/* Map - right side, expanded */}
+          <div className="order-2">
             <ResultsMap />
           </div>
         </div>
