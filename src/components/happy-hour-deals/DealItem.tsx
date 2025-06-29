@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { DraggableProvided, DraggableStateSnapshot } from 'react-beautiful-dnd';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,11 @@ export const DealItem: React.FC<DealItemProps> = ({
     if (confirm('Are you sure you want to delete this deal?')) {
       onDelete(deal.id);
     }
+  };
+
+  const preprocessMarkdown = (text: string) => {
+    // Convert single line breaks to double line breaks for proper markdown rendering
+    return text.replace(/\n(?!\n)/g, '\n\n');
   };
 
   return (
@@ -63,14 +69,14 @@ export const DealItem: React.FC<DealItemProps> = ({
             <div className="text-sm text-gray-600 prose prose-sm max-w-none">
               <ReactMarkdown
                 components={{
-                  p: ({ children }) => <span>{children}</span>,
+                  p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
                   strong: ({ children }) => <strong className="font-bold">{children}</strong>,
                   em: ({ children }) => <em className="italic">{children}</em>,
                   u: ({ children }) => <u className="underline">{children}</u>,
                   s: ({ children }) => <s className="line-through">{children}</s>,
                 }}
               >
-                {deal.deal_description}
+                {preprocessMarkdown(deal.deal_description)}
               </ReactMarkdown>
             </div>
           )}

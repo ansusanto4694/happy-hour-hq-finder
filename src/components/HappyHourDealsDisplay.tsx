@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
@@ -52,6 +53,11 @@ export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ re
     );
   }
 
+  const preprocessMarkdown = (text: string) => {
+    // Convert single line breaks to double line breaks for proper markdown rendering
+    return text.replace(/\n(?!\n)/g, '\n\n');
+  };
+
   return (
     <div className="space-y-3">
       {deals.map((deal) => (
@@ -63,14 +69,14 @@ export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ re
                 <div className="text-gray-700 text-sm prose prose-sm max-w-none">
                   <ReactMarkdown
                     components={{
-                      p: ({ children }) => <span>{children}</span>,
+                      p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
                       strong: ({ children }) => <strong className="font-bold">{children}</strong>,
                       em: ({ children }) => <em className="italic">{children}</em>,
                       u: ({ children }) => <u className="underline">{children}</u>,
                       s: ({ children }) => <s className="line-through">{children}</s>,
                     }}
                   >
-                    {deal.deal_description}
+                    {preprocessMarkdown(deal.deal_description)}
                   </ReactMarkdown>
                 </div>
               )}
