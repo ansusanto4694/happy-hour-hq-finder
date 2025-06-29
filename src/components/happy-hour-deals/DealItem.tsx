@@ -1,10 +1,10 @@
-
 import React from 'react';
 import { DraggableProvided, DraggableStateSnapshot } from 'react-beautiful-dnd';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Edit, Trash2, GripVertical } from 'lucide-react';
 import { HappyHourDeal } from './types';
+import ReactMarkdown from 'react-markdown';
 
 interface DealItemProps {
   deal: HappyHourDeal;
@@ -60,7 +60,19 @@ export const DealItem: React.FC<DealItemProps> = ({
             </Badge>
           </div>
           {deal.deal_description && (
-            <p className="text-sm text-gray-600 whitespace-pre-line">{deal.deal_description}</p>
+            <div className="text-sm text-gray-600 prose prose-sm max-w-none">
+              <ReactMarkdown
+                components={{
+                  p: ({ children }) => <span>{children}</span>,
+                  strong: ({ children }) => <strong className="font-bold">{children}</strong>,
+                  em: ({ children }) => <em className="italic">{children}</em>,
+                  u: ({ children }) => <u className="underline">{children}</u>,
+                  s: ({ children }) => <s className="line-through">{children}</s>,
+                }}
+              >
+                {deal.deal_description}
+              </ReactMarkdown>
+            </div>
           )}
         </div>
         

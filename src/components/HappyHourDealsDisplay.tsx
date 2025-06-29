@@ -1,8 +1,8 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
+import ReactMarkdown from 'react-markdown';
 
 interface HappyHourDealsDisplayProps {
   restaurantId: number;
@@ -60,7 +60,19 @@ export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ re
             <div className="flex-1">
               <h3 className="font-semibold text-gray-900 mb-1">{deal.deal_title}</h3>
               {deal.deal_description && (
-                <p className="text-gray-700 text-sm whitespace-pre-line">{deal.deal_description}</p>
+                <div className="text-gray-700 text-sm prose prose-sm max-w-none">
+                  <ReactMarkdown
+                    components={{
+                      p: ({ children }) => <span>{children}</span>,
+                      strong: ({ children }) => <strong className="font-bold">{children}</strong>,
+                      em: ({ children }) => <em className="italic">{children}</em>,
+                      u: ({ children }) => <u className="underline">{children}</u>,
+                      s: ({ children }) => <s className="line-through">{children}</s>,
+                    }}
+                  >
+                    {deal.deal_description}
+                  </ReactMarkdown>
+                </div>
               )}
             </div>
             <Badge variant="secondary" className="ml-3 bg-orange-100 text-orange-800">
