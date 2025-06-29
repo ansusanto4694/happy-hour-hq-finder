@@ -29,7 +29,7 @@ export const RestaurantDealsSection: React.FC<RestaurantDealsSectionProps> = ({ 
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-lg font-semibold text-gray-900">Happy Hour Deals</h3>
+        <h3 className="text-lg font-semibold text-gray-900">Happy Hour Menu</h3>
         <HappyHourDealsManager restaurantId={restaurantId} />
       </div>
       

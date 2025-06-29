@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
@@ -48,7 +47,7 @@ export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ re
   if (!deals || deals.length === 0) {
     return (
       <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-        <p className="text-gray-500 italic">No happy hour deals available at the moment.</p>
+        <p className="text-gray-500 italic">No happy hour menu items available at the moment.</p>
       </div>
     );
   }

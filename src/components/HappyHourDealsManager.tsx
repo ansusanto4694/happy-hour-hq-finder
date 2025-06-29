@@ -84,12 +84,12 @@ export const HappyHourDealsManager: React.FC<HappyHourDealsManagerProps> = ({ re
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="ml-auto">
           <Edit className="w-4 h-4 mr-2" />
-          Edit Deals
+          Edit Menu
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Manage Happy Hour Deals</DialogTitle>
+          <DialogTitle>Manage Happy Hour Menu</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6">
@@ -103,7 +103,7 @@ export const HappyHourDealsManager: React.FC<HappyHourDealsManagerProps> = ({ re
           />
 
           <div>
-            <h3 className="font-semibold mb-3">Current Deals (Drag to reorder)</h3>
+            <h3 className="font-semibold mb-3">Current Menu Items (Drag to reorder)</h3>
             <DealsList
               deals={deals || []}
               isLoading={isLoading}
