@@ -44,9 +44,15 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
         {/* Restaurant Basic Info Card */}
         <Card className="bg-white shadow-lg">
           <CardContent className="p-8">
-            {/* Header with Restaurant Name and Edit Button */}
+            {/* Header with Restaurant Name, Logo and Edit Button */}
             <div className="flex items-center justify-between mb-8">
-              <h1 className="text-3xl font-bold text-gray-900">{restaurant.restaurant_name}</h1>
+              <div className="flex items-center space-x-4">
+                {/* Logo Placeholder */}
+                <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <span className="text-gray-400 text-xs font-medium">LOGO</span>
+                </div>
+                <h1 className="text-3xl font-bold text-gray-900">{restaurant.restaurant_name}</h1>
+              </div>
               <RestaurantProfileEditor restaurant={restaurantWithIds} />
             </div>
 
