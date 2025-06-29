@@ -55,6 +55,7 @@ export type Database = {
           city: string
           created_at: string
           id: number
+          merchant_type: string | null
           phone_number: string | null
           restaurant_name: string
           state: string
@@ -67,6 +68,7 @@ export type Database = {
           city: string
           created_at?: string
           id?: number
+          merchant_type?: string | null
           phone_number?: string | null
           restaurant_name: string
           state: string
@@ -79,6 +81,7 @@ export type Database = {
           city?: string
           created_at?: string
           id?: number
+          merchant_type?: string | null
           phone_number?: string | null
           restaurant_name?: string
           state?: string
