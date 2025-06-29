@@ -4,11 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 
-interface RestaurantHeaderProps {
-  restaurantName?: string;
-}
-
-export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurantName }) => {
+export const RestaurantHeader: React.FC = () => {
   const navigate = useNavigate();
   
   const handleBackToResults = () => {
@@ -31,22 +27,12 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ restaurantNa
             <ArrowLeft className="w-4 h-4" />
             <span>Back to Results</span>
           </Button>
-          
-          <div className="flex items-center space-x-3">
-            {restaurantName && (
-              <div className="flex-shrink-0">
-                <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center">
-                  <span className="text-gray-500 text-xs">Logo</span>
-                </div>
-              </div>
-            )}
-            <h1 
-              className="text-2xl font-bold text-gray-900 cursor-pointer hover:text-orange-500 transition-colors"
-              onClick={handleGoHome}
-            >
-              {restaurantName || 'Happy.Hour'}
-            </h1>
-          </div>
+          <h1 
+            className="text-2xl font-bold text-gray-900 cursor-pointer hover:text-orange-500 transition-colors"
+            onClick={handleGoHome}
+          >
+            Happy.Hour
+          </h1>
         </div>
       </div>
     </div>
