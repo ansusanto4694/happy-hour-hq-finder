@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
@@ -61,18 +60,17 @@ export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ re
             <div className="flex-1">
               <h3 className="font-semibold text-gray-900 mb-1">{deal.deal_title}</h3>
               {deal.deal_description && (
-                <div className="text-gray-700 text-sm leading-tight">
+                <div className="text-gray-700 text-sm prose prose-sm max-w-none">
                   <ReactMarkdown
                     components={{
-                      p: ({ children }) => <p className="mb-0 leading-tight">{children}</p>,
+                      p: ({ children }) => <p className="mb-0 last:mb-0">{children}</p>,
                       strong: ({ children }) => <strong className="font-bold">{children}</strong>,
                       em: ({ children }) => <em className="italic">{children}</em>,
                       u: ({ children }) => <u className="underline">{children}</u>,
                       s: ({ children }) => <s className="line-through">{children}</s>,
-                      h1: ({ children }) => <h1 className="text-lg font-bold mb-1 leading-tight">{children}</h1>,
-                      h2: ({ children }) => <h2 className="text-base font-bold mb-1 leading-tight">{children}</h2>,
+                      h1: ({ children }) => <h1 className="text-lg font-bold mb-2">{children}</h1>,
+                      h2: ({ children }) => <h2 className="text-base font-bold mb-1">{children}</h2>,
                       small: ({ children }) => <small className="text-xs">{children}</small>,
-                      br: () => <br />,
                     }}
                   >
                     {deal.deal_description}
