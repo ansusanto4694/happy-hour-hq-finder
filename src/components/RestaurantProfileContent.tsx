@@ -57,10 +57,10 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
               <RestaurantProfileEditor restaurant={restaurantWithIds} />
             </div>
 
-            {/* Two Column Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Left Column */}
-              <div className="space-y-6">
+            {/* Two Column Layout with adjusted widths */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Left Column - Narrower */}
+              <div className="lg:col-span-1 space-y-6">
                 <RestaurantContactInfo
                   streetAddress={restaurant.street_address}
                   streetAddressLine2={restaurant.street_address_line_2}
@@ -74,8 +74,10 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
                 <RestaurantHappyHours happyHours={restaurant.merchant_happy_hour || []} />
               </div>
 
-              {/* Right Column - Happy Hour Deals aligned with Address */}
-              <RestaurantDealsSection restaurantId={restaurant.id} restaurant={restaurantWithIds} />
+              {/* Right Column - Wider for Happy Hour Deals */}
+              <div className="lg:col-span-2">
+                <RestaurantDealsSection restaurantId={restaurant.id} restaurant={restaurantWithIds} />
+              </div>
             </div>
           </CardContent>
         </Card>
