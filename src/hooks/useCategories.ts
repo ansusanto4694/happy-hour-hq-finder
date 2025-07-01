@@ -26,7 +26,12 @@ export const useCategories = () => {
         throw error;
       }
 
-      return data as Category[];
+      // Convert string ids to numbers since the database now uses integer ids
+      return data.map(category => ({
+        ...category,
+        id: parseInt(category.id.toString()),
+        parent_id: category.parent_id ? parseInt(category.parent_id.toString()) : null
+      })) as Category[];
     },
   });
 };

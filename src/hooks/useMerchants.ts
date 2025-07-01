@@ -29,11 +29,14 @@ export const useMerchants = (categoryIds?: number[]) => {
 
       // If category filters are applied, filter by them
       if (categoryIds && categoryIds.length > 0) {
+        // Convert number array to string array for Supabase query
+        const categoryIdsAsStrings = categoryIds.map(id => id.toString());
+        
         // First get merchant IDs that have the selected categories
         const { data: merchantIds, error: merchantIdsError } = await supabase
           .from('merchant_categories')
           .select('merchant_id')
-          .in('category_id', categoryIds);
+          .in('category_id', categoryIdsAsStrings);
 
         if (merchantIdsError) {
           console.error('Error fetching merchant IDs:', merchantIdsError);
