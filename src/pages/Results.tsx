@@ -35,7 +35,7 @@ const Results = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto pl-2 pr-4 py-6 space-y-6">
+      <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
         {/* Category Filters at Top */}
         <div className="bg-white rounded-lg shadow-sm p-6">
           <CategoryFilter
