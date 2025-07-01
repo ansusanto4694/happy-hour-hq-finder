@@ -19,36 +19,36 @@ const Results = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Filters Sidebar */}
+      <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+        {/* Category Filters at Top */}
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <CategoryFilter
+            selectedCategories={selectedCategories}
+            onCategoryChange={setSelectedCategories}
+          />
+        </div>
+
+        {/* Results and Map Side by Side */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Results List - Left Side */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm p-6 space-y-6">
-              <CategoryFilter
-                selectedCategories={selectedCategories}
-                onCategoryChange={setSelectedCategories}
-              />
-              <FilterSection />
-            </div>
+            {isLoading ? (
+              <div className="space-y-4">
+                <h2 className="text-xl font-semibold text-gray-900">Loading restaurants...</h2>
+              </div>
+            ) : error ? (
+              <div className="space-y-4">
+                <h2 className="text-xl font-semibold text-gray-900">Error loading restaurants</h2>
+                <p className="text-red-600">Please try again later.</p>
+              </div>
+            ) : (
+              <SearchResults />
+            )}
           </div>
 
-          {/* Results and Map */}
-          <div className="lg:col-span-3">
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-              {/* Results List */}
-              <div className="xl:col-span-1">
-                <SearchResults 
-                  merchants={merchants || []} 
-                  isLoading={isLoading} 
-                  error={error} 
-                />
-              </div>
-
-              {/* Map */}
-              <div className="xl:col-span-1">
-                <ResultsMap merchants={merchants || []} />
-              </div>
-            </div>
+          {/* Map - Right Side */}
+          <div className="lg:col-span-1">
+            <ResultsMap />
           </div>
         </div>
       </div>
