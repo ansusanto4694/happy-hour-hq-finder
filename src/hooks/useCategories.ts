@@ -3,10 +3,10 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 export type Category = {
-  id: string;
+  id: number;
   name: string;
   slug: string;
-  parent_id: string | null;
+  parent_id: number | null;
   description: string | null;
   created_at: string;
   updated_at: string;
@@ -38,7 +38,7 @@ export const useCategoriesHierarchy = () => {
     return categories?.filter(cat => cat.parent_id === null) || [];
   };
 
-  const getSubCategories = (parentId: string) => {
+  const getSubCategories = (parentId: number) => {
     return categories?.filter(cat => cat.parent_id === parentId) || [];
   };
 

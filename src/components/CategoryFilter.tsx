@@ -7,8 +7,8 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useCategoriesHierarchy } from '@/hooks/useCategories';
 
 interface CategoryFilterProps {
-  selectedCategories: string[];
-  onCategoryChange: (categories: string[]) => void;
+  selectedCategories: number[];
+  onCategoryChange: (categories: number[]) => void;
 }
 
 export const CategoryFilter: React.FC<CategoryFilterProps> = ({
@@ -16,9 +16,9 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
   onCategoryChange,
 }) => {
   const { getParentCategories, getSubCategories, isLoading } = useCategoriesHierarchy();
-  const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
+  const [expandedCategories, setExpandedCategories] = useState<number[]>([]);
 
-  const toggleCategory = (categoryId: string) => {
+  const toggleCategory = (categoryId: number) => {
     const newSelected = selectedCategories.includes(categoryId)
       ? selectedCategories.filter(id => id !== categoryId)
       : [...selectedCategories, categoryId];
@@ -26,7 +26,7 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
     onCategoryChange(newSelected);
   };
 
-  const toggleExpanded = (categoryId: string) => {
+  const toggleExpanded = (categoryId: number) => {
     setExpandedCategories(prev =>
       prev.includes(categoryId)
         ? prev.filter(id => id !== categoryId)
@@ -45,9 +45,11 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
   const parentCategories = getParentCategories();
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-base">Filter by Category</h3>
+        <div className="flex items-center h-8">
+          <h3 className="font-semibold text-base">Filter by Category</h3>
+        </div>
         {selectedCategories.length > 0 && (
           <Button variant="outline" size="sm" onClick={clearAllFilters}>
             Clear All

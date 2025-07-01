@@ -9,7 +9,7 @@ import { ResultsMap } from '@/components/ResultsMap';
 import { useMerchants } from '@/hooks/useMerchants';
 
 const Results = () => {
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
   const { data: merchants, isLoading, error } = useMerchants(selectedCategories);
   const navigate = useNavigate();
 
@@ -37,7 +37,7 @@ const Results = () => {
 
       <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
         {/* Category Filters at Top */}
-        <div className="bg-white rounded-lg shadow-sm p-4">
+        <div className="bg-white rounded-lg shadow-sm p-3">
           <CategoryFilter
             selectedCategories={selectedCategories}
             onCategoryChange={setSelectedCategories}
