@@ -9,6 +9,44 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      categories: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          parent_id: string | null
+          slug: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          parent_id?: string | null
+          slug: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          parent_id?: string | null
+          slug?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       happy_hour_deals: {
         Row: {
           active: boolean
@@ -91,6 +129,42 @@ export type Database = {
           zip_code?: string
         }
         Relationships: []
+      }
+      merchant_categories: {
+        Row: {
+          category_id: string
+          created_at: string | null
+          id: string
+          merchant_id: number
+        }
+        Insert: {
+          category_id: string
+          created_at?: string | null
+          id?: string
+          merchant_id: number
+        }
+        Update: {
+          category_id?: string
+          created_at?: string | null
+          id?: string
+          merchant_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_categories_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "Merchant"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       merchant_events: {
         Row: {
