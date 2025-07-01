@@ -70,23 +70,23 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
         </div>
       )}
 
-      <div className="space-y-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
         {parentCategories.map(parent => {
           const subCategories = getSubCategories(parent.id);
           const isExpanded = expandedCategories.includes(parent.id);
           const hasSubCategories = subCategories.length > 0;
 
           return (
-            <div key={parent.id} className="border rounded-lg p-3">
-              <div className="flex items-center justify-between">
-                <label className="flex items-center space-x-2 cursor-pointer">
+            <div key={parent.id} className="border rounded-lg p-3 bg-white">
+              <div className="flex items-center justify-between mb-2">
+                <label className="flex items-center space-x-2 cursor-pointer flex-1">
                   <input
                     type="checkbox"
                     checked={selectedCategories.includes(parent.id)}
                     onChange={() => toggleCategory(parent.id)}
                     className="rounded"
                   />
-                  <span className="font-medium">{parent.name}</span>
+                  <span className="font-medium text-sm">{parent.name}</span>
                 </label>
                 
                 {hasSubCategories && (
@@ -94,24 +94,25 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
                     variant="ghost"
                     size="sm"
                     onClick={() => toggleExpanded(parent.id)}
+                    className="h-6 w-6 p-0"
                   >
-                    {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                    {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                   </Button>
                 )}
               </div>
 
               {hasSubCategories && (
                 <Collapsible open={isExpanded}>
-                  <CollapsibleContent className="mt-2 ml-6 space-y-2">
+                  <CollapsibleContent className="space-y-1">
                     {subCategories.map(sub => (
-                      <label key={sub.id} className="flex items-center space-x-2 cursor-pointer">
+                      <label key={sub.id} className="flex items-center space-x-2 cursor-pointer pl-2">
                         <input
                           type="checkbox"
                           checked={selectedCategories.includes(sub.id)}
                           onChange={() => toggleCategory(sub.id)}
                           className="rounded"
                         />
-                        <span className="text-sm">{sub.name}</span>
+                        <span className="text-xs">{sub.name}</span>
                       </label>
                     ))}
                   </CollapsibleContent>
