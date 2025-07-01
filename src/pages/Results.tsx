@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { SearchBar } from '@/components/SearchBar';
 import { SearchResults } from '@/components/SearchResults';
@@ -36,15 +37,12 @@ const Results = () => {
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
               {/* Results List */}
               <div className="xl:col-span-1">
-                <SearchResults 
-                  isLoading={isLoading} 
-                  error={error} 
-                />
+                <SearchResults />
               </div>
 
               {/* Map */}
               <div className="xl:col-span-1">
-                <ResultsMap merchants={merchants || []} />
+                <ResultsMap />
               </div>
             </div>
           </div>
