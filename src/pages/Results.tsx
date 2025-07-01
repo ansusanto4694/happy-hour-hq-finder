@@ -37,7 +37,18 @@ const Results = () => {
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
               {/* Results List */}
               <div className="xl:col-span-1">
-                <SearchResults />
+                {isLoading ? (
+                  <div className="space-y-4">
+                    <h2 className="text-xl font-semibold text-gray-900">Loading restaurants...</h2>
+                  </div>
+                ) : error ? (
+                  <div className="space-y-4">
+                    <h2 className="text-xl font-semibold text-gray-900">Error loading restaurants</h2>
+                    <p className="text-red-600">Please try again later.</p>
+                  </div>
+                ) : (
+                  <SearchResults />
+                )}
               </div>
 
               {/* Map */}
