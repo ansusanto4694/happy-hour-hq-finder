@@ -17,6 +17,7 @@ interface Restaurant {
   state: string;
   zip_code: string;
   phone_number?: string | null;
+  website?: string | null;
   merchant_happy_hour: Array<{
     id: string;
     day_of_week: number;
@@ -46,6 +47,7 @@ export const RestaurantProfileEditor: React.FC<RestaurantProfileEditorProps> = (
     state: restaurant.state,
     zip_code: restaurant.zip_code,
     phone_number: restaurant.phone_number || '',
+    website: restaurant.website || '',
   });
 
   const [happyHours, setHappyHours] = useState(
@@ -200,6 +202,16 @@ export const RestaurantProfileEditor: React.FC<RestaurantProfileEditorProps> = (
                 value={formData.phone_number}
                 onChange={(e) => handleInputChange('phone_number', e.target.value)}
                 placeholder="(555) 123-4567"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="website">Website</Label>
+              <Input
+                id="website"
+                value={formData.website}
+                onChange={(e) => handleInputChange('website', e.target.value)}
+                placeholder="https://example.com"
               />
             </div>
           </div>

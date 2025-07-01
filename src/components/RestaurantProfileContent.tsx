@@ -17,6 +17,7 @@ interface Restaurant {
   state: string;
   zip_code: string;
   phone_number?: string | null;
+  website?: string | null;
   merchant_happy_hour: Array<{
     day_of_week: number;
     happy_hour_start: string;
@@ -67,6 +68,7 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
                   state={restaurant.state}
                   zipCode={restaurant.zip_code}
                   phoneNumber={restaurant.phone_number}
+                  website={restaurant.website}
                 />
 
                 <RestaurantHappyHours happyHours={restaurant.merchant_happy_hour || []} />

@@ -100,6 +100,7 @@ export type Database = {
           street_address: string
           street_address_line_2: string | null
           updated_at: string
+          website: string | null
           zip_code: string
         }
         Insert: {
@@ -113,6 +114,7 @@ export type Database = {
           street_address: string
           street_address_line_2?: string | null
           updated_at?: string
+          website?: string | null
           zip_code: string
         }
         Update: {
@@ -126,6 +128,7 @@ export type Database = {
           street_address?: string
           street_address_line_2?: string | null
           updated_at?: string
+          website?: string | null
           zip_code?: string
         }
         Relationships: []
