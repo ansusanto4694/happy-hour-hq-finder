@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { SearchBar } from '@/components/SearchBar';
 import { SearchResults } from '@/components/SearchResults';
 import { FilterSection } from '@/components/FilterSection';
@@ -10,12 +11,27 @@ import { useMerchants } from '@/hooks/useMerchants';
 const Results = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const { data: merchants, isLoading, error } = useMerchants(selectedCategories);
+  const navigate = useNavigate();
+
+  const handleGoHome = () => {
+    navigate('/');
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <SearchBar />
+          <div className="flex items-center justify-between">
+            <h1 
+              className="text-2xl font-bold text-gray-900 cursor-pointer hover:text-orange-500 transition-colors"
+              onClick={handleGoHome}
+            >
+              Happy.Hour
+            </h1>
+            <div className="flex-1 max-w-4xl mx-8">
+              <SearchBar />
+            </div>
+          </div>
         </div>
       </div>
 
