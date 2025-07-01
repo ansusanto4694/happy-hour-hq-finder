@@ -37,6 +37,11 @@ export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ re
     },
   });
 
+  const preprocessMarkdown = (text: string) => {
+    // Preserve single line breaks by converting them to double line breaks for proper markdown rendering
+    return text.replace(/\n(?!\n)/g, '\n\n');
+  };
+
   if (isLoading) {
     return (
       <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
@@ -61,10 +66,10 @@ export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ re
             <div className="flex-1">
               <h3 className="font-semibold text-gray-900 mb-1">{deal.deal_title}</h3>
               {deal.deal_description && (
-                <div className="text-gray-700 text-sm">
+                <div className="text-gray-700 text-sm prose prose-sm max-w-none">
                   <ReactMarkdown
                     components={{
-                      p: ({ children }) => <p className="mb-0 leading-normal">{children}</p>,
+                      p: ({ children }) => <p className="mb-2 last:mb-0 leading-normal">{children}</p>,
                       strong: ({ children }) => <strong className="font-bold">{children}</strong>,
                       em: ({ children }) => <em className="italic">{children}</em>,
                       u: ({ children }) => <u className="underline">{children}</u>,
@@ -77,7 +82,7 @@ export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ re
                     remarkPlugins={[]}
                     rehypePlugins={[]}
                   >
-                    {deal.deal_description.replace(/\n/g, '  \n')}
+                    {preprocessMarkdown(deal.deal_description)}
                   </ReactMarkdown>
                 </div>
               )}

@@ -31,7 +31,7 @@ export const DealItem: React.FC<DealItemProps> = ({
   };
 
   const preprocessMarkdown = (text: string) => {
-    // Convert single line breaks to double line breaks for proper markdown rendering
+    // Preserve single line breaks by converting them to double line breaks for proper markdown rendering
     return text.replace(/\n(?!\n)/g, '\n\n');
   };
 
@@ -74,6 +74,9 @@ export const DealItem: React.FC<DealItemProps> = ({
                   em: ({ children }) => <em className="italic">{children}</em>,
                   u: ({ children }) => <u className="underline">{children}</u>,
                   s: ({ children }) => <s className="line-through">{children}</s>,
+                  h1: ({ children }) => <h1 className="text-lg font-bold mb-1">{children}</h1>,
+                  h2: ({ children }) => <h2 className="text-base font-bold mb-1">{children}</h2>,
+                  small: ({ children }) => <small className="text-xs">{children}</small>,
                 }}
               >
                 {preprocessMarkdown(deal.deal_description)}
