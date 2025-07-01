@@ -29,12 +29,16 @@ export const useMerchants = (categoryIds?: string[]) => {
 
       // If category filters are applied, filter by them
       if (categoryIds && categoryIds.length > 0) {
-        query = query.in('id', 
-          supabase
-            .from('merchant_categories')
-            .select('merchant_id')
-            .in('category_id', categoryIds)
-        );
+        // First get merchant IDs that have the selected categories
+        const { data: merchantIds } = await supabase
+          .from('merchant_categories')
+          .select('merchant_id')
+          .in('category_id', categoryIds);
+
+        if (merchantIds) {
+          const ids = merchantIds.map(item => item.merchant_id);
+          query = query.in('id', ids);
+        }
       }
 
       const { data, error } = await query;

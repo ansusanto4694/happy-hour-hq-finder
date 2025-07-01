@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { SearchBar } from '@/components/SearchBar';
 import { SearchResults } from '@/components/SearchResults';
@@ -38,7 +37,6 @@ const Results = () => {
               {/* Results List */}
               <div className="xl:col-span-1">
                 <SearchResults 
-                  merchants={merchants || []} 
                   isLoading={isLoading} 
                   error={error} 
                 />
