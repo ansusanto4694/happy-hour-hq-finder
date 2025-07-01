@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Search, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -96,19 +97,6 @@ export const SearchBar = () => {
         >
           Search
         </Button>
-      </div>
-      
-      {/* Quick location suggestions */}
-      <div className="mt-4 flex flex-wrap justify-center gap-2">
-        {['Current Location', 'Downtown', 'Business District', 'Waterfront'].map((location) => (
-          <button
-            key={location}
-            onClick={() => setZipCode(location === 'Current Location' ? '' : location)}
-            className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-full text-sm transition-all duration-200 backdrop-blur-sm"
-          >
-            {location}
-          </button>
-        ))}
       </div>
     </div>
   );
