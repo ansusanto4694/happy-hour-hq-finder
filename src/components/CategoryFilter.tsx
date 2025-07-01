@@ -45,9 +45,9 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
   const parentCategories = getParentCategories();
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-lg">Filter by Category</h3>
+        <h3 className="font-semibold text-base">Filter by Category</h3>
         {selectedCategories.length > 0 && (
           <Button variant="outline" size="sm" onClick={clearAllFilters}>
             Clear All
@@ -77,8 +77,8 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
           const hasSubCategories = subCategories.length > 0;
 
           return (
-            <div key={parent.id} className="border rounded-lg p-3 bg-white">
-              <div className="flex items-center justify-between mb-2">
+            <div key={parent.id} className="border rounded-lg p-2 bg-white">
+              <div className="flex items-center justify-between mb-1">
                 <label className="flex items-center space-x-2 cursor-pointer flex-1">
                   <input
                     type="checkbox"
@@ -94,9 +94,9 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
                     variant="ghost"
                     size="sm"
                     onClick={() => toggleExpanded(parent.id)}
-                    className="h-6 w-6 p-0"
+                    className="h-5 w-5 p-0"
                   >
-                    {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                    {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
                   </Button>
                 )}
               </div>
