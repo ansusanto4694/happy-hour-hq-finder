@@ -46,8 +46,8 @@ const Results = () => {
 
         {/* Results and Map Side by Side */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Results List - Left Side */}
-          <div className="lg:col-span-1">
+          {/* Results List - Left Side - Scrollable */}
+          <div className="lg:col-span-1 lg:h-[calc(100vh-280px)] lg:overflow-y-auto lg:pr-2">
             {isLoading ? (
               <div className="space-y-4">
                 <h2 className="text-xl font-semibold text-gray-900">Loading restaurants...</h2>
@@ -62,8 +62,8 @@ const Results = () => {
             )}
           </div>
 
-          {/* Map - Right Side */}
-          <div className="lg:col-span-1">
+          {/* Map - Right Side - Sticky */}
+          <div className="lg:col-span-1 lg:sticky lg:top-6 lg:h-[calc(100vh-280px)]">
             <ResultsMap />
           </div>
         </div>
