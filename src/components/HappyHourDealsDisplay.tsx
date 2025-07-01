@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
@@ -60,20 +61,23 @@ export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ re
             <div className="flex-1">
               <h3 className="font-semibold text-gray-900 mb-1">{deal.deal_title}</h3>
               {deal.deal_description && (
-                <div className="text-gray-700 text-sm prose prose-sm max-w-none">
+                <div className="text-gray-700 text-sm">
                   <ReactMarkdown
                     components={{
-                      p: ({ children }) => <p className="mb-0 last:mb-0">{children}</p>,
+                      p: ({ children }) => <p className="mb-0 leading-normal">{children}</p>,
                       strong: ({ children }) => <strong className="font-bold">{children}</strong>,
                       em: ({ children }) => <em className="italic">{children}</em>,
                       u: ({ children }) => <u className="underline">{children}</u>,
                       s: ({ children }) => <s className="line-through">{children}</s>,
-                      h1: ({ children }) => <h1 className="text-lg font-bold mb-2">{children}</h1>,
-                      h2: ({ children }) => <h2 className="text-base font-bold mb-1">{children}</h2>,
-                      small: ({ children }) => <small className="text-xs">{children}</small>,
+                      h1: ({ children }) => <h1 className="text-lg font-bold mb-1 leading-normal">{children}</h1>,
+                      h2: ({ children }) => <h2 className="text-base font-bold mb-1 leading-normal">{children}</h2>,
+                      small: ({ children }) => <small className="text-xs leading-normal">{children}</small>,
+                      br: () => <br />,
                     }}
+                    remarkPlugins={[]}
+                    rehypePlugins={[]}
                   >
-                    {deal.deal_description}
+                    {deal.deal_description.replace(/\n/g, '  \n')}
                   </ReactMarkdown>
                 </div>
               )}
