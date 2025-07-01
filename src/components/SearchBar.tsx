@@ -35,7 +35,7 @@ export const SearchBar = () => {
 
   return (
     <div className="w-full max-w-5xl mx-auto">
-      <div className="bg-white rounded-2xl shadow-2xl p-2 flex flex-col lg:flex-row gap-2">
+      <div className="bg-white rounded-2xl shadow-sm p-2 flex flex-col lg:flex-row gap-2">
         {/* Search input */}
         <div className="flex-1 relative">
           <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
