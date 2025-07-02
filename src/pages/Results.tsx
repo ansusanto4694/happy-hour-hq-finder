@@ -82,7 +82,7 @@ const Results = () => {
           </div>
 
           {/* Fixed Width Right Side - Map */}
-          <div className="w-96 flex-shrink-0">
+          <div className="w-112 flex-shrink-0">
             <ResultsMap />
           </div>
         </div>
