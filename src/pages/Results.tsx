@@ -9,7 +9,7 @@ import { ResultsMap } from '@/components/ResultsMap';
 import { useMerchants } from '@/hooks/useMerchants';
 
 const Results = () => {
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]); // Changed to string array
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const { data: merchants, isLoading, error } = useMerchants(selectedCategories);
   const navigate = useNavigate();
 
@@ -48,18 +48,11 @@ const Results = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Results List - Left Side */}
           <div className="lg:col-span-1">
-            {isLoading ? (
-              <div className="space-y-4">
-                <h2 className="text-xl font-semibold text-gray-900">Loading restaurants...</h2>
-              </div>
-            ) : error ? (
-              <div className="space-y-4">
-                <h2 className="text-xl font-semibold text-gray-900">Error loading restaurants</h2>
-                <p className="text-red-600">Please try again later.</p>
-              </div>
-            ) : (
-              <SearchResults />
-            )}
+            <SearchResults 
+              merchants={merchants}
+              isLoading={isLoading}
+              error={error}
+            />
           </div>
 
           {/* Map - Right Side */}
