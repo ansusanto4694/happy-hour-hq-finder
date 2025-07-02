@@ -1,5 +1,5 @@
 
-import { Hero } from "@/components/Hero";
+import Hero from "@/components/Hero";
 import { AssignCategoriesToDaiHachi } from "@/components/AssignCategoriesToDaiHachi";
 
 const Index = () => {
