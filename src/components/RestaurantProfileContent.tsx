@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { RestaurantBasicInfo } from '@/components/RestaurantBasicInfo';
 import { RestaurantContactInfo } from '@/components/RestaurantContactInfo';
 import { RestaurantHappyHours } from '@/components/RestaurantHappyHours';
@@ -22,6 +23,15 @@ interface Restaurant {
     day_of_week: number;
     happy_hour_start: string;
     happy_hour_end: string;
+  }>;
+  merchant_categories?: Array<{
+    id: string;
+    categories: {
+      id: string;
+      name: string;
+      slug: string;
+      parent_id: string | null;
+    };
   }>;
 }
 
@@ -56,6 +66,21 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
               </div>
               <RestaurantProfileEditor restaurant={restaurantWithIds} />
             </div>
+
+            {/* Category tags - positioned below name/logo, above address */}
+            {restaurant.merchant_categories && restaurant.merchant_categories.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-8">
+                {restaurant.merchant_categories.map((merchantCategory) => (
+                  <Badge 
+                    key={merchantCategory.id} 
+                    variant="outline" 
+                    className="text-sm px-3 py-1"
+                  >
+                    {merchantCategory.categories.name}
+                  </Badge>
+                ))}
+              </div>
+            )}
 
             {/* Two Column Layout with adjusted widths */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

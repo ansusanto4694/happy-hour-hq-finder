@@ -27,6 +27,15 @@ const RestaurantProfile = () => {
             day_of_week,
             happy_hour_start,
             happy_hour_end
+          ),
+          merchant_categories (
+            id,
+            categories (
+              id,
+              name,
+              slug,
+              parent_id
+            )
           )
         `)
         .eq('id', restaurantId)
