@@ -46,6 +46,21 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
                     {restaurant.phone_number}
                   </p>
                 )}
+                
+                {/* Category tags */}
+                {restaurant.merchant_categories && restaurant.merchant_categories.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {restaurant.merchant_categories.map((merchantCategory: any) => (
+                      <Badge 
+                        key={merchantCategory.id} 
+                        variant="outline" 
+                        className="text-xs px-2 py-1"
+                      >
+                        {merchantCategory.categories.name}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
               </div>
               
               <Badge variant="secondary" className="flex-shrink-0 text-sm px-3 py-1">
