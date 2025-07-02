@@ -72,8 +72,8 @@ const Results = () => {
             </div>
           </div>
 
-          {/* Main Content Area - Results */}
-          <div className="flex-1 min-w-0">
+          {/* Main Content Area - Results (reduced width by 15%) */}
+          <div className="w-[420px] flex-shrink-0">
             <SearchResults 
               merchants={merchants}
               isLoading={isLoading}
@@ -81,8 +81,8 @@ const Results = () => {
             />
           </div>
 
-          {/* Right Side - Map */}
-          <div className="w-96 flex-shrink-0">
+          {/* Right Side - Map (expanded width by 10%) */}
+          <div className="flex-1 min-w-0">
             <ResultsMap />
           </div>
         </div>
