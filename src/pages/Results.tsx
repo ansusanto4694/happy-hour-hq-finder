@@ -9,7 +9,7 @@ import { ResultsMap } from '@/components/ResultsMap';
 import { useMerchants } from '@/hooks/useMerchants';
 
 const Results = () => {
-  const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]); // Changed to string array
   const { data: merchants, isLoading, error } = useMerchants(selectedCategories);
   const navigate = useNavigate();
 

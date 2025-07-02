@@ -7,8 +7,8 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useCategoriesHierarchy } from '@/hooks/useCategories';
 
 interface CategoryFilterProps {
-  selectedCategories: number[];
-  onCategoryChange: (categories: number[]) => void;
+  selectedCategories: string[]; // Changed to string array
+  onCategoryChange: (categories: string[]) => void;
 }
 
 export const CategoryFilter: React.FC<CategoryFilterProps> = ({
@@ -16,17 +16,21 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
   onCategoryChange,
 }) => {
   const { getParentCategories, getSubCategories, isLoading } = useCategoriesHierarchy();
-  const [expandedCategories, setExpandedCategories] = useState<number[]>([]);
+  const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
 
-  const toggleCategory = (categoryId: number) => {
+  const toggleCategory = (categoryId: string) => {
+    console.log('Toggling category:', categoryId);
+    console.log('Current selected categories:', selectedCategories);
+    
     const newSelected = selectedCategories.includes(categoryId)
       ? selectedCategories.filter(id => id !== categoryId)
       : [...selectedCategories, categoryId];
     
+    console.log('New selected categories:', newSelected);
     onCategoryChange(newSelected);
   };
 
-  const toggleExpanded = (categoryId: number) => {
+  const toggleExpanded = (categoryId: string) => {
     setExpandedCategories(prev =>
       prev.includes(categoryId)
         ? prev.filter(id => id !== categoryId)

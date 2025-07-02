@@ -53,10 +53,7 @@ export const AssignCategoriesToDaiHachi = () => {
         const categoriesToAssign = categories.filter(c => !existingCategoryIds.includes(c.id));
 
         if (categoriesToAssign.length === 0) {
-          toast({
-            title: "Info",
-            description: "Categories are already assigned to Dai Hachi",
-          });
+          console.log('Categories are already assigned to Dai Hachi');
           return;
         }
 

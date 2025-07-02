@@ -3,10 +3,10 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 export type Category = {
-  id: number;
+  id: string; // Changed to string to match UUID
   name: string;
   slug: string;
-  parent_id: number | null;
+  parent_id: string | null; // Changed to string to match UUID
   description: string | null;
   created_at: string;
   updated_at: string;
@@ -26,12 +26,8 @@ export const useCategories = () => {
         throw error;
       }
 
-      // Convert string ids to numbers since the database now uses integer ids
-      return data.map(category => ({
-        ...category,
-        id: parseInt(category.id.toString()),
-        parent_id: category.parent_id ? parseInt(category.parent_id.toString()) : null
-      })) as Category[];
+      // Return data as-is since IDs are already UUIDs (strings)
+      return data as Category[];
     },
   });
 };
@@ -43,7 +39,7 @@ export const useCategoriesHierarchy = () => {
     return categories?.filter(cat => cat.parent_id === null) || [];
   };
 
-  const getSubCategories = (parentId: number) => {
+  const getSubCategories = (parentId: string) => {
     return categories?.filter(cat => cat.parent_id === parentId) || [];
   };
 

@@ -2,7 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-export const useMerchants = (categoryIds?: number[]) => {
+export const useMerchants = (categoryIds?: string[]) => {
   return useQuery({
     queryKey: ['merchants', categoryIds],
     queryFn: async () => {
@@ -27,21 +27,22 @@ export const useMerchants = (categoryIds?: number[]) => {
           )
         `);
 
-      // If category filters are applied, filter by them
+      // If category filters are applied, filter by them using OR logic
       if (categoryIds && categoryIds.length > 0) {
-        // Convert number array to string array for Supabase query
-        const categoryIdsAsStrings = categoryIds.map(id => id.toString());
+        console.log('Filtering by category IDs:', categoryIds);
         
-        // First get merchant IDs that have the selected categories
+        // Get merchant IDs that have ANY of the selected categories (OR logic)
         const { data: merchantIds, error: merchantIdsError } = await supabase
           .from('merchant_categories')
           .select('merchant_id')
-          .in('category_id', categoryIdsAsStrings);
+          .in('category_id', categoryIds);
 
         if (merchantIdsError) {
           console.error('Error fetching merchant IDs:', merchantIdsError);
           throw merchantIdsError;
         }
+
+        console.log('Found merchant IDs with categories:', merchantIds);
 
         if (merchantIds && merchantIds.length > 0) {
           const ids = merchantIds.map(item => item.merchant_id);
@@ -59,6 +60,7 @@ export const useMerchants = (categoryIds?: number[]) => {
         throw error;
       }
 
+      console.log('Final merchants result:', data);
       return data;
     },
   });
