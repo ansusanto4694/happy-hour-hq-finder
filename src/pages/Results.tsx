@@ -82,7 +82,7 @@ const Results = () => {
           </div>
 
           {/* Right Side - Map */}
-          <div className="w-32 flex-shrink-0">
+          <div className="w-80 flex-shrink-0">
             <ResultsMap />
           </div>
         </div>
