@@ -101,3 +101,7 @@
     @apply bg-background text-foreground;
   }
 }
+
+.w-custom-1000 {
+  width: 1000px;
+}
