@@ -61,9 +61,9 @@ const Results = () => {
         </div>
 
         {/* Large Screen Layout - Full Width with Filters on Far Left */}
-        <div className="hidden xl:flex xl:gap-6 xl:h-[calc(100vh-200px)] xl:max-w-none xl:mx-0">
+        <div className="hidden xl:flex xl:gap-6 xl:h-[calc(100vh-200px)]">
           {/* Far Left Sidebar - Filters */}
-          <div className="w-72 flex-shrink-0">
+          <div className="w-80 flex-shrink-0">
             <div className="bg-white rounded-lg shadow-sm p-4 sticky top-6 h-fit">
               <CategoryFilter
                 selectedCategories={selectedCategories}
@@ -72,8 +72,8 @@ const Results = () => {
             </div>
           </div>
 
-          {/* Main Content Area - Results (reduced width) */}
-          <div className="w-96 flex-shrink-0">
+          {/* Main Content Area - Results */}
+          <div className="flex-1 min-w-0">
             <SearchResults 
               merchants={merchants}
               isLoading={isLoading}
@@ -81,8 +81,8 @@ const Results = () => {
             />
           </div>
 
-          {/* Right Side - Map (increased width) */}
-          <div className="flex-1 min-w-0">
+          {/* Right Side - Map */}
+          <div className="w-96 flex-shrink-0">
             <ResultsMap />
           </div>
         </div>
