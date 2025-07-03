@@ -2,9 +2,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-export const useMerchants = (categoryIds?: string[], searchTerm?: string) => {
+export const useMerchants = (categoryIds?: string[], searchTerm?: string, startTime?: string, endTime?: string) => {
   return useQuery({
-    queryKey: ['merchants', categoryIds, searchTerm],
+    queryKey: ['merchants', categoryIds, searchTerm, startTime, endTime],
     queryFn: async () => {
       let query = supabase
         .from('Merchant')
@@ -99,6 +99,37 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string) => {
       if (error) {
         console.error('Error fetching merchants:', error);
         throw error;
+      }
+
+      console.log('Merchants before time filtering:', data);
+
+      // Filter by happy hour times if both start and end times are provided
+      if (startTime && endTime && data) {
+        const filteredData = data.filter(merchant => {
+          // Check if merchant has any happy hours that overlap with the requested time range
+          return merchant.merchant_happy_hour.some((happyHour: any) => {
+            const hhStart = happyHour.happy_hour_start;
+            const hhEnd = happyHour.happy_hour_end;
+            
+            // Check if the happy hour time range overlaps with the requested time range
+            // Convert times to minutes for easier comparison
+            const toMinutes = (timeStr: string) => {
+              const [hours, minutes] = timeStr.split(':').map(Number);
+              return hours * 60 + minutes;
+            };
+            
+            const requestStart = toMinutes(startTime);
+            const requestEnd = toMinutes(endTime);
+            const happyStart = toMinutes(hhStart);
+            const happyEnd = toMinutes(hhEnd);
+            
+            // Check for overlap: happy hour must start before request ends and end after request starts
+            return happyStart < requestEnd && happyEnd > requestStart;
+          });
+        });
+        
+        console.log('Merchants after time filtering:', filteredData);
+        return filteredData;
       }
 
       console.log('Final merchants result:', data);
