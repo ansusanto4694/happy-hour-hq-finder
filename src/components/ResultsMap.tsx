@@ -11,7 +11,8 @@ interface Restaurant {
   city: string;
   state: string;
   zip_code: string;
-  // We'll need to add lat/lng coordinates - for now using placeholder logic
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 interface ResultsMapProps {
@@ -31,6 +32,26 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
 
   const mapRef = useRef<any>(null);
 
+  // Update map center based on restaurants with coordinates
+  useEffect(() => {
+    const restaurantsWithCoords = restaurants.filter(
+      restaurant => restaurant.latitude && restaurant.longitude
+    );
+
+    if (restaurantsWithCoords.length > 0) {
+      // Calculate center point of all restaurants
+      const avgLat = restaurantsWithCoords.reduce((sum, r) => sum + (r.latitude || 0), 0) / restaurantsWithCoords.length;
+      const avgLng = restaurantsWithCoords.reduce((sum, r) => sum + (r.longitude || 0), 0) / restaurantsWithCoords.length;
+      
+      setViewState(prev => ({
+        ...prev,
+        latitude: avgLat,
+        longitude: avgLng,
+        zoom: 13
+      }));
+    }
+  }, [restaurants]);
+
   // Handle map move events to update search results
   const handleMoveEnd = useCallback(() => {
     if (mapRef.current && onMapMove) {
@@ -45,19 +66,6 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
       });
     }
   }, [onMapMove]);
-
-  // Geocode function to convert addresses to coordinates (placeholder implementation)
-  const getCoordinatesForRestaurant = (restaurant: Restaurant) => {
-    // This is a placeholder - in production you'd want to either:
-    // 1. Store lat/lng in your database
-    // 2. Use a geocoding service to convert addresses to coordinates
-    // For now, adding some variation around San Francisco
-    const baseId = restaurant.id || 0;
-    return {
-      lng: -122.4194 + (baseId % 100) * 0.001 - 0.05,
-      lat: 37.7749 + (baseId % 50) * 0.001 - 0.025
-    };
-  };
 
   return (
     <Card className="h-full">
@@ -78,24 +86,33 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
             {/* Navigation Controls */}
             <NavigationControl position="top-right" />
             
-            {/* Restaurant Markers */}
-            {restaurants.map((restaurant) => {
-              const coords = getCoordinatesForRestaurant(restaurant);
-              return (
+            {/* Restaurant Markers - Only show if coordinates exist */}
+            {restaurants
+              .filter(restaurant => restaurant.latitude && restaurant.longitude)
+              .map((restaurant) => (
                 <Marker
                   key={restaurant.id}
-                  longitude={coords.lng}
-                  latitude={coords.lat}
+                  longitude={restaurant.longitude!}
+                  latitude={restaurant.latitude!}
                   anchor="bottom"
                 >
-                  <div className="bg-red-500 rounded-full w-6 h-6 flex items-center justify-center shadow-lg border-2 border-white cursor-pointer hover:bg-red-600 transition-colors">
+                  <div 
+                    className="bg-red-500 rounded-full w-6 h-6 flex items-center justify-center shadow-lg border-2 border-white cursor-pointer hover:bg-red-600 transition-colors"
+                    title={restaurant.restaurant_name}
+                  >
                     <div className="w-2 h-2 bg-white rounded-full"></div>
                   </div>
                 </Marker>
-              );
-            })}
+              ))}
           </Map>
         </div>
+        
+        {/* Show info about restaurants without coordinates */}
+        {restaurants.length > 0 && (
+          <div className="mt-2 text-xs text-gray-500">
+            Showing {restaurants.filter(r => r.latitude && r.longitude).length} of {restaurants.length} restaurants on map
+          </div>
+        )}
       </CardContent>
     </Card>
   );
