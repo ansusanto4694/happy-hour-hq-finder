@@ -29,10 +29,11 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
 
       let merchantIds: number[] | null = null;
 
-      // If search term is provided, find merchants with matching happy hour deals
+      // If search term is provided, find merchants with matching happy hour deals OR categories
       if (searchTerm && searchTerm.trim()) {
         console.log('Searching for term:', searchTerm);
         
+        // Search in happy hour deals
         const { data: dealMerchants, error: dealError } = await supabase
           .from('happy_hour_deals')
           .select('restaurant_id')
@@ -46,12 +47,54 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
 
         console.log('Found deals matching search:', dealMerchants);
 
-        if (dealMerchants && dealMerchants.length > 0) {
-          merchantIds = dealMerchants.map(deal => deal.restaurant_id);
-          console.log('Merchant IDs from search:', merchantIds);
+        // Search in categories
+        const { data: categoryMatches, error: categoryError } = await supabase
+          .from('categories')
+          .select('id')
+          .ilike('name', `%${searchTerm}%`);
+
+        if (categoryError) {
+          console.error('Error searching categories:', categoryError);
+          throw categoryError;
+        }
+
+        console.log('Found categories matching search:', categoryMatches);
+
+        // Get merchant IDs from matching categories
+        let categoryMerchantIds: number[] = [];
+        if (categoryMatches && categoryMatches.length > 0) {
+          const categoryIds = categoryMatches.map(cat => cat.id);
+          
+          const { data: merchantsWithCategories, error: merchantCategoryError } = await supabase
+            .from('merchant_categories')
+            .select('merchant_id')
+            .in('category_id', categoryIds);
+
+          if (merchantCategoryError) {
+            console.error('Error fetching merchants by categories:', merchantCategoryError);
+            throw merchantCategoryError;
+          }
+
+          console.log('Found merchants with matching categories:', merchantsWithCategories);
+          
+          if (merchantsWithCategories && merchantsWithCategories.length > 0) {
+            categoryMerchantIds = merchantsWithCategories.map(item => item.merchant_id);
+          }
+        }
+
+        // Combine results from deals and categories (OR logic)
+        const dealMerchantIds = dealMerchants ? dealMerchants.map(deal => deal.restaurant_id) : [];
+        const allSearchMerchantIds = [...new Set([...dealMerchantIds, ...categoryMerchantIds])];
+
+        console.log('Combined search results - Deal IDs:', dealMerchantIds);
+        console.log('Combined search results - Category IDs:', categoryMerchantIds);
+        console.log('Combined search results - All IDs:', allSearchMerchantIds);
+
+        if (allSearchMerchantIds.length > 0) {
+          merchantIds = allSearchMerchantIds;
         } else {
-          // No deals found for search term, return empty result
-          console.log('No deals found for search term, returning empty');
+          // No deals or categories found for search term, return empty result
+          console.log('No deals or categories found for search term, returning empty');
           return [];
         }
       }
