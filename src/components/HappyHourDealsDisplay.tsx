@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
@@ -37,8 +38,9 @@ export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ re
   });
 
   const preprocessMarkdown = (text: string) => {
-    // Keep single line breaks as single line breaks, don't convert to double
-    return text;
+    // Convert single line breaks to double line breaks for proper markdown paragraph separation
+    // This ensures each line becomes its own paragraph
+    return text.replace(/\n/g, '\n\n');
   };
 
   if (isLoading) {
@@ -68,13 +70,13 @@ export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ re
                 <div className="text-gray-700 text-sm prose prose-sm max-w-none">
                   <ReactMarkdown
                     components={{
-                      p: ({ children }) => <p className="mb-0 leading-tight">{children}</p>,
+                      p: ({ children }) => <p className="mb-1 leading-tight">{children}</p>,
                       strong: ({ children }) => <strong className="font-bold">{children}</strong>,
                       em: ({ children }) => <em className="italic">{children}</em>,
                       u: ({ children }) => <u className="underline">{children}</u>,
                       s: ({ children }) => <s className="line-through">{children}</s>,
-                      h1: ({ children }) => <h1 className="text-lg font-bold mb-0 leading-tight">{children}</h1>,
-                      h2: ({ children }) => <h2 className="text-base font-bold mb-0 leading-tight">{children}</h2>,
+                      h1: ({ children }) => <h1 className="text-lg font-bold mb-1 leading-tight">{children}</h1>,
+                      h2: ({ children }) => <h2 className="text-base font-bold mb-1 leading-tight">{children}</h2>,
                       small: ({ children }) => <small className="text-xs leading-tight">{children}</small>,
                       br: () => <br />,
                     }}
