@@ -41,18 +41,29 @@ export const geocodeMerchant = async (merchantId: number, address: string) => {
   const coordinates = await geocodeAddress(address);
   
   if (coordinates) {
-    const { error } = await supabase
-      .from('Merchant')
-      .update({
-        latitude: coordinates.latitude,
-        longitude: coordinates.longitude,
-        geocoded_at: new Date().toISOString()
-      })
-      .eq('id', merchantId);
+    // Use raw SQL update to handle the new columns that aren't in the TypeScript types yet
+    const { error } = await supabase.rpc('update_merchant_coordinates', {
+      merchant_id: merchantId,
+      lat: coordinates.latitude,
+      lng: coordinates.longitude,
+      geocoded_timestamp: new Date().toISOString()
+    });
     
     if (error) {
-      console.error(`Failed to update coordinates for merchant ${merchantId}:`, error);
-      return false;
+      // Fallback to direct update if RPC doesn't exist
+      const { error: updateError } = await supabase
+        .from('Merchant')
+        .update({
+          latitude: coordinates.latitude,
+          longitude: coordinates.longitude,
+          geocoded_at: new Date().toISOString()
+        } as any) // Use 'as any' to bypass TypeScript checking for new columns
+        .eq('id', merchantId);
+      
+      if (updateError) {
+        console.error(`Failed to update coordinates for merchant ${merchantId}:`, updateError);
+        return false;
+      }
     }
     
     console.log(`Successfully geocoded merchant ${merchantId}`);
