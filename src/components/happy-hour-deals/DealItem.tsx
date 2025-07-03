@@ -30,11 +30,17 @@ export const DealItem: React.FC<DealItemProps> = ({
   };
 
   const preprocessMarkdown = (text: string) => {
-    // Convert single line breaks to double line breaks for proper markdown paragraph separation
-    // Handle empty lines by converting them to non-breaking spaces so they render
-    return text
-      .replace(/\n/g, '\n\n')
-      .replace(/^\s*$/gm, '&nbsp;'); // Convert empty lines to non-breaking spaces
+    // Split by line breaks to handle each line individually
+    const lines = text.split('\n');
+    
+    return lines.map(line => {
+      // If line is empty or just whitespace, create an empty paragraph
+      if (line.trim() === '') {
+        return '\n&nbsp;\n';
+      }
+      // Otherwise, wrap the line content
+      return line.trim();
+    }).join('\n\n'); // Join with double line breaks for proper markdown paragraphs
   };
 
   return (
@@ -72,19 +78,19 @@ export const DealItem: React.FC<DealItemProps> = ({
               <ReactMarkdown
                 components={{
                   p: ({ children }) => {
-                    // Handle paragraphs with only non-breaking spaces
+                    // Handle paragraphs with only non-breaking spaces (empty lines)
                     if (children === '&nbsp;') {
-                      return <p className="mb-1 leading-tight">&nbsp;</p>;
+                      return <div className="h-4">&nbsp;</div>;
                     }
-                    return <p className="mb-1 leading-tight">{children}</p>;
+                    return <p className="mb-0 leading-normal">{children}</p>;
                   },
                   strong: ({ children }) => <strong className="font-bold">{children}</strong>,
                   em: ({ children }) => <em className="italic">{children}</em>,
                   u: ({ children }) => <u className="underline">{children}</u>,
                   s: ({ children }) => <s className="line-through">{children}</s>,
-                  h1: ({ children }) => <h1 className="text-lg font-bold mb-1 leading-tight">{children}</h1>,
-                  h2: ({ children }) => <h2 className="text-base font-bold mb-1 leading-tight">{children}</h2>,
-                  small: ({ children }) => <small className="text-xs leading-tight">{children}</small>,
+                  h1: ({ children }) => <h1 className="text-lg font-bold mb-1 leading-normal">{children}</h1>,
+                  h2: ({ children }) => <h2 className="text-base font-bold mb-1 leading-normal">{children}</h2>,
+                  small: ({ children }) => <small className="text-xs leading-normal">{children}</small>,
                   br: () => <br />,
                 }}
               >
