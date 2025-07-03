@@ -120,15 +120,34 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
             console.log(`Checking merchant ${merchant.restaurant_name}: HH ${hhStart}-${hhEnd} vs requested ${startTime}-${endTime}`);
             
             // Convert times to minutes for easier comparison
-            const toMinutes = (timeStr: string) => {
-              const [hours, minutes] = timeStr.split(':').map(Number);
+            const parseTimeToMinutes = (timeStr: string) => {
+              // Handle both 12-hour format (1:00 PM) and 24-hour format (13:00)
+              let time = timeStr.trim();
+              let hours, minutes;
+              
+              if (time.includes('AM') || time.includes('PM')) {
+                // 12-hour format
+                const isPM = time.includes('PM');
+                time = time.replace(/AM|PM/g, '').trim();
+                [hours, minutes] = time.split(':').map(Number);
+                
+                if (isPM && hours !== 12) {
+                  hours += 12;
+                } else if (!isPM && hours === 12) {
+                  hours = 0;
+                }
+              } else {
+                // 24-hour format
+                [hours, minutes] = time.split(':').map(Number);
+              }
+              
               return hours * 60 + minutes;
             };
             
-            const requestStart = toMinutes(startTime);
-            const requestEnd = toMinutes(endTime);
-            const happyStart = toMinutes(hhStart);
-            const happyEnd = toMinutes(hhEnd);
+            const requestStart = parseTimeToMinutes(startTime);
+            const requestEnd = parseTimeToMinutes(endTime);
+            const happyStart = parseTimeToMinutes(hhStart);
+            const happyEnd = parseTimeToMinutes(hhEnd);
             
             console.log(`Time comparison: requested ${requestStart}-${requestEnd} minutes vs happy hour ${happyStart}-${happyEnd} minutes`);
             
