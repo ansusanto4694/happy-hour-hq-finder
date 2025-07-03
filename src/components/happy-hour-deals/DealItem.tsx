@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Edit, Trash2, GripVertical } from 'lucide-react';
 import { HappyHourDeal } from './types';
 import ReactMarkdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
 
 interface DealItemProps {
   deal: HappyHourDeal;
@@ -93,6 +94,7 @@ export const DealItem: React.FC<DealItemProps> = ({
                   small: ({ children }) => <small className="text-xs leading-normal">{children}</small>,
                   br: () => <br />,
                 }}
+                rehypePlugins={[rehypeRaw]}
               >
                 {preprocessMarkdown(deal.deal_description)}
               </ReactMarkdown>

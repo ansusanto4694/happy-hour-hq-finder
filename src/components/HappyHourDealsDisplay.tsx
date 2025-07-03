@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import ReactMarkdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
 
 interface HappyHourDealsDisplayProps {
   restaurantId: number;
@@ -94,7 +95,7 @@ export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ re
                       br: () => <br />,
                     }}
                     remarkPlugins={[]}
-                    rehypePlugins={[]}
+                    rehypePlugins={[rehypeRaw]}
                   >
                     {preprocessMarkdown(deal.deal_description)}
                   </ReactMarkdown>
