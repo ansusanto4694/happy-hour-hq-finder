@@ -25,6 +25,12 @@ const Results = () => {
     navigate('/');
   };
 
+  // Handle map bounds change to potentially filter results
+  const handleMapMove = (bounds: { north: number; south: number; east: number; west: number }) => {
+    // For now, we'll just log the bounds - you can implement location-based filtering later
+    console.log('Map moved to bounds:', bounds);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Fixed Header */}
@@ -71,7 +77,10 @@ const Results = () => {
             {/* Fixed Map */}
             <div className="lg:col-span-1">
               <div className="sticky top-48 z-30">
-                <ResultsMap />
+                <ResultsMap 
+                  restaurants={merchants || []}
+                  onMapMove={handleMapMove}
+                />
               </div>
             </div>
           </div>
@@ -104,7 +113,10 @@ const Results = () => {
           {/* Fixed Right Side - Map */}
           <div className="w-[32rem] flex-shrink-0">
             <div className="sticky top-32 z-30">
-              <ResultsMap />
+              <ResultsMap 
+                restaurants={merchants || []}
+                onMapMove={handleMapMove}
+              />
             </div>
           </div>
         </div>
