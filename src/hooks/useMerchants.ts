@@ -111,7 +111,8 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
             const hhStart = happyHour.happy_hour_start;
             const hhEnd = happyHour.happy_hour_end;
             
-            // Check if the happy hour time range overlaps with the requested time range
+            console.log(`Checking merchant ${merchant.restaurant_name}: HH ${hhStart}-${hhEnd} vs requested ${startTime}-${endTime}`);
+            
             // Convert times to minutes for easier comparison
             const toMinutes = (timeStr: string) => {
               const [hours, minutes] = timeStr.split(':').map(Number);
@@ -123,8 +124,14 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
             const happyStart = toMinutes(hhStart);
             const happyEnd = toMinutes(hhEnd);
             
-            // Check for overlap: happy hour must start before request ends and end after request starts
-            return happyStart < requestEnd && happyEnd > requestStart;
+            console.log(`Time comparison: requested ${requestStart}-${requestEnd} minutes vs happy hour ${happyStart}-${happyEnd} minutes`);
+            
+            // Check for overlap: ranges overlap if one starts before the other ends
+            const hasOverlap = requestStart < happyEnd && requestEnd > happyStart;
+            
+            console.log(`Overlap result for ${merchant.restaurant_name}: ${hasOverlap}`);
+            
+            return hasOverlap;
           });
         });
         
