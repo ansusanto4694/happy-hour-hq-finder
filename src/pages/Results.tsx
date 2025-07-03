@@ -88,7 +88,7 @@ const Results = () => {
           </div>
 
           {/* Fixed Right Side - Map */}
-          <div className="w-96 flex-shrink-0">
+          <div className="w-[28rem] flex-shrink-0">
             <div className="sticky top-32 z-30">
               <ResultsMap />
             </div>
