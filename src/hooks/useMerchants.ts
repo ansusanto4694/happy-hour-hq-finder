@@ -48,8 +48,10 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
 
         if (dealMerchants && dealMerchants.length > 0) {
           merchantIds = dealMerchants.map(deal => deal.restaurant_id);
+          console.log('Merchant IDs from search:', merchantIds);
         } else {
           // No deals found for search term, return empty result
+          console.log('No deals found for search term, returning empty');
           return [];
         }
       }
@@ -89,8 +91,10 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
       // Apply merchant ID filter if we have any filters
       if (merchantIds !== null) {
         if (merchantIds.length === 0) {
+          console.log('No merchants match filters, returning empty');
           return [];
         }
+        console.log('Filtering by merchant IDs:', merchantIds);
         query = query.in('id', merchantIds);
       }
 
@@ -105,9 +109,11 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
 
       // Filter by happy hour times if both start and end times are provided
       if (startTime && endTime && data) {
+        console.log(`Applying time filter: ${startTime} to ${endTime}`);
+        
         const filteredData = data.filter(merchant => {
           // Check if merchant has any happy hours that overlap with the requested time range
-          return merchant.merchant_happy_hour.some((happyHour: any) => {
+          const hasOverlappingHour = merchant.merchant_happy_hour.some((happyHour: any) => {
             const hhStart = happyHour.happy_hour_start;
             const hhEnd = happyHour.happy_hour_end;
             
@@ -133,6 +139,9 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
             
             return hasOverlap;
           });
+          
+          console.log(`Final result for ${merchant.restaurant_name}: ${hasOverlappingHour}`);
+          return hasOverlappingHour;
         });
         
         console.log('Merchants after time filtering:', filteredData);
