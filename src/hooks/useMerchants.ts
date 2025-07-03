@@ -2,9 +2,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-export const useMerchants = (categoryIds?: string[]) => {
+export const useMerchants = (categoryIds?: string[], searchTerm?: string) => {
   return useQuery({
-    queryKey: ['merchants', categoryIds],
+    queryKey: ['merchants', categoryIds, searchTerm],
     queryFn: async () => {
       let query = supabase
         .from('Merchant')
@@ -27,12 +27,39 @@ export const useMerchants = (categoryIds?: string[]) => {
           )
         `);
 
+      let merchantIds: number[] | null = null;
+
+      // If search term is provided, find merchants with matching happy hour deals
+      if (searchTerm && searchTerm.trim()) {
+        console.log('Searching for term:', searchTerm);
+        
+        const { data: dealMerchants, error: dealError } = await supabase
+          .from('happy_hour_deals')
+          .select('restaurant_id')
+          .or(`deal_title.ilike.%${searchTerm}%,deal_description.ilike.%${searchTerm}%`)
+          .eq('active', true);
+
+        if (dealError) {
+          console.error('Error searching happy hour deals:', dealError);
+          throw dealError;
+        }
+
+        console.log('Found deals matching search:', dealMerchants);
+
+        if (dealMerchants && dealMerchants.length > 0) {
+          merchantIds = dealMerchants.map(deal => deal.restaurant_id);
+        } else {
+          // No deals found for search term, return empty result
+          return [];
+        }
+      }
+
       // If category filters are applied, filter by them using OR logic
       if (categoryIds && categoryIds.length > 0) {
         console.log('Filtering by category IDs:', categoryIds);
         
         // Get merchant IDs that have ANY of the selected categories (OR logic)
-        const { data: merchantIds, error: merchantIdsError } = await supabase
+        const { data: categoryMerchants, error: merchantIdsError } = await supabase
           .from('merchant_categories')
           .select('merchant_id')
           .in('category_id', categoryIds);
@@ -42,15 +69,29 @@ export const useMerchants = (categoryIds?: string[]) => {
           throw merchantIdsError;
         }
 
-        console.log('Found merchant IDs with categories:', merchantIds);
+        console.log('Found merchant IDs with categories:', categoryMerchants);
 
-        if (merchantIds && merchantIds.length > 0) {
-          const ids = merchantIds.map(item => item.merchant_id);
-          query = query.in('id', ids);
+        if (categoryMerchants && categoryMerchants.length > 0) {
+          const categoryMerchantIds = categoryMerchants.map(item => item.merchant_id);
+          
+          // If we also have search results, find intersection
+          if (merchantIds !== null) {
+            merchantIds = merchantIds.filter(id => categoryMerchantIds.includes(id));
+          } else {
+            merchantIds = categoryMerchantIds;
+          }
         } else {
           // No merchants found for the selected categories, return empty result
           return [];
         }
+      }
+
+      // Apply merchant ID filter if we have any filters
+      if (merchantIds !== null) {
+        if (merchantIds.length === 0) {
+          return [];
+        }
+        query = query.in('id', merchantIds);
       }
 
       const { data, error } = await query;

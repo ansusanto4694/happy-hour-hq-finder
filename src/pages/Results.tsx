@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { SearchBar } from '@/components/SearchBar';
 import { SearchResults } from '@/components/SearchResults';
 import { FilterSection } from '@/components/FilterSection';
@@ -10,8 +10,16 @@ import { useMerchants } from '@/hooks/useMerchants';
 
 const Results = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const { data: merchants, isLoading, error } = useMerchants(selectedCategories);
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+
+  // Extract search parameters
+  const searchTerm = searchParams.get('search') || '';
+  const zipCode = searchParams.get('zip') || '';
+  const startTime = searchParams.get('startTime') || '';
+  const endTime = searchParams.get('endTime') || '';
+
+  const { data: merchants, isLoading, error } = useMerchants(selectedCategories, searchTerm);
 
   const handleGoHome = () => {
     navigate('/');
@@ -55,6 +63,9 @@ const Results = () => {
                 merchants={merchants}
                 isLoading={isLoading}
                 error={error}
+                startTime={startTime}
+                endTime={endTime}
+                zipCode={zipCode}
               />
             </div>
             {/* Fixed Map */}
@@ -84,6 +95,9 @@ const Results = () => {
               merchants={merchants}
               isLoading={isLoading}
               error={error}
+              startTime={startTime}
+              endTime={endTime}
+              zipCode={zipCode}
             />
           </div>
 

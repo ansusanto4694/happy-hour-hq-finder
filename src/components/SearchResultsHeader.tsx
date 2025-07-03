@@ -9,6 +9,7 @@ interface SearchResultsHeaderProps {
   currentPage?: number;
   totalPages?: number;
   resultsPerPage?: number;
+  searchTerm?: string;
 }
 
 export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
@@ -18,7 +19,8 @@ export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
   zipCode,
   currentPage = 1,
   totalPages = 1,
-  resultsPerPage = 20
+  resultsPerPage = 20,
+  searchTerm
 }) => {
   const startResult = (currentPage - 1) * resultsPerPage + 1;
   const endResult = Math.min(currentPage * resultsPerPage, resultsCount);
@@ -38,14 +40,18 @@ export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
         <div>
           <h2 className="text-lg font-semibold text-gray-900">
             Happy Hour Results
+            {searchTerm && <span className="text-orange-600"> for "{searchTerm}"</span>}
           </h2>
           <div className="text-sm text-gray-600 space-y-1">
             <p>
               Showing {startResult}-{endResult} of {resultsCount} restaurants
               {totalPages > 1 && ` (Page ${currentPage} of ${totalPages})`}
             </p>
-            {(startTime || endTime || zipCode) && (
+            {(startTime || endTime || zipCode || searchTerm) && (
               <div className="flex flex-wrap gap-4 text-xs">
+                {searchTerm && (
+                  <span>Search: "{searchTerm}"</span>
+                )}
                 {startTime && endTime && (
                   <span>Time: {formatTime(startTime)} - {formatTime(endTime)}</span>
                 )}

@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { SearchResultsLoading } from './SearchResultsLoading';
 import { SearchResultsError } from './SearchResultsError';
 import { SearchResultsEmpty } from './SearchResultsEmpty';
@@ -37,6 +38,10 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
 }) => {
   const { handleRestaurantClick } = useSearchResultsNavigation();
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchParams] = useSearchParams();
+  
+  // Extract search term from URL parameters
+  const searchTerm = searchParams.get('search') || '';
 
   if (isLoading) {
     return <SearchResultsLoading />;
@@ -140,6 +145,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
         currentPage={currentPage}
         totalPages={totalPages}
         resultsPerPage={RESULTS_PER_PAGE}
+        searchTerm={searchTerm}
       />
       
       <div className="space-y-3">
