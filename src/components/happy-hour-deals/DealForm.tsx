@@ -1,3 +1,4 @@
+
 import React, { useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -57,7 +58,7 @@ export const DealForm: React.FC<DealFormProps> = ({
           formattedText = `*${selectedText}*`;
           break;
         case 'underline':
-          formattedText = `__${selectedText}__`;
+          formattedText = `<u>${selectedText}</u>`;
           break;
         case 'strikethrough':
           formattedText = `~~${selectedText}~~`;
@@ -227,7 +228,7 @@ export const DealForm: React.FC<DealFormProps> = ({
         />
         
         <div className="text-xs text-gray-500 mt-1">
-          Tip: Select text and use the formatting buttons above. Use **bold**, *italic*, __underline__, ~~strikethrough~~, # Large Text, ## Medium Text, or &lt;small&gt;small text&lt;/small&gt;
+          Tip: Select text and use the formatting buttons above. Use **bold**, *italic*, &lt;u&gt;underline&lt;/u&gt;, ~~strikethrough~~, # Large Text, ## Medium Text, or &lt;small&gt;small text&lt;/small&gt;
         </div>
       </div>
       
