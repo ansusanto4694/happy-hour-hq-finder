@@ -39,8 +39,10 @@ export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ re
 
   const preprocessMarkdown = (text: string) => {
     // Convert single line breaks to double line breaks for proper markdown paragraph separation
-    // This ensures each line becomes its own paragraph
-    return text.replace(/\n/g, '\n\n');
+    // Handle empty lines by converting them to non-breaking spaces so they render
+    return text
+      .replace(/\n/g, '\n\n')
+      .replace(/^\s*$/gm, '&nbsp;'); // Convert empty lines to non-breaking spaces
   };
 
   if (isLoading) {
@@ -70,7 +72,13 @@ export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ re
                 <div className="text-gray-700 text-sm prose prose-sm max-w-none">
                   <ReactMarkdown
                     components={{
-                      p: ({ children }) => <p className="mb-1 leading-tight">{children}</p>,
+                      p: ({ children }) => {
+                        // Handle paragraphs with only non-breaking spaces
+                        if (children === '&nbsp;') {
+                          return <p className="mb-1 leading-tight">&nbsp;</p>;
+                        }
+                        return <p className="mb-1 leading-tight">{children}</p>;
+                      },
                       strong: ({ children }) => <strong className="font-bold">{children}</strong>,
                       em: ({ children }) => <em className="italic">{children}</em>,
                       u: ({ children }) => <u className="underline">{children}</u>,
