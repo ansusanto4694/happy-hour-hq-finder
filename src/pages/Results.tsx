@@ -19,7 +19,8 @@ const Results = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow-sm border-b">
+      {/* Fixed Header */}
+      <div className="bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="flex items-center justify-center">
             <h1 
@@ -35,10 +36,12 @@ const Results = () => {
         </div>
       </div>
 
-      <div className="px-4 py-6">
+      {/* Content with top padding to account for fixed header */}
+      <div className="pt-32 px-4 py-6">
         {/* Mobile/Small Screen Layout - Filters at Top */}
         <div className="xl:hidden max-w-7xl mx-auto space-y-6">
-          <div className="bg-white rounded-lg shadow-sm p-3">
+          {/* Fixed Filters */}
+          <div className="bg-white rounded-lg shadow-sm p-3 sticky top-32 z-40">
             <CategoryFilter
               selectedCategories={selectedCategories}
               onCategoryChange={setSelectedCategories}
@@ -54,17 +57,20 @@ const Results = () => {
                 error={error}
               />
             </div>
+            {/* Fixed Map */}
             <div className="lg:col-span-1">
-              <ResultsMap />
+              <div className="sticky top-48 z-30">
+                <ResultsMap />
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Large Screen Layout - Full Width with Filters on Far Left */}
-        <div className="hidden xl:flex xl:gap-6 xl:h-[calc(100vh-200px)]">
-          {/* Far Left Sidebar - Filters */}
+        {/* Large Screen Layout - Full Width with Fixed Components */}
+        <div className="hidden xl:flex xl:gap-6">
+          {/* Fixed Far Left Sidebar - Filters */}
           <div className="w-80 flex-shrink-0">
-            <div className="bg-white rounded-lg shadow-sm p-4 sticky top-6 h-fit">
+            <div className="bg-white rounded-lg shadow-sm p-4 sticky top-32 z-40">
               <CategoryFilter
                 selectedCategories={selectedCategories}
                 onCategoryChange={setSelectedCategories}
@@ -72,7 +78,7 @@ const Results = () => {
             </div>
           </div>
 
-          {/* Main Content Area - Results */}
+          {/* Scrollable Main Content Area - Results */}
           <div className="flex-1 min-w-0">
             <SearchResults 
               merchants={merchants}
@@ -81,9 +87,11 @@ const Results = () => {
             />
           </div>
 
-          {/* Right Side - Map */}
+          {/* Fixed Right Side - Map */}
           <div className="w-96 flex-shrink-0">
-            <ResultsMap />
+            <div className="sticky top-32 z-30">
+              <ResultsMap />
+            </div>
           </div>
         </div>
       </div>
