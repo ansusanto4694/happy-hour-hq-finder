@@ -48,10 +48,14 @@ const geocodeAddress = async (address: string): Promise<GeocodeResult | null> =>
 };
 
 serve(async (req) => {
-  console.log(`Received ${req.method} request to geocode-address function`);
+  console.log(`=== GEOCODE FUNCTION START ===`);
+  console.log(`Method: ${req.method}`);
+  console.log(`URL: ${req.url}`);
+  console.log(`Headers:`, Object.fromEntries(req.headers.entries()));
   
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('Handling CORS preflight request');
     return new Response(null, { headers: corsHeaders });
   }
 
@@ -59,9 +63,31 @@ serve(async (req) => {
     const requestBody = await req.text();
     console.log(`Request body: ${requestBody}`);
     
+    if (!requestBody) {
+      console.error('Empty request body received');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Empty request body' }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+    
     const { merchant_id, address } = JSON.parse(requestBody);
     
     console.log(`Processing geocoding request for merchant ${merchant_id}: ${address}`);
+    
+    if (!merchant_id || !address) {
+      console.error('Missing merchant_id or address in request');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Missing merchant_id or address' }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
     
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -69,6 +95,8 @@ serve(async (req) => {
     
     if (!supabaseUrl || !supabaseKey) {
       console.error('Missing Supabase environment variables');
+      console.error(`SUPABASE_URL present: ${!!supabaseUrl}`);
+      console.error(`SUPABASE_SERVICE_ROLE_KEY present: ${!!supabaseKey}`);
       throw new Error('Missing Supabase configuration');
     }
     
@@ -121,7 +149,10 @@ serve(async (req) => {
       );
     }
   } catch (error) {
-    console.error('Edge function error:', error);
+    console.error('=== EDGE FUNCTION ERROR ===');
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    console.error('=== END ERROR ===');
     return new Response(
       JSON.stringify({ 
         success: false, 
