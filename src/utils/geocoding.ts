@@ -41,14 +41,13 @@ export const geocodeMerchant = async (merchantId: number, address: string) => {
   const coordinates = await geocodeAddress(address);
   
   if (coordinates) {
-    // Use 'as any' to bypass TypeScript checking for newly added columns
     const { error } = await supabase
       .from('Merchant')
       .update({
         latitude: coordinates.latitude,
         longitude: coordinates.longitude,
         geocoded_at: new Date().toISOString()
-      } as any)
+      })
       .eq('id', merchantId);
     
     if (error) {
@@ -56,7 +55,7 @@ export const geocodeMerchant = async (merchantId: number, address: string) => {
       return false;
     }
     
-    console.log(`Successfully geocoded merchant ${merchantId}`);
+    console.log(`Successfully geocoded merchant ${merchantId}:`, coordinates);
     return true;
   }
   
@@ -75,28 +74,41 @@ export const geocodeAllMerchants = async () => {
     
     if (error) {
       console.error('Failed to fetch merchants for geocoding:', error);
-      return;
+      return { success: false, message: 'Failed to fetch merchants' };
     }
     
     if (!merchants || merchants.length === 0) {
       console.log('No merchants need geocoding');
-      return;
+      return { success: true, message: 'All merchants already have coordinates' };
     }
     
     console.log(`Starting geocoding for ${merchants.length} merchants`);
+    
+    let successCount = 0;
+    let failureCount = 0;
     
     // Process merchants one by one to avoid rate limiting
     for (const merchant of merchants) {
       const fullAddress = `${merchant.street_address}, ${merchant.city}, ${merchant.state} ${merchant.zip_code}`;
       
-      await geocodeMerchant(merchant.id, fullAddress);
+      const success = await geocodeMerchant(merchant.id, fullAddress);
+      if (success) {
+        successCount++;
+      } else {
+        failureCount++;
+      }
       
       // Add a small delay to avoid hitting rate limits
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 200));
     }
     
-    console.log('Batch geocoding completed');
+    console.log(`Batch geocoding completed. Success: ${successCount}, Failed: ${failureCount}`);
+    return { 
+      success: true, 
+      message: `Geocoded ${successCount} restaurants successfully. ${failureCount} failed.` 
+    };
   } catch (error) {
     console.error('Batch geocoding failed:', error);
+    return { success: false, message: 'Geocoding process failed' };
   }
 };
