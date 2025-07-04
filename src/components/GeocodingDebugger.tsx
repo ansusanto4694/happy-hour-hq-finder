@@ -12,14 +12,14 @@ const GeocodingDebugger = () => {
   const testDatabaseTrigger = async () => {
     setIsTestingTrigger(true);
     try {
-      // Try to update merchant 32 to trigger the geocoding
+      // Try to update merchant 33 to trigger the geocoding
       const { error } = await supabase
         .from('Merchant')
         .update({ 
           street_address: '123 Test Street Updated', 
           updated_at: new Date().toISOString() 
         })
-        .eq('id', 32);
+        .eq('id', 33);
 
       if (error) {
         toast.error(`Database update failed: ${error.message}`);
@@ -37,7 +37,7 @@ const GeocodingDebugger = () => {
     try {
       const { data, error } = await supabase.functions.invoke('geocode-address', {
         body: {
-          merchant_id: 32,
+          merchant_id: 33,
           address: '123 Test Street, Test City, CA 90210'
         }
       });
@@ -65,7 +65,7 @@ const GeocodingDebugger = () => {
         <div className="space-y-2">
           <h3 className="font-semibold">Test Database Trigger</h3>
           <p className="text-sm text-gray-600">
-            This will update merchant ID 32 to see if the database trigger fires.
+            This will update merchant ID 33 to see if the database trigger fires.
           </p>
           <Button 
             onClick={testDatabaseTrigger} 
