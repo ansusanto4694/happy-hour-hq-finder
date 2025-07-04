@@ -16,22 +16,30 @@ interface GeocodeResult {
 
 const geocodeAddress = async (address: string): Promise<GeocodeResult | null> => {
   try {
+    console.log(`Starting geocoding for address: ${address}`);
+    
     const encodedAddress = encodeURIComponent(address);
-    const response = await fetch(
-      `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedAddress}.json?access_token=${MAPBOX_TOKEN}&limit=1`
-    );
+    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedAddress}.json?access_token=${MAPBOX_TOKEN}&limit=1`;
+    
+    console.log(`Mapbox URL: ${url}`);
+    
+    const response = await fetch(url);
     
     if (!response.ok) {
+      console.error(`Mapbox API error: ${response.status} ${response.statusText}`);
       throw new Error(`Geocoding failed: ${response.status}`);
     }
     
     const data = await response.json();
+    console.log(`Mapbox response:`, JSON.stringify(data, null, 2));
     
     if (data.features && data.features.length > 0) {
       const [longitude, latitude] = data.features[0].center;
+      console.log(`Coordinates found: lat=${latitude}, lng=${longitude}`);
       return { latitude, longitude };
     }
     
+    console.log('No coordinates found in Mapbox response');
     return null;
   } catch (error) {
     console.error('Geocoding error:', error);
@@ -40,25 +48,40 @@ const geocodeAddress = async (address: string): Promise<GeocodeResult | null> =>
 };
 
 serve(async (req) => {
+  console.log(`Received ${req.method} request to geocode-address function`);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { merchant_id, address } = await req.json();
+    const requestBody = await req.text();
+    console.log(`Request body: ${requestBody}`);
     
-    console.log(`Geocoding merchant ${merchant_id}: ${address}`);
+    const { merchant_id, address } = JSON.parse(requestBody);
+    
+    console.log(`Processing geocoding request for merchant ${merchant_id}: ${address}`);
     
     // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('Missing Supabase environment variables');
+      throw new Error('Missing Supabase configuration');
+    }
+    
+    console.log(`Supabase URL: ${supabaseUrl}`);
+    
     const supabase = createClient(supabaseUrl, supabaseKey);
     
     // Get coordinates from Mapbox
     const coordinates = await geocodeAddress(address);
     
     if (coordinates) {
+      console.log(`Updating merchant ${merchant_id} with coordinates:`, coordinates);
+      
       // Update merchant with coordinates
       const { error } = await supabase
         .from('Merchant')
@@ -72,7 +95,7 @@ serve(async (req) => {
       if (error) {
         console.error(`Failed to update coordinates for merchant ${merchant_id}:`, error);
         return new Response(
-          JSON.stringify({ success: false, error: 'Failed to update database' }),
+          JSON.stringify({ success: false, error: 'Failed to update database', details: error }),
           { 
             status: 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -80,7 +103,7 @@ serve(async (req) => {
         );
       }
       
-      console.log(`Successfully geocoded merchant ${merchant_id}:`, coordinates);
+      console.log(`Successfully geocoded and updated merchant ${merchant_id}:`, coordinates);
       return new Response(
         JSON.stringify({ success: true, coordinates }),
         { 
@@ -90,7 +113,7 @@ serve(async (req) => {
     } else {
       console.warn(`Failed to geocode merchant ${merchant_id}: ${address}`);
       return new Response(
-        JSON.stringify({ success: false, error: 'Geocoding failed' }),
+        JSON.stringify({ success: false, error: 'Geocoding failed - no coordinates found' }),
         { 
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -100,7 +123,11 @@ serve(async (req) => {
   } catch (error) {
     console.error('Edge function error:', error);
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({ 
+        success: false, 
+        error: error.message,
+        stack: error.stack 
+      }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
