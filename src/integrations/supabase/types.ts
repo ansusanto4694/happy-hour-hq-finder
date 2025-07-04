@@ -92,7 +92,10 @@ export type Database = {
         Row: {
           city: string
           created_at: string
+          geocoded_at: string | null
           id: number
+          latitude: number | null
+          longitude: number | null
           merchant_type: string | null
           phone_number: string | null
           restaurant_name: string
@@ -106,7 +109,10 @@ export type Database = {
         Insert: {
           city: string
           created_at?: string
+          geocoded_at?: string | null
           id?: number
+          latitude?: number | null
+          longitude?: number | null
           merchant_type?: string | null
           phone_number?: string | null
           restaurant_name: string
@@ -120,7 +126,10 @@ export type Database = {
         Update: {
           city?: string
           created_at?: string
+          geocoded_at?: string | null
           id?: number
+          latitude?: number | null
+          longitude?: number | null
           merchant_type?: string | null
           phone_number?: string | null
           restaurant_name?: string

@@ -41,13 +41,14 @@ export const geocodeMerchant = async (merchantId: number, address: string) => {
   const coordinates = await geocodeAddress(address);
   
   if (coordinates) {
+    // Use 'as any' to bypass TypeScript checking for newly added columns
     const { error } = await supabase
       .from('Merchant')
       .update({
         latitude: coordinates.latitude,
         longitude: coordinates.longitude,
         geocoded_at: new Date().toISOString()
-      })
+      } as any)
       .eq('id', merchantId);
     
     if (error) {
