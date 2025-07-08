@@ -195,6 +195,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
             key={restaurant.id}
             restaurant={restaurant}
             onClick={handleRestaurantClick}
+            isMobile={isMobile}
           />
         ))}
       </div>
