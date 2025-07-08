@@ -11,19 +11,27 @@ export const ViewToggle: React.FC<ViewToggleProps> = ({ view, onViewChange }) =>
   return (
     <div className="flex bg-gray-100 rounded-lg p-1">
       <Button
-        variant={view === 'list' ? 'default' : 'ghost'}
+        variant="ghost"
         size="sm"
         onClick={() => onViewChange('list')}
-        className={`flex-1 ${view === 'list' ? 'bg-white shadow-sm' : ''}`}
+        className={`flex-1 ${
+          view === 'list' 
+            ? 'bg-white shadow-sm text-gray-900 hover:bg-white hover:text-gray-900' 
+            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+        }`}
       >
         <List className="w-4 h-4 mr-2" />
         List
       </Button>
       <Button
-        variant={view === 'map' ? 'default' : 'ghost'}
+        variant="ghost"
         size="sm"
         onClick={() => onViewChange('map')}
-        className={`flex-1 ${view === 'map' ? 'bg-white shadow-sm' : ''}`}
+        className={`flex-1 ${
+          view === 'map' 
+            ? 'bg-white shadow-sm text-gray-900 hover:bg-white hover:text-gray-900' 
+            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+        }`}
       >
         <Map className="w-4 h-4 mr-2" />
         Map
