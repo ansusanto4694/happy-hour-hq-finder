@@ -66,39 +66,42 @@ export const MobileSearchBar = () => {
           </CollapsibleTrigger>
           
           <CollapsibleContent>
-            <div className="border-t pt-3 space-y-3">
+            <div className="border-t mt-3 pt-4 space-y-4">
               {/* Time filters */}
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-xs text-gray-500 block mb-1">Start Time</label>
-                  <TimeDropdown
-                    placeholder="Starting at..."
-                    value={startTime}
-                    onChange={setStartTime}
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-500 block mb-1">End Time</label>
-                  <TimeDropdown
-                    placeholder="Ending at..."
-                    value={endTime}
-                    onChange={setEndTime}
-                  />
+              <div className="space-y-3">
+                <div className="text-sm font-medium text-gray-700">Time Range</div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-gray-500 block mb-1">Start Time</label>
+                    <TimeDropdown
+                      placeholder="Starting..."
+                      value={startTime}
+                      onChange={setStartTime}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500 block mb-1">End Time</label>
+                    <TimeDropdown
+                      placeholder="Ending..."
+                      value={endTime}
+                      onChange={setEndTime}
+                    />
+                  </div>
                 </div>
               </div>
               
-              {/* Zip code */}
-              <div>
-                <label className="text-xs text-gray-500 block mb-1">Location</label>
+              {/* Location */}
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-gray-700">Location</div>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <Input
                     type="text"
-                    placeholder="Zip code"
+                    placeholder="Enter zip code"
                     value={zipCode}
                     onChange={(e) => setZipCode(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    className="pl-10 pr-4"
+                    className="pl-10 pr-4 h-10"
                     maxLength={5}
                   />
                 </div>
@@ -107,7 +110,7 @@ export const MobileSearchBar = () => {
               {/* Search button */}
               <Button
                 onClick={handleSearch}
-                className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold"
+                className="w-full h-11 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold text-base"
               >
                 Search
               </Button>
