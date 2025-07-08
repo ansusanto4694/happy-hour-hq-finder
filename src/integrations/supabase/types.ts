@@ -267,7 +267,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      update_merchant_coordinates: {
+        Args: { merchant_id: number; latitude: number; longitude: number }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
