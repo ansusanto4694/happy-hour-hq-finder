@@ -1,21 +1,15 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useInView } from 'react-intersection-observer';
 import { SearchResultsLoading } from './SearchResultsLoading';
 import { SearchResultsError } from './SearchResultsError';
 import { SearchResultsEmpty } from './SearchResultsEmpty';
 import { SearchResultsHeader } from './SearchResultsHeader';
 import { SearchResultCard } from './SearchResultCard';
 import { useSearchResultsNavigation } from '@/hooks/useSearchResultsNavigation';
-import { 
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-  PaginationEllipsis
-} from '@/components/ui/pagination';
+import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 
 interface SearchResultsProps {
   merchants?: any[];
@@ -24,6 +18,7 @@ interface SearchResultsProps {
   startTime?: string;
   endTime?: string;
   zipCode?: string;
+  isMobile?: boolean;
 }
 
 const RESULTS_PER_PAGE = 20;
@@ -34,14 +29,55 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   error,
   startTime, 
   endTime, 
-  zipCode 
+  zipCode,
+  isMobile = false
 }) => {
   const { handleRestaurantClick } = useSearchResultsNavigation();
-  const [currentPage, setCurrentPage] = useState(1);
+  const [displayedResults, setDisplayedResults] = useState<any[]>([]);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [searchParams] = useSearchParams();
   
   // Extract search term from URL parameters
   const searchTerm = searchParams.get('search') || '';
+  
+  // Intersection observer for infinite scroll
+  const { ref, inView } = useInView({
+    threshold: 0.1,
+    triggerOnce: false,
+  });
+
+  // Reset displayed results when merchants change
+  useEffect(() => {
+    if (merchants) {
+      const initialResults = merchants.slice(0, RESULTS_PER_PAGE);
+      setDisplayedResults(initialResults);
+      setHasMore(merchants.length > RESULTS_PER_PAGE);
+    }
+  }, [merchants]);
+
+  // Load more results when scrolling to bottom (mobile only)
+  useEffect(() => {
+    if (inView && hasMore && !loadingMore && isMobile && displayedResults.length > 0) {
+      loadMore();
+    }
+  }, [inView, hasMore, loadingMore, isMobile, displayedResults.length]);
+
+  const loadMore = () => {
+    if (!merchants || loadingMore) return;
+    
+    setLoadingMore(true);
+    
+    // Simulate loading delay for better UX
+    setTimeout(() => {
+      const currentLength = displayedResults.length;
+      const nextResults = merchants.slice(currentLength, currentLength + RESULTS_PER_PAGE);
+      
+      setDisplayedResults(prev => [...prev, ...nextResults]);
+      setHasMore(currentLength + nextResults.length < merchants.length);
+      setLoadingMore(false);
+    }, 500);
+  };
 
   if (isLoading) {
     return <SearchResultsLoading />;
@@ -61,79 +97,8 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
     );
   }
 
-  // Calculate pagination
   const totalResults = merchants.length;
-  const totalPages = Math.ceil(totalResults / RESULTS_PER_PAGE);
-  const startIndex = (currentPage - 1) * RESULTS_PER_PAGE;
-  const endIndex = startIndex + RESULTS_PER_PAGE;
-  const currentResults = merchants.slice(startIndex, endIndex);
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    // Scroll to top of results when page changes
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const renderPaginationItems = () => {
-    const items = [];
-    const maxVisiblePages = 5;
-    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
-    // Adjust start page if we're near the end
-    if (endPage - startPage < maxVisiblePages - 1) {
-      startPage = Math.max(1, endPage - maxVisiblePages + 1);
-    }
-
-    // Add first page and ellipsis if needed
-    if (startPage > 1) {
-      items.push(
-        <PaginationItem key={1}>
-          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
-            1
-          </PaginationLink>
-        </PaginationItem>
-      );
-      if (startPage > 2) {
-        items.push(
-          <PaginationItem key="ellipsis-start">
-            <PaginationEllipsis />
-          </PaginationItem>
-        );
-      }
-    }
-
-    // Add visible page numbers
-    for (let i = startPage; i <= endPage; i++) {
-      items.push(
-        <PaginationItem key={i}>
-          <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
-            {i}
-          </PaginationLink>
-        </PaginationItem>
-      );
-    }
-
-    // Add ellipsis and last page if needed
-    if (endPage < totalPages) {
-      if (endPage < totalPages - 1) {
-        items.push(
-          <PaginationItem key="ellipsis-end">
-            <PaginationEllipsis />
-          </PaginationItem>
-        );
-      }
-      items.push(
-        <PaginationItem key={totalPages}>
-          <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
-            {totalPages}
-          </PaginationLink>
-        </PaginationItem>
-      );
-    }
-
-    return items;
-  };
+  const resultsToShow = isMobile ? displayedResults : merchants;
 
   return (
     <div className="space-y-4">
@@ -142,14 +107,15 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
         startTime={startTime}
         endTime={endTime}
         zipCode={zipCode}
-        currentPage={currentPage}
-        totalPages={totalPages}
+        currentPage={isMobile ? 1 : Math.ceil(displayedResults.length / RESULTS_PER_PAGE)}
+        totalPages={isMobile ? 1 : Math.ceil(totalResults / RESULTS_PER_PAGE)}
         resultsPerPage={RESULTS_PER_PAGE}
         searchTerm={searchTerm}
+        isMobile={isMobile}
       />
       
       <div className="space-y-3">
-        {currentResults.map((restaurant) => (
+        {resultsToShow.map((restaurant) => (
           <SearchResultCard
             key={restaurant.id}
             restaurant={restaurant}
@@ -158,27 +124,38 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
         ))}
       </div>
 
-      {totalPages > 1 && (
+      {/* Infinite scroll loading trigger (mobile only) */}
+      {isMobile && hasMore && (
+        <div ref={ref} className="flex justify-center py-4">
+          {loadingMore && (
+            <div className="flex items-center gap-2 text-gray-500">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Loading more results...
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Desktop pagination */}
+      {!isMobile && totalResults > RESULTS_PER_PAGE && (
         <div className="flex justify-center mt-8">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious 
-                  onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                  className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                />
-              </PaginationItem>
-              
-              {renderPaginationItems()}
-              
-              <PaginationItem>
-                <PaginationNext 
-                  onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                  className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
+          <Button
+            onClick={loadMore}
+            disabled={loadingMore || !hasMore}
+            variant="outline"
+            className="w-full max-w-xs"
+          >
+            {loadingMore ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                Loading...
+              </>
+            ) : hasMore ? (
+              `Load More (${totalResults - displayedResults.length} remaining)`
+            ) : (
+              'All results loaded'
+            )}
+          </Button>
         </div>
       )}
     </div>

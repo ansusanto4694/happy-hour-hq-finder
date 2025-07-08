@@ -101,7 +101,6 @@ export type Database = {
           id: number
           latitude: number | null
           longitude: number | null
-          merchant_type: string | null
           phone_number: string | null
           restaurant_name: string
           state: string
@@ -118,7 +117,6 @@ export type Database = {
           id?: number
           latitude?: number | null
           longitude?: number | null
-          merchant_type?: string | null
           phone_number?: string | null
           restaurant_name: string
           state: string
@@ -135,7 +133,6 @@ export type Database = {
           id?: number
           latitude?: number | null
           longitude?: number | null
-          merchant_type?: string | null
           phone_number?: string | null
           restaurant_name?: string
           state?: string

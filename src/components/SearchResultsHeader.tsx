@@ -10,6 +10,7 @@ interface SearchResultsHeaderProps {
   totalPages?: number;
   resultsPerPage?: number;
   searchTerm?: string;
+  isMobile?: boolean;
 }
 
 export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
@@ -20,7 +21,8 @@ export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
   currentPage = 1,
   totalPages = 1,
   resultsPerPage = 20,
-  searchTerm
+  searchTerm,
+  isMobile = false
 }) => {
   const startResult = (currentPage - 1) * resultsPerPage + 1;
   const endResult = Math.min(currentPage * resultsPerPage, resultsCount);
@@ -44,8 +46,10 @@ export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
           </h2>
           <div className="text-sm text-gray-600 space-y-1">
             <p>
-              Showing {startResult}-{endResult} of {resultsCount} restaurants
-              {totalPages > 1 && ` (Page ${currentPage} of ${totalPages})`}
+              {isMobile ? 
+                `${resultsCount} restaurants found` : 
+                `Showing ${startResult}-${endResult} of ${resultsCount} restaurants${totalPages > 1 ? ` (Page ${currentPage} of ${totalPages})` : ''}`
+              }
             </p>
             {(startTime || endTime || zipCode || searchTerm) && (
               <div className="flex flex-wrap gap-4 text-xs">
