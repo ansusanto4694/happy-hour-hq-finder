@@ -8,8 +8,16 @@ import { SearchResultsEmpty } from './SearchResultsEmpty';
 import { SearchResultsHeader } from './SearchResultsHeader';
 import { SearchResultCard } from './SearchResultCard';
 import { useSearchResultsNavigation } from '@/hooks/useSearchResultsNavigation';
-import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
+import { 
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis
+} from '@/components/ui/pagination';
 
 interface SearchResultsProps {
   merchants?: any[];
@@ -21,7 +29,7 @@ interface SearchResultsProps {
   isMobile?: boolean;
 }
 
-const RESULTS_PER_PAGE = 20;
+const RESULTS_PER_PAGE = 30;
 
 export const SearchResults: React.FC<SearchResultsProps> = ({ 
   merchants, 
@@ -34,6 +42,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
 }) => {
   const { handleRestaurantClick } = useSearchResultsNavigation();
   const [displayedResults, setDisplayedResults] = useState<any[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [searchParams] = useSearchParams();
@@ -98,7 +107,73 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   }
 
   const totalResults = merchants.length;
-  const resultsToShow = isMobile ? displayedResults : merchants;
+  const totalPages = Math.ceil(totalResults / RESULTS_PER_PAGE);
+  const startIndex = (currentPage - 1) * RESULTS_PER_PAGE;
+  const endIndex = startIndex + RESULTS_PER_PAGE;
+  const paginatedResults = merchants.slice(startIndex, endIndex);
+  const resultsToShow = isMobile ? displayedResults : paginatedResults;
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const renderPaginationItems = () => {
+    const items = [];
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+    if (endPage - startPage < maxVisiblePages - 1) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    if (startPage > 1) {
+      items.push(
+        <PaginationItem key={1}>
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+      if (startPage > 2) {
+        items.push(
+          <PaginationItem key="ellipsis-start">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      }
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      items.push(
+        <PaginationItem key={i}>
+          <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+            {i}
+          </PaginationLink>
+        </PaginationItem>
+      );
+    }
+
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) {
+        items.push(
+          <PaginationItem key="ellipsis-end">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      }
+      items.push(
+        <PaginationItem key={totalPages}>
+          <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+            {totalPages}
+          </PaginationLink>
+        </PaginationItem>
+      );
+    }
+
+    return items;
+  };
 
   return (
     <div className="space-y-4">
@@ -107,8 +182,8 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
         startTime={startTime}
         endTime={endTime}
         zipCode={zipCode}
-        currentPage={isMobile ? 1 : Math.ceil(displayedResults.length / RESULTS_PER_PAGE)}
-        totalPages={isMobile ? 1 : Math.ceil(totalResults / RESULTS_PER_PAGE)}
+        currentPage={isMobile ? 1 : currentPage}
+        totalPages={isMobile ? 1 : totalPages}
         resultsPerPage={RESULTS_PER_PAGE}
         searchTerm={searchTerm}
         isMobile={isMobile}
@@ -137,25 +212,27 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
       )}
 
       {/* Desktop pagination */}
-      {!isMobile && totalResults > RESULTS_PER_PAGE && (
+      {!isMobile && totalPages > 1 && (
         <div className="flex justify-center mt-8">
-          <Button
-            onClick={loadMore}
-            disabled={loadingMore || !hasMore}
-            variant="outline"
-            className="w-full max-w-xs"
-          >
-            {loadingMore ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                Loading...
-              </>
-            ) : hasMore ? (
-              `Load More (${totalResults - displayedResults.length} remaining)`
-            ) : (
-              'All results loaded'
-            )}
-          </Button>
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious 
+                  onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                  className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+              
+              {renderPaginationItems()}
+              
+              <PaginationItem>
+                <PaginationNext 
+                  onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                  className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         </div>
       )}
     </div>
