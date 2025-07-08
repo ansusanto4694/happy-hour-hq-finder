@@ -2,6 +2,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import Map, { Marker, NavigationControl } from 'react-map-gl';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useNavigate } from 'react-router-dom';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 interface Restaurant {
@@ -31,6 +32,12 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
   });
 
   const mapRef = useRef<any>(null);
+  const navigate = useNavigate();
+
+  // Handle restaurant marker click
+  const handleRestaurantClick = useCallback((restaurantId: number) => {
+    navigate(`/restaurant/${restaurantId}`);
+  }, [navigate]);
 
   // Update map center based on restaurants with coordinates
   useEffect(() => {
@@ -99,6 +106,7 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
                   <div 
                     className="bg-red-500 rounded-full w-6 h-6 flex items-center justify-center shadow-lg border-2 border-white cursor-pointer hover:bg-red-600 transition-colors"
                     title={restaurant.restaurant_name}
+                    onClick={() => handleRestaurantClick(restaurant.id)}
                   >
                     <div className="w-2 h-2 bg-white rounded-full"></div>
                   </div>
