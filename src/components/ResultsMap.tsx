@@ -3,6 +3,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import Map, { Marker, NavigationControl } from 'react-map-gl';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
+import { MerchantMapPreviewCard } from '@/components/MerchantMapPreviewCard';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 interface Restaurant {
@@ -31,6 +32,9 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
     zoom: 12
   });
 
+  const [hoveredRestaurant, setHoveredRestaurant] = useState<Restaurant | null>(null);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
   const mapRef = useRef<any>(null);
   const navigate = useNavigate();
 
@@ -38,6 +42,17 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
   const handleRestaurantClick = useCallback((restaurantId: number) => {
     navigate(`/restaurant/${restaurantId}`);
   }, [navigate]);
+
+  // Handle marker hover
+  const handleMarkerHover = useCallback((restaurant: Restaurant, event: React.MouseEvent) => {
+    setHoveredRestaurant(restaurant);
+    setMousePosition({ x: event.clientX, y: event.clientY });
+  }, []);
+
+  // Handle marker leave
+  const handleMarkerLeave = useCallback(() => {
+    setHoveredRestaurant(null);
+  }, []);
 
   // Update map center based on restaurants with coordinates
   useEffect(() => {
@@ -107,12 +122,21 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
                     className="bg-red-500 rounded-full w-6 h-6 flex items-center justify-center shadow-lg border-2 border-white cursor-pointer hover:bg-red-600 transition-colors"
                     title={restaurant.restaurant_name}
                     onClick={() => handleRestaurantClick(restaurant.id)}
+                    onMouseEnter={(event) => handleMarkerHover(restaurant, event)}
+                    onMouseLeave={handleMarkerLeave}
                   >
                     <div className="w-2 h-2 bg-white rounded-full"></div>
                   </div>
                 </Marker>
               ))}
           </Map>
+          
+          {/* Merchant Preview Card */}
+          <MerchantMapPreviewCard
+            restaurant={hoveredRestaurant!}
+            position={mousePosition}
+            isVisible={!!hoveredRestaurant}
+          />
         </div>
         
         {/* Show info about restaurants without coordinates */}
