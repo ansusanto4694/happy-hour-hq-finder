@@ -9,11 +9,13 @@ import { useCategoriesHierarchy } from '@/hooks/useCategories';
 interface CategoryFilterProps {
   selectedCategories: string[]; // Changed to string array
   onCategoryChange: (categories: string[]) => void;
+  vertical?: boolean; // New prop for vertical layout
 }
 
 export const CategoryFilter: React.FC<CategoryFilterProps> = ({
   selectedCategories,
   onCategoryChange,
+  vertical = false,
 }) => {
   const { getParentCategories, getSubCategories, isLoading } = useCategoriesHierarchy();
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
@@ -76,8 +78,8 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
         </div>
       )}
 
-      {/* Responsive grid layout - vertical on large screens (sidebar), horizontal on small screens (top) */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-1 gap-3">
+      {/* Responsive grid layout - vertical when vertical prop is true */}
+      <div className={vertical ? "space-y-3" : "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-1 gap-3"}>
         {parentCategories.map(parent => {
           const subCategories = getSubCategories(parent.id);
           const isExpanded = expandedCategories.includes(parent.id);

@@ -42,6 +42,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
           <CategoryFilter
             selectedCategories={selectedCategories}
             onCategoryChange={onCategoryChange}
+            vertical={true}
           />
         </div>
       </SheetContent>
