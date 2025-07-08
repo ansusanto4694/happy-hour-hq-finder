@@ -2,6 +2,7 @@
 import React from 'react';
 import { HappyHourDealsManager } from '@/components/HappyHourDealsManager';
 import { HappyHourDealsDisplay } from '@/components/HappyHourDealsDisplay';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Restaurant {
   id: number;
@@ -26,11 +27,13 @@ interface RestaurantDealsSectionProps {
 }
 
 export const RestaurantDealsSection: React.FC<RestaurantDealsSectionProps> = ({ restaurantId, restaurant }) => {
+  const { isAdmin } = useAuth();
+  
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-lg font-semibold text-gray-900">Happy Hour Menu</h3>
-        <HappyHourDealsManager restaurantId={restaurantId} />
+        {isAdmin && <HappyHourDealsManager restaurantId={restaurantId} />}
       </div>
       
       <div>

@@ -8,6 +8,7 @@ import { RestaurantHappyHours } from '@/components/RestaurantHappyHours';
 import { RestaurantDealsSection } from '@/components/RestaurantDealsSection';
 import { RestaurantEventsFeed } from '@/components/RestaurantEventsFeed';
 import { RestaurantProfileEditor } from '@/components/RestaurantProfileEditor';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Restaurant {
   id: number;
@@ -40,6 +41,8 @@ interface RestaurantProfileContentProps {
 }
 
 export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> = ({ restaurant }) => {
+  const { isAdmin } = useAuth();
+  
   // Transform the merchant_happy_hour data to include IDs for the editor
   const restaurantWithIds = {
     ...restaurant,
@@ -64,7 +67,7 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
                 </div>
                 <h1 className="text-3xl font-bold text-gray-900">{restaurant.restaurant_name}</h1>
               </div>
-              <RestaurantProfileEditor restaurant={restaurantWithIds} />
+              {isAdmin && <RestaurantProfileEditor restaurant={restaurantWithIds} />}
             </div>
 
             {/* Category tags - positioned below name/logo, above address */}
