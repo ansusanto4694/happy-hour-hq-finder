@@ -60,14 +60,16 @@ const Results = () => {
       <div className="pt-24 md:pt-32 px-4 py-6">
         {/* Mobile Layout (< 768px) */}
         {isMobile && (
-          <div className="max-w-7xl mx-auto space-y-4">
-            {/* Mobile Controls */}
-            <div className="flex items-center justify-between gap-3">
-              <MobileFilterDrawer
-                selectedCategories={selectedCategories}
-                onCategoryChange={setSelectedCategories}
-              />
-              <ViewToggle view={mobileView} onViewChange={setMobileView} />
+          <div className="max-w-7xl mx-auto">
+            {/* Fixed Mobile Controls */}
+            <div className="sticky top-24 md:top-32 z-40 bg-gray-50 pb-4 mb-4">
+              <div className="flex items-center justify-between gap-3">
+                <MobileFilterDrawer
+                  selectedCategories={selectedCategories}
+                  onCategoryChange={setSelectedCategories}
+                />
+                <ViewToggle view={mobileView} onViewChange={setMobileView} />
+              </div>
             </div>
 
             {/* Mobile Content */}
@@ -82,7 +84,7 @@ const Results = () => {
                 isMobile={true}
               />
             ) : (
-              <div className="h-[calc(100vh-200px)] rounded-lg overflow-hidden">
+              <div className="h-[calc(100vh-220px)] rounded-lg overflow-hidden">
                 <ResultsMap 
                   restaurants={merchants || []}
                   onMapMove={handleMapMove}
