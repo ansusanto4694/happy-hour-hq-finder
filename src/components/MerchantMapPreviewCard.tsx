@@ -23,6 +23,8 @@ export const MerchantMapPreviewCard: React.FC<MerchantMapPreviewCardProps> = ({
   position,
   isVisible,
 }) => {
+  console.log('MerchantMapPreviewCard props:', { restaurant: restaurant?.restaurant_name, position, isVisible });
+  
   if (!isVisible) return null;
 
   return (

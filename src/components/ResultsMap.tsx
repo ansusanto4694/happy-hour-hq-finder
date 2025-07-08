@@ -45,12 +45,25 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
 
   // Handle marker hover
   const handleMarkerHover = useCallback((restaurant: Restaurant, event: React.MouseEvent) => {
+    console.log('Marker hover triggered for:', restaurant.restaurant_name);
+    
+    // Get the map container's bounding rect for relative positioning
+    const mapContainer = event.currentTarget.closest('.map-container');
+    if (mapContainer) {
+      const rect = mapContainer.getBoundingClientRect();
+      const position = { 
+        x: event.clientX - rect.left, 
+        y: event.clientY - rect.top 
+      };
+      console.log('Mouse position:', position);
+      setMousePosition(position);
+    }
     setHoveredRestaurant(restaurant);
-    setMousePosition({ x: event.clientX, y: event.clientY });
   }, []);
 
   // Handle marker leave
   const handleMarkerLeave = useCallback(() => {
+    console.log('Marker leave triggered');
     setHoveredRestaurant(null);
   }, []);
 
@@ -94,8 +107,8 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
       <CardHeader className="pb-3">
         <CardTitle className="text-lg font-semibold">Map View</CardTitle>
       </CardHeader>
-      <CardContent className="p-4 pt-0">
-        <div className="rounded-lg overflow-hidden h-[calc(100vh-280px)] xl:h-[calc(100vh-240px)]">
+      <CardContent className="p-4 pt-0 relative">
+        <div className="map-container rounded-lg overflow-hidden h-[calc(100vh-280px)] xl:h-[calc(100vh-240px)] relative">
           <Map
             ref={mapRef}
             {...viewState}
@@ -130,14 +143,14 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
                 </Marker>
               ))}
           </Map>
-          
-          {/* Merchant Preview Card */}
-          <MerchantMapPreviewCard
-            restaurant={hoveredRestaurant!}
-            position={mousePosition}
-            isVisible={!!hoveredRestaurant}
-          />
         </div>
+        
+        {/* Merchant Preview Card - positioned outside map container to avoid clipping */}
+        <MerchantMapPreviewCard
+          restaurant={hoveredRestaurant!}
+          position={mousePosition}
+          isVisible={!!hoveredRestaurant}
+        />
         
         {/* Show info about restaurants without coordinates */}
         {restaurants.length > 0 && (
