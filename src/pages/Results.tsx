@@ -57,12 +57,12 @@ const Results = () => {
       </div>
 
       {/* Content with top padding to account for fixed header */}
-      <div className="pt-24 md:pt-32 px-4 py-6">
+      <div className="pt-32 md:pt-32 px-4 py-6">
         {/* Mobile Layout (< 768px) */}
         {isMobile && (
           <div className="max-w-7xl mx-auto">
             {/* Fixed Mobile Controls */}
-            <div className="sticky top-24 md:top-32 z-40 bg-gray-50 pb-4 mb-4">
+            <div className="sticky top-32 md:top-32 z-40 bg-gray-50 pb-4 mb-4">
               <div className="flex items-center justify-between gap-3">
                 <MobileFilterDrawer
                   selectedCategories={selectedCategories}
