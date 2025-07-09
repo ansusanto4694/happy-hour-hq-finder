@@ -26,19 +26,19 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
           <div className="space-y-2">
             {/* Restaurant name and happy hour badge */}
             <div className="flex items-start justify-between gap-3">
-              <h3 className="text-sm font-semibold text-gray-900 break-words leading-tight">
+              <h3 className="text-lg font-semibold text-gray-900 break-words leading-tight">
                 {restaurant.restaurant_name}
               </h3>
               <Badge 
                 variant="secondary" 
-                className="flex-shrink-0 text-xs px-2 py-1 font-medium"
+                className="flex-shrink-0 text-sm px-2 py-1 font-medium"
               >
                 {getTodaysHappyHour(restaurant.merchant_happy_hour || [])}
               </Badge>
             </div>
             
             {/* Address */}
-            <div className="text-xs text-gray-600 leading-snug">
+            <div className="text-sm text-gray-600 leading-snug">
               <p className="break-words">
                 {restaurant.street_address}
                 {restaurant.street_address_line_2 && `, ${restaurant.street_address_line_2}`}
@@ -51,7 +51,7 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
             {/* Phone and Categories in same row */}
             <div className="flex items-center justify-between gap-2">
               {restaurant.phone_number && (
-                <p className="text-xs text-gray-500 font-medium">
+                <p className="text-sm text-gray-500 font-medium">
                   {restaurant.phone_number}
                 </p>
               )}
@@ -63,7 +63,7 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
                     <Badge 
                       key={merchantCategory.id} 
                       variant="outline" 
-                      className="text-xs px-1.5 py-0.5 font-normal"
+                      className="text-sm px-2 py-1 font-normal"
                     >
                       {merchantCategory.categories.name}
                     </Badge>
@@ -71,7 +71,7 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
                   {restaurant.merchant_categories.length > 2 && (
                     <Badge 
                       variant="outline" 
-                      className="text-xs px-1.5 py-0.5 font-normal text-gray-500"
+                      className="text-sm px-2 py-1 font-normal text-gray-500"
                     >
                       +{restaurant.merchant_categories.length - 2}
                     </Badge>
@@ -94,18 +94,18 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
             <div className="flex-1 min-w-0 space-y-2">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-xl font-semibold text-gray-900 break-words">
+                  <h3 className="text-2xl font-semibold text-gray-900 break-words">
                     {restaurant.restaurant_name}
                   </h3>
-                  <p className="text-gray-600 text-base mt-2 break-words">
+                  <p className="text-gray-600 text-lg mt-2 break-words">
                     {restaurant.street_address}
                     {restaurant.street_address_line_2 && `, ${restaurant.street_address_line_2}`}
                   </p>
-                  <p className="text-gray-600 text-base">
+                  <p className="text-gray-600 text-lg">
                     {restaurant.city}, {restaurant.state} {restaurant.zip_code}
                   </p>
                   {restaurant.phone_number && (
-                    <p className="text-gray-600 text-base mt-1">
+                    <p className="text-gray-600 text-lg mt-1">
                       {restaurant.phone_number}
                     </p>
                   )}
@@ -117,7 +117,7 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
                         <Badge 
                           key={merchantCategory.id} 
                           variant="outline" 
-                          className="text-xs px-2 py-1"
+                          className="text-sm px-2 py-1"
                         >
                           {merchantCategory.categories.name}
                         </Badge>
@@ -126,7 +126,7 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
                   )}
                 </div>
                 
-                <Badge variant="secondary" className="flex-shrink-0 text-sm px-3 py-1">
+                <Badge variant="secondary" className="flex-shrink-0 text-base px-3 py-1">
                   {getTodaysHappyHour(restaurant.merchant_happy_hour || [])}
                 </Badge>
               </div>
