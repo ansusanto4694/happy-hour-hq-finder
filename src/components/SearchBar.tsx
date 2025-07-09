@@ -4,14 +4,17 @@ import { Search, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TimeDropdown } from './TimeDropdown';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 export const SearchBar = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [zipCode, setZipCode] = useState('');
-  const [startTime, setStartTime] = useState('');
-  const [endTime, setEndTime] = useState('');
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  
+  // Initialize state from URL parameters when available
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+  const [zipCode, setZipCode] = useState(searchParams.get('zip') || '');
+  const [startTime, setStartTime] = useState(searchParams.get('startTime') || '');
+  const [endTime, setEndTime] = useState(searchParams.get('endTime') || '');
 
   const handleSearch = () => {
     console.log('Searching for:', searchTerm, 'in zip code:', zipCode, 'start time:', startTime, 'end time:', endTime);
