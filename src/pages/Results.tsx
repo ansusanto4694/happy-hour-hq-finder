@@ -43,12 +43,14 @@ const Results = () => {
       <div className="bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
           <div className="flex items-center justify-center">
-            <h1 
-              className="text-xl md:text-2xl font-bold text-gray-900 cursor-pointer hover:text-orange-500 transition-colors absolute left-4"
-              onClick={handleGoHome}
-            >
-              Happy.Hour
-            </h1>
+            {!isMobile && (
+              <h1 
+                className="text-xl md:text-2xl font-bold text-gray-900 cursor-pointer hover:text-orange-500 transition-colors absolute left-4"
+                onClick={handleGoHome}
+              >
+                Happy.Hour
+              </h1>
+            )}
             <div className="max-w-4xl w-full">
               {isMobile ? <MobileSearchBar /> : <SearchBar />}
             </div>
