@@ -9,7 +9,7 @@ export const RestaurantHeader: React.FC = () => {
   const navigate = useNavigate();
   
   const handleBackToResults = () => {
-    navigate('/results');
+    navigate(-1);
   };
   
   const handleGoHome = () => {
