@@ -30,10 +30,24 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
 
       let merchantIds: number[] | null = null;
 
-      // If search term is provided, find merchants with matching happy hour deals OR categories
+      // If search term is provided, find merchants with matching names, happy hour deals OR categories
       if (searchTerm && searchTerm.trim()) {
         console.log('Searching for term:', searchTerm);
         
+        // Search in merchant names first
+        const { data: nameMerchants, error: nameError } = await supabase
+          .from('Merchant')
+          .select('id')
+          .ilike('restaurant_name', `%${searchTerm}%`)
+          .eq('is_active', true);
+
+        if (nameError) {
+          console.error('Error searching merchant names:', nameError);
+          throw nameError;
+        }
+
+        console.log('Found merchants matching name search:', nameMerchants);
+
         // Search in happy hour deals (only from active merchants)
         const { data: dealMerchants, error: dealError } = await supabase
           .from('happy_hour_deals')
@@ -91,10 +105,12 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
           }
         }
 
-        // Combine results from deals and categories (OR logic)
+        // Combine results from names, deals and categories (OR logic)
+        const nameMerchantIds = nameMerchants ? nameMerchants.map(merchant => merchant.id) : [];
         const dealMerchantIds = dealMerchants ? dealMerchants.map(deal => deal.restaurant_id) : [];
-        const allSearchMerchantIds = [...new Set([...dealMerchantIds, ...categoryMerchantIds])];
+        const allSearchMerchantIds = [...new Set([...nameMerchantIds, ...dealMerchantIds, ...categoryMerchantIds])];
 
+        console.log('Combined search results - Name IDs:', nameMerchantIds);
         console.log('Combined search results - Deal IDs:', dealMerchantIds);
         console.log('Combined search results - Category IDs:', categoryMerchantIds);
         console.log('Combined search results - All IDs:', allSearchMerchantIds);
@@ -102,8 +118,8 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
         if (allSearchMerchantIds.length > 0) {
           merchantIds = allSearchMerchantIds;
         } else {
-          // No deals or categories found for search term, return empty result
-          console.log('No deals or categories found for search term, returning empty');
+          // No merchants, deals or categories found for search term, return empty result
+          console.log('No merchants, deals or categories found for search term, returning empty');
           return [];
         }
       }
