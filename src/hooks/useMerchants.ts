@@ -2,9 +2,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-export const useMerchants = (categoryIds?: string[], searchTerm?: string, startTime?: string, endTime?: string) => {
+export const useMerchants = (categoryIds?: string[], searchTerm?: string, startTime?: string, endTime?: string, zipCode?: string) => {
   return useQuery({
-    queryKey: ['merchants', categoryIds, searchTerm, startTime, endTime],
+    queryKey: ['merchants', categoryIds, searchTerm, startTime, endTime, zipCode],
     queryFn: async () => {
       let query = supabase
         .from('Merchant')
@@ -158,6 +158,12 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
           // No merchants found for the selected categories, return empty result
           return [];
         }
+      }
+
+      // Apply zip code filter if provided
+      if (zipCode && zipCode.trim()) {
+        console.log('Applying zip code filter:', zipCode);
+        query = query.eq('zip_code', zipCode.trim());
       }
 
       // Apply merchant ID filter if we have any filters

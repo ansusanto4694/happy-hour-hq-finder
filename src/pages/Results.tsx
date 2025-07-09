@@ -25,7 +25,7 @@ const Results = () => {
   const startTime = searchParams.get('startTime') || '';
   const endTime = searchParams.get('endTime') || '';
 
-  const { data: merchants, isLoading, error } = useMerchants(selectedCategories, searchTerm, startTime, endTime);
+  const { data: merchants, isLoading, error } = useMerchants(selectedCategories, searchTerm, startTime, endTime, zipCode);
 
   const handleGoHome = () => {
     navigate('/');
