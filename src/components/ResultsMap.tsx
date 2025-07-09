@@ -4,6 +4,7 @@ import Map, { Marker, NavigationControl } from 'react-map-gl';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { MerchantMapPreviewCard } from '@/components/MerchantMapPreviewCard';
+import { useIsMobile } from '@/hooks/use-mobile';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 interface Restaurant {
@@ -33,18 +34,28 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
   });
 
   const [hoveredRestaurant, setHoveredRestaurant] = useState<Restaurant | null>(null);
+  const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   const mapRef = useRef<any>(null);
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   // Handle restaurant marker click
-  const handleRestaurantClick = useCallback((restaurantId: number) => {
-    navigate(`/restaurant/${restaurantId}`);
-  }, [navigate]);
+  const handleRestaurantClick = useCallback((restaurant: Restaurant) => {
+    if (isMobile) {
+      // On mobile, show preview card at bottom instead of navigating
+      setSelectedRestaurant(restaurant);
+    } else {
+      // On desktop, navigate directly
+      navigate(`/restaurant/${restaurant.id}`);
+    }
+  }, [navigate, isMobile]);
 
-  // Handle marker hover
+  // Handle marker hover (desktop only)
   const handleMarkerHover = useCallback((restaurant: Restaurant, event: React.MouseEvent) => {
+    if (isMobile) return; // Skip hover on mobile
+    
     console.log('Marker hover triggered for:', restaurant.restaurant_name);
     
     // Get the map container's bounding rect for relative positioning
@@ -59,13 +70,15 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
       setMousePosition(position);
     }
     setHoveredRestaurant(restaurant);
-  }, []);
+  }, [isMobile]);
 
-  // Handle marker leave
+  // Handle marker leave (desktop only)
   const handleMarkerLeave = useCallback(() => {
+    if (isMobile) return; // Skip hover on mobile
+    
     console.log('Marker leave triggered');
     setHoveredRestaurant(null);
-  }, []);
+  }, [isMobile]);
 
   // Update map center based on restaurants with coordinates
   useEffect(() => {
@@ -134,7 +147,7 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
                   <div 
                     className="bg-red-500 rounded-full w-6 h-6 flex items-center justify-center shadow-lg border-2 border-white cursor-pointer hover:bg-red-600 transition-colors"
                     title={restaurant.restaurant_name}
-                    onClick={() => handleRestaurantClick(restaurant.id)}
+                    onClick={() => handleRestaurantClick(restaurant)}
                     onMouseEnter={(event) => handleMarkerHover(restaurant, event)}
                     onMouseLeave={handleMarkerLeave}
                   >
@@ -147,9 +160,16 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
         
         {/* Merchant Preview Card - positioned outside map container to avoid clipping */}
         <MerchantMapPreviewCard
-          restaurant={hoveredRestaurant!}
+          restaurant={isMobile ? selectedRestaurant! : hoveredRestaurant!}
           position={mousePosition}
-          isVisible={!!hoveredRestaurant}
+          isVisible={isMobile ? !!selectedRestaurant : !!hoveredRestaurant}
+          isMobile={isMobile}
+          onNavigate={() => {
+            if (selectedRestaurant) {
+              navigate(`/restaurant/${selectedRestaurant.id}`);
+            }
+          }}
+          onClose={() => setSelectedRestaurant(null)}
         />
         
         {/* Show info about restaurants without coordinates */}
