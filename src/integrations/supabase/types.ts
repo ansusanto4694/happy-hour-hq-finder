@@ -99,6 +99,7 @@ export type Database = {
           created_at: string
           geocoded_at: string | null
           id: number
+          is_active: boolean
           latitude: number | null
           longitude: number | null
           phone_number: string | null
@@ -115,6 +116,7 @@ export type Database = {
           created_at?: string
           geocoded_at?: string | null
           id?: number
+          is_active?: boolean
           latitude?: number | null
           longitude?: number | null
           phone_number?: string | null
@@ -131,6 +133,7 @@ export type Database = {
           created_at?: string
           geocoded_at?: string | null
           id?: number
+          is_active?: boolean
           latitude?: number | null
           longitude?: number | null
           phone_number?: string | null

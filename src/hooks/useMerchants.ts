@@ -25,7 +25,8 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
               parent_id
             )
           )
-        `);
+        `)
+        .eq('is_active', true);
 
       let merchantIds: number[] | null = null;
 
@@ -33,12 +34,16 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
       if (searchTerm && searchTerm.trim()) {
         console.log('Searching for term:', searchTerm);
         
-        // Search in happy hour deals
+        // Search in happy hour deals (only from active merchants)
         const { data: dealMerchants, error: dealError } = await supabase
           .from('happy_hour_deals')
-          .select('restaurant_id')
+          .select(`
+            restaurant_id,
+            Merchant!inner(is_active)
+          `)
           .or(`deal_title.ilike.%${searchTerm}%,deal_description.ilike.%${searchTerm}%`)
-          .eq('active', true);
+          .eq('active', true)
+          .eq('Merchant.is_active', true);
 
         if (dealError) {
           console.error('Error searching happy hour deals:', dealError);
@@ -67,8 +72,12 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
           
           const { data: merchantsWithCategories, error: merchantCategoryError } = await supabase
             .from('merchant_categories')
-            .select('merchant_id')
-            .in('category_id', categoryIds);
+            .select(`
+              merchant_id,
+              Merchant!inner(is_active)
+            `)
+            .in('category_id', categoryIds)
+            .eq('Merchant.is_active', true);
 
           if (merchantCategoryError) {
             console.error('Error fetching merchants by categories:', merchantCategoryError);
@@ -106,8 +115,12 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
         // Get merchant IDs that have ANY of the selected categories (OR logic)
         const { data: categoryMerchants, error: merchantIdsError } = await supabase
           .from('merchant_categories')
-          .select('merchant_id')
-          .in('category_id', categoryIds);
+          .select(`
+            merchant_id,
+            Merchant!inner(is_active)
+          `)
+          .in('category_id', categoryIds)
+          .eq('Merchant.is_active', true);
 
         if (merchantIdsError) {
           console.error('Error fetching merchant IDs:', merchantIdsError);
