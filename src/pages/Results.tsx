@@ -15,6 +15,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 const Results = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [mobileView, setMobileView] = useState<'list' | 'map'>('list');
+  const [searchAsMapMoves, setSearchAsMapMoves] = useState(false);
+  const [mapBounds, setMapBounds] = useState<{ north: number; south: number; east: number; west: number } | null>(null);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -25,7 +27,14 @@ const Results = () => {
   const startTime = searchParams.get('startTime') || '';
   const endTime = searchParams.get('endTime') || '';
 
-  const { data: merchants, isLoading, error } = useMerchants(selectedCategories, searchTerm, startTime, endTime, zipCode);
+  const { data: merchants, isLoading, error } = useMerchants(
+    selectedCategories, 
+    searchTerm, 
+    startTime, 
+    endTime, 
+    zipCode,
+    searchAsMapMoves ? mapBounds : undefined
+  );
 
   const handleGoHome = () => {
     navigate('/');
@@ -33,8 +42,10 @@ const Results = () => {
 
   // Handle map bounds change to potentially filter results
   const handleMapMove = (bounds: { north: number; south: number; east: number; west: number }) => {
-    // For now, we'll just log the bounds - you can implement location-based filtering later
-    console.log('Map moved to bounds:', bounds);
+    setMapBounds(bounds);
+    if (searchAsMapMoves) {
+      console.log('Map moved to bounds, updating search:', bounds);
+    }
   };
 
   return (
@@ -90,6 +101,8 @@ const Results = () => {
                 <ResultsMap 
                   restaurants={merchants || []}
                   onMapMove={handleMapMove}
+                  searchAsMapMoves={searchAsMapMoves}
+                  onToggleSearchAsMapMoves={setSearchAsMapMoves}
                 />
               </div>
             )}
@@ -126,6 +139,8 @@ const Results = () => {
                   <ResultsMap 
                     restaurants={merchants || []}
                     onMapMove={handleMapMove}
+                    searchAsMapMoves={searchAsMapMoves}
+                    onToggleSearchAsMapMoves={setSearchAsMapMoves}
                   />
                 </div>
               </div>
@@ -163,6 +178,8 @@ const Results = () => {
               <ResultsMap 
                 restaurants={merchants || []}
                 onMapMove={handleMapMove}
+                searchAsMapMoves={searchAsMapMoves}
+                onToggleSearchAsMapMoves={setSearchAsMapMoves}
               />
             </div>
           </div>

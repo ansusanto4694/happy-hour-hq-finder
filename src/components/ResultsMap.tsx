@@ -2,9 +2,11 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import Map, { Marker, NavigationControl } from 'react-map-gl';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { MerchantMapPreviewCard } from '@/components/MerchantMapPreviewCard';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Map as MapIcon } from 'lucide-react';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 interface Restaurant {
@@ -21,11 +23,15 @@ interface Restaurant {
 interface ResultsMapProps {
   restaurants?: Restaurant[];
   onMapMove?: (bounds: { north: number; south: number; east: number; west: number }) => void;
+  searchAsMapMoves?: boolean;
+  onToggleSearchAsMapMoves?: (enabled: boolean) => void;
 }
 
 export const ResultsMap: React.FC<ResultsMapProps> = ({ 
   restaurants = [], 
-  onMapMove 
+  onMapMove,
+  searchAsMapMoves = false,
+  onToggleSearchAsMapMoves
 }) => {
   const [viewState, setViewState] = useState({
     longitude: -122.4194,
@@ -118,7 +124,20 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
   return (
     <Card className="h-full">
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg font-semibold">Map View</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg font-semibold">Map View</CardTitle>
+          {onToggleSearchAsMapMoves && (
+            <Button
+              variant={searchAsMapMoves ? "default" : "outline"}
+              size="sm"
+              onClick={() => onToggleSearchAsMapMoves(!searchAsMapMoves)}
+              className="flex items-center gap-2"
+            >
+              <MapIcon className="h-4 w-4" />
+              Search as map moves
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="p-4 pt-0 relative">
         <div className="map-container rounded-lg overflow-hidden h-[calc(100vh-280px)] xl:h-[calc(100vh-240px)] relative">

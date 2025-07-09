@@ -2,9 +2,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-export const useMerchants = (categoryIds?: string[], searchTerm?: string, startTime?: string, endTime?: string, zipCode?: string) => {
+export const useMerchants = (categoryIds?: string[], searchTerm?: string, startTime?: string, endTime?: string, zipCode?: string, bounds?: { north: number; south: number; east: number; west: number }) => {
   return useQuery({
-    queryKey: ['merchants', categoryIds, searchTerm, startTime, endTime, zipCode],
+    queryKey: ['merchants', categoryIds, searchTerm, startTime, endTime, zipCode, bounds],
     queryFn: async () => {
       let query = supabase
         .from('Merchant')
@@ -164,6 +164,18 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
       if (zipCode && zipCode.trim()) {
         console.log('Applying zip code filter:', zipCode);
         query = query.eq('zip_code', zipCode.trim());
+      }
+
+      // Apply geographic bounds filter if provided
+      if (bounds) {
+        console.log('Applying geographic bounds filter:', bounds);
+        query = query
+          .gte('latitude', bounds.south)
+          .lte('latitude', bounds.north)
+          .gte('longitude', bounds.west)
+          .lte('longitude', bounds.east)
+          .not('latitude', 'is', null)
+          .not('longitude', 'is', null);
       }
 
       // Apply merchant ID filter if we have any filters
