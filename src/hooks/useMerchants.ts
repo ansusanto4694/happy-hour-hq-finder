@@ -196,10 +196,18 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
               console.log('Geocoding result:', geocodeResult);
               const { canonical_city, canonical_state } = geocodeResult;
               
-              // Search for both canonical city/state and original variations
-              // This handles cases where data might be stored as "Manhattan" vs "New York"
+              // Handle NYC searches specially
               const originalCity = locationData.value.split(',')[0]?.trim() || locationData.value;
-              query = query.or(`and(city.ilike.%${canonical_city}%,state.ilike.%${canonical_state}%),and(city.ilike.%${originalCity}%,state.ilike.%${canonical_state}%)`);
+              
+              if (canonical_city === 'New York' && originalCity.toLowerCase() === 'new york') {
+                // "New York, NY" should include ALL NYC boroughs
+                const nycBoroughs = ['New York', 'Manhattan', 'Brooklyn', 'Queens', 'Bronx', 'Staten Island'];
+                const cityConditions = nycBoroughs.map(borough => `city.ilike.%${borough}%`).join(',');
+                query = query.or(`and(or(${cityConditions}),state.ilike.%${canonical_state}%)`);
+              } else {
+                // Specific borough searches (Manhattan, Brooklyn, etc.) or other cities
+                query = query.or(`and(city.ilike.%${canonical_city}%,state.ilike.%${canonical_state}%),and(city.ilike.%${originalCity}%,state.ilike.%${canonical_state}%)`);
+              }
             }
           } catch (error) {
             console.error('Failed to call geocoding service:', error);
