@@ -5,7 +5,7 @@ interface SearchResultsHeaderProps {
   resultsCount: number;
   startTime?: string;
   endTime?: string;
-  zipCode?: string;
+  location?: string;
   currentPage?: number;
   totalPages?: number;
   resultsPerPage?: number;
@@ -17,7 +17,7 @@ export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
   resultsCount,
   startTime,
   endTime,
-  zipCode,
+  location,
   currentPage = 1,
   totalPages = 1,
   resultsPerPage = 20,
@@ -51,7 +51,7 @@ export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
                 `Showing ${startResult}-${endResult} of ${resultsCount} restaurants${totalPages > 1 ? ` (Page ${currentPage} of ${totalPages})` : ''}`
               }
             </p>
-            {(startTime || endTime || zipCode || searchTerm) && (
+            {(startTime || endTime || location || searchTerm) && (
               <div className="flex flex-wrap gap-4 text-xs">
                 {searchTerm && (
                   <span>Search: "{searchTerm}"</span>
@@ -59,8 +59,8 @@ export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
                 {startTime && endTime && (
                   <span>Time: {formatTime(startTime)} - {formatTime(endTime)}</span>
                 )}
-                {zipCode && (
-                  <span>Location: {zipCode}</span>
+                {location && (
+                  <span>Location: {location}</span>
                 )}
               </div>
             )}

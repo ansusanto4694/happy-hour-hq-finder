@@ -25,7 +25,7 @@ interface SearchResultsProps {
   error?: any;
   startTime?: string;
   endTime?: string;
-  zipCode?: string;
+  location?: string;
   isMobile?: boolean;
 }
 
@@ -37,7 +37,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   error,
   startTime, 
   endTime, 
-  zipCode,
+  location,
   isMobile = false
 }) => {
   const { handleRestaurantClick } = useSearchResultsNavigation();
@@ -101,7 +101,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
       <SearchResultsEmpty 
         startTime={startTime} 
         endTime={endTime} 
-        zipCode={zipCode} 
+        location={location} 
       />
     );
   }
@@ -181,7 +181,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
         resultsCount={totalResults}
         startTime={startTime}
         endTime={endTime}
-        zipCode={zipCode}
+        location={location}
         currentPage={isMobile ? 1 : currentPage}
         totalPages={isMobile ? 1 : totalPages}
         resultsPerPage={RESULTS_PER_PAGE}

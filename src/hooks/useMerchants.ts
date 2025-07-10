@@ -2,9 +2,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-export const useMerchants = (categoryIds?: string[], searchTerm?: string, startTime?: string, endTime?: string, zipCode?: string, bounds?: { north: number; south: number; east: number; west: number }) => {
+export const useMerchants = (categoryIds?: string[], searchTerm?: string, startTime?: string, endTime?: string, location?: string, bounds?: { north: number; south: number; east: number; west: number }) => {
   return useQuery({
-    queryKey: ['merchants', categoryIds, searchTerm, startTime, endTime, zipCode, bounds],
+    queryKey: ['merchants', categoryIds, searchTerm, startTime, endTime, location, bounds],
     queryFn: async () => {
       let query = supabase
         .from('Merchant')
@@ -160,10 +160,39 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
         }
       }
 
-      // Apply zip code filter if provided
-      if (zipCode && zipCode.trim()) {
-        console.log('Applying zip code filter:', zipCode);
-        query = query.eq('zip_code', zipCode.trim());
+      // Apply location filter if provided (supports zip code, city, or city/state)
+      if (location && location.trim()) {
+        console.log('Applying location filter:', location);
+        const trimmedLocation = location.trim();
+        
+        // Parse location input
+        const parseLocation = (input: string) => {
+          // Check if it's a 5-digit zip code
+          if (/^\d{5}$/.test(input)) {
+            return { type: 'zip', value: input };
+          }
+          
+          // Check if it contains a comma (city, state format)
+          if (input.includes(',')) {
+            const [city, state] = input.split(',').map(s => s.trim());
+            return { type: 'city_state', city, state };
+          }
+          
+          // Otherwise treat as city name
+          return { type: 'city', value: input };
+        };
+        
+        const locationData = parseLocation(trimmedLocation);
+        
+        if (locationData.type === 'zip') {
+          query = query.eq('zip_code', locationData.value);
+        } else if (locationData.type === 'city_state') {
+          query = query
+            .ilike('city', locationData.city)
+            .ilike('state', locationData.state);
+        } else if (locationData.type === 'city') {
+          query = query.ilike('city', locationData.value);
+        }
       }
 
       // Apply geographic bounds filter if provided

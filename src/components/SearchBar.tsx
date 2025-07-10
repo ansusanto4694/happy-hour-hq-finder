@@ -12,17 +12,17 @@ export const SearchBar = () => {
   
   // Initialize state from URL parameters when available
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
-  const [zipCode, setZipCode] = useState(searchParams.get('zip') || '');
+  const [location, setLocation] = useState(searchParams.get('location') || searchParams.get('zip') || '');
   const [startTime, setStartTime] = useState(searchParams.get('startTime') || '');
   const [endTime, setEndTime] = useState(searchParams.get('endTime') || '');
 
   const handleSearch = () => {
-    console.log('Searching for:', searchTerm, 'in zip code:', zipCode, 'start time:', startTime, 'end time:', endTime);
+    console.log('Searching for:', searchTerm, 'in location:', location, 'start time:', startTime, 'end time:', endTime);
     
     // Create URL search parameters
     const params = new URLSearchParams();
     if (searchTerm) params.set('search', searchTerm);
-    if (zipCode) params.set('zip', zipCode);
+    if (location) params.set('location', location);
     if (startTime) params.set('startTime', startTime);
     if (endTime) params.set('endTime', endTime);
     
@@ -79,17 +79,16 @@ export const SearchBar = () => {
         {/* Divider */}
         <div className="hidden lg:block w-px bg-gray-200 my-2"></div>
         
-        {/* Zip code input */}
+        {/* Location input */}
         <div className="lg:w-48 relative">
           <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
           <Input
             type="text"
-            placeholder="Zip code"
-            value={zipCode}
-            onChange={(e) => setZipCode(e.target.value)}
+            placeholder="City, State or ZIP"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
             onKeyPress={handleKeyPress}
             className="pl-12 pr-4 py-4 text-lg border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl"
-            maxLength={5}
           />
         </div>
         

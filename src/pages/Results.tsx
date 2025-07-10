@@ -29,7 +29,7 @@ const Results = () => {
 
   // Extract search parameters
   const searchTerm = searchParams.get('search') || '';
-  const zipCode = searchParams.get('zip') || '';
+  const location = searchParams.get('location') || searchParams.get('zip') || '';
   const startTime = searchParams.get('startTime') || '';
   const endTime = searchParams.get('endTime') || '';
 
@@ -38,7 +38,7 @@ const Results = () => {
     searchTerm, 
     startTime, 
     endTime, 
-    zipCode,
+    location,
     searchAsMapMoves ? mapBounds : undefined
   );
 
@@ -104,7 +104,7 @@ const Results = () => {
                 error={error}
                 startTime={startTime}
                 endTime={endTime}
-                zipCode={zipCode}
+                location={location}
                 isMobile={true}
               />
             ) : (
@@ -144,7 +144,7 @@ const Results = () => {
                   error={error}
                   startTime={startTime}
                   endTime={endTime}
-                  zipCode={zipCode}
+                  location={location}
                 />
               </div>
               <div className="lg:col-span-1">
@@ -183,7 +183,7 @@ const Results = () => {
               error={error}
               startTime={startTime}
               endTime={endTime}
-              zipCode={zipCode}
+              location={location}
             />
           </div>
 
