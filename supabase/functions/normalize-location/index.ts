@@ -109,6 +109,11 @@ serve(async (req) => {
       }
     }
 
+    // Normalize state format to match database (always use abbreviation)
+    if (canonicalState === 'New York' || canonicalState === 'US-NY' || canonicalState.toLowerCase() === 'new york') {
+      canonicalState = 'NY';
+    }
+
     // Handle special cases for NYC boroughs
     const nycBoroughs = ['manhattan', 'brooklyn', 'queens', 'bronx', 'staten island'];
     if (nycBoroughs.includes(canonicalCity.toLowerCase())) {
