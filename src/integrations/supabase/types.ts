@@ -93,6 +93,36 @@ export type Database = {
           },
         ]
       }
+      location_cache: {
+        Row: {
+          canonical_city: string
+          canonical_state: string
+          created_at: string
+          id: string
+          latitude: number
+          longitude: number
+          original_input: string
+        }
+        Insert: {
+          canonical_city: string
+          canonical_state: string
+          created_at?: string
+          id?: string
+          latitude: number
+          longitude: number
+          original_input: string
+        }
+        Update: {
+          canonical_city?: string
+          canonical_state?: string
+          created_at?: string
+          id?: string
+          latitude?: number
+          longitude?: number
+          original_input?: string
+        }
+        Relationships: []
+      }
       Merchant: {
         Row: {
           city: string

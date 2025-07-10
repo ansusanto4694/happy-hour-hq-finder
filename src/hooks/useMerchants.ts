@@ -160,7 +160,7 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
         }
       }
 
-      // Apply location filter if provided (supports zip code, city, or city/state)
+      // Apply location filter if provided (supports zip code, city, or city/state with geocoding)
       if (location && location.trim()) {
         console.log('Applying location filter:', location);
         const trimmedLocation = location.trim();
@@ -172,26 +172,47 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
             return { type: 'zip', value: input };
           }
           
-          // Check if it contains a comma (city, state format)
-          if (input.includes(',')) {
-            const [city, state] = input.split(',').map(s => s.trim());
-            return { type: 'city_state', city, state };
-          }
-          
-          // Otherwise treat as city name
-          return { type: 'city', value: input };
+          // For any other input, use geocoding service to normalize
+          return { type: 'geocode', value: input };
         };
         
         const locationData = parseLocation(trimmedLocation);
         
         if (locationData.type === 'zip') {
           query = query.eq('zip_code', locationData.value);
-        } else if (locationData.type === 'city_state') {
-          query = query
-            .ilike('city', locationData.city)
-            .ilike('state', locationData.state);
-        } else if (locationData.type === 'city') {
-          query = query.ilike('city', locationData.value);
+        } else if (locationData.type === 'geocode') {
+          // Call geocoding service to normalize location
+          try {
+            console.log('Calling geocoding service for:', locationData.value);
+            const { data: geocodeResult, error: geocodeError } = await supabase.functions.invoke('normalize-location', {
+              body: { location: locationData.value }
+            });
+            
+            if (geocodeError) {
+              console.error('Geocoding error:', geocodeError);
+              // Fall back to simple city search if geocoding fails
+              query = query.ilike('city', locationData.value);
+            } else if (geocodeResult) {
+              console.log('Geocoding result:', geocodeResult);
+              const { canonical_city, canonical_state } = geocodeResult;
+              
+              // Search for both canonical city/state and original variations
+              // This handles cases where data might be stored as "Manhattan" vs "New York"
+              const originalCity = locationData.value.split(',')[0]?.trim() || locationData.value;
+              query = query.or(`and(city.ilike.%${canonical_city}%,state.ilike.%${canonical_state}%),and(city.ilike.%${originalCity}%,state.ilike.%${canonical_state}%)`);
+            }
+          } catch (error) {
+            console.error('Failed to call geocoding service:', error);
+            // Fall back to simple city search
+            if (trimmedLocation.includes(',')) {
+              const [city, state] = trimmedLocation.split(',').map(s => s.trim());
+              query = query
+                .ilike('city', city)
+                .ilike('state', state);
+            } else {
+              query = query.ilike('city', trimmedLocation);
+            }
+          }
         }
       }
 
