@@ -114,9 +114,9 @@ serve(async (req) => {
       canonicalState = 'NY';
     }
 
-    // Handle special cases for NYC boroughs
-    const nycBoroughs = ['manhattan', 'brooklyn', 'queens', 'bronx', 'staten island'];
-    if (nycBoroughs.includes(canonicalCity.toLowerCase())) {
+    // Only normalize if user actually searches for "NYC" or "New York City"  
+    // Don't normalize specific boroughs like Brooklyn, Manhattan, etc.
+    if (canonicalCity.toLowerCase().includes('new york city') || canonicalCity.toLowerCase() === 'nyc') {
       canonicalCity = 'New York';
       canonicalState = 'NY';
     }
