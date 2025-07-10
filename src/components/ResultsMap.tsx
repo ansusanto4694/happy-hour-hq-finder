@@ -25,15 +25,19 @@ interface ResultsMapProps {
   onMapMove?: (bounds: { north: number; south: number; east: number; west: number }) => void;
   searchAsMapMoves?: boolean;
   onToggleSearchAsMapMoves?: (enabled: boolean) => void;
+  viewState?: { longitude: number; latitude: number; zoom: number };
+  onViewStateChange?: (viewState: { longitude: number; latitude: number; zoom: number }) => void;
 }
 
 export const ResultsMap: React.FC<ResultsMapProps> = ({ 
   restaurants = [], 
   onMapMove,
   searchAsMapMoves = false,
-  onToggleSearchAsMapMoves
+  onToggleSearchAsMapMoves,
+  viewState: externalViewState,
+  onViewStateChange
 }) => {
-  const [viewState, setViewState] = useState({
+  const [viewState, setViewState] = useState(externalViewState || {
     longitude: -122.4194,
     latitude: 37.7749,
     zoom: 12
@@ -100,14 +104,25 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
       const avgLat = restaurantsWithCoords.reduce((sum, r) => sum + (r.latitude || 0), 0) / restaurantsWithCoords.length;
       const avgLng = restaurantsWithCoords.reduce((sum, r) => sum + (r.longitude || 0), 0) / restaurantsWithCoords.length;
       
-      setViewState(prev => ({
-        ...prev,
+      const newViewState = {
+        ...viewState,
         latitude: avgLat,
         longitude: avgLng,
         zoom: 13
-      }));
+      };
+      
+      setViewState(newViewState);
+      // Notify parent of view state change
+      onViewStateChange?.(newViewState);
     }
   }, [restaurants, searchAsMapMoves]);
+
+  // Sync with external viewState when it changes
+  useEffect(() => {
+    if (externalViewState) {
+      setViewState(externalViewState);
+    }
+  }, [externalViewState]);
 
   // Handle map move events to update search results
   const handleMoveEnd = useCallback(() => {
@@ -147,7 +162,12 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
           <Map
             ref={mapRef}
             {...viewState}
-            onMove={evt => setViewState(evt.viewState)}
+            onMove={evt => {
+              const newViewState = evt.viewState;
+              setViewState(newViewState);
+              // Notify parent of view state change
+              onViewStateChange?.(newViewState);
+            }}
             onMoveEnd={handleMoveEnd}
             style={{ width: '100%', height: '100%' }}
             mapStyle="mapbox://styles/mapbox/streets-v12"

@@ -17,6 +17,12 @@ const Results = () => {
   const [mobileView, setMobileView] = useState<'list' | 'map'>('list');
   const [searchAsMapMoves, setSearchAsMapMoves] = useState(false);
   const [mapBounds, setMapBounds] = useState<{ north: number; south: number; east: number; west: number } | null>(null);
+  // Persist map view state across view toggles
+  const [mapViewState, setMapViewState] = useState({
+    longitude: -122.4194,
+    latitude: 37.7749,
+    zoom: 12
+  });
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -46,6 +52,11 @@ const Results = () => {
     if (searchAsMapMoves) {
       console.log('Map moved to bounds, updating search:', bounds);
     }
+  };
+
+  // Handle map view state changes to persist across view toggles
+  const handleViewStateChange = (newViewState: { longitude: number; latitude: number; zoom: number }) => {
+    setMapViewState(newViewState);
   };
 
   return (
@@ -103,6 +114,8 @@ const Results = () => {
                   onMapMove={handleMapMove}
                   searchAsMapMoves={searchAsMapMoves}
                   onToggleSearchAsMapMoves={setSearchAsMapMoves}
+                  viewState={mapViewState}
+                  onViewStateChange={handleViewStateChange}
                 />
               </div>
             )}
@@ -141,6 +154,8 @@ const Results = () => {
                     onMapMove={handleMapMove}
                     searchAsMapMoves={searchAsMapMoves}
                     onToggleSearchAsMapMoves={setSearchAsMapMoves}
+                    viewState={mapViewState}
+                    onViewStateChange={handleViewStateChange}
                   />
                 </div>
               </div>
@@ -180,6 +195,8 @@ const Results = () => {
                 onMapMove={handleMapMove}
                 searchAsMapMoves={searchAsMapMoves}
                 onToggleSearchAsMapMoves={setSearchAsMapMoves}
+                viewState={mapViewState}
+                onViewStateChange={handleViewStateChange}
               />
             </div>
           </div>
