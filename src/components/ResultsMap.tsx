@@ -86,8 +86,11 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
     setHoveredRestaurant(null);
   }, [isMobile]);
 
-  // Update map center based on restaurants with coordinates
+  // Update map center based on restaurants with coordinates (only when not using search as map moves)
   useEffect(() => {
+    // Skip automatic centering/zooming if search as map moves is enabled
+    if (searchAsMapMoves) return;
+    
     const restaurantsWithCoords = restaurants.filter(
       restaurant => restaurant.latitude && restaurant.longitude
     );
@@ -104,7 +107,7 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
         zoom: 13
       }));
     }
-  }, [restaurants]);
+  }, [restaurants, searchAsMapMoves]);
 
   // Handle map move events to update search results
   const handleMoveEnd = useCallback(() => {
