@@ -114,12 +114,15 @@ serve(async (req) => {
       canonicalState = 'NY';
     }
 
-    // Only normalize if user actually searches for "NYC" or "New York City"  
-    // Don't normalize specific boroughs like Brooklyn, Manhattan, etc.
-    if (canonicalCity.toLowerCase().includes('new york city') || canonicalCity.toLowerCase() === 'nyc') {
+    // Preserve specific borough names for targeted searches
+    // Only normalize generic "NYC" or "New York City" to "New York"
+    const inputLower = location.toLowerCase().trim();
+    if (inputLower === 'nyc' || inputLower === 'new york city' || inputLower === 'new york city, ny') {
       canonicalCity = 'New York';
       canonicalState = 'NY';
     }
+    // For "new york, ny" keep it as "New York" but handle specially in search
+    // For specific boroughs like "manhattan, ny", "brooklyn, ny" keep the specific name
 
     const result: LocationData = {
       canonical_city: canonicalCity,
