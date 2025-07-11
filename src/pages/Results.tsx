@@ -145,8 +145,8 @@ const Results = () => {
                   location={location}
                 />
               </div>
-              <div className="xl:col-span-1">
-                <div className="sticky top-48 z-30">
+              <div className="xl:col-span-1 flex justify-center">
+                <div className="w-[28rem] lg:w-[32rem] sticky top-48 z-30">
                   <ResultsMap 
                     restaurants={merchants || []}
                     onMapMove={handleMapMove}
@@ -186,7 +186,7 @@ const Results = () => {
           </div>
 
           {/* Fixed Right Side - Map */}
-          <div className="w-[48rem] flex-shrink-0">
+          <div className="w-[28rem] 2xl:w-[32rem] flex-shrink-0">
             <div className="sticky top-32 z-30">
               <ResultsMap 
                 restaurants={merchants || []}
