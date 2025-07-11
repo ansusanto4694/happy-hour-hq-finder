@@ -81,42 +81,23 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
             </div>
           </div>
         ) : (
-          // Desktop Layout - Responsive between horizontal and vertical
-          <div className="lg:flex lg:items-start lg:space-x-4">
-            {/* Status badge - shown at top on narrow screens */}
-            <div className="lg:hidden mb-3">
-              <Badge variant="secondary" className="text-base px-3 py-1">
-                {getTodaysHappyHour(restaurant.merchant_happy_hour || [])}
-              </Badge>
-            </div>
-
-            {/* Logo and name container - stacked on narrow, side by side on wide */}
-            <div className="lg:flex lg:items-start lg:space-x-4">
-              {/* Logo placeholder */}
-              <div className="flex-shrink-0 mb-3 lg:mb-0">
-                <div className="w-20 h-20 rounded-lg bg-gray-200 flex items-center justify-center">
-                  <span className="text-gray-500 text-xs">Logo</span>
-                </div>
-              </div>
-              
-              {/* Restaurant name - below logo on narrow screens */}
-              <div className="lg:flex-1 lg:min-w-0">
-                <h3 className="text-2xl font-semibold text-gray-900 break-words mb-3 lg:mb-2">
-                  {restaurant.restaurant_name}
-                </h3>
+          // Desktop Layout - Original design with logo
+          <div className="flex items-start space-x-4">
+            {/* Logo placeholder */}
+            <div className="flex-shrink-0">
+              <div className="w-20 h-20 rounded-lg bg-gray-200 flex items-center justify-center">
+                <span className="text-gray-500 text-xs">Logo</span>
               </div>
             </div>
-
-            {/* Restaurant details - stacked below on narrow, part of flex on wide */}
-            <div className="lg:flex-1 lg:min-w-0 space-y-2">
-              <div className="lg:flex lg:items-start lg:justify-between lg:gap-4">
-                <div className="lg:flex-1 lg:min-w-0">
-                  {/* Hide name on wide screens since it's shown above */}
-                  <h3 className="hidden lg:block text-2xl font-semibold text-gray-900 break-words">
+            
+            {/* Restaurant details */}
+            <div className="flex-1 min-w-0 space-y-2">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-2xl font-semibold text-gray-900 break-words">
                     {restaurant.restaurant_name}
                   </h3>
-                  
-                  <p className="text-gray-600 text-lg lg:mt-2 break-words">
+                  <p className="text-gray-600 text-lg mt-2 break-words">
                     {restaurant.street_address}
                     {restaurant.street_address_line_2 && `, ${restaurant.street_address_line_2}`}
                   </p>
@@ -145,12 +126,9 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
                   )}
                 </div>
                 
-                {/* Status badge - shown on right side on wide screens */}
-                <div className="hidden lg:block">
-                  <Badge variant="secondary" className="flex-shrink-0 text-base px-3 py-1">
-                    {getTodaysHappyHour(restaurant.merchant_happy_hour || [])}
-                  </Badge>
-                </div>
+                <Badge variant="secondary" className="flex-shrink-0 text-base px-3 py-1">
+                  {getTodaysHappyHour(restaurant.merchant_happy_hour || [])}
+                </Badge>
               </div>
             </div>
           </div>
