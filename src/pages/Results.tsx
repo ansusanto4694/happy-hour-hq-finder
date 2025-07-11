@@ -122,22 +122,20 @@ const Results = () => {
           </div>
         )}
 
-        {/* Tablet Layout (768px - 1280px) */}
+        {/* Tablet/Small Desktop Layout (768px - 1439px) */}
         {!isMobile && (
-          <div className="xl:hidden max-w-7xl mx-auto space-y-6">
-            {/* Tablet Controls */}
-            <div className="flex items-center justify-between">
-              <div className="bg-white rounded-lg shadow-sm p-3">
-                <CategoryFilter
-                  selectedCategories={selectedCategories}
-                  onCategoryChange={setSelectedCategories}
-                />
-              </div>
+          <div className="2xl:hidden max-w-7xl mx-auto space-y-6">
+            {/* Filters at top for smaller screens */}
+            <div className="bg-white rounded-lg shadow-sm p-4">
+              <CategoryFilter
+                selectedCategories={selectedCategories}
+                onCategoryChange={setSelectedCategories}
+              />
             </div>
 
-            {/* Tablet Results and Map Side by Side */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="lg:col-span-1">
+            {/* Results and Map Side by Side */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <div className="xl:col-span-1">
                 <SearchResults 
                   merchants={merchants}
                   isLoading={isLoading}
@@ -147,7 +145,7 @@ const Results = () => {
                   location={location}
                 />
               </div>
-              <div className="lg:col-span-1">
+              <div className="xl:col-span-1">
                 <div className="sticky top-48 z-30">
                   <ResultsMap 
                     restaurants={merchants || []}
@@ -163,8 +161,8 @@ const Results = () => {
           </div>
         )}
 
-        {/* Desktop Layout (> 1280px) */}
-        <div className="hidden xl:flex xl:gap-6">
+        {/* Large Desktop Layout (>= 1440px) */}
+        <div className="hidden 2xl:flex 2xl:gap-6">
           {/* Fixed Far Left Sidebar - Filters */}
           <div className="w-80 flex-shrink-0">
             <div className="bg-white rounded-lg shadow-sm p-4 sticky top-32 z-40">
