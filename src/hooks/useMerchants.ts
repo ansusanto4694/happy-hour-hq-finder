@@ -2,6 +2,46 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
+// Helper function to generate search variations for better singular/plural matching
+const generateSearchVariations = (term: string): string[] => {
+  const variations = [term];
+  const lowerTerm = term.toLowerCase();
+  
+  // Handle plural to singular
+  if (lowerTerm.endsWith('s') && lowerTerm.length > 1) {
+    variations.push(lowerTerm.slice(0, -1)); // Remove 's'
+  }
+  
+  // Handle singular to plural
+  if (!lowerTerm.endsWith('s')) {
+    variations.push(lowerTerm + 's'); // Add 's'
+  }
+  
+  // Handle common irregular plurals
+  const irregularPlurals: { [key: string]: string[] } = {
+    'child': ['children'],
+    'children': ['child'],
+    'foot': ['feet'],
+    'feet': ['foot'],
+    'tooth': ['teeth'],
+    'teeth': ['tooth'],
+    'man': ['men'],
+    'men': ['man'],
+    'woman': ['women'],
+    'women': ['woman'],
+    'person': ['people'],
+    'people': ['person'],
+    'mouse': ['mice'],
+    'mice': ['mouse']
+  };
+  
+  if (irregularPlurals[lowerTerm]) {
+    variations.push(...irregularPlurals[lowerTerm]);
+  }
+  
+  return [...new Set(variations)]; // Remove duplicates
+};
+
 export const useMerchants = (categoryIds?: string[], searchTerm?: string, startTime?: string, endTime?: string, location?: string, bounds?: { north: number; south: number; east: number; west: number }) => {
   return useQuery({
     queryKey: ['merchants', categoryIds, searchTerm, startTime, endTime, location, bounds],
@@ -34,11 +74,18 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
       if (searchTerm && searchTerm.trim()) {
         console.log('Searching for term:', searchTerm);
         
+        // Generate search variations for better singular/plural matching
+        const searchVariations = generateSearchVariations(searchTerm.trim());
+        console.log('Search variations:', searchVariations);
+        
+        // Build OR conditions for all variations
+        const nameSearchConditions = searchVariations.map(variation => `restaurant_name.ilike.%${variation}%`).join(',');
+        
         // Search in merchant names first
         const { data: nameMerchants, error: nameError } = await supabase
           .from('Merchant')
           .select('id')
-          .ilike('restaurant_name', `%${searchTerm}%`)
+          .or(nameSearchConditions)
           .eq('is_active', true);
 
         if (nameError) {
@@ -49,13 +96,18 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
         console.log('Found merchants matching name search:', nameMerchants);
 
         // Search in happy hour deals (only from active merchants)
+        const dealSearchConditions = searchVariations.flatMap(variation => [
+          `deal_title.ilike.%${variation}%`,
+          `deal_description.ilike.%${variation}%`
+        ]).join(',');
+        
         const { data: dealMerchants, error: dealError } = await supabase
           .from('happy_hour_deals')
           .select(`
             restaurant_id,
             Merchant!inner(is_active)
           `)
-          .or(`deal_title.ilike.%${searchTerm}%,deal_description.ilike.%${searchTerm}%`)
+          .or(dealSearchConditions)
           .eq('active', true)
           .eq('Merchant.is_active', true);
 
@@ -67,10 +119,12 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
         console.log('Found deals matching search:', dealMerchants);
 
         // Search in categories
+        const categorySearchConditions = searchVariations.map(variation => `name.ilike.%${variation}%`).join(',');
+        
         const { data: categoryMatches, error: categoryError } = await supabase
           .from('categories')
           .select('id')
-          .ilike('name', `%${searchTerm}%`);
+          .or(categorySearchConditions);
 
         if (categoryError) {
           console.error('Error searching categories:', categoryError);
