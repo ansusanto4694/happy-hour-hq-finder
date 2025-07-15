@@ -4,17 +4,27 @@ import { supabase } from '@/integrations/supabase/client';
 
 // Helper function to generate accent variations for better accent matching
 const generateAccentVariations = (term: string): string[] => {
+  const variations = [term];
+  
+  // Map of base characters to their accented variations
   const accentMap: { [key: string]: string[] } = {
-    'a': ['à', 'á', 'â', 'ã', 'ä', 'å', 'æ'],
-    'e': ['è', 'é', 'ê', 'ë'],
-    'i': ['ì', 'í', 'î', 'ï'],
-    'o': ['ò', 'ó', 'ô', 'õ', 'ö', 'ø'],
-    'u': ['ù', 'ú', 'û', 'ü'],
-    'n': ['ñ'],
-    'c': ['ç'],
-    'y': ['ÿ']
+    'a': ['à', 'á', 'â', 'ã', 'ä', 'å', 'æ', 'ā', 'ă', 'ą'],
+    'e': ['è', 'é', 'ê', 'ë', 'ē', 'ĕ', 'ė', 'ę', 'ě'],
+    'i': ['ì', 'í', 'î', 'ï', 'ī', 'ĭ', 'į', 'ı'],
+    'o': ['ò', 'ó', 'ô', 'õ', 'ö', 'ø', 'ō', 'ŏ', 'ő', 'œ'],
+    'u': ['ù', 'ú', 'û', 'ü', 'ū', 'ŭ', 'ů', 'ű', 'ų'],
+    'n': ['ñ', 'ń', 'ň', 'ņ'],
+    'c': ['ç', 'ć', 'ĉ', 'ċ', 'č'],
+    'y': ['ÿ', 'ý', 'ŷ'],
+    's': ['š', 'ś', 'ŝ', 'ş'],
+    'z': ['ž', 'ź', 'ż'],
+    'd': ['đ', 'ď'],
+    'l': ['ł', 'ľ', 'ļ', 'ĺ'],
+    'r': ['ř', 'ŕ', 'ŗ'],
+    't': ['ť', 'ţ']
   };
   
+  // Create reverse mapping (accented to base)
   const reverseAccentMap: { [key: string]: string } = {};
   Object.entries(accentMap).forEach(([base, accents]) => {
     accents.forEach(accent => {
@@ -22,47 +32,32 @@ const generateAccentVariations = (term: string): string[] => {
     });
   });
   
-  const variations = [term];
-  const chars = term.toLowerCase().split('');
+  // Simple approach: for each character, try both accented and unaccented versions
+  const words = term.toLowerCase().split(' ');
   
-  // Generate variations by replacing each character with its accent variants
-  const generateVariations = (currentChars: string[], index: number): string[] => {
-    if (index >= currentChars.length) {
-      return [currentChars.join('')];
+  words.forEach((word, wordIndex) => {
+    for (let i = 0; i < word.length; i++) {
+      const char = word[i];
+      
+      // If character has accent variants, create variations
+      if (accentMap[char]) {
+        accentMap[char].forEach(accentChar => {
+          const newWords = [...words];
+          newWords[wordIndex] = word.substring(0, i) + accentChar + word.substring(i + 1);
+          variations.push(newWords.join(' '));
+        });
+      }
+      
+      // If character is accented, create unaccented version
+      if (reverseAccentMap[char]) {
+        const newWords = [...words];
+        newWords[wordIndex] = word.substring(0, i) + reverseAccentMap[char] + word.substring(i + 1);
+        variations.push(newWords.join(' '));
+      }
     }
-    
-    const char = currentChars[index];
-    const results: string[] = [];
-    
-    // Keep original character
-    results.push(...generateVariations(currentChars, index + 1));
-    
-    // Try accent variations
-    if (accentMap[char]) {
-      accentMap[char].forEach(accentChar => {
-        const newChars = [...currentChars];
-        newChars[index] = accentChar;
-        results.push(...generateVariations(newChars, index + 1));
-      });
-    }
-    
-    // Try removing accent if character is accented
-    if (reverseAccentMap[char]) {
-      const newChars = [...currentChars];
-      newChars[index] = reverseAccentMap[char];
-      results.push(...generateVariations(newChars, index + 1));
-    }
-    
-    return results;
-  };
+  });
   
-  // Only generate a reasonable number of variations to avoid performance issues
-  const allVariations = generateVariations(chars, 0);
-  
-  // Limit to most common variations (first 20) to avoid too many database queries
-  const limitedVariations = allVariations.slice(0, 20);
-  
-  return [...new Set([...variations, ...limitedVariations])];
+  return [...new Set(variations)];
 };
 
 // Helper function to generate search variations for better singular/plural matching
@@ -75,42 +70,59 @@ const generateSearchVariations = (term: string): string[] => {
   variations.push(...accentVariations);
   
   // Handle plural to singular for all variations
-  accentVariations.forEach(variation => {
-    if (variation.endsWith('s') && variation.length > 1) {
-      variations.push(variation.slice(0, -1)); // Remove 's'
-    }
+  const allVariations = [...new Set([...variations, ...accentVariations])];
+  
+  allVariations.forEach(variation => {
+    // Split into words to handle each word's plural/singular forms
+    const words = variation.split(' ');
     
-    // Handle singular to plural
-    if (!variation.endsWith('s')) {
-      variations.push(variation + 's'); // Add 's'
-    }
+    words.forEach((word, wordIndex) => {
+      // Handle plural to singular
+      if (word.endsWith('s') && word.length > 1) {
+        const newWords = [...words];
+        newWords[wordIndex] = word.slice(0, -1);
+        variations.push(newWords.join(' '));
+      }
+      
+      // Handle singular to plural
+      if (!word.endsWith('s')) {
+        const newWords = [...words];
+        newWords[wordIndex] = word + 's';
+        variations.push(newWords.join(' '));
+      }
+    });
   });
   
-  // Handle common irregular plurals for all variations
-  const irregularPlurals: { [key: string]: string[] } = {
-    'child': ['children'],
-    'children': ['child'],
-    'foot': ['feet'],
-    'feet': ['foot'],
-    'tooth': ['teeth'],
-    'teeth': ['tooth'],
-    'man': ['men'],
-    'men': ['man'],
-    'woman': ['women'],
-    'women': ['woman'],
-    'person': ['people'],
-    'people': ['person'],
-    'mouse': ['mice'],
-    'mice': ['mouse']
+  // Handle common irregular plurals
+  const irregularPlurals: { [key: string]: string } = {
+    'child': 'children',
+    'children': 'child',
+    'foot': 'feet',
+    'feet': 'foot',
+    'tooth': 'teeth',
+    'teeth': 'tooth',
+    'man': 'men',
+    'men': 'man',
+    'woman': 'women',
+    'women': 'woman',
+    'person': 'people',
+    'people': 'person',
+    'mouse': 'mice',
+    'mice': 'mouse'
   };
   
-  accentVariations.forEach(variation => {
-    if (irregularPlurals[variation]) {
-      variations.push(...irregularPlurals[variation]);
-    }
+  allVariations.forEach(variation => {
+    const words = variation.split(' ');
+    words.forEach((word, wordIndex) => {
+      if (irregularPlurals[word]) {
+        const newWords = [...words];
+        newWords[wordIndex] = irregularPlurals[word];
+        variations.push(newWords.join(' '));
+      }
+    });
   });
   
-  return [...new Set(variations)]; // Remove duplicates
+  return [...new Set(variations)];
 };
 
 export const useMerchants = (categoryIds?: string[], searchTerm?: string, startTime?: string, endTime?: string, location?: string, bounds?: { north: number; south: number; east: number; west: number }) => {
