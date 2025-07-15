@@ -122,13 +122,20 @@ const generateSearchVariations = (term: string): string[] => {
     });
   });
   
-  return [...new Set(variations)];
+  // Limit variations to prevent database query issues
+  const limitedVariations = [...new Set(variations)].slice(0, 15);
+  console.log('Limited search variations:', limitedVariations);
+  return limitedVariations;
 };
 
 export const useMerchants = (categoryIds?: string[], searchTerm?: string, startTime?: string, endTime?: string, location?: string, bounds?: { north: number; south: number; east: number; west: number }) => {
   return useQuery({
     queryKey: ['merchants', categoryIds, searchTerm, startTime, endTime, location, bounds],
     queryFn: async () => {
+      console.log('=== STARTING MERCHANT SEARCH ===');
+      console.log('Search parameters:', { categoryIds, searchTerm, startTime, endTime, location, bounds });
+      
+      try {
       let query = supabase
         .from('Merchant')
         .select(`
@@ -460,6 +467,10 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
 
       console.log('Final merchants result:', data);
       return data;
+      } catch (error) {
+        console.error('=== SEARCH ERROR ===', error);
+        throw error;
+      }
     },
   });
 };
