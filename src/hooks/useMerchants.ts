@@ -148,9 +148,15 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
         // Generate search variations for better singular/plural matching
         const searchVariations = generateSearchVariations(searchTerm.trim());
         console.log('Search variations:', searchVariations);
+        console.log('Number of search variations:', searchVariations.length);
+        
+        // Test accent variations specifically
+        const accentTest = generateAccentVariations(searchTerm.trim().toLowerCase());
+        console.log('Accent variations for "' + searchTerm + '":', accentTest);
         
         // Build OR conditions for all variations
         const nameSearchConditions = searchVariations.map(variation => `restaurant_name.ilike.%${variation}%`).join(',');
+        console.log('Name search conditions:', nameSearchConditions);
         
         // Search in merchant names first
         const { data: nameMerchants, error: nameError } = await supabase
