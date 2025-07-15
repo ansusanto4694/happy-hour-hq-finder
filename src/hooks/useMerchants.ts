@@ -2,22 +2,91 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
+// Helper function to generate accent variations for better accent matching
+const generateAccentVariations = (term: string): string[] => {
+  const accentMap: { [key: string]: string[] } = {
+    'a': ['à', 'á', 'â', 'ã', 'ä', 'å', 'æ'],
+    'e': ['è', 'é', 'ê', 'ë'],
+    'i': ['ì', 'í', 'î', 'ï'],
+    'o': ['ò', 'ó', 'ô', 'õ', 'ö', 'ø'],
+    'u': ['ù', 'ú', 'û', 'ü'],
+    'n': ['ñ'],
+    'c': ['ç'],
+    'y': ['ÿ']
+  };
+  
+  const reverseAccentMap: { [key: string]: string } = {};
+  Object.entries(accentMap).forEach(([base, accents]) => {
+    accents.forEach(accent => {
+      reverseAccentMap[accent] = base;
+    });
+  });
+  
+  const variations = [term];
+  const chars = term.toLowerCase().split('');
+  
+  // Generate variations by replacing each character with its accent variants
+  const generateVariations = (currentChars: string[], index: number): string[] => {
+    if (index >= currentChars.length) {
+      return [currentChars.join('')];
+    }
+    
+    const char = currentChars[index];
+    const results: string[] = [];
+    
+    // Keep original character
+    results.push(...generateVariations(currentChars, index + 1));
+    
+    // Try accent variations
+    if (accentMap[char]) {
+      accentMap[char].forEach(accentChar => {
+        const newChars = [...currentChars];
+        newChars[index] = accentChar;
+        results.push(...generateVariations(newChars, index + 1));
+      });
+    }
+    
+    // Try removing accent if character is accented
+    if (reverseAccentMap[char]) {
+      const newChars = [...currentChars];
+      newChars[index] = reverseAccentMap[char];
+      results.push(...generateVariations(newChars, index + 1));
+    }
+    
+    return results;
+  };
+  
+  // Only generate a reasonable number of variations to avoid performance issues
+  const allVariations = generateVariations(chars, 0);
+  
+  // Limit to most common variations (first 20) to avoid too many database queries
+  const limitedVariations = allVariations.slice(0, 20);
+  
+  return [...new Set([...variations, ...limitedVariations])];
+};
+
 // Helper function to generate search variations for better singular/plural matching
 const generateSearchVariations = (term: string): string[] => {
   const variations = [term];
   const lowerTerm = term.toLowerCase();
   
-  // Handle plural to singular
-  if (lowerTerm.endsWith('s') && lowerTerm.length > 1) {
-    variations.push(lowerTerm.slice(0, -1)); // Remove 's'
-  }
+  // Generate accent variations first
+  const accentVariations = generateAccentVariations(lowerTerm);
+  variations.push(...accentVariations);
   
-  // Handle singular to plural
-  if (!lowerTerm.endsWith('s')) {
-    variations.push(lowerTerm + 's'); // Add 's'
-  }
+  // Handle plural to singular for all variations
+  accentVariations.forEach(variation => {
+    if (variation.endsWith('s') && variation.length > 1) {
+      variations.push(variation.slice(0, -1)); // Remove 's'
+    }
+    
+    // Handle singular to plural
+    if (!variation.endsWith('s')) {
+      variations.push(variation + 's'); // Add 's'
+    }
+  });
   
-  // Handle common irregular plurals
+  // Handle common irregular plurals for all variations
   const irregularPlurals: { [key: string]: string[] } = {
     'child': ['children'],
     'children': ['child'],
@@ -35,9 +104,11 @@ const generateSearchVariations = (term: string): string[] => {
     'mice': ['mouse']
   };
   
-  if (irregularPlurals[lowerTerm]) {
-    variations.push(...irregularPlurals[lowerTerm]);
-  }
+  accentVariations.forEach(variation => {
+    if (irregularPlurals[variation]) {
+      variations.push(...irregularPlurals[variation]);
+    }
+  });
   
   return [...new Set(variations)]; // Remove duplicates
 };
