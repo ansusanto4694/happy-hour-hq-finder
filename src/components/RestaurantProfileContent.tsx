@@ -20,6 +20,7 @@ interface Restaurant {
   zip_code: string;
   phone_number?: string | null;
   website?: string | null;
+  logo_url?: string | null;
   merchant_happy_hour: Array<{
     day_of_week: number;
     happy_hour_start: string;
@@ -61,9 +62,17 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
             {/* Header with Restaurant Name, Logo and Edit Button */}
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center space-x-4">
-                {/* Logo Placeholder */}
-                <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <span className="text-gray-400 text-xs font-medium">LOGO</span>
+                {/* Restaurant Logo */}
+                <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  {restaurant.logo_url ? (
+                    <img 
+                      src={restaurant.logo_url} 
+                      alt={`${restaurant.restaurant_name} logo`}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-gray-400 text-xs font-medium">LOGO</span>
+                  )}
                 </div>
                 <h1 className="text-3xl font-bold text-gray-900">{restaurant.restaurant_name}</h1>
               </div>

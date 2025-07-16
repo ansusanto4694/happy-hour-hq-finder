@@ -6,6 +6,7 @@ import { Edit } from 'lucide-react';
 import { BasicInfoForm } from '@/components/restaurant-profile-editor/BasicInfoForm';
 import { AddressForm } from '@/components/restaurant-profile-editor/AddressForm';
 import { HappyHoursForm } from '@/components/restaurant-profile-editor/HappyHoursForm';
+import { LogoUpload } from '@/components/restaurant-profile-editor/LogoUpload';
 import { useRestaurantMutations } from '@/components/restaurant-profile-editor/useRestaurantMutations';
 
 interface Restaurant {
@@ -18,6 +19,7 @@ interface Restaurant {
   zip_code: string;
   phone_number?: string | null;
   website?: string | null;
+  logo_url?: string | null;
   merchant_happy_hour: Array<{
     id: string;
     day_of_week: number;
@@ -32,6 +34,7 @@ interface RestaurantProfileEditorProps {
 
 export const RestaurantProfileEditor: React.FC<RestaurantProfileEditorProps> = ({ restaurant }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [logoUrl, setLogoUrl] = useState<string | null>(restaurant.logo_url || null);
   const { updateRestaurantMutation, updateHappyHoursMutation } = useRestaurantMutations(restaurant.id);
 
   const [formData, setFormData] = useState({
@@ -135,6 +138,12 @@ export const RestaurantProfileEditor: React.FC<RestaurantProfileEditorProps> = (
             onHappyHourDayChange={handleHappyHourDayChange}
             onAddHappyHour={addHappyHour}
             onRemoveHappyHour={removeHappyHour}
+          />
+
+          <LogoUpload
+            restaurantId={restaurant.id}
+            currentLogoUrl={logoUrl}
+            onLogoUpdate={setLogoUrl}
           />
 
           <div className="flex justify-end gap-3">

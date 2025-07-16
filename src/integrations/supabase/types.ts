@@ -131,6 +131,7 @@ export type Database = {
           id: number
           is_active: boolean
           latitude: number | null
+          logo_url: string | null
           longitude: number | null
           phone_number: string | null
           restaurant_name: string
@@ -148,6 +149,7 @@ export type Database = {
           id?: number
           is_active?: boolean
           latitude?: number | null
+          logo_url?: string | null
           longitude?: number | null
           phone_number?: string | null
           restaurant_name: string
@@ -165,6 +167,7 @@ export type Database = {
           id?: number
           is_active?: boolean
           latitude?: number | null
+          logo_url?: string | null
           longitude?: number | null
           phone_number?: string | null
           restaurant_name?: string
