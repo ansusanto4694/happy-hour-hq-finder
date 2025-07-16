@@ -10,6 +10,7 @@ interface Restaurant {
   zip_code: string;
   latitude?: number | null;
   longitude?: number | null;
+  logo_url?: string | null;
 }
 
 interface MerchantMapPreviewCardProps {
@@ -45,11 +46,19 @@ export const MerchantMapPreviewCard: React.FC<MerchantMapPreviewCardProps> = ({
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3 flex-1">
-              {/* Placeholder for merchant logo */}
-              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-orange-600 font-semibold text-lg">
-                  {restaurant.restaurant_name.charAt(0)}
-                </span>
+              {/* Merchant logo */}
+              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                {restaurant.logo_url ? (
+                  <img 
+                    src={restaurant.logo_url} 
+                    alt={`${restaurant.restaurant_name} logo`}
+                    className="w-full h-full object-cover rounded-full"
+                  />
+                ) : (
+                  <span className="text-orange-600 font-semibold text-lg">
+                    {restaurant.restaurant_name.charAt(0)}
+                  </span>
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-gray-900 text-lg leading-tight truncate">
@@ -97,11 +106,19 @@ export const MerchantMapPreviewCard: React.FC<MerchantMapPreviewCardProps> = ({
     >
       <CardContent className="p-3">
         <div className="flex items-center space-x-3">
-          {/* Placeholder for merchant logo - you can replace with actual logo when available */}
-          <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
-            <span className="text-orange-600 font-semibold text-sm">
-              {restaurant.restaurant_name.charAt(0)}
-            </span>
+          {/* Merchant logo */}
+          <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+            {restaurant.logo_url ? (
+              <img 
+                src={restaurant.logo_url} 
+                alt={`${restaurant.restaurant_name} logo`}
+                className="w-full h-full object-cover rounded-full"
+              />
+            ) : (
+              <span className="text-orange-600 font-semibold text-sm">
+                {restaurant.restaurant_name.charAt(0)}
+              </span>
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-gray-900 text-sm leading-tight truncate">
