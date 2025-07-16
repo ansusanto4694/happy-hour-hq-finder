@@ -63,12 +63,12 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center space-x-4">
                 {/* Restaurant Logo */}
-                <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                <div className="w-20 h-20 bg-white border-2 border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
                   {restaurant.logo_url ? (
                     <img 
                       src={restaurant.logo_url} 
                       alt={`${restaurant.restaurant_name} logo`}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain p-2"
                     />
                   ) : (
                     <span className="text-gray-400 text-xs font-medium">LOGO</span>
