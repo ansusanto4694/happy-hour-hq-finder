@@ -31,7 +31,7 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
                   <img 
                     src={restaurant.logo_url} 
                     alt={`${restaurant.restaurant_name} logo`}
-                    className="w-full h-full object-contain p-0.5"
+                    className="w-full h-full object-contain"
                   />
                 ) : (
                   <span className="text-gray-500 text-xs">Logo</span>
@@ -107,7 +107,7 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
                   <img 
                     src={restaurant.logo_url} 
                     alt={`${restaurant.restaurant_name} logo`}
-                    className="w-full h-full object-contain p-1"
+                    className="w-full h-full object-contain"
                   />
                 ) : (
                   <span className="text-gray-500 text-xs">Logo</span>
