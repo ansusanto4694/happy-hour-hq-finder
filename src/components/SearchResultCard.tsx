@@ -26,12 +26,12 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
           <div className="flex items-start space-x-3">
             {/* Small logo for mobile */}
             <div className="flex-shrink-0">
-              <div className="w-12 h-12 bg-white border border-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
+              <div className="w-14 h-14 bg-white border border-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
                 {restaurant.logo_url ? (
                   <img 
                     src={restaurant.logo_url} 
                     alt={`${restaurant.restaurant_name} logo`}
-                    className="w-full h-full object-contain p-1"
+                    className="w-full h-full object-contain p-0.5"
                   />
                 ) : (
                   <span className="text-gray-500 text-xs">Logo</span>
@@ -102,12 +102,12 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
           <div className="flex items-start space-x-4">
             {/* Logo placeholder */}
             <div className="flex-shrink-0">
-              <div className="w-20 h-20 bg-white border border-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
+              <div className="w-24 h-24 bg-white border border-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
                 {restaurant.logo_url ? (
                   <img 
                     src={restaurant.logo_url} 
                     alt={`${restaurant.restaurant_name} logo`}
-                    className="w-full h-full object-contain p-2"
+                    className="w-full h-full object-contain p-1"
                   />
                 ) : (
                   <span className="text-gray-500 text-xs">Logo</span>
