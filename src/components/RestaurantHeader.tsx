@@ -2,10 +2,16 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Flag } from 'lucide-react';
 import { AuthButton } from '@/components/AuthButton';
+import { ReportIssueModal } from '@/components/ReportIssueModal';
 
-export const RestaurantHeader: React.FC = () => {
+interface RestaurantHeaderProps {
+  merchantId?: number;
+  merchantName?: string;
+}
+
+export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ merchantId, merchantName }) => {
   const navigate = useNavigate();
   
   const handleBackToResults = () => {
@@ -36,7 +42,22 @@ export const RestaurantHeader: React.FC = () => {
               Happy.Hour
             </h1>
           </div>
-          <AuthButton />
+          <div className="flex items-center space-x-2">
+            {merchantId && merchantName && (
+              <div className="sm:hidden">
+                <ReportIssueModal
+                  merchantId={merchantId}
+                  merchantName={merchantName}
+                  trigger={
+                    <Button variant="outline" size="sm">
+                      <Flag className="w-4 h-4" />
+                    </Button>
+                  }
+                />
+              </div>
+            )}
+            <AuthButton />
+          </div>
         </div>
       </div>
     </div>

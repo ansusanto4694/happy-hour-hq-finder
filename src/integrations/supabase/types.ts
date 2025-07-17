@@ -295,6 +295,44 @@ export type Database = {
           },
         ]
       }
+      merchant_listing_issue: {
+        Row: {
+          additional_feedback: string | null
+          created_at: string
+          id: string
+          issue_types: string[]
+          merchant_id: number
+          reporter_email: string | null
+          updated_at: string
+        }
+        Insert: {
+          additional_feedback?: string | null
+          created_at?: string
+          id?: string
+          issue_types: string[]
+          merchant_id: number
+          reporter_email?: string | null
+          updated_at?: string
+        }
+        Update: {
+          additional_feedback?: string | null
+          created_at?: string
+          id?: string
+          issue_types?: string[]
+          merchant_id?: number
+          reporter_email?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_listing_issue_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "Merchant"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string

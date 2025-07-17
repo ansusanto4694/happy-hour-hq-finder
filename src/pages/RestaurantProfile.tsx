@@ -76,7 +76,10 @@ const RestaurantProfile = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <RestaurantHeader />
+      <RestaurantHeader 
+        merchantId={restaurant.id} 
+        merchantName={restaurant.restaurant_name} 
+      />
       <RestaurantProfileContent restaurant={restaurant} />
     </div>
   );

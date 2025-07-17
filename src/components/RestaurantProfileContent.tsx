@@ -8,6 +8,7 @@ import { RestaurantHappyHours } from '@/components/RestaurantHappyHours';
 import { RestaurantDealsSection } from '@/components/RestaurantDealsSection';
 import { RestaurantEventsFeed } from '@/components/RestaurantEventsFeed';
 import { RestaurantProfileEditor } from '@/components/RestaurantProfileEditor';
+import { ReportIssueModal } from '@/components/ReportIssueModal';
 import { useAuth } from '@/hooks/useAuth';
 
 interface Restaurant {
@@ -76,7 +77,16 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
                 </div>
                 <h1 className="text-3xl font-bold text-gray-900">{restaurant.restaurant_name}</h1>
               </div>
-              {isAdmin && <RestaurantProfileEditor restaurant={restaurantWithIds} />}
+              {isAdmin ? (
+                <RestaurantProfileEditor restaurant={restaurantWithIds} />
+              ) : (
+                <div className="hidden sm:block">
+                  <ReportIssueModal
+                    merchantId={restaurant.id}
+                    merchantName={restaurant.restaurant_name}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Category tags - positioned below name/logo, above address */}
