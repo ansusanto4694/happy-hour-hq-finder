@@ -12,6 +12,12 @@ interface LocationData {
   latitude: number;
   longitude: number;
   original_input: string;
+  location_type: 'city' | 'neighborhood' | 'zipcode';
+  neighborhood_name?: string;
+  north_lat?: number;
+  south_lat?: number;
+  east_lng?: number;
+  west_lng?: number;
 }
 
 serve(async (req) => {
@@ -52,6 +58,12 @@ serve(async (req) => {
           canonical_state: cachedResult.canonical_state,
           latitude: cachedResult.latitude,
           longitude: cachedResult.longitude,
+          location_type: cachedResult.location_type,
+          neighborhood_name: cachedResult.neighborhood_name,
+          north_lat: cachedResult.north_lat,
+          south_lat: cachedResult.south_lat,
+          east_lng: cachedResult.east_lng,
+          west_lng: cachedResult.west_lng,
           cached: true
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -87,9 +99,19 @@ serve(async (req) => {
     const feature = mapboxData.features[0];
     const [longitude, latitude] = feature.center;
     
-    // Extract city and state from the feature
+    // Extract city, state, and neighborhood information from the feature
     let canonicalCity = '';
     let canonicalState = '';
+    let neighborhoodName = '';
+    let locationType: 'city' | 'neighborhood' | 'zipcode' = 'city';
+    
+    // Determine location type from feature properties
+    if (feature.place_type?.includes('neighborhood')) {
+      locationType = 'neighborhood';
+      neighborhoodName = feature.text;
+    } else if (feature.place_type?.includes('postcode')) {
+      locationType = 'zipcode';
+    }
     
     // Mapbox context provides hierarchical location data
     for (const context of feature.context || []) {
@@ -97,6 +119,9 @@ serve(async (req) => {
         canonicalCity = context.text;
       } else if (context.id.startsWith('region.')) {
         canonicalState = context.short_code?.replace('us-', '').toUpperCase() || context.text;
+      } else if (context.id.startsWith('neighborhood.') && !neighborhoodName) {
+        neighborhoodName = context.text;
+        locationType = 'neighborhood';
       }
     }
     
@@ -107,6 +132,12 @@ serve(async (req) => {
         canonicalCity = parts[0];
         canonicalState = parts[1];
       }
+    }
+
+    // Extract bounding box if available
+    let northLat, southLat, eastLng, westLng;
+    if (feature.bbox) {
+      [westLng, southLat, eastLng, northLat] = feature.bbox;
     }
 
     // Normalize state format to match database (always use abbreviation)
@@ -129,7 +160,13 @@ serve(async (req) => {
       canonical_state: canonicalState,
       latitude,
       longitude,
-      original_input: location
+      original_input: location,
+      location_type: locationType,
+      neighborhood_name: neighborhoodName || undefined,
+      north_lat: northLat,
+      south_lat: southLat,
+      east_lng: eastLng,
+      west_lng: westLng
     };
 
     // Cache the result
@@ -141,6 +178,12 @@ serve(async (req) => {
         canonical_state: canonicalState,
         latitude,
         longitude,
+        location_type: locationType,
+        neighborhood_name: neighborhoodName || null,
+        north_lat: northLat || null,
+        south_lat: southLat || null,
+        east_lng: eastLng || null,
+        west_lng: westLng || null,
         created_at: new Date().toISOString()
       });
 
@@ -156,6 +199,12 @@ serve(async (req) => {
         canonical_state: canonicalState,
         latitude,
         longitude,
+        location_type: locationType,
+        neighborhood_name: neighborhoodName,
+        north_lat: northLat,
+        south_lat: southLat,
+        east_lng: eastLng,
+        west_lng: westLng,
         cached: false
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

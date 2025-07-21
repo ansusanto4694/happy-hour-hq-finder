@@ -98,28 +98,46 @@ export type Database = {
           canonical_city: string
           canonical_state: string
           created_at: string
+          east_lng: number | null
           id: string
           latitude: number
+          location_type: string | null
           longitude: number
+          neighborhood_name: string | null
+          north_lat: number | null
           original_input: string
+          south_lat: number | null
+          west_lng: number | null
         }
         Insert: {
           canonical_city: string
           canonical_state: string
           created_at?: string
+          east_lng?: number | null
           id?: string
           latitude: number
+          location_type?: string | null
           longitude: number
+          neighborhood_name?: string | null
+          north_lat?: number | null
           original_input: string
+          south_lat?: number | null
+          west_lng?: number | null
         }
         Update: {
           canonical_city?: string
           canonical_state?: string
           created_at?: string
+          east_lng?: number | null
           id?: string
           latitude?: number
+          location_type?: string | null
           longitude?: number
+          neighborhood_name?: string | null
+          north_lat?: number | null
           original_input?: string
+          south_lat?: number | null
+          west_lng?: number | null
         }
         Relationships: []
       }

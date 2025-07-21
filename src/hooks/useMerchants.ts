@@ -342,11 +342,22 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
               console.error('Geocoding error:', geocodeError);
               // Fall back to simple city search if geocoding fails
               query = query.ilike('city', locationData.value);
-            } else if (geocodeResult) {
-              console.log('Geocoding result:', geocodeResult);
-              const { canonical_city, canonical_state } = geocodeResult;
-              
-              // Handle NYC searches specially
+          } else if (geocodeResult) {
+            console.log('Geocoding result:', geocodeResult);
+            const { canonical_city, canonical_state, location_type, north_lat, south_lat, east_lng, west_lng } = geocodeResult;
+            
+            // If we have a neighborhood with bounding box, use geographic filtering
+            if (location_type === 'neighborhood' && north_lat && south_lat && east_lng && west_lng) {
+              console.log('Using neighborhood bounding box filter:', { north_lat, south_lat, east_lng, west_lng });
+              query = query
+                .gte('latitude', south_lat)
+                .lte('latitude', north_lat)
+                .gte('longitude', west_lng)
+                .lte('longitude', east_lng)
+                .not('latitude', 'is', null)
+                .not('longitude', 'is', null);
+            } else {
+              // Fall back to city/state filtering for cities and neighborhoods without bounds
               const originalCity = locationData.value.split(',')[0]?.trim() || locationData.value;
               
               if (canonical_city === 'New York' && originalCity.toLowerCase() === 'new york') {
@@ -359,6 +370,7 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
                 query = query.or(`and(city.ilike.%${canonical_city}%,state.ilike.%${canonical_state}%),and(city.ilike.%${originalCity}%,state.ilike.%${canonical_state}%)`);
               }
             }
+          }
           } catch (error) {
             console.error('Failed to call geocoding service:', error);
             // Fall back to simple city search
