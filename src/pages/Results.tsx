@@ -49,14 +49,23 @@ const Results = () => {
     isRadiusEnabled ? radiusMiles : undefined
   );
 
-  // Debug the merchants data being passed to SearchResults
+  // Debug the merchants data being passed to SearchResults - ALWAYS LOG
   console.log('=== RESULTS PAGE DEBUG ===');
   console.log('Search term from URL:', searchTerm);
   console.log('Merchants data from hook:', merchants);
   console.log('Merchants count from hook:', merchants?.length || 0);
   console.log('Is loading:', isLoading);
   console.log('Error:', error);
+  console.log('Selected categories:', selectedCategories);
+  console.log('Location:', location);
   console.log('========================');
+
+  // Force re-render when data changes
+  React.useEffect(() => {
+    console.log('=== RESULTS EFFECT TRIGGERED ===');
+    console.log('Merchants updated:', merchants?.length || 0);
+    console.log('================================');
+  }, [merchants]);
 
   const handleGoHome = () => {
     navigate('/');
