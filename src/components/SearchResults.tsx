@@ -89,10 +89,14 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   };
 
   console.log('=== SEARCH RESULTS DEBUG ===');
-  console.log('isLoading:', isLoading);
-  console.log('error:', error);
-  console.log('merchants:', merchants);
-  console.log('merchants length:', merchants?.length || 0);
+  console.log('Props received:');
+  console.log('- isLoading:', isLoading);
+  console.log('- error:', error);
+  console.log('- merchants:', merchants);
+  console.log('- merchants length:', merchants?.length || 0);
+  console.log('- merchants type:', typeof merchants);
+  console.log('- merchants is array:', Array.isArray(merchants));
+  console.log('- search term from URL:', searchTerm);
   console.log('============================');
 
   if (isLoading) {
