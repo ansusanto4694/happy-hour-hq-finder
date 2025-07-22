@@ -77,17 +77,42 @@ const generateSearchVariations = (term: string): string[] => {
     const words = variation.split(' ');
     
     words.forEach((word, wordIndex) => {
-      // Handle plural to singular
+      // Handle plural to singular - improved logic
       if (word.endsWith('s') && word.length > 1) {
         const newWords = [...words];
-        newWords[wordIndex] = word.slice(0, -1);
+        
+        // Handle different plural endings
+        if (word.endsWith('ies') && word.length > 3) {
+          // parties -> party
+          newWords[wordIndex] = word.slice(0, -3) + 'y';
+        } else if (word.endsWith('es') && word.length > 2) {
+          // boxes -> box, dishes -> dish
+          newWords[wordIndex] = word.slice(0, -2);
+          variations.push(newWords.join(' '));
+          // Also try just removing 's' for cases like "houses"
+          newWords[wordIndex] = word.slice(0, -1);
+        } else {
+          // Simple case: restaurants -> restaurant
+          newWords[wordIndex] = word.slice(0, -1);
+        }
         variations.push(newWords.join(' '));
       }
       
-      // Handle singular to plural
+      // Handle singular to plural - improved logic
       if (!word.endsWith('s')) {
         const newWords = [...words];
-        newWords[wordIndex] = word + 's';
+        
+        // Handle different singular to plural patterns
+        if (word.endsWith('y') && word.length > 1 && !'aeiou'.includes(word[word.length - 2])) {
+          // party -> parties
+          newWords[wordIndex] = word.slice(0, -1) + 'ies';
+        } else if (word.endsWith('ch') || word.endsWith('sh') || word.endsWith('x') || word.endsWith('z') || word.endsWith('s')) {
+          // box -> boxes, dish -> dishes
+          newWords[wordIndex] = word + 'es';
+        } else {
+          // Simple case: restaurant -> restaurants
+          newWords[wordIndex] = word + 's';
+        }
         variations.push(newWords.join(' '));
       }
     });
@@ -122,9 +147,11 @@ const generateSearchVariations = (term: string): string[] => {
     });
   });
   
-  // Limit variations to prevent database query issues
-  const limitedVariations = [...new Set(variations)].slice(0, 15);
-  console.log('Limited search variations:', limitedVariations);
+  // Remove duplicates and limit variations to prevent database query issues
+  const uniqueVariations = [...new Set(variations)];
+  const limitedVariations = uniqueVariations.slice(0, 20); // Increased limit
+  console.log('All unique search variations:', uniqueVariations);
+  console.log('Limited search variations (first 20):', limitedVariations);
   return limitedVariations;
 };
 
@@ -183,8 +210,16 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
         
         // Generate search variations for better singular/plural matching
         const searchVariations = generateSearchVariations(searchTerm.trim());
-        console.log('Search variations:', searchVariations);
+        console.log('Search variations for "' + searchTerm + '":', searchVariations);
         console.log('Number of search variations:', searchVariations.length);
+        
+        // Log specifically for restaurant/restaurants debugging
+        if (searchTerm.toLowerCase().includes('restaurant')) {
+          console.log('=== RESTAURANT SEARCH DEBUG ===');
+          console.log('Original term:', searchTerm);
+          console.log('Generated variations:', searchVariations);
+          console.log('================================');
+        }
         
         // Test accent variations specifically
         const accentTest = generateAccentVariations(searchTerm.trim().toLowerCase());
