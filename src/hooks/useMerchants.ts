@@ -604,6 +604,18 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
       }
 
       console.log('Final merchants result:', data);
+      console.log('Final merchants count:', data?.length || 0);
+      
+      // Extra debugging for restaurant searches
+      if (searchTerm?.toLowerCase().includes('restaurant')) {
+        console.log('🔍 RESTAURANT SEARCH FINAL RESULT:');
+        console.log('- Search term:', searchTerm);
+        console.log('- Result count:', data?.length || 0);
+        console.log('- First few results:', data?.slice(0, 3));
+        console.log('- Is result truthy?', !!data);
+        console.log('- Is result an array?', Array.isArray(data));
+      }
+      
       return data;
       } catch (error) {
         console.error('=== SEARCH ERROR ===', error);
