@@ -1,159 +1,6 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-
-// Helper function to generate accent variations for better accent matching
-const generateAccentVariations = (term: string): string[] => {
-  const variations = [term];
-  
-  // Map of base characters to their accented variations
-  const accentMap: { [key: string]: string[] } = {
-    'a': ['à', 'á', 'â', 'ã', 'ä', 'å', 'æ', 'ā', 'ă', 'ą'],
-    'e': ['è', 'é', 'ê', 'ë', 'ē', 'ĕ', 'ė', 'ę', 'ě'],
-    'i': ['ì', 'í', 'î', 'ï', 'ī', 'ĭ', 'į', 'ı'],
-    'o': ['ò', 'ó', 'ô', 'õ', 'ö', 'ø', 'ō', 'ŏ', 'ő', 'œ'],
-    'u': ['ù', 'ú', 'û', 'ü', 'ū', 'ŭ', 'ů', 'ű', 'ų'],
-    'n': ['ñ', 'ń', 'ň', 'ņ'],
-    'c': ['ç', 'ć', 'ĉ', 'ċ', 'č'],
-    'y': ['ÿ', 'ý', 'ŷ'],
-    's': ['š', 'ś', 'ŝ', 'ş'],
-    'z': ['ž', 'ź', 'ż'],
-    'd': ['đ', 'ď'],
-    'l': ['ł', 'ľ', 'ļ', 'ĺ'],
-    'r': ['ř', 'ŕ', 'ŗ'],
-    't': ['ť', 'ţ']
-  };
-  
-  // Create reverse mapping (accented to base)
-  const reverseAccentMap: { [key: string]: string } = {};
-  Object.entries(accentMap).forEach(([base, accents]) => {
-    accents.forEach(accent => {
-      reverseAccentMap[accent] = base;
-    });
-  });
-  
-  // Simple approach: for each character, try both accented and unaccented versions
-  const words = term.toLowerCase().split(' ');
-  
-  words.forEach((word, wordIndex) => {
-    for (let i = 0; i < word.length; i++) {
-      const char = word[i];
-      
-      // If character has accent variants, create variations
-      if (accentMap[char]) {
-        accentMap[char].forEach(accentChar => {
-          const newWords = [...words];
-          newWords[wordIndex] = word.substring(0, i) + accentChar + word.substring(i + 1);
-          variations.push(newWords.join(' '));
-        });
-      }
-      
-      // If character is accented, create unaccented version
-      if (reverseAccentMap[char]) {
-        const newWords = [...words];
-        newWords[wordIndex] = word.substring(0, i) + reverseAccentMap[char] + word.substring(i + 1);
-        variations.push(newWords.join(' '));
-      }
-    }
-  });
-  
-  return [...new Set(variations)];
-};
-
-// Helper function to generate search variations for better singular/plural matching
-const generateSearchVariations = (term: string): string[] => {
-  const variations = [term];
-  const lowerTerm = term.toLowerCase();
-  
-  // Generate accent variations first
-  const accentVariations = generateAccentVariations(lowerTerm);
-  variations.push(...accentVariations);
-  
-  // Handle plural to singular for all variations
-  const allVariations = [...new Set([...variations, ...accentVariations])];
-  
-  allVariations.forEach(variation => {
-    // Split into words to handle each word's plural/singular forms
-    const words = variation.split(' ');
-    
-    words.forEach((word, wordIndex) => {
-      // Handle plural to singular - improved logic
-      if (word.endsWith('s') && word.length > 1) {
-        const newWords = [...words];
-        
-        // Handle different plural endings
-        if (word.endsWith('ies') && word.length > 3) {
-          // parties -> party
-          newWords[wordIndex] = word.slice(0, -3) + 'y';
-        } else if (word.endsWith('es') && word.length > 2) {
-          // boxes -> box, dishes -> dish
-          newWords[wordIndex] = word.slice(0, -2);
-          variations.push(newWords.join(' '));
-          // Also try just removing 's' for cases like "houses"
-          newWords[wordIndex] = word.slice(0, -1);
-        } else {
-          // Simple case: restaurants -> restaurant
-          newWords[wordIndex] = word.slice(0, -1);
-        }
-        variations.push(newWords.join(' '));
-      }
-      
-      // Handle singular to plural - improved logic
-      if (!word.endsWith('s')) {
-        const newWords = [...words];
-        
-        // Handle different singular to plural patterns
-        if (word.endsWith('y') && word.length > 1 && !'aeiou'.includes(word[word.length - 2])) {
-          // party -> parties
-          newWords[wordIndex] = word.slice(0, -1) + 'ies';
-        } else if (word.endsWith('ch') || word.endsWith('sh') || word.endsWith('x') || word.endsWith('z') || word.endsWith('s')) {
-          // box -> boxes, dish -> dishes
-          newWords[wordIndex] = word + 'es';
-        } else {
-          // Simple case: restaurant -> restaurants
-          newWords[wordIndex] = word + 's';
-        }
-        variations.push(newWords.join(' '));
-      }
-    });
-  });
-  
-  // Handle common irregular plurals
-  const irregularPlurals: { [key: string]: string } = {
-    'child': 'children',
-    'children': 'child',
-    'foot': 'feet',
-    'feet': 'foot',
-    'tooth': 'teeth',
-    'teeth': 'tooth',
-    'man': 'men',
-    'men': 'man',
-    'woman': 'women',
-    'women': 'woman',
-    'person': 'people',
-    'people': 'person',
-    'mouse': 'mice',
-    'mice': 'mouse'
-  };
-  
-  allVariations.forEach(variation => {
-    const words = variation.split(' ');
-    words.forEach((word, wordIndex) => {
-      if (irregularPlurals[word]) {
-        const newWords = [...words];
-        newWords[wordIndex] = irregularPlurals[word];
-        variations.push(newWords.join(' '));
-      }
-    });
-  });
-  
-  // Remove duplicates and limit variations to prevent database query issues
-  const uniqueVariations = [...new Set(variations)];
-  const limitedVariations = uniqueVariations.slice(0, 20); // Increased limit
-  console.log('All unique search variations:', uniqueVariations);
-  console.log('Limited search variations (first 20):', limitedVariations);
-  return limitedVariations;
-};
+import { generateSearchVariations, createSearchConditions, debugSearchVariations } from '@/utils/searchUtils';
 
 // Helper function to calculate distance between two coordinates using Haversine formula
 const calculateHaversineDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
@@ -213,28 +60,17 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
       if (searchTerm && searchTerm.trim()) {
         console.log('Searching for term:', searchTerm);
         
-        // Generate search variations for better singular/plural matching
+        // Debug search variations
+        debugSearchVariations(searchTerm.trim());
+        
+        // Get search variations using the new utility
         const searchVariations = generateSearchVariations(searchTerm.trim());
-        console.log('Search variations for "' + searchTerm + '":', searchVariations);
-        console.log('Number of search variations:', searchVariations.length);
-        
-        // Log specifically for restaurant/restaurants debugging
-        if (searchTerm.toLowerCase().includes('restaurant')) {
-          console.log('=== RESTAURANT SEARCH DEBUG ===');
-          console.log('Original term:', searchTerm);
-          console.log('Generated variations:', searchVariations);
-          console.log('================================');
-        }
-        
-        // Test accent variations specifically
-        const accentTest = generateAccentVariations(searchTerm.trim().toLowerCase());
-        console.log('Accent variations for "' + searchTerm + '":', accentTest);
-        
-        // Build OR conditions for all variations
-        const nameSearchConditions = searchVariations.map(variation => `restaurant_name.ilike.%${variation}%`).join(',');
-        console.log('Name search conditions:', nameSearchConditions);
+        console.log('Generated search variations:', searchVariations);
         
         // Search in merchant names first
+        const nameSearchConditions = createSearchConditions(searchTerm.trim(), 'restaurant_name');
+        console.log('Name search conditions:', nameSearchConditions);
+        
         const { data: nameMerchants, error: nameError } = await supabase
           .from('Merchant')
           .select('id')
@@ -271,8 +107,8 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
 
         console.log('Found deals matching search:', dealMerchants);
 
-        // Search in categories
-        const categorySearchConditions = searchVariations.map(variation => `name.ilike.%${variation}%`).join(',');
+        // Search in categories using the new utility
+        const categorySearchConditions = createSearchConditions(searchTerm.trim(), 'name');
         console.log('Category search conditions:', categorySearchConditions);
         
         const { data: categoryMatches, error: categoryError } = await supabase
@@ -303,305 +139,133 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
             .eq('Merchant.is_active', true);
 
           if (merchantCategoryError) {
-            console.error('Error fetching merchants by categories:', merchantCategoryError);
+            console.error('Error getting merchants by category:', merchantCategoryError);
             throw merchantCategoryError;
           }
 
-          console.log('Found merchants with matching categories:', merchantsWithCategories);
-          
-          if (merchantsWithCategories && merchantsWithCategories.length > 0) {
-            categoryMerchantIds = merchantsWithCategories.map(item => item.merchant_id);
-          }
+          categoryMerchantIds = merchantsWithCategories?.map(mc => mc.merchant_id) || [];
+          console.log('Found merchant IDs from category search:', categoryMerchantIds);
         }
 
-        // Combine results from names, deals and categories (OR logic)
-        const nameMerchantIds = nameMerchants ? nameMerchants.map(merchant => merchant.id) : [];
-        const dealMerchantIds = dealMerchants ? dealMerchants.map(deal => deal.restaurant_id) : [];
-        const allSearchMerchantIds = [...new Set([...nameMerchantIds, ...dealMerchantIds, ...categoryMerchantIds])];
+        // Combine all merchant IDs from name, deal, and category searches
+        const nameIds = nameMerchants?.map(m => m.id) || [];
+        const dealIds = dealMerchants?.map(d => d.restaurant_id) || [];
+        
+        merchantIds = [...new Set([...nameIds, ...dealIds, ...categoryMerchantIds])];
+        console.log('Combined merchant IDs from all searches:', merchantIds);
 
-        console.log('Combined search results - Name IDs:', nameMerchantIds);
-        console.log('Combined search results - Deal IDs:', dealMerchantIds);
-        console.log('Combined search results - Category IDs:', categoryMerchantIds);
-        console.log('Combined search results - All IDs:', allSearchMerchantIds);
-
-        if (allSearchMerchantIds.length > 0) {
-          merchantIds = allSearchMerchantIds;
-        } else {
-          // No merchants, deals or categories found for search term, return empty result
-          console.log('No merchants, deals or categories found for search term, returning empty');
+        if (merchantIds.length === 0) {
+          console.log('No merchants found matching search criteria');
           return [];
         }
+
+        // Filter query to only include matching merchants
+        query = query.in('id', merchantIds);
       }
 
-      // If category filters are applied, filter by them using OR logic
+      // Apply category filters if provided
       if (categoryIds && categoryIds.length > 0) {
-        console.log('Filtering by category IDs:', categoryIds);
+        console.log('Applying category filters:', categoryIds);
         
-        // Get merchant IDs that have ANY of the selected categories (OR logic)
-        const { data: categoryMerchants, error: merchantIdsError } = await supabase
+        const { data: filteredMerchants, error: categoryFilterError } = await supabase
           .from('merchant_categories')
-          .select(`
-            merchant_id,
-            Merchant!inner(is_active)
-          `)
-          .in('category_id', categoryIds)
-          .eq('Merchant.is_active', true);
+          .select('merchant_id')
+          .in('category_id', categoryIds);
 
-        if (merchantIdsError) {
-          console.error('Error fetching merchant IDs:', merchantIdsError);
-          throw merchantIdsError;
+        if (categoryFilterError) {
+          console.error('Error filtering by categories:', categoryFilterError);
+          throw categoryFilterError;
         }
 
-        console.log('Found merchant IDs with categories:', categoryMerchants);
+        const categoryFilteredIds = filteredMerchants?.map(mc => mc.merchant_id) || [];
+        console.log('Merchant IDs matching category filters:', categoryFilteredIds);
 
-        if (categoryMerchants && categoryMerchants.length > 0) {
-          const categoryMerchantIds = categoryMerchants.map(item => item.merchant_id);
-          
-          // If we also have search results, find intersection
-          if (merchantIds !== null) {
-            merchantIds = merchantIds.filter(id => categoryMerchantIds.includes(id));
-          } else {
-            merchantIds = categoryMerchantIds;
-          }
+        if (merchantIds) {
+          // Intersect with existing search results
+          merchantIds = merchantIds.filter(id => categoryFilteredIds.includes(id));
         } else {
-          // No merchants found for the selected categories, return empty result
+          // Use category filter as the only filter
+          merchantIds = categoryFilteredIds;
+        }
+
+        if (merchantIds.length === 0) {
+          console.log('No merchants found after applying category filters');
           return [];
         }
+
+        query = query.in('id', merchantIds);
       }
 
-      // Apply location filter if provided (supports zip code, city, or city/state with geocoding)
-      if (location && location.trim()) {
-        console.log('Applying location filter:', location);
-        const trimmedLocation = location.trim();
-        
-        // Parse location input
-        const parseLocation = (input: string) => {
-          // Check if it's a 5-digit zip code
-          if (/^\d{5}$/.test(input)) {
-            return { type: 'zip', value: input };
-          }
-          
-          // For any other input, use geocoding service to normalize
-          return { type: 'geocode', value: input };
-        };
-        
-        const locationData = parseLocation(trimmedLocation);
-        
-        if (locationData.type === 'zip') {
-          // If radius is specified, use geographic filtering instead of exact zip match
-          if (radiusMiles !== undefined && radiusMiles > 0) {
-            console.log(`Using radius-based search: ${radiusMiles} miles from zip ${locationData.value}`);
-            
-            // First, get coordinates for the zip code center
-            try {
-              const { data: geocodeResult, error: geocodeError } = await supabase.functions.invoke('geocode-address', {
-                body: { address: locationData.value }
-              });
-              
-              if (geocodeError || !geocodeResult?.success) {
-                console.error('Failed to geocode zip code:', geocodeError || geocodeResult);
-                // Fall back to exact zip match
-                query = query.eq('zip_code', locationData.value);
-              } else {
-                const { latitude: centerLat, longitude: centerLng } = geocodeResult;
-                console.log(`Zip code ${locationData.value} coordinates: ${centerLat}, ${centerLng}`);
-                
-                // Get all merchants with coordinates first, then filter by distance
-                const allMerchantIds = merchantIds;
-                const baseQuery = supabase
-                  .from('Merchant')
-                  .select('id, latitude, longitude')
-                  .eq('is_active', true)
-                  .not('latitude', 'is', null)
-                  .not('longitude', 'is', null);
-                
-                // Apply existing merchant ID filters if any
-                const coordQuery = allMerchantIds ? baseQuery.in('id', allMerchantIds) : baseQuery;
-                
-                const { data: merchantsWithCoords, error: coordError } = await coordQuery;
-                
-                if (coordError) {
-                  console.error('Error fetching merchant coordinates:', coordError);
-                  throw coordError;
-                }
-                
-                if (!merchantsWithCoords) {
-                  console.log('No merchants with coordinates found');
-                  return [];
-                }
-                
-                // Calculate distance for each merchant using Haversine formula
-                const withinRadiusMerchants = merchantsWithCoords.filter(merchant => {
-                  if (!merchant.latitude || !merchant.longitude) return false;
-                  
-                  const distance = calculateHaversineDistance(
-                    centerLat, centerLng,
-                    Number(merchant.latitude), Number(merchant.longitude)
-                  );
-                  
-                  return distance <= radiusMiles;
-                });
-                
-                console.log(`Found ${withinRadiusMerchants.length} merchants within ${radiusMiles} miles of zip ${locationData.value}`);
-                
-                if (withinRadiusMerchants.length === 0) {
-                  return [];
-                }
-                
-                // Update merchantIds to include only those within radius
-                const radiusFilteredIds = withinRadiusMerchants.map(m => m.id);
-                merchantIds = merchantIds ? merchantIds.filter(id => radiusFilteredIds.includes(id)) : radiusFilteredIds;
-              }
-            } catch (error) {
-              console.error('Error in radius-based search:', error);
-              // Fall back to exact zip match
-              query = query.eq('zip_code', locationData.value);
-            }
-          } else {
-            // No radius specified, use exact zip match
-            query = query.eq('zip_code', locationData.value);
-          }
-        } else if (locationData.type === 'geocode') {
-          // Call geocoding service to normalize location
-          try {
-            console.log('Calling geocoding service for:', locationData.value);
-            const { data: geocodeResult, error: geocodeError } = await supabase.functions.invoke('normalize-location', {
-              body: { location: locationData.value }
-            });
-            
-            if (geocodeError) {
-              console.error('Geocoding error:', geocodeError);
-              // Fall back to simple city search if geocoding fails
-              query = query.ilike('city', locationData.value);
-          } else if (geocodeResult) {
-            console.log('Geocoding result:', geocodeResult);
-            const { canonical_city, canonical_state, location_type, north_lat, south_lat, east_lng, west_lng } = geocodeResult;
-            
-            // If we have a neighborhood with bounding box, use geographic filtering
-            if (location_type === 'neighborhood' && north_lat && south_lat && east_lng && west_lng) {
-              console.log('Using neighborhood bounding box filter:', { north_lat, south_lat, east_lng, west_lng });
-              query = query
-                .gte('latitude', south_lat)
-                .lte('latitude', north_lat)
-                .gte('longitude', west_lng)
-                .lte('longitude', east_lng)
-                .not('latitude', 'is', null)
-                .not('longitude', 'is', null);
-            } else {
-              // Fall back to city/state filtering for cities and neighborhoods without bounds
-              const originalCity = locationData.value.split(',')[0]?.trim() || locationData.value;
-              
-              if (canonical_city === 'New York' && originalCity.toLowerCase() === 'new york') {
-                // "New York, NY" should include ALL NYC boroughs
-                const nycBoroughs = ['New York', 'Manhattan', 'Brooklyn', 'Queens', 'Bronx', 'Staten Island'];
-                const cityConditions = nycBoroughs.map(borough => `city.ilike.%${borough}%`).join(',');
-                query = query.or(`and(or(${cityConditions}),state.ilike.%${canonical_state}%)`);
-              } else {
-                // Specific borough searches (Manhattan, Brooklyn, etc.) or other cities
-                query = query.or(`and(city.ilike.%${canonical_city}%,state.ilike.%${canonical_state}%),and(city.ilike.%${originalCity}%,state.ilike.%${canonical_state}%)`);
-              }
-            }
-          }
-          } catch (error) {
-            console.error('Failed to call geocoding service:', error);
-            // Fall back to simple city search
-            if (trimmedLocation.includes(',')) {
-              const [city, state] = trimmedLocation.split(',').map(s => s.trim());
-              query = query
-                .ilike('city', city)
-                .ilike('state', state);
-            } else {
-              query = query.ilike('city', trimmedLocation);
-            }
-          }
-        }
-      }
-
-      // Apply geographic bounds filter if provided
+      // Apply location-based filtering if bounds are provided
       if (bounds) {
-        console.log('Applying geographic bounds filter:', bounds);
+        console.log('Applying map bounds filter:', bounds);
         query = query
           .gte('latitude', bounds.south)
           .lte('latitude', bounds.north)
           .gte('longitude', bounds.west)
-          .lte('longitude', bounds.east)
-          .not('latitude', 'is', null)
-          .not('longitude', 'is', null);
+          .lte('longitude', bounds.east);
       }
 
-      // Apply merchant ID filter if we have any filters
-      if (merchantIds !== null) {
-        if (merchantIds.length === 0) {
-          console.log('No merchants match filters, returning empty');
-          return [];
-        }
-        console.log('Filtering by merchant IDs:', merchantIds);
-        query = query.in('id', merchantIds);
-      }
-
-      const { data, error } = await query;
+      // Execute the main query
+      const { data, error } = await query.order('restaurant_name');
 
       if (error) {
         console.error('Error fetching merchants:', error);
         throw error;
       }
 
-      console.log('Merchants before time filtering:', data);
+      console.log('Raw merchant data from database:', data);
 
-      // Filter by happy hour times if both start and end times are provided
-      if (startTime && endTime && data) {
-        console.log(`Applying time filter: ${startTime} to ${endTime}`);
+      // Apply radius filtering if specified (must have location)
+      if (radiusMiles && location) {
+        console.log('Applying radius filtering:', radiusMiles, 'miles from', location);
         
-        const filteredData = data.filter(merchant => {
-          // Check if merchant has any happy hours that overlap with the requested time range
-          const hasOverlappingHour = merchant.merchant_happy_hour.some((happyHour: any) => {
-            const hhStart = happyHour.happy_hour_start;
-            const hhEnd = happyHour.happy_hour_end;
+        // Get coordinates for the location
+        const { data: locationData, error: locationError } = await supabase
+          .from('location_cache')
+          .select('latitude, longitude')
+          .eq('original_input', location)
+          .single();
+
+        if (locationError || !locationData) {
+          console.log('Location not found in cache, skipping radius filter');
+        } else {
+          const filteredData = data?.filter(merchant => {
+            if (!merchant.latitude || !merchant.longitude) return false;
             
-            console.log(`Checking merchant ${merchant.restaurant_name}: HH ${hhStart}-${hhEnd} vs requested ${startTime}-${endTime}`);
+            const distance = calculateHaversineDistance(
+              locationData.latitude,
+              locationData.longitude,
+              parseFloat(merchant.latitude.toString()),
+              parseFloat(merchant.longitude.toString())
+            );
             
-            // Convert times to minutes for easier comparison
-            const parseTimeToMinutes = (timeStr: string) => {
-              // Handle both 12-hour format (1:00 PM) and 24-hour format (13:00)
-              let time = timeStr.trim();
-              let hours, minutes;
-              
-              if (time.includes('AM') || time.includes('PM')) {
-                // 12-hour format
-                const isPM = time.includes('PM');
-                time = time.replace(/AM|PM/g, '').trim();
-                [hours, minutes] = time.split(':').map(Number);
-                
-                if (isPM && hours !== 12) {
-                  hours += 12;
-                } else if (!isPM && hours === 12) {
-                  hours = 0;
-                }
-              } else {
-                // 24-hour format
-                [hours, minutes] = time.split(':').map(Number);
-              }
-              
-              return hours * 60 + minutes;
-            };
-            
-            const requestStart = parseTimeToMinutes(startTime);
-            const requestEnd = parseTimeToMinutes(endTime);
-            const happyStart = parseTimeToMinutes(hhStart);
-            const happyEnd = parseTimeToMinutes(hhEnd);
-            
-            console.log(`Time comparison: requested ${requestStart}-${requestEnd} minutes vs happy hour ${happyStart}-${happyEnd} minutes`);
-            
-            // Check for overlap: ranges overlap if one starts before the other ends
-            const hasOverlap = requestStart < happyEnd && requestEnd > happyStart;
-            
-            console.log(`Overlap result for ${merchant.restaurant_name}: ${hasOverlap}`);
-            
-            return hasOverlap;
+            return distance <= radiusMiles;
           });
           
-          console.log(`Final result for ${merchant.restaurant_name}: ${hasOverlappingHour}`);
-          return hasOverlappingHour;
+          console.log('Merchants after radius filtering:', filteredData);
+          return filteredData;
+        }
+      }
+
+      // Apply time-based filtering if start and end times are provided
+      if (startTime && endTime && data) {
+        console.log('Applying time filtering:', startTime, 'to', endTime);
+        
+        const filteredData = data.filter(merchant => {
+          if (!merchant.merchant_happy_hour || merchant.merchant_happy_hour.length === 0) {
+            return false;
+          }
+
+          return merchant.merchant_happy_hour.some((hh: any) => {
+            const startTimeMinutes = parseInt(startTime.split(':')[0]) * 60 + parseInt(startTime.split(':')[1]);
+            const endTimeMinutes = parseInt(endTime.split(':')[0]) * 60 + parseInt(endTime.split(':')[1]);
+            
+            const hhStartMinutes = parseInt(hh.happy_hour_start.split(':')[0]) * 60 + parseInt(hh.happy_hour_start.split(':')[1]);
+            const hhEndMinutes = parseInt(hh.happy_hour_end.split(':')[0]) * 60 + parseInt(hh.happy_hour_end.split(':')[1]);
+
+            return startTimeMinutes >= hhStartMinutes && endTimeMinutes <= hhEndMinutes;
+          });
         });
         
         console.log('Merchants after time filtering:', filteredData);
