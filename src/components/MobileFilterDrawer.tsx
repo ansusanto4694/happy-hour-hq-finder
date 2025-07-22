@@ -48,18 +48,18 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
         
         <div className="mt-6 overflow-y-auto h-[calc(100vh-120px)]">
           <div className="space-y-6">
-            <RadiusFilter
-              selectedRadius={selectedRadius}
-              onRadiusChange={onRadiusChange}
-              isEnabled={isRadiusEnabled}
-            />
-            
-            <Separator />
-            
             <CategoryFilter
               selectedCategories={selectedCategories}
               onCategoryChange={onCategoryChange}
               vertical={true}
+            />
+            
+            <Separator />
+            
+            <RadiusFilter
+              selectedRadius={selectedRadius}
+              onRadiusChange={onRadiusChange}
+              isEnabled={isRadiusEnabled}
             />
           </div>
         </div>

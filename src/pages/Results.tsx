@@ -178,17 +178,17 @@ const Results = () => {
           {/* Fixed Far Left Sidebar - Filters */}
           <div className="w-80 flex-shrink-0">
             <div className="space-y-4 sticky top-32 z-40">
-              <FilterSection
-                selectedRadius={selectedRadius}
-                onRadiusChange={setSelectedRadius}
-                isRadiusEnabled={isRadiusEnabled}
-              />
               <div className="bg-white rounded-lg shadow-sm p-4">
                 <CategoryFilter
                   selectedCategories={selectedCategories}
                   onCategoryChange={setSelectedCategories}
                 />
               </div>
+              <FilterSection
+                selectedRadius={selectedRadius}
+                onRadiusChange={setSelectedRadius}
+                isRadiusEnabled={isRadiusEnabled}
+              />
             </div>
           </div>
 
