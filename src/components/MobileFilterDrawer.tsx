@@ -48,6 +48,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
         
         <div className="mt-6 overflow-y-auto h-[calc(100vh-120px)]">
           <div className="space-y-6">
+            {/* Category filter first */}
             <CategoryFilter
               selectedCategories={selectedCategories}
               onCategoryChange={onCategoryChange}
