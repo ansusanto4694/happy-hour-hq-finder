@@ -15,7 +15,7 @@ import { RadiusOption, getRadiusMiles } from '@/components/RadiusFilter';
 
 const Results = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedRadius, setSelectedRadius] = useState<RadiusOption>(null);
+  const [selectedRadius, setSelectedRadius] = useState<RadiusOption>('walking');
   const [mobileView, setMobileView] = useState<'list' | 'map'>('list');
   const [searchAsMapMoves, setSearchAsMapMoves] = useState(false);
   const [mapBounds, setMapBounds] = useState<{ north: number; south: number; east: number; west: number } | null>(null);
@@ -35,8 +35,8 @@ const Results = () => {
   const startTime = searchParams.get('startTime') || '';
   const endTime = searchParams.get('endTime') || '';
 
-  // Check if radius filtering should be enabled (location must be a 5-digit zip code)
-  const isRadiusEnabled = location && /^\d{5}$/.test(location.trim());
+  // Check if radius filtering should be enabled (any location provided)
+  const isRadiusEnabled = Boolean(location && location.trim());
   const radiusMiles = getRadiusMiles(selectedRadius);
 
   const { data: merchants, isLoading, error } = useMerchants(

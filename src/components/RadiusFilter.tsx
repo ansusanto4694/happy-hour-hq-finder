@@ -2,7 +2,7 @@ import React from 'react';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
-export type RadiusOption = 'blocks' | 'walking' | 'bike' | 'drive' | null;
+export type RadiusOption = 'blocks' | 'walking' | 'bike' | 'drive';
 
 interface RadiusFilterProps {
   selectedRadius: RadiusOption;
@@ -16,7 +16,6 @@ export const RadiusFilter: React.FC<RadiusFilterProps> = ({
   isEnabled
 }) => {
   const radiusOptions = [
-    { value: null, label: 'Any distance', miles: null },
     { value: 'blocks' as const, label: 'Within 5 blocks', miles: 0.25 },
     { value: 'walking' as const, label: 'Walking (within 1 mile)', miles: 1 },
     { value: 'bike' as const, label: 'Bike (within 3 miles)', miles: 3 },
@@ -31,26 +30,26 @@ export const RadiusFilter: React.FC<RadiusFilterProps> = ({
         </Label>
         {!isEnabled && (
           <span className="text-xs text-gray-400">
-            Enter a zip code to enable
+            Enter a location to enable
           </span>
         )}
       </div>
       
       <RadioGroup
-        value={selectedRadius || 'any'}
-        onValueChange={(value) => onRadiusChange(value === 'any' ? null : value as RadiusOption)}
+        value={selectedRadius || 'walking'}
+        onValueChange={(value) => onRadiusChange(value as RadiusOption)}
         disabled={!isEnabled}
         className="space-y-2"
       >
         {radiusOptions.map((option) => (
-          <div key={option.value || 'any'} className="flex items-center space-x-2">
+          <div key={option.value} className="flex items-center space-x-2">
             <RadioGroupItem 
-              value={option.value || 'any'} 
-              id={option.value || 'any'}
+              value={option.value} 
+              id={option.value}
               disabled={!isEnabled}
             />
             <Label 
-              htmlFor={option.value || 'any'}
+              htmlFor={option.value}
               className={`text-sm cursor-pointer ${
                 !isEnabled ? 'text-gray-400' : 'text-gray-700'
               }`}
@@ -65,7 +64,7 @@ export const RadiusFilter: React.FC<RadiusFilterProps> = ({
 };
 
 // Helper function to get miles from radius option
-export const getRadiusMiles = (radius: RadiusOption): number | null => {
+export const getRadiusMiles = (radius: RadiusOption | null): number => {
   const radiusMap = {
     blocks: 0.25,
     walking: 1,
@@ -73,5 +72,5 @@ export const getRadiusMiles = (radius: RadiusOption): number | null => {
     drive: 5
   };
   
-  return radius ? radiusMap[radius] : null;
+  return radius ? radiusMap[radius] : 1; // Default to 1 mile if no radius selected
 };
