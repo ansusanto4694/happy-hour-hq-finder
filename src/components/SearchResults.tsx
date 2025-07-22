@@ -88,6 +88,13 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
     }, 500);
   };
 
+  console.log('=== SEARCH RESULTS DEBUG ===');
+  console.log('isLoading:', isLoading);
+  console.log('error:', error);
+  console.log('merchants:', merchants);
+  console.log('merchants length:', merchants?.length || 0);
+  console.log('============================');
+
   if (isLoading) {
     return <SearchResultsLoading />;
   }
@@ -97,6 +104,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   }
 
   if (!merchants || merchants.length === 0) {
+    console.log('Showing empty results because merchants is:', merchants);
     return (
       <SearchResultsEmpty 
         startTime={startTime} 
