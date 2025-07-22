@@ -49,6 +49,15 @@ const Results = () => {
     isRadiusEnabled ? radiusMiles : undefined
   );
 
+  // Debug the merchants data being passed to SearchResults
+  console.log('=== RESULTS PAGE DEBUG ===');
+  console.log('Search term from URL:', searchTerm);
+  console.log('Merchants data from hook:', merchants);
+  console.log('Merchants count from hook:', merchants?.length || 0);
+  console.log('Is loading:', isLoading);
+  console.log('Error:', error);
+  console.log('========================');
+
   const handleGoHome = () => {
     navigate('/');
   };
