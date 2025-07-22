@@ -11,9 +11,11 @@ import { CategoryFilter } from '@/components/CategoryFilter';
 import { ResultsMap } from '@/components/ResultsMap';
 import { useMerchants } from '@/hooks/useMerchants';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { RadiusOption, getRadiusMiles } from '@/components/RadiusFilter';
 
 const Results = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedRadius, setSelectedRadius] = useState<RadiusOption>(null);
   const [mobileView, setMobileView] = useState<'list' | 'map'>('list');
   const [searchAsMapMoves, setSearchAsMapMoves] = useState(false);
   const [mapBounds, setMapBounds] = useState<{ north: number; south: number; east: number; west: number } | null>(null);
@@ -33,13 +35,18 @@ const Results = () => {
   const startTime = searchParams.get('startTime') || '';
   const endTime = searchParams.get('endTime') || '';
 
+  // Check if radius filtering should be enabled (location must be a 5-digit zip code)
+  const isRadiusEnabled = location && /^\d{5}$/.test(location.trim());
+  const radiusMiles = getRadiusMiles(selectedRadius);
+
   const { data: merchants, isLoading, error } = useMerchants(
     selectedCategories, 
     searchTerm, 
     startTime, 
     endTime, 
     location,
-    searchAsMapMoves ? mapBounds : undefined
+    searchAsMapMoves ? mapBounds : undefined,
+    isRadiusEnabled ? radiusMiles : undefined
   );
 
   const handleGoHome = () => {
@@ -91,6 +98,9 @@ const Results = () => {
                 <MobileFilterDrawer
                   selectedCategories={selectedCategories}
                   onCategoryChange={setSelectedCategories}
+                  selectedRadius={selectedRadius}
+                  onRadiusChange={setSelectedRadius}
+                  isRadiusEnabled={isRadiusEnabled}
                 />
                 <ViewToggle view={mobileView} onViewChange={setMobileView} />
               </div>
@@ -167,11 +177,18 @@ const Results = () => {
         <div className="hidden xl:flex xl:gap-6">
           {/* Fixed Far Left Sidebar - Filters */}
           <div className="w-80 flex-shrink-0">
-            <div className="bg-white rounded-lg shadow-sm p-4 sticky top-32 z-40">
-              <CategoryFilter
-                selectedCategories={selectedCategories}
-                onCategoryChange={setSelectedCategories}
+            <div className="space-y-4 sticky top-32 z-40">
+              <FilterSection
+                selectedRadius={selectedRadius}
+                onRadiusChange={setSelectedRadius}
+                isRadiusEnabled={isRadiusEnabled}
               />
+              <div className="bg-white rounded-lg shadow-sm p-4">
+                <CategoryFilter
+                  selectedCategories={selectedCategories}
+                  onCategoryChange={setSelectedCategories}
+                />
+              </div>
             </div>
           </div>
 

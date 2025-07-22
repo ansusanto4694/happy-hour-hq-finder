@@ -3,17 +3,25 @@ import { Filter, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { CategoryFilter } from './CategoryFilter';
+import { RadiusFilter, RadiusOption } from './RadiusFilter';
+import { Separator } from '@/components/ui/separator';
 
 interface MobileFilterDrawerProps {
   selectedCategories: string[];
   onCategoryChange: (categories: string[]) => void;
+  selectedRadius: RadiusOption;
+  onRadiusChange: (radius: RadiusOption) => void;
+  isRadiusEnabled: boolean;
 }
 
 export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
   selectedCategories,
   onCategoryChange,
+  selectedRadius,
+  onRadiusChange,
+  isRadiusEnabled
 }) => {
-  const hasFilters = selectedCategories.length > 0;
+  const hasFilters = selectedCategories.length > 0 || selectedRadius !== null;
 
   return (
     <Sheet>
@@ -39,11 +47,21 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
         </SheetHeader>
         
         <div className="mt-6 overflow-y-auto h-[calc(100vh-120px)]">
-          <CategoryFilter
-            selectedCategories={selectedCategories}
-            onCategoryChange={onCategoryChange}
-            vertical={true}
-          />
+          <div className="space-y-6">
+            <RadiusFilter
+              selectedRadius={selectedRadius}
+              onRadiusChange={onRadiusChange}
+              isEnabled={isRadiusEnabled}
+            />
+            
+            <Separator />
+            
+            <CategoryFilter
+              selectedCategories={selectedCategories}
+              onCategoryChange={onCategoryChange}
+              vertical={true}
+            />
+          </div>
         </div>
       </SheetContent>
     </Sheet>

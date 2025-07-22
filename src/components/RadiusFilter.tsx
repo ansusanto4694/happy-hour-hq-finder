@@ -1,0 +1,77 @@
+import React from 'react';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+
+export type RadiusOption = 'blocks' | 'walking' | 'bike' | 'drive' | null;
+
+interface RadiusFilterProps {
+  selectedRadius: RadiusOption;
+  onRadiusChange: (radius: RadiusOption) => void;
+  isEnabled: boolean;
+}
+
+export const RadiusFilter: React.FC<RadiusFilterProps> = ({
+  selectedRadius,
+  onRadiusChange,
+  isEnabled
+}) => {
+  const radiusOptions = [
+    { value: null, label: 'Any distance', miles: null },
+    { value: 'blocks' as const, label: 'Within 5 blocks', miles: 0.25 },
+    { value: 'walking' as const, label: 'Walking (within 1 mile)', miles: 1 },
+    { value: 'bike' as const, label: 'Bike (within 3 miles)', miles: 3 },
+    { value: 'drive' as const, label: 'Drive (within 5 miles)', miles: 5 }
+  ];
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <Label className="text-sm font-medium">
+          Distance from location
+        </Label>
+        {!isEnabled && (
+          <span className="text-xs text-gray-400">
+            Enter a zip code to enable
+          </span>
+        )}
+      </div>
+      
+      <RadioGroup
+        value={selectedRadius || 'any'}
+        onValueChange={(value) => onRadiusChange(value === 'any' ? null : value as RadiusOption)}
+        disabled={!isEnabled}
+        className="space-y-2"
+      >
+        {radiusOptions.map((option) => (
+          <div key={option.value || 'any'} className="flex items-center space-x-2">
+            <RadioGroupItem 
+              value={option.value || 'any'} 
+              id={option.value || 'any'}
+              disabled={!isEnabled}
+            />
+            <Label 
+              htmlFor={option.value || 'any'}
+              className={`text-sm cursor-pointer ${
+                !isEnabled ? 'text-gray-400' : 'text-gray-700'
+              }`}
+            >
+              {option.label}
+            </Label>
+          </div>
+        ))}
+      </RadioGroup>
+    </div>
+  );
+};
+
+// Helper function to get miles from radius option
+export const getRadiusMiles = (radius: RadiusOption): number | null => {
+  const radiusMap = {
+    blocks: 0.25,
+    walking: 1,
+    bike: 3,
+    drive: 5
+  };
+  
+  return radius ? radiusMap[radius] : null;
+};

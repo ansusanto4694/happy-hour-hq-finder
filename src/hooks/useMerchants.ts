@@ -128,12 +128,29 @@ const generateSearchVariations = (term: string): string[] => {
   return limitedVariations;
 };
 
-export const useMerchants = (categoryIds?: string[], searchTerm?: string, startTime?: string, endTime?: string, location?: string, bounds?: { north: number; south: number; east: number; west: number }) => {
+// Helper function to calculate distance between two coordinates using Haversine formula
+const calculateHaversineDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+  const R = 3959; // Earth's radius in miles
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  
+  const a = 
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = R * c;
+  
+  return distance; // Distance in miles
+};
+
+export const useMerchants = (categoryIds?: string[], searchTerm?: string, startTime?: string, endTime?: string, location?: string, bounds?: { north: number; south: number; east: number; west: number }, radiusMiles?: number) => {
   return useQuery({
-    queryKey: ['merchants', categoryIds, searchTerm, startTime, endTime, location, bounds],
+    queryKey: ['merchants', categoryIds, searchTerm, startTime, endTime, location, bounds, radiusMiles],
     queryFn: async () => {
       console.log('=== STARTING MERCHANT SEARCH ===');
-      console.log('Search parameters:', { categoryIds, searchTerm, startTime, endTime, location, bounds });
+      console.log('Search parameters:', { categoryIds, searchTerm, startTime, endTime, location, bounds, radiusMiles });
       
       try {
       let query = supabase
@@ -329,7 +346,79 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
         const locationData = parseLocation(trimmedLocation);
         
         if (locationData.type === 'zip') {
-          query = query.eq('zip_code', locationData.value);
+          // If radius is specified, use geographic filtering instead of exact zip match
+          if (radiusMiles !== undefined && radiusMiles > 0) {
+            console.log(`Using radius-based search: ${radiusMiles} miles from zip ${locationData.value}`);
+            
+            // First, get coordinates for the zip code center
+            try {
+              const { data: geocodeResult, error: geocodeError } = await supabase.functions.invoke('geocode-address', {
+                body: { address: locationData.value }
+              });
+              
+              if (geocodeError || !geocodeResult?.success) {
+                console.error('Failed to geocode zip code:', geocodeError || geocodeResult);
+                // Fall back to exact zip match
+                query = query.eq('zip_code', locationData.value);
+              } else {
+                const { latitude: centerLat, longitude: centerLng } = geocodeResult;
+                console.log(`Zip code ${locationData.value} coordinates: ${centerLat}, ${centerLng}`);
+                
+                // Get all merchants with coordinates first, then filter by distance
+                const allMerchantIds = merchantIds;
+                const baseQuery = supabase
+                  .from('Merchant')
+                  .select('id, latitude, longitude')
+                  .eq('is_active', true)
+                  .not('latitude', 'is', null)
+                  .not('longitude', 'is', null);
+                
+                // Apply existing merchant ID filters if any
+                const coordQuery = allMerchantIds ? baseQuery.in('id', allMerchantIds) : baseQuery;
+                
+                const { data: merchantsWithCoords, error: coordError } = await coordQuery;
+                
+                if (coordError) {
+                  console.error('Error fetching merchant coordinates:', coordError);
+                  throw coordError;
+                }
+                
+                if (!merchantsWithCoords) {
+                  console.log('No merchants with coordinates found');
+                  return [];
+                }
+                
+                // Calculate distance for each merchant using Haversine formula
+                const withinRadiusMerchants = merchantsWithCoords.filter(merchant => {
+                  if (!merchant.latitude || !merchant.longitude) return false;
+                  
+                  const distance = calculateHaversineDistance(
+                    centerLat, centerLng,
+                    Number(merchant.latitude), Number(merchant.longitude)
+                  );
+                  
+                  return distance <= radiusMiles;
+                });
+                
+                console.log(`Found ${withinRadiusMerchants.length} merchants within ${radiusMiles} miles of zip ${locationData.value}`);
+                
+                if (withinRadiusMerchants.length === 0) {
+                  return [];
+                }
+                
+                // Update merchantIds to include only those within radius
+                const radiusFilteredIds = withinRadiusMerchants.map(m => m.id);
+                merchantIds = merchantIds ? merchantIds.filter(id => radiusFilteredIds.includes(id)) : radiusFilteredIds;
+              }
+            } catch (error) {
+              console.error('Error in radius-based search:', error);
+              // Fall back to exact zip match
+              query = query.eq('zip_code', locationData.value);
+            }
+          } else {
+            // No radius specified, use exact zip match
+            query = query.eq('zip_code', locationData.value);
+          }
         } else if (locationData.type === 'geocode') {
           // Call geocoding service to normalize location
           try {
