@@ -268,6 +268,7 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
 
         // Search in categories
         const categorySearchConditions = searchVariations.map(variation => `name.ilike.%${variation}%`).join(',');
+        console.log('Category search conditions:', categorySearchConditions);
         
         const { data: categoryMatches, error: categoryError } = await supabase
           .from('categories')
@@ -280,6 +281,7 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
         }
 
         console.log('Found categories matching search:', categoryMatches);
+        console.log('Category matches count:', categoryMatches?.length || 0);
 
         // Get merchant IDs from matching categories
         let categoryMerchantIds: number[] = [];
