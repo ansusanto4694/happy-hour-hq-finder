@@ -17,7 +17,11 @@ export const SearchBar = () => {
   const [endTime, setEndTime] = useState(searchParams.get('endTime') || '');
 
   const handleSearch = () => {
+    console.log('=== SEARCH BAR DEBUG ===');
     console.log('Searching for:', searchTerm, 'in location:', location, 'start time:', startTime, 'end time:', endTime);
+    console.log('Search term length:', searchTerm.length);
+    console.log('Search term trim:', searchTerm.trim());
+    console.log('========================');
     
     // Create URL search parameters
     const params = new URLSearchParams();
