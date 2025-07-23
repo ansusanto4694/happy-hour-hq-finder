@@ -21,7 +21,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
   onRadiusChange,
   isRadiusEnabled
 }) => {
-  const hasFilters = selectedCategories.length > 0 || selectedRadius !== 'walking';
+  const hasFilters = selectedCategories.length > 0 || selectedRadius !== 'blocks';
 
   return (
     <Sheet>

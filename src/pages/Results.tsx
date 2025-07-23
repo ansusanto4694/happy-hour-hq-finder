@@ -15,7 +15,7 @@ import { RadiusOption, getRadiusMiles } from '@/components/RadiusFilter';
 
 const Results = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedRadius, setSelectedRadius] = useState<RadiusOption>('walking');
+  const [selectedRadius, setSelectedRadius] = useState<RadiusOption>('blocks');
   const [mobileView, setMobileView] = useState<'list' | 'map'>('list');
   const [searchAsMapMoves, setSearchAsMapMoves] = useState(false);
   const [mapBounds, setMapBounds] = useState<{ north: number; south: number; east: number; west: number } | null>(null);
