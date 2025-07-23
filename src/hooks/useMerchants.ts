@@ -226,7 +226,7 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
           const { data: cachedLocation, error: cacheError } = await supabase
             .from('location_cache')
             .select('latitude, longitude')
-            .eq('original_input', location)
+            .eq('original_input', location.trim().toLowerCase())
             .single();
 
           if (!cacheError && cachedLocation) {
