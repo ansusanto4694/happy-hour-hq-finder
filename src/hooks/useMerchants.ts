@@ -270,11 +270,13 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
             console.log(`Merchants after radius filtering (${radiusMiles} miles):`, filteredData?.length || 0);
             return filteredData;
           } else {
-            console.log('Could not get location coordinates, returning all results');
+            console.log('Could not get location coordinates for radius filtering, returning empty results');
+            return [];
           }
         } catch (error) {
           console.error('Error in radius filtering:', error);
-          console.log('Falling back to all results');
+          console.log('Returning empty results due to location error');
+          return [];
         }
       }
 
