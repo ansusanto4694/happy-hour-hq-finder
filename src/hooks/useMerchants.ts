@@ -220,31 +220,61 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
       if (radiusMiles && location) {
         console.log('Applying radius filtering:', radiusMiles, 'miles from', location);
         
-        // Get coordinates for the location
-        const { data: locationData, error: locationError } = await supabase
-          .from('location_cache')
-          .select('latitude, longitude')
-          .eq('original_input', location)
-          .single();
+        try {
+          // First, try to get coordinates from cache
+          let locationData = null;
+          const { data: cachedLocation, error: cacheError } = await supabase
+            .from('location_cache')
+            .select('latitude, longitude')
+            .eq('original_input', location)
+            .single();
 
-        if (locationError || !locationData) {
-          console.log('Location not found in cache, skipping radius filter');
-        } else {
-          const filteredData = data?.filter(merchant => {
-            if (!merchant.latitude || !merchant.longitude) return false;
+          if (!cacheError && cachedLocation) {
+            locationData = cachedLocation;
+            console.log('Found location in cache:', locationData);
+          } else {
+            console.log('Location not in cache, normalizing:', location);
             
-            const distance = calculateHaversineDistance(
-              locationData.latitude,
-              locationData.longitude,
-              parseFloat(merchant.latitude.toString()),
-              parseFloat(merchant.longitude.toString())
-            );
+            // Normalize the location using the edge function
+            const { data: normalizedLocation, error: normalizeError } = await supabase.functions.invoke('normalize-location', {
+              body: { location }
+            });
+
+            if (normalizeError) {
+              console.error('Error normalizing location:', normalizeError);
+              console.log('Skipping radius filter due to normalization error');
+            } else if (normalizedLocation) {
+              locationData = {
+                latitude: normalizedLocation.latitude,
+                longitude: normalizedLocation.longitude
+              };
+              console.log('Normalized location:', locationData);
+            }
+          }
+
+          if (locationData) {
+            const filteredData = data?.filter(merchant => {
+              if (!merchant.latitude || !merchant.longitude) return false;
+              
+              const distance = calculateHaversineDistance(
+                locationData.latitude,
+                locationData.longitude,
+                parseFloat(merchant.latitude.toString()),
+                parseFloat(merchant.longitude.toString())
+              );
+              
+              console.log(`Distance from ${merchant.restaurant_name}: ${distance.toFixed(2)} miles`);
+              return distance <= radiusMiles;
+            });
             
-            return distance <= radiusMiles;
-          });
-          
-          console.log('Merchants after radius filtering:', filteredData);
-          return filteredData;
+            console.log(`Merchants after radius filtering (${radiusMiles} miles):`, filteredData?.length || 0);
+            return filteredData;
+          } else {
+            console.log('Could not get location coordinates, returning all results');
+          }
+        } catch (error) {
+          console.error('Error in radius filtering:', error);
+          console.log('Falling back to all results');
         }
       }
 
