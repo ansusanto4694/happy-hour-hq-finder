@@ -77,7 +77,7 @@ serve(async (req) => {
     }
 
     const encodedLocation = encodeURIComponent(location);
-    const mapboxUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedLocation}.json?access_token=${mapboxToken}&country=US&types=place,locality,neighborhood&limit=1`;
+    const mapboxUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedLocation}.json?access_token=${mapboxToken}&country=US&types=place,locality,neighborhood,postcode&limit=1`;
     
     console.log('Calling Mapbox API for:', location);
     const mapboxResponse = await fetch(mapboxUrl);
