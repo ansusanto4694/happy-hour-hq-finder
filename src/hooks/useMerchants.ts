@@ -253,7 +253,7 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
           }
 
           if (locationData) {
-            const filteredData = data?.filter(merchant => {
+            let filteredData = data?.filter(merchant => {
               if (!merchant.latitude || !merchant.longitude) return false;
               
               const distance = calculateHaversineDistance(
@@ -268,6 +268,31 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
             });
             
             console.log(`Merchants after radius filtering (${radiusMiles} miles):`, filteredData?.length || 0);
+            
+            // Apply time filtering if both start and end times are provided
+            if (startTime && endTime && filteredData) {
+              console.log('Applying time filtering after radius filtering:', startTime, 'to', endTime);
+              
+              filteredData = filteredData.filter(merchant => {
+                if (!merchant.merchant_happy_hour || merchant.merchant_happy_hour.length === 0) {
+                  return false;
+                }
+
+                return merchant.merchant_happy_hour.some((hh: any) => {
+                  const startTimeMinutes = parseInt(startTime.split(':')[0]) * 60 + parseInt(startTime.split(':')[1]);
+                  const endTimeMinutes = parseInt(endTime.split(':')[0]) * 60 + parseInt(endTime.split(':')[1]);
+                  
+                  const hhStartMinutes = parseInt(hh.happy_hour_start.split(':')[0]) * 60 + parseInt(hh.happy_hour_start.split(':')[1]);
+                  const hhEndMinutes = parseInt(hh.happy_hour_end.split(':')[0]) * 60 + parseInt(hh.happy_hour_end.split(':')[1]);
+
+                  // Check if happy hour overlaps with user's specified time window
+                  return hhStartMinutes < endTimeMinutes && hhEndMinutes > startTimeMinutes;
+                });
+              });
+              
+              console.log('Merchants after time filtering:', filteredData);
+            }
+            
             return filteredData;
           } else {
             console.log('Could not get location coordinates for radius filtering, returning empty results');
