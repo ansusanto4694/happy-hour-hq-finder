@@ -217,6 +217,7 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
       console.log('Raw merchant data from database:', data);
 
       // Apply radius filtering if specified (must have location)
+      let filteredData = data;
       if (radiusMiles && location) {
         console.log('Applying radius filtering:', radiusMiles, 'miles from', location);
         
@@ -253,7 +254,7 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
           }
 
           if (locationData) {
-            let filteredData = data?.filter(merchant => {
+            filteredData = data?.filter(merchant => {
               if (!merchant.latitude || !merchant.longitude) return false;
               
               const distance = calculateHaversineDistance(
@@ -268,32 +269,6 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
             });
             
             console.log(`Merchants after radius filtering (${radiusMiles} miles):`, filteredData?.length || 0);
-            
-            // Apply time filtering if both start and end times are provided
-            if (startTime && endTime && filteredData) {
-              console.log('Applying time filtering after radius filtering:', startTime, 'to', endTime);
-              
-              filteredData = filteredData.filter(merchant => {
-                if (!merchant.merchant_happy_hour || merchant.merchant_happy_hour.length === 0) {
-                  return false;
-                }
-
-                return merchant.merchant_happy_hour.some((hh: any) => {
-                  const startTimeMinutes = parseInt(startTime.split(':')[0]) * 60 + parseInt(startTime.split(':')[1]);
-                  const endTimeMinutes = parseInt(endTime.split(':')[0]) * 60 + parseInt(endTime.split(':')[1]);
-                  
-                  const hhStartMinutes = parseInt(hh.happy_hour_start.split(':')[0]) * 60 + parseInt(hh.happy_hour_start.split(':')[1]);
-                  const hhEndMinutes = parseInt(hh.happy_hour_end.split(':')[0]) * 60 + parseInt(hh.happy_hour_end.split(':')[1]);
-
-                  // Check if happy hour overlaps with user's specified time window
-                  return hhStartMinutes < endTimeMinutes && hhEndMinutes > startTimeMinutes;
-                });
-              });
-              
-              console.log('Merchants after time filtering:', filteredData);
-            }
-            
-            return filteredData;
           } else {
             console.log('Could not get location coordinates for radius filtering, returning empty results');
             return [];
@@ -306,44 +281,43 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
       }
 
       // Apply time-based filtering if start and end times are provided
-      if (startTime && endTime && data) {
+      if (startTime && endTime && filteredData) {
         console.log('Applying time filtering:', startTime, 'to', endTime);
         
-        const filteredData = data.filter(merchant => {
+        filteredData = filteredData.filter(merchant => {
           if (!merchant.merchant_happy_hour || merchant.merchant_happy_hour.length === 0) {
             return false;
           }
 
-      return merchant.merchant_happy_hour.some((hh: any) => {
-        const startTimeMinutes = parseInt(startTime.split(':')[0]) * 60 + parseInt(startTime.split(':')[1]);
-        const endTimeMinutes = parseInt(endTime.split(':')[0]) * 60 + parseInt(endTime.split(':')[1]);
-        
-        const hhStartMinutes = parseInt(hh.happy_hour_start.split(':')[0]) * 60 + parseInt(hh.happy_hour_start.split(':')[1]);
-        const hhEndMinutes = parseInt(hh.happy_hour_end.split(':')[0]) * 60 + parseInt(hh.happy_hour_end.split(':')[1]);
+          return merchant.merchant_happy_hour.some((hh: any) => {
+            const startTimeMinutes = parseInt(startTime.split(':')[0]) * 60 + parseInt(startTime.split(':')[1]);
+            const endTimeMinutes = parseInt(endTime.split(':')[0]) * 60 + parseInt(endTime.split(':')[1]);
+            
+            const hhStartMinutes = parseInt(hh.happy_hour_start.split(':')[0]) * 60 + parseInt(hh.happy_hour_start.split(':')[1]);
+            const hhEndMinutes = parseInt(hh.happy_hour_end.split(':')[0]) * 60 + parseInt(hh.happy_hour_end.split(':')[1]);
 
-        // Check if happy hour overlaps with user's specified time window
-        return hhStartMinutes < endTimeMinutes && hhEndMinutes > startTimeMinutes;
-      });
+            // Check if happy hour overlaps with user's specified time window
+            return hhStartMinutes < endTimeMinutes && hhEndMinutes > startTimeMinutes;
+          });
         });
         
         console.log('Merchants after time filtering:', filteredData);
-        return filteredData;
       }
 
-      console.log('Final merchants result:', data);
-      console.log('Final merchants count:', data?.length || 0);
+      console.log('Final merchants result:', filteredData);
+      console.log('Final merchants count:', filteredData?.length || 0);
       
       // Extra debugging for restaurant searches
       if (searchTerm?.toLowerCase().includes('restaurant')) {
         console.log('🔍 RESTAURANT SEARCH FINAL RESULT:');
         console.log('- Search term:', searchTerm);
-        console.log('- Result count:', data?.length || 0);
-        console.log('- First few results:', data?.slice(0, 3));
-        console.log('- Is result truthy?', !!data);
-        console.log('- Is result an array?', Array.isArray(data));
+        console.log('- Result count:', filteredData?.length || 0);
+        console.log('- First few results:', filteredData?.slice(0, 3));
+        console.log('- Is result truthy?', !!filteredData);
+        console.log('- Is result an array?', Array.isArray(filteredData));
       }
       
-      return data;
+      return filteredData;
       } catch (error) {
         console.error('=== SEARCH ERROR ===', error);
         throw error;
