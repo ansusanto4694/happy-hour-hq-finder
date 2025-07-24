@@ -289,15 +289,16 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
             return false;
           }
 
-          return merchant.merchant_happy_hour.some((hh: any) => {
-            const startTimeMinutes = parseInt(startTime.split(':')[0]) * 60 + parseInt(startTime.split(':')[1]);
-            const endTimeMinutes = parseInt(endTime.split(':')[0]) * 60 + parseInt(endTime.split(':')[1]);
-            
-            const hhStartMinutes = parseInt(hh.happy_hour_start.split(':')[0]) * 60 + parseInt(hh.happy_hour_start.split(':')[1]);
-            const hhEndMinutes = parseInt(hh.happy_hour_end.split(':')[0]) * 60 + parseInt(hh.happy_hour_end.split(':')[1]);
+      return merchant.merchant_happy_hour.some((hh: any) => {
+        const startTimeMinutes = parseInt(startTime.split(':')[0]) * 60 + parseInt(startTime.split(':')[1]);
+        const endTimeMinutes = parseInt(endTime.split(':')[0]) * 60 + parseInt(endTime.split(':')[1]);
+        
+        const hhStartMinutes = parseInt(hh.happy_hour_start.split(':')[0]) * 60 + parseInt(hh.happy_hour_start.split(':')[1]);
+        const hhEndMinutes = parseInt(hh.happy_hour_end.split(':')[0]) * 60 + parseInt(hh.happy_hour_end.split(':')[1]);
 
-            return startTimeMinutes >= hhStartMinutes && endTimeMinutes <= hhEndMinutes;
-          });
+        // Check if happy hour overlaps with user's specified time window
+        return hhStartMinutes < endTimeMinutes && hhEndMinutes > startTimeMinutes;
+      });
         });
         
         console.log('Merchants after time filtering:', filteredData);
