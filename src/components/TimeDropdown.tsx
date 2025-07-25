@@ -9,20 +9,13 @@ interface TimeDropdownProps {
 }
 
 export const TimeDropdown = ({ placeholder, value, onChange }: TimeDropdownProps) => {
-  console.log(`⏰ TimeDropdown ${placeholder} rendered with value: "${value}"`);
   const timeOptions = [
     '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM',
     '6:00 PM', '7:00 PM', '8:00 PM', '9:00 PM', '10:00 PM', '11:00 PM', '12:00 AM', '1:00 AM', '2:00 AM'
   ];
 
   return (
-    <Select 
-      value={value} 
-      onValueChange={(newValue) => {
-        console.log(`⏰ TimeDropdown ${placeholder} changed from "${value}" to "${newValue}"`);
-        onChange(newValue);
-      }}
-    >
+    <Select value={value} onValueChange={onChange}>
       <SelectTrigger className="w-full py-4 text-lg border-0 focus:ring-0 focus:ring-offset-0 rounded-xl">
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>

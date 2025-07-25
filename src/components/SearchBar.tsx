@@ -15,12 +15,7 @@ interface LocationSuggestion {
   center: [number, number];
 }
 
-interface SearchBarProps {
-  variant?: 'horizontal' | 'vertical';
-}
-
-export const SearchBar = ({ variant = 'horizontal' }: SearchBarProps) => {
-  console.log('🏗️ SearchBar component rendered with variant:', variant);
+export const SearchBar = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   
@@ -29,14 +24,6 @@ export const SearchBar = ({ variant = 'horizontal' }: SearchBarProps) => {
   const [location, setLocation] = useState(searchParams.get('location') || searchParams.get('zip') || '');
   const [startTime, setStartTime] = useState(searchParams.get('startTime') || '');
   const [endTime, setEndTime] = useState(searchParams.get('endTime') || '');
-
-  // Debug what we're getting from URL parameters
-  console.log('=== SEARCH BAR INITIALIZATION ===');
-  console.log('URL startTime:', searchParams.get('startTime'));
-  console.log('URL endTime:', searchParams.get('endTime'));
-  console.log('State startTime:', startTime);
-  console.log('State endTime:', endTime);
-  console.log('=================================');
   
   // Location autocomplete state
   const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>([]);
@@ -47,15 +34,23 @@ export const SearchBar = ({ variant = 'horizontal' }: SearchBarProps) => {
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
   // Memoized search handler to prevent unnecessary re-renders
-  const handleSearch = () => {
-    alert(`Searching with times: ${startTime} to ${endTime}`);
+  const handleSearch = useCallback(() => {
+    console.log('=== SEARCH BAR DEBUG ===');
+    console.log('Searching for:', searchTerm, 'in location:', location, 'start time:', startTime, 'end time:', endTime);
+    console.log('Search term length:', searchTerm.length);
+    console.log('Search term trim:', searchTerm.trim());
+    console.log('========================');
     
+    // Create URL search parameters
     const params = new URLSearchParams();
+    if (searchTerm) params.set('search', searchTerm);
+    if (location) params.set('location', location);
     if (startTime) params.set('startTime', startTime);
     if (endTime) params.set('endTime', endTime);
     
-    window.location.href = `/results?${params.toString()}`;
-  };
+    // Navigate to results page with parameters
+    navigate(`/results?${params.toString()}`);
+  }, [searchTerm, location, startTime, endTime, navigate]);
 
   // Fetch location suggestions
   const fetchLocationSuggestions = useCallback(async (query: string) => {
@@ -170,24 +165,18 @@ export const SearchBar = ({ variant = 'horizontal' }: SearchBarProps) => {
 
   // Memoized dropdown change handlers
   const handleStartTimeChange = useCallback((value: string) => {
-    console.log('Start time changing to:', value);
     setStartTime(value);
   }, []);
 
   const handleEndTimeChange = useCallback((value: string) => {
-    console.log('End time changing to:', value);
     setEndTime(value);
   }, []);
 
   return (
     <div className="w-full max-w-7xl mx-auto">
-      <div className={`bg-white rounded-2xl shadow-lg ${
-        variant === 'vertical' 
-          ? 'p-6 flex flex-col gap-4' 
-          : 'p-2 flex flex-col lg:flex-row gap-2'
-      }`}>
+      <div className="bg-white rounded-2xl shadow-lg p-2 flex flex-col lg:flex-row gap-2">
         {/* Search input */}
-        <div className={variant === 'vertical' ? 'w-full relative' : 'flex-[2] relative'}>
+        <div className="flex-1 relative">
           <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
           <Input
             type="text"
@@ -195,48 +184,39 @@ export const SearchBar = ({ variant = 'horizontal' }: SearchBarProps) => {
             value={searchTerm}
             onChange={handleSearchTermChange}
             onKeyPress={handleKeyPress}
-            className={`pl-12 pr-4 border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl ${
-              variant === 'vertical' ? 'py-5 text-lg' : 'py-4 text-base'
-            }`}
+            className="pl-12 pr-4 py-4 text-lg border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl"
           />
         </div>
         
-        {/* Time inputs container */}
-        <div className={`${
-          variant === 'vertical' 
-            ? 'flex gap-3 w-full' 
-            : 'contents'
-        }`}>
-          {/* Divider for horizontal layout */}
-          {variant === 'horizontal' && <div className="hidden lg:block w-px bg-gray-200 my-2"></div>}
-          
-          {/* Starting time dropdown */}
-          <div className={variant === 'vertical' ? 'flex-1' : 'lg:w-36'}>
-            <TimeDropdown
-              placeholder="Starting at..."
-              value={startTime}
-              onChange={handleStartTimeChange}
-            />
-          </div>
-          
-          {/* Divider for horizontal layout */}
-          {variant === 'horizontal' && <div className="hidden lg:block w-px bg-gray-200 my-2"></div>}
-          
-          {/* Ending time dropdown */}
-          <div className={variant === 'vertical' ? 'flex-1' : 'lg:w-36'}>
-            <TimeDropdown
-              placeholder="Ending at..."
-              value={endTime}
-              onChange={handleEndTimeChange}
-            />
-          </div>
+        {/* Divider */}
+        <div className="hidden lg:block w-px bg-gray-200 my-2"></div>
+        
+        {/* Starting time dropdown */}
+        <div className="lg:w-40">
+          <TimeDropdown
+            placeholder="Starting at..."
+            value={startTime}
+            onChange={handleStartTimeChange}
+          />
         </div>
         
-        {/* Divider for horizontal layout */}
-        {variant === 'horizontal' && <div className="hidden lg:block w-px bg-gray-200 my-2"></div>}
+        {/* Divider */}
+        <div className="hidden lg:block w-px bg-gray-200 my-2"></div>
+        
+        {/* Ending time dropdown */}
+        <div className="lg:w-40">
+          <TimeDropdown
+            placeholder="Ending at..."
+            value={endTime}
+            onChange={handleEndTimeChange}
+          />
+        </div>
+        
+        {/* Divider */}
+        <div className="hidden lg:block w-px bg-gray-200 my-2"></div>
         
         {/* Location input with autocomplete */}
-        <div className={variant === 'vertical' ? 'w-full relative' : 'lg:w-56 relative'}>
+        <div className="lg:w-64 relative">
           <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 z-10" />
           <Input
             ref={locationInputRef}
@@ -245,9 +225,7 @@ export const SearchBar = ({ variant = 'horizontal' }: SearchBarProps) => {
             value={location}
             onChange={handleLocationChange}
             onKeyDown={handleLocationKeyDown}
-            className={`pl-12 pr-4 border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl ${
-              variant === 'vertical' ? 'py-5 text-lg' : 'py-4 text-base'
-            }`}
+            className="pl-12 pr-4 py-4 text-lg border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl"
             autoComplete="off"
           />
           
@@ -289,14 +267,12 @@ export const SearchBar = ({ variant = 'horizontal' }: SearchBarProps) => {
         </div>
         
         {/* Search button */}
-        <button
-          onClick={() => alert('BUTTON CLICKED - Testing basic functionality')}
-          className={`bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-8 text-lg font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl ${
-            variant === 'vertical' ? 'w-full py-5 mt-2' : 'py-4'
-          }`}
+        <Button
+          onClick={handleSearch}
+          className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-8 py-4 text-lg font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
         >
           Search
-        </button>
+        </Button>
       </div>
     </div>
   );

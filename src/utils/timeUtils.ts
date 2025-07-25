@@ -54,10 +54,7 @@ export const timeToMinutes = (timeStr: string): number => {
     return 0;
   }
 
-  // Decode URL-encoded characters first
-  const decodedTime = decodeURIComponent(timeStr);
-
-  const trimmedTime = decodedTime.trim();
+  const trimmedTime = timeStr.trim();
   const parts = trimmedTime.split(':');
   
   if (parts.length < 2) {
