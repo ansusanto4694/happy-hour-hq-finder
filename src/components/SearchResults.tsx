@@ -40,6 +40,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   location,
   isMobile = false
 }) => {
+  // ALL HOOKS MUST BE CALLED FIRST - BEFORE ANY CONDITIONAL LOGIC
   const { handleRestaurantClick } = useSearchResultsNavigation();
   const [displayedResults, setDisplayedResults] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -50,64 +51,13 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   // Extract search term from URL parameters
   const searchTerm = searchParams.get('search') || '';
   
-  // Add comprehensive error handling and logging
-  try {
-    console.log('=== SEARCH RESULTS COMPONENT RENDER ===');
-    console.log('Props received:');
-    console.log('- isLoading:', isLoading);
-    console.log('- error:', error);
-    console.log('- merchants:', merchants);
-    console.log('- merchants length:', merchants?.length || 0);
-    console.log('- merchants type:', typeof merchants);
-    console.log('- merchants is array:', Array.isArray(merchants));
-    console.log('- search term from URL:', searchTerm);
-    console.log('==========================================');
-  } catch (e) {
-    console.error('Error in SearchResults logging:', e);
-  }
-  
   // Intersection observer for infinite scroll
   const { ref, inView } = useInView({
     threshold: 0.1,
     triggerOnce: false,
   });
 
-  // Reset displayed results when merchants change (optimized with useMemo)
-  const initialResults = useMemo(() => {
-    if (!merchants) return [];
-    return merchants.slice(0, RESULTS_PER_PAGE);
-  }, [merchants]);
-
-  useEffect(() => {
-    setDisplayedResults(initialResults);
-    setHasMore((merchants?.length || 0) > RESULTS_PER_PAGE);
-  }, [initialResults, merchants]);
-
-  // Optimized load more function with useCallback
-  const loadMore = useCallback(() => {
-    if (!merchants || loadingMore) return;
-    
-    setLoadingMore(true);
-    
-    // Simulate loading delay for better UX
-    setTimeout(() => {
-      const currentLength = displayedResults.length;
-      const nextResults = merchants.slice(currentLength, currentLength + RESULTS_PER_PAGE);
-      
-      setDisplayedResults(prev => [...prev, ...nextResults]);
-      setHasMore(currentLength + nextResults.length < merchants.length);
-      setLoadingMore(false);
-    }, 500);
-  }, [merchants, loadingMore, displayedResults.length]);
-
-  // Load more results when scrolling to bottom (mobile only)
-  useEffect(() => {
-    if (inView && hasMore && !loadingMore && isMobile && displayedResults.length > 0) {
-      loadMore();
-    }
-  }, [inView, hasMore, loadingMore, isMobile, displayedResults.length, loadMore]);
-
-  // Memoized calculations for performance
+  // Memoized calculations for performance - MUST BE BEFORE EARLY RETURNS
   const paginationData = useMemo(() => {
     if (!merchants) return { totalResults: 0, totalPages: 0, startIndex: 0, endIndex: 0 };
     
@@ -129,47 +79,38 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
     }
   }, [merchants, isMobile, displayedResults, paginationData]);
 
+  // Memoized initial results calculation
+  const initialResults = useMemo(() => {
+    if (!merchants) return [];
+    return merchants.slice(0, RESULTS_PER_PAGE);
+  }, [merchants]);
+
   // Memoized page change handler
   const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  console.log('=== SEARCH RESULTS DEBUG ===');
-  console.log('Props received:');
-  console.log('- isLoading:', isLoading);
-  console.log('- error:', error);
-  console.log('- merchants:', merchants);
-  console.log('- merchants length:', merchants?.length || 0);
-  console.log('- merchants type:', typeof merchants);
-  console.log('- merchants is array:', Array.isArray(merchants));
-  console.log('- search term from URL:', searchTerm);
-  console.log('============================');
-
-  if (isLoading) {
-    return <SearchResultsLoading />;
-  }
-
-  if (error) {
-    return <SearchResultsError />;
-  }
-
-  if (!merchants || merchants.length === 0) {
-    console.log('Showing empty results because merchants is:', merchants);
-    return (
-      <SearchResultsEmpty 
-        startTime={startTime} 
-        endTime={endTime} 
-        location={location} 
-      />
-    );
-  }
-
-  const totalResults = paginationData.totalResults;
-  const totalPages = paginationData.totalPages;
+  // Optimized load more function with useCallback
+  const loadMore = useCallback(() => {
+    if (!merchants || loadingMore) return;
+    
+    setLoadingMore(true);
+    
+    // Simulate loading delay for better UX
+    setTimeout(() => {
+      const currentLength = displayedResults.length;
+      const nextResults = merchants.slice(currentLength, currentLength + RESULTS_PER_PAGE);
+      
+      setDisplayedResults(prev => [...prev, ...nextResults]);
+      setHasMore(currentLength + nextResults.length < merchants.length);
+      setLoadingMore(false);
+    }, 500);
+  }, [merchants, loadingMore, displayedResults.length]);
 
   // Memoized pagination items for better performance
   const renderPaginationItems = useCallback(() => {
+    const { totalPages } = paginationData;
     const items = [];
     const maxVisiblePages = 5;
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
@@ -224,7 +165,59 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
     }
 
     return items;
-  }, [currentPage, totalPages, handlePageChange]);
+  }, [currentPage, paginationData, handlePageChange]);
+
+  // Reset displayed results when merchants change (optimized with useMemo)
+  useEffect(() => {
+    setDisplayedResults(initialResults);
+    setHasMore((merchants?.length || 0) > RESULTS_PER_PAGE);
+  }, [initialResults, merchants]);
+
+  // Load more results when scrolling to bottom (mobile only)
+  useEffect(() => {
+    if (inView && hasMore && !loadingMore && isMobile && displayedResults.length > 0) {
+      loadMore();
+    }
+  }, [inView, hasMore, loadingMore, isMobile, displayedResults.length, loadMore]);
+
+  // Add comprehensive error handling and logging
+  try {
+    console.log('=== SEARCH RESULTS COMPONENT RENDER ===');
+    console.log('Props received:');
+    console.log('- isLoading:', isLoading);
+    console.log('- error:', error);
+    console.log('- merchants:', merchants);
+    console.log('- merchants length:', merchants?.length || 0);
+    console.log('- merchants type:', typeof merchants);
+    console.log('- merchants is array:', Array.isArray(merchants));
+    console.log('- search term from URL:', searchTerm);
+    console.log('==========================================');
+  } catch (e) {
+    console.error('Error in SearchResults logging:', e);
+  }
+
+  // NOW SAFE TO DO CONDITIONAL RETURNS - ALL HOOKS HAVE BEEN CALLED
+  if (isLoading) {
+    return <SearchResultsLoading />;
+  }
+
+  if (error) {
+    return <SearchResultsError />;
+  }
+
+  if (!merchants || merchants.length === 0) {
+    console.log('Showing empty results because merchants is:', merchants);
+    return (
+      <SearchResultsEmpty 
+        startTime={startTime} 
+        endTime={endTime} 
+        location={location} 
+      />
+    );
+  }
+
+  const totalResults = paginationData.totalResults;
+  const totalPages = paginationData.totalPages;
 
   return (
     <div className="space-y-4">
