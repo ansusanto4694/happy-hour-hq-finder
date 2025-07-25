@@ -17,7 +17,13 @@ export const TimeDropdown = ({ placeholder, value, onChange, variant = 'horizont
   ];
 
   return (
-    <Select value={value} onValueChange={onChange}>
+    <Select 
+      value={value} 
+      onValueChange={(newValue) => {
+        console.log(`⏰ TimeDropdown ${placeholder} changed from "${value}" to "${newValue}"`);
+        onChange(newValue);
+      }}
+    >
       <SelectTrigger className={`w-full border-0 focus:ring-0 focus:ring-offset-0 rounded-xl ${
         variant === 'vertical' ? 'py-5 text-lg' : 'py-4 text-base'
       }`}>
