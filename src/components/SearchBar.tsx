@@ -290,7 +290,7 @@ export const SearchBar = ({ variant = 'horizontal' }: SearchBarProps) => {
         
         {/* Search button */}
         <button
-          onClick={handleSearch}
+          onClick={() => alert('BUTTON CLICKED - Testing basic functionality')}
           className={`bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-8 text-lg font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl ${
             variant === 'vertical' ? 'w-full py-5 mt-2' : 'py-4'
           }`}
