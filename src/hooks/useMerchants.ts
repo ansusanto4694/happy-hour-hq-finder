@@ -35,8 +35,16 @@ export const useMerchants = (
           'Search and Category Filtering'
         );
         
+        // Debug what we got from search/category filters
+        console.log('=== SEARCH/CATEGORY FILTER RESULT ===');
+        console.log('merchantIds result:', merchantIds);
+        console.log('Is array?', Array.isArray(merchantIds));
+        console.log('Length:', merchantIds?.length);
+        console.log('=====================================');
+        
         // Early return if no merchants match the search/category criteria
         if (Array.isArray(merchantIds) && merchantIds.length === 0) {
+          console.log('Early return: empty array from search/category filters');
           return [];
         }
 
@@ -44,15 +52,25 @@ export const useMerchants = (
         const data = await measureFilterPerformance(async () => {
           let query = buildBaseMerchantQuery();
           
+          console.log('=== QUERY BUILDING ===');
+          console.log('merchantIds for query:', merchantIds);
+          console.log('bounds for query:', bounds);
+          
           if (merchantIds) {
+            console.log('Applying merchant ID filter');
             query = applyMerchantIdFilter(query, merchantIds);
+          } else {
+            console.log('No merchant ID filter - getting all merchants');
           }
           
           if (bounds) {
+            console.log('Applying bounds filter');
             query = applyBoundsFilter(query, bounds);
           }
 
-          return await executeMerchantQuery(query);
+          const result = await executeMerchantQuery(query);
+          console.log('Query executed, result count:', result?.length || 0);
+          return result;
         }, 'Database Query Execution');
 
         // Apply post-query filters with performance monitoring
