@@ -22,6 +22,9 @@ export const filterMerchantsByTime = (
   startTime: string, 
   endTime: string
 ): any[] => {
+  console.log('=== TIME FILTERING DEBUG ===');
+  console.log('Input startTime:', startTime, 'endTime:', endTime);
+  console.log('Input merchants count:', merchants?.length || 0);
   console.log('Applying optimized time filtering:', startTime, 'to', endTime);
   
   // Validate inputs
@@ -33,6 +36,8 @@ export const filterMerchantsByTime = (
   // Pre-calculate time ranges for efficiency
   const startMinutes = timeToMinutes(startTime);
   const endMinutes = timeToMinutes(endTime);
+  
+  console.log('Converted times - startMinutes:', startMinutes, 'endMinutes:', endMinutes);
   
   if (startMinutes === 0 && endMinutes === 0) {
     console.warn('Invalid time range for filtering');

@@ -49,6 +49,7 @@ export const HOURS_12 = [
  * Handles both 12-hour (with AM/PM) and 24-hour formats
  */
 export const timeToMinutes = (timeStr: string): number => {
+  console.log('timeToMinutes called with:', timeStr);
   if (!timeStr || typeof timeStr !== 'string') {
     console.warn('Invalid time string provided to timeToMinutes:', timeStr);
     return 0;
