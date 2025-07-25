@@ -28,6 +28,14 @@ export const SearchBar = ({ variant = 'horizontal' }: SearchBarProps) => {
   const [location, setLocation] = useState(searchParams.get('location') || searchParams.get('zip') || '');
   const [startTime, setStartTime] = useState(searchParams.get('startTime') || '');
   const [endTime, setEndTime] = useState(searchParams.get('endTime') || '');
+
+  // Debug what we're getting from URL parameters
+  console.log('=== SEARCH BAR INITIALIZATION ===');
+  console.log('URL startTime:', searchParams.get('startTime'));
+  console.log('URL endTime:', searchParams.get('endTime'));
+  console.log('State startTime:', startTime);
+  console.log('State endTime:', endTime);
+  console.log('=================================');
   
   // Location autocomplete state
   const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>([]);
@@ -41,6 +49,8 @@ export const SearchBar = ({ variant = 'horizontal' }: SearchBarProps) => {
   const handleSearch = useCallback(() => {
     console.log('=== SEARCH BAR DEBUG ===');
     console.log('Searching for:', searchTerm, 'in location:', location, 'start time:', startTime, 'end time:', endTime);
+    console.log('Start time type:', typeof startTime, 'Value:', JSON.stringify(startTime));
+    console.log('End time type:', typeof endTime, 'Value:', JSON.stringify(endTime));
     console.log('Search term length:', searchTerm.length);
     console.log('Search term trim:', searchTerm.trim());
     console.log('========================');
@@ -169,10 +179,12 @@ export const SearchBar = ({ variant = 'horizontal' }: SearchBarProps) => {
 
   // Memoized dropdown change handlers
   const handleStartTimeChange = useCallback((value: string) => {
+    console.log('Start time changing to:', value);
     setStartTime(value);
   }, []);
 
   const handleEndTimeChange = useCallback((value: string) => {
+    console.log('End time changing to:', value);
     setEndTime(value);
   }, []);
 
