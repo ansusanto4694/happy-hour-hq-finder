@@ -36,10 +36,20 @@ export const SearchBar = () => {
   // Memoized search handler to prevent unnecessary re-renders
   const handleSearch = useCallback(() => {
     console.log('=== SEARCH BAR DEBUG ===');
-    console.log('Searching for:', searchTerm, 'in location:', location, 'start time:', startTime, 'end time:', endTime);
-    console.log('Search term length:', searchTerm.length);
-    console.log('Search term trim:', searchTerm.trim());
+    console.log('🔍 SEARCH BUTTON CLICKED!');
+    console.log('Current state:');
+    console.log('  - searchTerm:', searchTerm);
+    console.log('  - location:', location);
+    console.log('  - startTime:', startTime);
+    console.log('  - endTime:', endTime);
     console.log('========================');
+    
+    // Validate that we have time inputs
+    if (!startTime || !endTime) {
+      console.warn('⚠️ Missing time inputs - startTime:', startTime, 'endTime:', endTime);
+      alert('Please select both start and end times');
+      return;
+    }
     
     // Create URL search parameters
     const params = new URLSearchParams();
@@ -48,8 +58,11 @@ export const SearchBar = () => {
     if (startTime) params.set('startTime', startTime);
     if (endTime) params.set('endTime', endTime);
     
+    const url = `/results?${params.toString()}`;
+    console.log('🚀 Navigating to:', url);
+    
     // Navigate to results page with parameters
-    navigate(`/results?${params.toString()}`);
+    navigate(url);
   }, [searchTerm, location, startTime, endTime, navigate]);
 
   // Fetch location suggestions
