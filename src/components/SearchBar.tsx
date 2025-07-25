@@ -62,6 +62,11 @@ export const SearchBar = ({ variant = 'horizontal' }: SearchBarProps) => {
     if (startTime) params.set('startTime', startTime);
     if (endTime) params.set('endTime', endTime);
     
+    console.log('=== NAVIGATION DEBUG ===');
+    console.log('About to navigate with params:', params.toString());
+    console.log('Full URL will be:', `/results?${params.toString()}`);
+    console.log('========================');
+    
     // Navigate to results page with parameters
     navigate(`/results?${params.toString()}`);
   }, [searchTerm, location, startTime, endTime, navigate]);
