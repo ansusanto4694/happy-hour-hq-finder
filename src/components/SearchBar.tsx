@@ -47,32 +47,15 @@ export const SearchBar = ({ variant = 'horizontal' }: SearchBarProps) => {
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
   // Memoized search handler to prevent unnecessary re-renders
-  const handleSearch = useCallback(() => {
-    console.log('🔍 SEARCH FUNCTION CALLED!');
-    console.log('=== SEARCH BAR DEBUG ===');
-    console.log('startTime:', startTime);
-    console.log('endTime:', endTime);
-    console.log('location:', location);
-    console.log('searchTerm:', searchTerm);
+  const handleSearch = () => {
+    alert(`Searching with times: ${startTime} to ${endTime}`);
     
-    try {
-      // Create URL search parameters
-      const params = new URLSearchParams();
-      if (searchTerm) params.set('search', searchTerm);
-      if (location) params.set('location', location);
-      if (startTime) params.set('startTime', startTime);
-      if (endTime) params.set('endTime', endTime);
-      
-      console.log('URL params:', params.toString());
-      console.log('About to navigate to:', `/results?${params.toString()}`);
-      
-      // Navigate to results page with parameters
-      navigate(`/results?${params.toString()}`);
-      console.log('Navigation called');
-    } catch (error) {
-      console.error('Error in handleSearch:', error);
-    }
-  }, [searchTerm, location, startTime, endTime, navigate]);
+    const params = new URLSearchParams();
+    if (startTime) params.set('startTime', startTime);
+    if (endTime) params.set('endTime', endTime);
+    
+    window.location.href = `/results?${params.toString()}`;
+  };
 
   // Fetch location suggestions
   const fetchLocationSuggestions = useCallback(async (query: string) => {
@@ -307,11 +290,7 @@ export const SearchBar = ({ variant = 'horizontal' }: SearchBarProps) => {
         
         {/* Search button */}
         <button
-          onClick={() => {
-            console.log('🚨 BASIC BUTTON CLICKED!');
-            alert('Button clicked!');
-            handleSearch();
-          }}
+          onClick={handleSearch}
           className={`bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-8 text-lg font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl ${
             variant === 'vertical' ? 'w-full py-5 mt-2' : 'py-4'
           }`}
