@@ -47,6 +47,7 @@ export const SearchBar = ({ variant = 'horizontal' }: SearchBarProps) => {
 
   // Memoized search handler to prevent unnecessary re-renders
   const handleSearch = useCallback(() => {
+    console.log('🔍 SEARCH FUNCTION CALLED!');
     console.log('=== SEARCH BAR DEBUG ===');
     console.log('Searching for:', searchTerm, 'in location:', location, 'start time:', startTime, 'end time:', endTime);
     console.log('Start time type:', typeof startTime, 'Value:', JSON.stringify(startTime));
