@@ -20,6 +20,7 @@ interface SearchBarProps {
 }
 
 export const SearchBar = ({ variant = 'horizontal' }: SearchBarProps) => {
+  console.log('🏗️ SearchBar component rendered with variant:', variant);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   
