@@ -1,19 +1,10 @@
 
-import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { Search, MapPin, ChevronDown } from 'lucide-react';
+import React, { useState } from 'react';
+import { Search, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TimeDropdown } from './TimeDropdown';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useDebounce } from '@/hooks/usePerformanceOptimizations';
-import { supabase } from '@/integrations/supabase/client';
-
-interface LocationSuggestion {
-  id: string;
-  place_name: string;
-  place_type: string[];
-  center: [number, number];
-}
 
 export const SearchBar = () => {
   const [searchParams] = useSearchParams();
@@ -24,32 +15,13 @@ export const SearchBar = () => {
   const [location, setLocation] = useState(searchParams.get('location') || searchParams.get('zip') || '');
   const [startTime, setStartTime] = useState(searchParams.get('startTime') || '');
   const [endTime, setEndTime] = useState(searchParams.get('endTime') || '');
-  
-  // Location autocomplete state
-  const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
-  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
-  const locationInputRef = useRef<HTMLInputElement>(null);
-  const suggestionsRef = useRef<HTMLDivElement>(null);
 
-  // Memoized search handler to prevent unnecessary re-renders
-  const handleSearch = useCallback(() => {
+  const handleSearch = () => {
     console.log('=== SEARCH BAR DEBUG ===');
-    console.log('🔍 SEARCH BUTTON CLICKED!');
-    console.log('Current state:');
-    console.log('  - searchTerm:', searchTerm);
-    console.log('  - location:', location);
-    console.log('  - startTime:', startTime);
-    console.log('  - endTime:', endTime);
+    console.log('Searching for:', searchTerm, 'in location:', location, 'start time:', startTime, 'end time:', endTime);
+    console.log('Search term length:', searchTerm.length);
+    console.log('Search term trim:', searchTerm.trim());
     console.log('========================');
-    
-    // Validate that we have time inputs
-    if (!startTime || !endTime) {
-      console.warn('⚠️ Missing time inputs - startTime:', startTime, 'endTime:', endTime);
-      alert('Please select both start and end times');
-      return;
-    }
     
     // Create URL search parameters
     const params = new URLSearchParams();
@@ -58,132 +30,15 @@ export const SearchBar = () => {
     if (startTime) params.set('startTime', startTime);
     if (endTime) params.set('endTime', endTime);
     
-    const url = `/results?${params.toString()}`;
-    console.log('🚀 Navigating to:', url);
-    
     // Navigate to results page with parameters
-    navigate(url);
-  }, [searchTerm, location, startTime, endTime, navigate]);
+    navigate(`/results?${params.toString()}`);
+  };
 
-  // Fetch location suggestions
-  const fetchLocationSuggestions = useCallback(async (query: string) => {
-    if (!query || query.trim().length < 2) {
-      setLocationSuggestions([]);
-      setShowSuggestions(false);
-      return;
-    }
-
-    setIsLoadingSuggestions(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('location-suggestions', {
-        body: { query: query.trim() }
-      });
-
-      if (error) {
-        console.error('Error fetching location suggestions:', error);
-        setLocationSuggestions([]);
-      } else {
-        setLocationSuggestions(data?.suggestions || []);
-        setShowSuggestions(true);
-        setSelectedSuggestionIndex(-1);
-      }
-    } catch (error) {
-      console.error('Error fetching location suggestions:', error);
-      setLocationSuggestions([]);
-    } finally {
-      setIsLoadingSuggestions(false);
-    }
-  }, []);
-
-  // Debounced suggestion fetch
-  const { debouncedCallback: debouncedFetchSuggestions } = useDebounce(fetchLocationSuggestions, 300);
-
-  // Debounced search for auto-search functionality (optional future enhancement)
-  const { debouncedCallback: debouncedSearch } = useDebounce(handleSearch, 500);
-
-  // Memoized key press handler
-  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
+  const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleSearch();
     }
-  }, [handleSearch]);
-
-  // Memoized input change handlers to prevent unnecessary re-renders
-  const handleSearchTermChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  }, []);
-
-  const handleLocationChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setLocation(value);
-    debouncedFetchSuggestions(value);
-  }, [debouncedFetchSuggestions]);
-
-  // Handle suggestion selection
-  const handleSuggestionSelect = useCallback((suggestion: LocationSuggestion) => {
-    setLocation(suggestion.place_name);
-    setShowSuggestions(false);
-    setLocationSuggestions([]);
-    locationInputRef.current?.focus();
-  }, []);
-
-  // Handle keyboard navigation in suggestions
-  const handleLocationKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!showSuggestions || locationSuggestions.length === 0) {
-      if (e.key === 'Enter') {
-        handleSearch();
-      }
-      return;
-    }
-
-    switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault();
-        setSelectedSuggestionIndex(prev => 
-          prev < locationSuggestions.length - 1 ? prev + 1 : prev
-        );
-        break;
-      case 'ArrowUp':
-        e.preventDefault();
-        setSelectedSuggestionIndex(prev => prev > 0 ? prev - 1 : -1);
-        break;
-      case 'Enter':
-        e.preventDefault();
-        if (selectedSuggestionIndex >= 0) {
-          handleSuggestionSelect(locationSuggestions[selectedSuggestionIndex]);
-        } else {
-          handleSearch();
-        }
-        break;
-      case 'Escape':
-        setShowSuggestions(false);
-        setSelectedSuggestionIndex(-1);
-        break;
-    }
-  }, [showSuggestions, locationSuggestions, selectedSuggestionIndex, handleSuggestionSelect, handleSearch]);
-
-  // Close suggestions when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target as Node) &&
-          locationInputRef.current && !locationInputRef.current.contains(event.target as Node)) {
-        setShowSuggestions(false);
-        setSelectedSuggestionIndex(-1);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // Memoized dropdown change handlers
-  const handleStartTimeChange = useCallback((value: string) => {
-    setStartTime(value);
-  }, []);
-
-  const handleEndTimeChange = useCallback((value: string) => {
-    setEndTime(value);
-  }, []);
+  };
 
   return (
     <div className="w-full max-w-5xl mx-auto">
@@ -195,7 +50,7 @@ export const SearchBar = () => {
             type="text"
             placeholder="Search for bars, restaurants, or cuisines..."
             value={searchTerm}
-            onChange={handleSearchTermChange}
+            onChange={(e) => setSearchTerm(e.target.value)}
             onKeyPress={handleKeyPress}
             className="pl-12 pr-4 py-4 text-lg border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl"
           />
@@ -209,7 +64,7 @@ export const SearchBar = () => {
           <TimeDropdown
             placeholder="Starting at..."
             value={startTime}
-            onChange={handleStartTimeChange}
+            onChange={setStartTime}
           />
         </div>
         
@@ -221,62 +76,24 @@ export const SearchBar = () => {
           <TimeDropdown
             placeholder="Ending at..."
             value={endTime}
-            onChange={handleEndTimeChange}
+            onChange={setEndTime}
           />
         </div>
         
         {/* Divider */}
         <div className="hidden lg:block w-px bg-gray-200 my-2"></div>
         
-        {/* Location input with autocomplete */}
+        {/* Location input */}
         <div className="lg:w-48 relative">
-          <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 z-10" />
+          <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
           <Input
-            ref={locationInputRef}
             type="text"
             placeholder="City, State or ZIP"
             value={location}
-            onChange={handleLocationChange}
-            onKeyDown={handleLocationKeyDown}
+            onChange={(e) => setLocation(e.target.value)}
+            onKeyPress={handleKeyPress}
             className="pl-12 pr-4 py-4 text-lg border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl"
-            autoComplete="off"
           />
-          
-          {/* Suggestions dropdown */}
-          {showSuggestions && (locationSuggestions.length > 0 || isLoadingSuggestions) && (
-            <div 
-              ref={suggestionsRef}
-              className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto"
-            >
-              {isLoadingSuggestions ? (
-                <div className="px-4 py-3 text-sm text-gray-500">
-                  Searching locations...
-                </div>
-              ) : (
-                locationSuggestions.map((suggestion, index) => (
-                  <div
-                    key={suggestion.id}
-                    className={`px-4 py-3 cursor-pointer border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors ${
-                      index === selectedSuggestionIndex ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
-                    }`}
-                    onClick={() => handleSuggestionSelect(suggestion)}
-                  >
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium truncate">
-                          {suggestion.place_name}
-                        </div>
-                        <div className="text-xs text-gray-500 capitalize">
-                          {suggestion.place_type.join(', ')}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
         </div>
         
         {/* Search button */}

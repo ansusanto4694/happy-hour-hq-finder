@@ -36,7 +36,7 @@ export const RadiusFilter: React.FC<RadiusFilterProps> = ({
       </div>
       
       <RadioGroup
-        value={selectedRadius || 'walking'}
+        value={selectedRadius || 'blocks'}
         onValueChange={(value) => onRadiusChange(value as RadiusOption)}
         disabled={!isEnabled}
         className="space-y-2"
@@ -72,5 +72,5 @@ export const getRadiusMiles = (radius: RadiusOption | null): number => {
     drive: 5
   };
   
-  return radius ? radiusMap[radius] : 1; // Default to walking (1 mile) if no radius selected
+  return radius ? radiusMap[radius] : 0.25; // Default to 5 blocks if no radius selected
 };

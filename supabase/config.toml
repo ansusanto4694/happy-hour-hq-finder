@@ -24,8 +24,5 @@ major_version = 15
 [functions.geocode-address]
 verify_jwt = false
 
-[functions.location-suggestions]
-verify_jwt = false
-
 [functions.normalize-location]
 verify_jwt = false
