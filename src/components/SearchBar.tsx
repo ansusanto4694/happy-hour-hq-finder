@@ -305,9 +305,10 @@ export const SearchBar = ({ variant = 'horizontal' }: SearchBarProps) => {
         </div>
         
         {/* Search button */}
-        <Button
+        <button
           onClick={() => {
-            console.log('🚨 BUTTON CLICKED!');
+            console.log('🚨 BASIC BUTTON CLICKED!');
+            alert('Button clicked!');
             handleSearch();
           }}
           className={`bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-8 text-lg font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl ${
@@ -315,7 +316,7 @@ export const SearchBar = ({ variant = 'horizontal' }: SearchBarProps) => {
           }`}
         >
           Search
-        </Button>
+        </button>
       </div>
     </div>
   );
