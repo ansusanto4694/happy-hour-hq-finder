@@ -11,21 +11,7 @@ interface RestaurantHappyHoursProps {
   happyHours: HappyHour[];
 }
 
-// Helper function to get day name from day number
-const getDayName = (dayNumber: number): string => {
-  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-  return days[dayNumber] || '';
-};
-
-// Helper function to format time
-const formatTime = (timeString: string): string => {
-  const time = new Date(`1970-01-01T${timeString}`);
-  return time.toLocaleTimeString('en-US', { 
-    hour: 'numeric', 
-    minute: '2-digit',
-    hour12: true 
-  });
-};
+import { getDayName, formatTime } from '@/utils/timeUtils';
 
 export const RestaurantHappyHours: React.FC<RestaurantHappyHoursProps> = ({ happyHours }) => {
   // Sort happy hours by day of week for display

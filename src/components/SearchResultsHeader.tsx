@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { formatTime as formatTimeUtil } from '@/utils/timeUtils';
 
 interface SearchResultsHeaderProps {
   resultsCount: number;
@@ -29,11 +30,7 @@ export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
 
   const formatTime = (time?: string) => {
     if (!time) return '';
-    const [hours, minutes] = time.split(':');
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour % 12 || 12;
-    return `${displayHour}:${minutes} ${ampm}`;
+    return formatTimeUtil(time);
   };
 
   return (
