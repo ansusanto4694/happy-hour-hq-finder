@@ -35,6 +35,14 @@ const Results = () => {
   const startTime = searchParams.get('startTime') || '';
   const endTime = searchParams.get('endTime') || '';
 
+  // Debug URL parameters
+  console.log('=== URL PARAMETERS DEBUG ===');
+  console.log('Raw startTime from URL:', searchParams.get('startTime'));
+  console.log('Raw endTime from URL:', searchParams.get('endTime'));
+  console.log('Processed startTime:', startTime);
+  console.log('Processed endTime:', endTime);
+  console.log('===============================');
+
   // Check if radius filtering should be enabled (any location provided)
   const isRadiusEnabled = Boolean(location && location.trim());
   const radiusMiles = getRadiusMiles(selectedRadius);
