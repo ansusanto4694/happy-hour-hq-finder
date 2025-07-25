@@ -24,6 +24,8 @@ export const useMerchants = (
     queryFn: async () => {
       console.log('=== STARTING MERCHANT SEARCH ===');
       console.log('Search parameters:', { categoryIds, searchTerm, startTime, endTime, location, bounds, radiusMiles });
+      console.log('startTime type:', typeof startTime, 'value:', startTime);
+      console.log('endTime type:', typeof endTime, 'value:', endTime);
       
       try {
         const queryStart = performance.now();

@@ -120,6 +120,10 @@ export const applyOptimizedPostQueryFilters = async (
   // Apply time-based filtering if start and end times are provided
   if (startTime && endTime && filteredData.length > 0) {
     try {
+      console.log('=== TIME FILTER PIPELINE ===');
+      console.log('startTime received:', startTime, 'type:', typeof startTime);
+      console.log('endTime received:', endTime, 'type:', typeof endTime);
+      console.log('filteredData length before time filter:', filteredData.length);
       console.log(`Applying time filtering: ${startTime} to ${endTime}`);
       const timeStart = performance.now();
       

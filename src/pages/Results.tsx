@@ -34,6 +34,11 @@ const Results = () => {
   const location = searchParams.get('location') || searchParams.get('zip') || '';
   const startTime = searchParams.get('startTime') || '';
   const endTime = searchParams.get('endTime') || '';
+  
+  console.log('=== URL PARAMS DEBUG ===');
+  console.log('Raw startTime from URL:', startTime);
+  console.log('Raw endTime from URL:', endTime);
+  console.log('========================');
 
   // Check if radius filtering should be enabled (any location provided)
   const isRadiusEnabled = Boolean(location && location.trim());
