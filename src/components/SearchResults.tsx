@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useInView } from 'react-intersection-observer';
 import { SearchResultsLoading } from './SearchResultsLoading';
@@ -72,23 +72,19 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
     triggerOnce: false,
   });
 
-  // Reset displayed results when merchants change
-  useEffect(() => {
-    if (merchants) {
-      const initialResults = merchants.slice(0, RESULTS_PER_PAGE);
-      setDisplayedResults(initialResults);
-      setHasMore(merchants.length > RESULTS_PER_PAGE);
-    }
+  // Reset displayed results when merchants change (optimized with useMemo)
+  const initialResults = useMemo(() => {
+    if (!merchants) return [];
+    return merchants.slice(0, RESULTS_PER_PAGE);
   }, [merchants]);
 
-  // Load more results when scrolling to bottom (mobile only)
   useEffect(() => {
-    if (inView && hasMore && !loadingMore && isMobile && displayedResults.length > 0) {
-      loadMore();
-    }
-  }, [inView, hasMore, loadingMore, isMobile, displayedResults.length]);
+    setDisplayedResults(initialResults);
+    setHasMore((merchants?.length || 0) > RESULTS_PER_PAGE);
+  }, [initialResults, merchants]);
 
-  const loadMore = () => {
+  // Optimized load more function with useCallback
+  const loadMore = useCallback(() => {
     if (!merchants || loadingMore) return;
     
     setLoadingMore(true);
@@ -102,7 +98,42 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
       setHasMore(currentLength + nextResults.length < merchants.length);
       setLoadingMore(false);
     }, 500);
-  };
+  }, [merchants, loadingMore, displayedResults.length]);
+
+  // Load more results when scrolling to bottom (mobile only)
+  useEffect(() => {
+    if (inView && hasMore && !loadingMore && isMobile && displayedResults.length > 0) {
+      loadMore();
+    }
+  }, [inView, hasMore, loadingMore, isMobile, displayedResults.length, loadMore]);
+
+  // Memoized calculations for performance
+  const paginationData = useMemo(() => {
+    if (!merchants) return { totalResults: 0, totalPages: 0, startIndex: 0, endIndex: 0 };
+    
+    const totalResults = merchants.length;
+    const totalPages = Math.ceil(totalResults / RESULTS_PER_PAGE);
+    const startIndex = (currentPage - 1) * RESULTS_PER_PAGE;
+    const endIndex = startIndex + RESULTS_PER_PAGE;
+    
+    return { totalResults, totalPages, startIndex, endIndex };
+  }, [merchants, currentPage]);
+
+  const resultsToShow = useMemo(() => {
+    if (!merchants) return [];
+    
+    if (isMobile) {
+      return displayedResults;
+    } else {
+      return merchants.slice(paginationData.startIndex, paginationData.endIndex);
+    }
+  }, [merchants, isMobile, displayedResults, paginationData]);
+
+  // Memoized page change handler
+  const handlePageChange = useCallback((page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
   console.log('=== SEARCH RESULTS DEBUG ===');
   console.log('Props received:');
@@ -134,19 +165,11 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
     );
   }
 
-  const totalResults = merchants.length;
-  const totalPages = Math.ceil(totalResults / RESULTS_PER_PAGE);
-  const startIndex = (currentPage - 1) * RESULTS_PER_PAGE;
-  const endIndex = startIndex + RESULTS_PER_PAGE;
-  const paginatedResults = merchants.slice(startIndex, endIndex);
-  const resultsToShow = isMobile ? displayedResults : paginatedResults;
+  const totalResults = paginationData.totalResults;
+  const totalPages = paginationData.totalPages;
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const renderPaginationItems = () => {
+  // Memoized pagination items for better performance
+  const renderPaginationItems = useCallback(() => {
     const items = [];
     const maxVisiblePages = 5;
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
@@ -201,7 +224,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
     }
 
     return items;
-  };
+  }, [currentPage, totalPages, handlePageChange]);
 
   return (
     <div className="space-y-4">

@@ -1,10 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Search, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TimeDropdown } from './TimeDropdown';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useDebounce } from '@/hooks/usePerformanceOptimizations';
 
 export const SearchBar = () => {
   const [searchParams] = useSearchParams();
@@ -16,7 +17,8 @@ export const SearchBar = () => {
   const [startTime, setStartTime] = useState(searchParams.get('startTime') || '');
   const [endTime, setEndTime] = useState(searchParams.get('endTime') || '');
 
-  const handleSearch = () => {
+  // Memoized search handler to prevent unnecessary re-renders
+  const handleSearch = useCallback(() => {
     console.log('=== SEARCH BAR DEBUG ===');
     console.log('Searching for:', searchTerm, 'in location:', location, 'start time:', startTime, 'end time:', endTime);
     console.log('Search term length:', searchTerm.length);
@@ -32,13 +34,35 @@ export const SearchBar = () => {
     
     // Navigate to results page with parameters
     navigate(`/results?${params.toString()}`);
-  };
+  }, [searchTerm, location, startTime, endTime, navigate]);
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  // Debounced search for auto-search functionality (optional future enhancement)
+  const { debouncedCallback: debouncedSearch } = useDebounce(handleSearch, 500);
+
+  // Memoized key press handler
+  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleSearch();
     }
-  };
+  }, [handleSearch]);
+
+  // Memoized input change handlers to prevent unnecessary re-renders
+  const handleSearchTermChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  }, []);
+
+  const handleLocationChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setLocation(e.target.value);
+  }, []);
+
+  // Memoized dropdown change handlers
+  const handleStartTimeChange = useCallback((value: string) => {
+    setStartTime(value);
+  }, []);
+
+  const handleEndTimeChange = useCallback((value: string) => {
+    setEndTime(value);
+  }, []);
 
   return (
     <div className="w-full max-w-5xl mx-auto">
@@ -50,7 +74,7 @@ export const SearchBar = () => {
             type="text"
             placeholder="Search for bars, restaurants, or cuisines..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={handleSearchTermChange}
             onKeyPress={handleKeyPress}
             className="pl-12 pr-4 py-4 text-lg border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl"
           />
@@ -64,7 +88,7 @@ export const SearchBar = () => {
           <TimeDropdown
             placeholder="Starting at..."
             value={startTime}
-            onChange={setStartTime}
+            onChange={handleStartTimeChange}
           />
         </div>
         
@@ -76,7 +100,7 @@ export const SearchBar = () => {
           <TimeDropdown
             placeholder="Ending at..."
             value={endTime}
-            onChange={setEndTime}
+            onChange={handleEndTimeChange}
           />
         </div>
         
@@ -90,7 +114,7 @@ export const SearchBar = () => {
             type="text"
             placeholder="City, State or ZIP"
             value={location}
-            onChange={(e) => setLocation(e.target.value)}
+            onChange={handleLocationChange}
             onKeyPress={handleKeyPress}
             className="pl-12 pr-4 py-4 text-lg border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl"
           />

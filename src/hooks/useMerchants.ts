@@ -13,12 +13,14 @@ export const useMerchants = (
   radiusMiles?: number
 ) => {
   const queryKey = generateMerchantQueryKey(categoryIds, searchTerm, startTime, endTime, location, bounds, radiusMiles);
-  const cacheSettings = getCacheSettings(searchTerm);
+  const cacheSettings = getCacheSettings(searchTerm, categoryIds, location);
   
   return useQuery({
     queryKey,
     staleTime: cacheSettings.staleTime,
     gcTime: cacheSettings.gcTime,
+    retry: cacheSettings.retry,
+    retryDelay: cacheSettings.retryDelay,
     queryFn: async () => {
       console.log('=== STARTING MERCHANT SEARCH ===');
       console.log('Search parameters:', { categoryIds, searchTerm, startTime, endTime, location, bounds, radiusMiles });

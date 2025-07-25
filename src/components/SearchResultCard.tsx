@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo, useMemo, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getTodaysHappyHour } from '@/utils/timeUtils';
@@ -10,15 +10,35 @@ interface SearchResultCardProps {
   isMobile?: boolean;
 }
 
-export const SearchResultCard: React.FC<SearchResultCardProps> = ({ 
+const SearchResultCard: React.FC<SearchResultCardProps> = memo(({ 
   restaurant, 
   onClick,
   isMobile = false
 }) => {
+  // Memoize expensive calculations
+  const happyHourText = useMemo(() => 
+    getTodaysHappyHour(restaurant.merchant_happy_hour || []), 
+    [restaurant.merchant_happy_hour]
+  );
+
+  const address = useMemo(() => ({
+    line1: restaurant.street_address + (restaurant.street_address_line_2 ? `, ${restaurant.street_address_line_2}` : ''),
+    line2: `${restaurant.city}, ${restaurant.state} ${restaurant.zip_code}`
+  }), [restaurant.street_address, restaurant.street_address_line_2, restaurant.city, restaurant.state, restaurant.zip_code]);
+
+  const categories = useMemo(() => 
+    restaurant.merchant_categories || [], 
+    [restaurant.merchant_categories]
+  );
+
+  // Memoize click handler
+  const handleClick = useCallback(() => {
+    onClick(restaurant.id);
+  }, [onClick, restaurant.id]);
   return (
     <Card 
       className="hover:shadow-md transition-shadow cursor-pointer"
-      onClick={() => onClick(restaurant.id)}
+      onClick={handleClick}
     >
       <CardContent className="p-3 sm:p-6">
         {isMobile ? (
@@ -49,18 +69,17 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
                   variant="secondary" 
                   className="flex-shrink-0 text-xs px-2 py-1 font-medium"
                 >
-                  {getTodaysHappyHour(restaurant.merchant_happy_hour || [])}
+                  {happyHourText}
                 </Badge>
               </div>
               
               {/* Address */}
               <div className="text-xs text-gray-600 leading-snug">
                 <p className="break-words">
-                  {restaurant.street_address}
-                  {restaurant.street_address_line_2 && `, ${restaurant.street_address_line_2}`}
+                  {address.line1}
                 </p>
                 <p>
-                  {restaurant.city}, {restaurant.state} {restaurant.zip_code}
+                  {address.line2}
                 </p>
               </div>
               
@@ -73,9 +92,9 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
                 )}
                 
                 {/* Category tags - limit to 2 on mobile */}
-                {restaurant.merchant_categories && restaurant.merchant_categories.length > 0 && (
+                {categories.length > 0 && (
                   <div className="flex flex-wrap gap-1 justify-end">
-                    {restaurant.merchant_categories.slice(0, 2).map((merchantCategory: any) => (
+                    {categories.slice(0, 2).map((merchantCategory: any) => (
                       <Badge 
                         key={merchantCategory.id} 
                         variant="outline" 
@@ -84,12 +103,12 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
                         {merchantCategory.categories.name}
                       </Badge>
                     ))}
-                    {restaurant.merchant_categories.length > 2 && (
+                    {categories.length > 2 && (
                       <Badge 
                         variant="outline" 
                         className="text-xs px-2 py-1 font-normal text-gray-500"
                       >
-                        +{restaurant.merchant_categories.length - 2}
+                        +{categories.length - 2}
                       </Badge>
                     )}
                   </div>
@@ -123,11 +142,10 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
                     {restaurant.restaurant_name}
                   </h3>
                   <p className="text-gray-600 text-base mt-2 break-words">
-                    {restaurant.street_address}
-                    {restaurant.street_address_line_2 && `, ${restaurant.street_address_line_2}`}
+                    {address.line1}
                   </p>
                   <p className="text-gray-600 text-base">
-                    {restaurant.city}, {restaurant.state} {restaurant.zip_code}
+                    {address.line2}
                   </p>
                   {restaurant.phone_number && (
                     <p className="text-gray-600 text-base mt-1">
@@ -136,9 +154,9 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
                   )}
                   
                   {/* Category tags */}
-                  {restaurant.merchant_categories && restaurant.merchant_categories.length > 0 && (
+                  {categories.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-2">
-                      {restaurant.merchant_categories.map((merchantCategory: any) => (
+                      {categories.map((merchantCategory: any) => (
                         <Badge 
                           key={merchantCategory.id} 
                           variant="outline" 
@@ -152,7 +170,7 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
                 </div>
                 
                 <Badge variant="secondary" className="flex-shrink-0 text-sm px-3 py-1">
-                  {getTodaysHappyHour(restaurant.merchant_happy_hour || [])}
+                  {happyHourText}
                 </Badge>
               </div>
             </div>
@@ -161,4 +179,8 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
       </CardContent>
     </Card>
   );
-};
+});
+
+SearchResultCard.displayName = 'SearchResultCard';
+
+export { SearchResultCard };
