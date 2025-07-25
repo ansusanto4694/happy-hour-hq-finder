@@ -50,15 +50,29 @@ export const filterMerchantsByTime = (
   const filteredMerchants = merchants.filter(merchant => {
     processedCount++;
     
+    console.log(`=== Merchant ${processedCount}: ${merchant.restaurant_name || 'Unknown'} ===`);
+    console.log('Merchant data:', {
+      id: merchant.id,
+      name: merchant.restaurant_name,
+      hasHappyHour: !!merchant?.merchant_happy_hour,
+      happyHourCount: merchant?.merchant_happy_hour?.length || 0
+    });
+    
     // Validate merchant structure
     if (!merchant?.merchant_happy_hour || !Array.isArray(merchant.merchant_happy_hour)) {
+      console.log('❌ No happy hour data or not array');
       return false;
     }
 
+    console.log('Happy hour data:', merchant.merchant_happy_hour);
+
     // Check if any happy hour overlaps with the specified time range
     const hasOverlap = merchant.merchant_happy_hour.some((hh: any) => {
+      console.log(`  Checking happy hour:`, hh);
+      
       // Validate happy hour structure
       if (!isValidHappyHour(hh)) {
+        console.log('  ❌ Invalid happy hour structure');
         return false;
       }
 
@@ -67,23 +81,23 @@ export const filterMerchantsByTime = (
         const hhStartMinutes = timeToMinutes(hh.happy_hour_start);
         const hhEndMinutes = timeToMinutes(hh.happy_hour_end);
 
-        // Log detailed comparison for debugging
-        if (merchant.restaurant_name) {
-          console.log(
-            `Checking ${merchant.restaurant_name}: ` +
-            `User time ${startTime}-${endTime} (${startMinutes}-${endMinutes} min) ` +
-            `vs HH ${hh.happy_hour_start}-${hh.happy_hour_end} (${hhStartMinutes}-${hhEndMinutes} min)`
-          );
-        }
-
+        console.log(`  🕐 Conversion results:`);
+        console.log(`    User: ${startTime}(${startMinutes}min) - ${endTime}(${endMinutes}min)`);
+        console.log(`    HH: ${hh.happy_hour_start}(${hhStartMinutes}min) - ${hh.happy_hour_end}(${hhEndMinutes}min)`);
+        
         // Check if happy hour overlaps with user's specified time window
-        return hhStartMinutes < endMinutes && hhEndMinutes > startMinutes;
+        const overlaps = hhStartMinutes < endMinutes && hhEndMinutes > startMinutes;
+        console.log(`    ✅ Overlaps: ${overlaps}`);
+        
+        return overlaps;
       } catch (error) {
         console.warn('Error processing happy hour:', error, hh);
         return false;
       }
     });
 
+    console.log(`🎯 Final result for ${merchant.restaurant_name}: ${hasOverlap}`);
+    
     if (hasOverlap) {
       matchedCount++;
     }
