@@ -15,7 +15,11 @@ interface LocationSuggestion {
   center: [number, number];
 }
 
-export const SearchBar = () => {
+interface SearchBarProps {
+  variant?: 'horizontal' | 'vertical';
+}
+
+export const SearchBar = ({ variant = 'horizontal' }: SearchBarProps) => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   
@@ -174,9 +178,13 @@ export const SearchBar = () => {
 
   return (
     <div className="w-full max-w-7xl mx-auto">
-      <div className="bg-white rounded-2xl shadow-lg p-2 flex flex-col lg:flex-row gap-2">
+      <div className={`bg-white rounded-2xl shadow-lg p-2 ${
+        variant === 'vertical' 
+          ? 'flex flex-col gap-2' 
+          : 'flex flex-col lg:flex-row gap-2'
+      }`}>
         {/* Search input */}
-        <div className="flex-1 relative">
+        <div className={variant === 'vertical' ? 'w-full' : 'flex-1 relative'}>
           <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
           <Input
             type="text"
@@ -188,35 +196,42 @@ export const SearchBar = () => {
           />
         </div>
         
-        {/* Divider */}
-        <div className="hidden lg:block w-px bg-gray-200 my-2"></div>
-        
-        {/* Starting time dropdown */}
-        <div className="lg:w-40">
-          <TimeDropdown
-            placeholder="Starting at..."
-            value={startTime}
-            onChange={handleStartTimeChange}
-          />
+        {/* Time inputs container */}
+        <div className={`${
+          variant === 'vertical' 
+            ? 'flex gap-2' 
+            : 'contents'
+        }`}>
+          {/* Divider for horizontal layout */}
+          {variant === 'horizontal' && <div className="hidden lg:block w-px bg-gray-200 my-2"></div>}
+          
+          {/* Starting time dropdown */}
+          <div className="lg:w-40">
+            <TimeDropdown
+              placeholder="Starting at..."
+              value={startTime}
+              onChange={handleStartTimeChange}
+            />
+          </div>
+          
+          {/* Divider for horizontal layout */}
+          {variant === 'horizontal' && <div className="hidden lg:block w-px bg-gray-200 my-2"></div>}
+          
+          {/* Ending time dropdown */}
+          <div className="lg:w-40">
+            <TimeDropdown
+              placeholder="Ending at..."
+              value={endTime}
+              onChange={handleEndTimeChange}
+            />
+          </div>
         </div>
         
-        {/* Divider */}
-        <div className="hidden lg:block w-px bg-gray-200 my-2"></div>
-        
-        {/* Ending time dropdown */}
-        <div className="lg:w-40">
-          <TimeDropdown
-            placeholder="Ending at..."
-            value={endTime}
-            onChange={handleEndTimeChange}
-          />
-        </div>
-        
-        {/* Divider */}
-        <div className="hidden lg:block w-px bg-gray-200 my-2"></div>
+        {/* Divider for horizontal layout */}
+        {variant === 'horizontal' && <div className="hidden lg:block w-px bg-gray-200 my-2"></div>}
         
         {/* Location input with autocomplete */}
-        <div className="lg:w-64 relative">
+        <div className={variant === 'vertical' ? 'w-full relative' : 'lg:w-64 relative'}>
           <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 z-10" />
           <Input
             ref={locationInputRef}
@@ -269,7 +284,9 @@ export const SearchBar = () => {
         {/* Search button */}
         <Button
           onClick={handleSearch}
-          className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-8 py-4 text-lg font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
+          className={`bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-8 py-4 text-lg font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl ${
+            variant === 'vertical' ? 'w-full' : ''
+          }`}
         >
           Search
         </Button>
