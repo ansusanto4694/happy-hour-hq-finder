@@ -106,13 +106,21 @@ export const applyOptimizedPostQueryFilters = async (
       const radiusEnd = performance.now();
       console.log(`Radius filtering completed in ${(radiusEnd - radiusStart).toFixed(2)}ms`);
       console.log(`Merchants after radius filtering: ${filteredData.length}`);
+      console.log(`Original data length: ${data.length}`);
       
       if (filteredData.length === 0) {
         console.log('No merchants found within specified radius - checking if we should continue with time filtering');
-        // Don't return early - let time filtering run on original data if we have time parameters
+        // If we have time parameters and radius filtering eliminated everything, 
+        // use a larger radius (5 miles) to ensure time filtering has data to work with
         if (startTime && endTime) {
-          console.log('Time parameters provided, continuing with original data for time filtering');
-          filteredData = data; // Reset to original data for time filtering
+          console.log('Time parameters provided, trying larger radius (5 miles) for time filtering');
+          filteredData = await filterMerchantsByRadius(data, location, 5); // Use 5-mile radius
+          console.log(`Merchants with 5-mile radius: ${filteredData.length}`);
+          
+          if (filteredData.length === 0) {
+            console.log('Still no merchants found even with 5-mile radius');
+            return [];
+          }
         } else {
           return [];
         }
