@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { buildBaseMerchantQuery, applyMerchantIdFilter, applyBoundsFilter, executeMerchantQuery } from '@/utils/queryBuilder';
-import { applySearchAndCategoryFilters, applyPostQueryFilters } from '@/utils/filterPipeline';
+import { applyOptimizedSearchAndCategoryFilters, applyOptimizedPostQueryFilters, measureFilterPerformance } from '@/utils/filterPipeline';
 import { generateMerchantQueryKey, getCacheSettings } from '@/utils/queryCache';
 
 export const useMerchants = (
@@ -24,32 +24,45 @@ export const useMerchants = (
       console.log('Search parameters:', { categoryIds, searchTerm, startTime, endTime, location, bounds, radiusMiles });
       
       try {
+        const queryStart = performance.now();
         const filterParams = { searchTerm, categoryIds, location, radiusMiles, startTime, endTime };
         
-        // Apply search and category filters to get merchant IDs
-        const merchantIds = await applySearchAndCategoryFilters(filterParams);
+        // Apply optimized search and category filters with performance monitoring
+        const merchantIds = await measureFilterPerformance(
+          () => applyOptimizedSearchAndCategoryFilters(filterParams),
+          'Search and Category Filtering'
+        );
         
         // Early return if no merchants match the search/category criteria
         if (Array.isArray(merchantIds) && merchantIds.length === 0) {
           return [];
         }
 
-        // Build and execute the main query
-        let query = buildBaseMerchantQuery();
-        
-        if (merchantIds) {
-          query = applyMerchantIdFilter(query, merchantIds);
-        }
-        
-        if (bounds) {
-          query = applyBoundsFilter(query, bounds);
-        }
+        // Build and execute the main query with performance monitoring
+        const data = await measureFilterPerformance(async () => {
+          let query = buildBaseMerchantQuery();
+          
+          if (merchantIds) {
+            query = applyMerchantIdFilter(query, merchantIds);
+          }
+          
+          if (bounds) {
+            query = applyBoundsFilter(query, bounds);
+          }
 
-        const data = await executeMerchantQuery(query);
+          return await executeMerchantQuery(query);
+        }, 'Database Query Execution');
 
-        // Apply post-query filters (radius and time)
-        const filteredData = await applyPostQueryFilters(data || [], filterParams);
+        // Apply post-query filters with performance monitoring
+        const filteredData = await measureFilterPerformance(
+          () => applyOptimizedPostQueryFilters(data || [], filterParams),
+          'Post-Query Filtering'
+        );
 
+        const queryEnd = performance.now();
+        const totalTime = queryEnd - queryStart;
+
+        console.log(`Total query execution time: ${totalTime.toFixed(2)}ms`);
         console.log('Final merchants result:', filteredData);
         console.log('Final merchants count:', filteredData?.length || 0);
         
