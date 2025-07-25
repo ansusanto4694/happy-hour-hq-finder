@@ -56,7 +56,13 @@ export const timeToMinutes = (timeStr: string): number => {
   }
 
   const trimmedTime = timeStr.trim();
-  const parts = trimmedTime.split(':');
+  
+  // Handle database format (HH:MM:SS) - remove seconds if present
+  const timeWithoutSeconds = trimmedTime.includes(':') && trimmedTime.split(':').length === 3 
+    ? trimmedTime.substring(0, trimmedTime.lastIndexOf(':'))
+    : trimmedTime;
+  
+  const parts = timeWithoutSeconds.split(':');
   
   if (parts.length < 2) {
     console.warn('Invalid time format, expected HH:MM:', timeStr);
