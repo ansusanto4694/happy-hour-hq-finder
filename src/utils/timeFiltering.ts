@@ -22,21 +22,27 @@ export const filterMerchantsByTime = (
   startTime: string, 
   endTime: string
 ): any[] => {
-  console.log('Applying optimized time filtering:', startTime, 'to', endTime);
+  console.log('=== TIME FILTERING DEBUG ===');
+  console.log('Input startTime:', startTime, '(type:', typeof startTime, ')');
+  console.log('Input endTime:', endTime, '(type:', typeof endTime, ')');
+  console.log('Merchants array length:', merchants?.length || 0);
   
   // Validate inputs
   if (!Array.isArray(merchants) || !startTime || !endTime) {
     console.warn('Invalid inputs for time filtering');
-    return [];
+    return merchants || [];
   }
 
   // Pre-calculate time ranges for efficiency
   const startMinutes = timeToMinutes(startTime);
   const endMinutes = timeToMinutes(endTime);
   
+  console.log('Converted startMinutes:', startMinutes);
+  console.log('Converted endMinutes:', endMinutes);
+  
   if (startMinutes === 0 && endMinutes === 0) {
-    console.warn('Invalid time range for filtering');
-    return [];
+    console.warn('Invalid time range for filtering - both times converted to 0');
+    return merchants || [];
   }
 
   let processedCount = 0;
