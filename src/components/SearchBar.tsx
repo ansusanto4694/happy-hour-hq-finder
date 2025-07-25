@@ -232,7 +232,6 @@ export const SearchBar = ({ variant = 'horizontal' }: SearchBarProps) => {
               placeholder="Starting at..."
               value={startTime}
               onChange={handleStartTimeChange}
-              variant={variant}
             />
           </div>
           
@@ -245,7 +244,6 @@ export const SearchBar = ({ variant = 'horizontal' }: SearchBarProps) => {
               placeholder="Ending at..."
               value={endTime}
               onChange={handleEndTimeChange}
-              variant={variant}
             />
           </div>
         </div>
