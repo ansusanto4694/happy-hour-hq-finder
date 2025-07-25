@@ -173,7 +173,7 @@ export const SearchBar = () => {
   }, []);
 
   return (
-    <div className="w-full max-w-6xl mx-auto">
+    <div className="w-full max-w-7xl mx-auto">
       <div className="bg-white rounded-2xl shadow-lg p-2 flex flex-col lg:flex-row gap-2">
         {/* Search input */}
         <div className="flex-1 relative">
