@@ -184,7 +184,7 @@ export const SearchBar = ({ variant = 'horizontal' }: SearchBarProps) => {
           : 'p-2 flex flex-col lg:flex-row gap-2'
       }`}>
         {/* Search input */}
-        <div className={variant === 'vertical' ? 'w-full relative' : 'flex-1 relative'}>
+        <div className={variant === 'vertical' ? 'w-full relative' : 'flex-[2] relative'}>
           <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
           <Input
             type="text"
@@ -192,8 +192,8 @@ export const SearchBar = ({ variant = 'horizontal' }: SearchBarProps) => {
             value={searchTerm}
             onChange={handleSearchTermChange}
             onKeyPress={handleKeyPress}
-            className={`pl-12 pr-4 text-lg border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl ${
-              variant === 'vertical' ? 'py-5' : 'py-4'
+            className={`pl-12 pr-4 border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl ${
+              variant === 'vertical' ? 'py-5 text-lg' : 'py-4 text-base'
             }`}
           />
         </div>
@@ -208,11 +208,12 @@ export const SearchBar = ({ variant = 'horizontal' }: SearchBarProps) => {
           {variant === 'horizontal' && <div className="hidden lg:block w-px bg-gray-200 my-2"></div>}
           
           {/* Starting time dropdown */}
-          <div className={variant === 'vertical' ? 'flex-1' : 'lg:w-40'}>
+          <div className={variant === 'vertical' ? 'flex-1' : 'lg:w-36'}>
             <TimeDropdown
               placeholder="Starting at..."
               value={startTime}
               onChange={handleStartTimeChange}
+              variant={variant}
             />
           </div>
           
@@ -220,11 +221,12 @@ export const SearchBar = ({ variant = 'horizontal' }: SearchBarProps) => {
           {variant === 'horizontal' && <div className="hidden lg:block w-px bg-gray-200 my-2"></div>}
           
           {/* Ending time dropdown */}
-          <div className={variant === 'vertical' ? 'flex-1' : 'lg:w-40'}>
+          <div className={variant === 'vertical' ? 'flex-1' : 'lg:w-36'}>
             <TimeDropdown
               placeholder="Ending at..."
               value={endTime}
               onChange={handleEndTimeChange}
+              variant={variant}
             />
           </div>
         </div>
@@ -233,7 +235,7 @@ export const SearchBar = ({ variant = 'horizontal' }: SearchBarProps) => {
         {variant === 'horizontal' && <div className="hidden lg:block w-px bg-gray-200 my-2"></div>}
         
         {/* Location input with autocomplete */}
-        <div className={variant === 'vertical' ? 'w-full relative' : 'lg:w-64 relative'}>
+        <div className={variant === 'vertical' ? 'w-full relative' : 'lg:w-56 relative'}>
           <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 z-10" />
           <Input
             ref={locationInputRef}
@@ -242,8 +244,8 @@ export const SearchBar = ({ variant = 'horizontal' }: SearchBarProps) => {
             value={location}
             onChange={handleLocationChange}
             onKeyDown={handleLocationKeyDown}
-            className={`pl-12 pr-4 text-lg border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl ${
-              variant === 'vertical' ? 'py-5' : 'py-4'
+            className={`pl-12 pr-4 border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl ${
+              variant === 'vertical' ? 'py-5 text-lg' : 'py-4 text-base'
             }`}
             autoComplete="off"
           />
