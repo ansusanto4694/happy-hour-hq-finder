@@ -50,27 +50,28 @@ export const SearchBar = ({ variant = 'horizontal' }: SearchBarProps) => {
   const handleSearch = useCallback(() => {
     console.log('🔍 SEARCH FUNCTION CALLED!');
     console.log('=== SEARCH BAR DEBUG ===');
-    console.log('Searching for:', searchTerm, 'in location:', location, 'start time:', startTime, 'end time:', endTime);
-    console.log('Start time type:', typeof startTime, 'Value:', JSON.stringify(startTime));
-    console.log('End time type:', typeof endTime, 'Value:', JSON.stringify(endTime));
-    console.log('Search term length:', searchTerm.length);
-    console.log('Search term trim:', searchTerm.trim());
-    console.log('========================');
+    console.log('startTime:', startTime);
+    console.log('endTime:', endTime);
+    console.log('location:', location);
+    console.log('searchTerm:', searchTerm);
     
-    // Create URL search parameters
-    const params = new URLSearchParams();
-    if (searchTerm) params.set('search', searchTerm);
-    if (location) params.set('location', location);
-    if (startTime) params.set('startTime', startTime);
-    if (endTime) params.set('endTime', endTime);
-    
-    console.log('=== NAVIGATION DEBUG ===');
-    console.log('About to navigate with params:', params.toString());
-    console.log('Full URL will be:', `/results?${params.toString()}`);
-    console.log('========================');
-    
-    // Navigate to results page with parameters
-    navigate(`/results?${params.toString()}`);
+    try {
+      // Create URL search parameters
+      const params = new URLSearchParams();
+      if (searchTerm) params.set('search', searchTerm);
+      if (location) params.set('location', location);
+      if (startTime) params.set('startTime', startTime);
+      if (endTime) params.set('endTime', endTime);
+      
+      console.log('URL params:', params.toString());
+      console.log('About to navigate to:', `/results?${params.toString()}`);
+      
+      // Navigate to results page with parameters
+      navigate(`/results?${params.toString()}`);
+      console.log('Navigation called');
+    } catch (error) {
+      console.error('Error in handleSearch:', error);
+    }
   }, [searchTerm, location, startTime, endTime, navigate]);
 
   // Fetch location suggestions
