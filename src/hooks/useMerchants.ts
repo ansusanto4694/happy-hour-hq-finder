@@ -222,37 +222,41 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
         console.log('Applying radius filtering:', radiusMiles, 'miles from', location);
         
         try {
-          // Enhanced location matching with multiple fallback strategies
+          // Enhanced location matching - prioritize zip code for consistency
           let locationData = null;
           const trimmedLocation = location.trim().toLowerCase();
           
-          // Strategy 1: Exact cache match
-          const { data: cachedLocation, error: cacheError } = await supabase
-            .from('location_cache')
-            .select('latitude, longitude')
-            .eq('original_input', trimmedLocation)
-            .single();
-
-          if (!cacheError && cachedLocation) {
-            locationData = cachedLocation;
-            console.log('Found exact location in cache:', locationData);
-          } else {
-            console.log('Exact match not found, trying alternative strategies...');
-            
-            // Strategy 2: Try partial matching for zip codes
-            const zipMatch = location.match(/\b\d{5}\b/);
-            if (zipMatch) {
-              const { data: zipCachedLocation, error: zipCacheError } = await supabase
-                .from('location_cache')
-                .select('latitude, longitude')
-                .eq('original_input', zipMatch[0])
-                .single();
-                
-              if (!zipCacheError && zipCachedLocation) {
-                locationData = zipCachedLocation;
-                console.log('Found zip code in cache:', locationData);
-              }
+          // Strategy 1: First check for zip codes in the location string
+          const zipMatch = location.match(/\b\d{5}\b/);
+          if (zipMatch) {
+            const { data: zipCachedLocation, error: zipCacheError } = await supabase
+              .from('location_cache')
+              .select('latitude, longitude')
+              .eq('original_input', zipMatch[0])
+              .single();
+              
+            if (!zipCacheError && zipCachedLocation) {
+              locationData = zipCachedLocation;
+              console.log('Found zip code in cache:', locationData);
             }
+          }
+          
+          // Strategy 2: If no zip code found, try exact cache match
+          if (!locationData) {
+            const { data: cachedLocation, error: cacheError } = await supabase
+              .from('location_cache')
+              .select('latitude, longitude')
+              .eq('original_input', trimmedLocation)
+              .single();
+
+            if (!cacheError && cachedLocation) {
+              locationData = cachedLocation;
+              console.log('Found exact location in cache:', locationData);
+            }
+          }
+          
+          if (!locationData) {
+            console.log('Cache strategies failed, trying additional fallbacks...');
             
             // Strategy 3: Try city name extraction for Mapbox formatted strings
             if (!locationData) {
