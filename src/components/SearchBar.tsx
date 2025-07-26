@@ -16,7 +16,11 @@ interface LocationSuggestion {
   location_type: string;
 }
 
-export const SearchBar = () => {
+interface SearchBarProps {
+  variant?: 'hero' | 'results';
+}
+
+export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   
@@ -172,97 +176,203 @@ export const SearchBar = () => {
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
-      <div className="bg-white rounded-2xl shadow-lg p-6 space-y-4">
-        {/* Search input */}
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-          <Input
-            type="text"
-            placeholder="Search for bars, restaurants, or cuisines..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyPress={handleKeyPress}
-            className="pl-12 pr-4 py-4 text-lg border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl bg-gray-50"
-          />
-        </div>
-        
-        {/* Time filters */}
-        <div className="grid grid-cols-2 gap-4">
-          <TimeDropdown
-            placeholder="Starting at..."
-            value={startTime}
-            onChange={setStartTime}
-          />
-          <TimeDropdown
-            placeholder="Ending at..."
-            value={endTime}
-            onChange={setEndTime}
-          />
-        </div>
-        
-        {/* Location input with autocomplete */}
-        <div className="relative">
-          <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 z-10" />
-          <Input
-            ref={locationInputRef}
-            type="text"
-            placeholder="City, State or ZIP"
-            value={location}
-            onChange={(e) => handleLocationChange(e.target.value)}
-            onKeyDown={handleLocationKeyDown}
-            className="pl-12 pr-4 py-4 text-lg border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl bg-gray-50"
-            autoComplete="off"
-          />
+    <div className={`w-full ${variant === 'hero' ? 'max-w-2xl' : 'max-w-5xl'} mx-auto`}>
+      {variant === 'hero' ? (
+        <div className="bg-white rounded-2xl shadow-lg p-6 space-y-4">
+          {/* Search input */}
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Input
+              type="text"
+              placeholder="Search for bars, restaurants, or cuisines..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyPress={handleKeyPress}
+              className="pl-12 pr-4 py-4 text-lg border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl bg-gray-50"
+            />
+          </div>
           
-          {/* Loading indicator */}
-          {isLoadingSuggestions && (
-            <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-              <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-gray-600"></div>
-            </div>
-          )}
+          {/* Time filters */}
+          <div className="grid grid-cols-2 gap-4">
+            <TimeDropdown
+              placeholder="Starting at..."
+              value={startTime}
+              onChange={setStartTime}
+            />
+            <TimeDropdown
+              placeholder="Ending at..."
+              value={endTime}
+              onChange={setEndTime}
+            />
+          </div>
           
-          {/* Suggestions dropdown */}
-          {showSuggestions && locationSuggestions.length > 0 && (
-            <div
-              ref={suggestionsRef}
-              className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto"
-            >
-              {locationSuggestions.map((suggestion, index) => (
-                <div
-                  key={suggestion.id}
-                  className={`px-4 py-3 cursor-pointer border-b border-gray-100 last:border-b-0 hover:bg-gray-50 ${
-                    index === selectedSuggestionIndex ? 'bg-blue-50 border-blue-200' : ''
-                  }`}
-                  onClick={() => selectSuggestion(suggestion)}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="text-sm font-medium text-gray-900">
-                        {suggestion.text}
+          {/* Location input with autocomplete */}
+          <div className="relative">
+            <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 z-10" />
+            <Input
+              ref={locationInputRef}
+              type="text"
+              placeholder="City, State or ZIP"
+              value={location}
+              onChange={(e) => handleLocationChange(e.target.value)}
+              onKeyDown={handleLocationKeyDown}
+              className="pl-12 pr-4 py-4 text-lg border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl bg-gray-50"
+              autoComplete="off"
+            />
+            
+            {/* Loading indicator */}
+            {isLoadingSuggestions && (
+              <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-gray-600"></div>
+              </div>
+            )}
+            
+            {/* Suggestions dropdown */}
+            {showSuggestions && locationSuggestions.length > 0 && (
+              <div
+                ref={suggestionsRef}
+                className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto"
+              >
+                {locationSuggestions.map((suggestion, index) => (
+                  <div
+                    key={suggestion.id}
+                    className={`px-4 py-3 cursor-pointer border-b border-gray-100 last:border-b-0 hover:bg-gray-50 ${
+                      index === selectedSuggestionIndex ? 'bg-blue-50 border-blue-200' : ''
+                    }`}
+                    onClick={() => selectSuggestion(suggestion)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-gray-900">
+                          {suggestion.text}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {suggestion.place_name}
+                        </div>
                       </div>
-                      <div className="text-xs text-gray-500">
-                        {suggestion.place_name}
+                      <div className="text-xs text-gray-400 ml-2">
+                        {suggestion.location_type}
                       </div>
-                    </div>
-                    <div className="text-xs text-gray-400 ml-2">
-                      {suggestion.location_type}
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
+          
+          {/* Search button */}
+          <Button
+            onClick={handleSearch}
+            className="w-full py-4 text-lg font-semibold rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white transition-all duration-200 shadow-lg hover:shadow-xl"
+          >
+            Search
+          </Button>
         </div>
-        
-        {/* Search button */}
-        <Button
-          onClick={handleSearch}
-          className="w-full py-4 text-lg font-semibold rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white transition-all duration-200 shadow-lg hover:shadow-xl"
-        >
-          Search
-        </Button>
-      </div>
+      ) : (
+        <div className="bg-white rounded-2xl shadow-lg p-2 flex flex-col lg:flex-row gap-2">
+          {/* Search input */}
+          <div className="flex-1 relative">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Input
+              type="text"
+              placeholder="Search for bars, restaurants, or cuisines..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyPress={handleKeyPress}
+              className="pl-12 pr-4 py-4 text-lg border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl"
+            />
+          </div>
+          
+          {/* Divider */}
+          <div className="hidden lg:block w-px bg-gray-200 my-2"></div>
+          
+          {/* Starting time dropdown */}
+          <div className="lg:w-40">
+            <TimeDropdown
+              placeholder="Starting at..."
+              value={startTime}
+              onChange={setStartTime}
+            />
+          </div>
+          
+          {/* Divider */}
+          <div className="hidden lg:block w-px bg-gray-200 my-2"></div>
+          
+          {/* Ending time dropdown */}
+          <div className="lg:w-40">
+            <TimeDropdown
+              placeholder="Ending at..."
+              value={endTime}
+              onChange={setEndTime}
+            />
+          </div>
+          
+          {/* Divider */}
+          <div className="hidden lg:block w-px bg-gray-200 my-2"></div>
+          
+          {/* Location input with autocomplete */}
+          <div className="lg:w-48 relative">
+            <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 z-10" />
+            <Input
+              ref={locationInputRef}
+              type="text"
+              placeholder="City, State or ZIP"
+              value={location}
+              onChange={(e) => handleLocationChange(e.target.value)}
+              onKeyDown={handleLocationKeyDown}
+              className="pl-12 pr-4 py-4 text-lg border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl"
+              autoComplete="off"
+            />
+            
+            {/* Loading indicator */}
+            {isLoadingSuggestions && (
+              <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-gray-600"></div>
+              </div>
+            )}
+            
+            {/* Suggestions dropdown */}
+            {showSuggestions && locationSuggestions.length > 0 && (
+              <div
+                ref={suggestionsRef}
+                className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto"
+              >
+                {locationSuggestions.map((suggestion, index) => (
+                  <div
+                    key={suggestion.id}
+                    className={`px-4 py-3 cursor-pointer border-b border-gray-100 last:border-b-0 hover:bg-gray-50 ${
+                      index === selectedSuggestionIndex ? 'bg-blue-50 border-blue-200' : ''
+                    }`}
+                    onClick={() => selectSuggestion(suggestion)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-gray-900">
+                          {suggestion.text}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {suggestion.place_name}
+                        </div>
+                      </div>
+                      <div className="text-xs text-gray-400 ml-2">
+                        {suggestion.location_type}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          {/* Search button */}
+          <Button
+            onClick={handleSearch}
+            className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-8 py-4 text-lg font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
+          >
+            Search
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

@@ -99,7 +99,7 @@ const Results = () => {
               </h1>
             )}
             <div className="max-w-4xl w-full">
-              {isMobile ? <MobileSearchBar /> : <SearchBar />}
+              {isMobile ? <MobileSearchBar /> : <SearchBar variant="results" />}
             </div>
           </div>
         </div>
