@@ -222,34 +222,75 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
         console.log('Applying radius filtering:', radiusMiles, 'miles from', location);
         
         try {
-          // First, try to get coordinates from cache
+          // Enhanced location matching with multiple fallback strategies
           let locationData = null;
+          const trimmedLocation = location.trim().toLowerCase();
+          
+          // Strategy 1: Exact cache match
           const { data: cachedLocation, error: cacheError } = await supabase
             .from('location_cache')
             .select('latitude, longitude')
-            .eq('original_input', location.trim().toLowerCase())
+            .eq('original_input', trimmedLocation)
             .single();
 
           if (!cacheError && cachedLocation) {
             locationData = cachedLocation;
-            console.log('Found location in cache:', locationData);
+            console.log('Found exact location in cache:', locationData);
           } else {
-            console.log('Location not in cache, normalizing:', location);
+            console.log('Exact match not found, trying alternative strategies...');
             
-            // Normalize the location using the edge function
-            const { data: normalizedLocation, error: normalizeError } = await supabase.functions.invoke('normalize-location', {
-              body: { location }
-            });
+            // Strategy 2: Try partial matching for zip codes
+            const zipMatch = location.match(/\b\d{5}\b/);
+            if (zipMatch) {
+              const { data: zipCachedLocation, error: zipCacheError } = await supabase
+                .from('location_cache')
+                .select('latitude, longitude')
+                .eq('original_input', zipMatch[0])
+                .single();
+                
+              if (!zipCacheError && zipCachedLocation) {
+                locationData = zipCachedLocation;
+                console.log('Found zip code in cache:', locationData);
+              }
+            }
+            
+            // Strategy 3: Try city name extraction for Mapbox formatted strings
+            if (!locationData) {
+              const cityMatch = location.match(/^([^,]+)/);
+              if (cityMatch) {
+                const cityName = cityMatch[1].trim().toLowerCase();
+                const { data: cityCachedLocation, error: cityCacheError } = await supabase
+                  .from('location_cache')
+                  .select('latitude, longitude')
+                  .ilike('original_input', `%${cityName}%`)
+                  .single();
+                  
+                if (!cityCacheError && cityCachedLocation) {
+                  locationData = cityCachedLocation;
+                  console.log('Found city name in cache:', locationData);
+                }
+              }
+            }
+            
+            // Strategy 4: Normalize the location using edge function as final fallback
+            if (!locationData) {
+              console.log('Cache strategies failed, normalizing location:', location);
+              
+              // Normalize the location using the edge function
+              const { data: normalizedLocation, error: normalizeError } = await supabase.functions.invoke('normalize-location', {
+                body: { location }
+              });
 
-            if (normalizeError) {
-              console.error('Error normalizing location:', normalizeError);
-              console.log('Skipping radius filter due to normalization error');
-            } else if (normalizedLocation) {
-              locationData = {
-                latitude: normalizedLocation.latitude,
-                longitude: normalizedLocation.longitude
-              };
-              console.log('Normalized location:', locationData);
+              if (normalizeError) {
+                console.error('Error normalizing location:', normalizeError);
+                console.log('Skipping radius filter due to normalization error');
+              } else if (normalizedLocation) {
+                locationData = {
+                  latitude: normalizedLocation.latitude,
+                  longitude: normalizedLocation.longitude
+                };
+                console.log('Normalized location:', locationData);
+              }
             }
           }
 
