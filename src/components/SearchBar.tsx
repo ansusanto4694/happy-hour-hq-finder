@@ -225,9 +225,24 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
               value={location}
               onChange={(e) => handleLocationChange(e.target.value)}
               onKeyDown={handleLocationKeyDown}
-              className="pl-12 pr-4 py-4 text-lg border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl bg-gray-50"
+              className="pl-12 pr-12 py-4 text-lg border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl bg-gray-50"
               autoComplete="off"
             />
+            
+            {/* Clear button */}
+            {location && (
+              <button
+                onClick={() => {
+                  setLocation('');
+                  setShowSuggestions(false);
+                  setLocationSuggestions([]);
+                }}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors z-20"
+                type="button"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
             
             {/* Loading indicator */}
             {isLoadingSuggestions && (
@@ -338,9 +353,24 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
               value={location}
               onChange={(e) => handleLocationChange(e.target.value)}
               onKeyDown={handleLocationKeyDown}
-              className="pl-12 pr-4 py-4 text-lg border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl"
+              className="pl-12 pr-12 py-4 text-lg border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl"
               autoComplete="off"
             />
+            
+            {/* Clear button */}
+            {location && (
+              <button
+                onClick={() => {
+                  setLocation('');
+                  setShowSuggestions(false);
+                  setLocationSuggestions([]);
+                }}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors z-20"
+                type="button"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
             
             {/* Loading indicator */}
             {isLoadingSuggestions && (

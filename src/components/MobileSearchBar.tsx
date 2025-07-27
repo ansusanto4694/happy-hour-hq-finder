@@ -278,9 +278,24 @@ export const MobileSearchBar = () => {
                         value={location}
                         onChange={(e) => handleLocationChange(e.target.value)}
                         onKeyDown={handleLocationKeyDown}
-                        className="pl-10 pr-4 h-12 text-base bg-gray-50 border-gray-200 rounded-lg"
+                        className="pl-10 pr-10 h-12 text-base bg-gray-50 border-gray-200 rounded-lg"
                         autoComplete="off"
                       />
+                      
+                      {/* Clear button */}
+                      {location && (
+                        <button
+                          onClick={() => {
+                            setLocation('');
+                            setShowSuggestions(false);
+                            setLocationSuggestions([]);
+                          }}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors z-20"
+                          type="button"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
                       
                       {/* Loading indicator */}
                       {isLoadingSuggestions && (
