@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, MapPin, Clock, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, MapPin, Clock, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TimeDropdown } from './TimeDropdown';
@@ -180,8 +180,17 @@ export const MobileSearchBar = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="pl-10 pr-4 h-12 text-base border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-gray-50 rounded-lg"
+              className="pl-10 pr-10 h-12 text-base border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-gray-50 rounded-lg"
             />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                type="button"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
           
           <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
@@ -209,8 +218,17 @@ export const MobileSearchBar = () => {
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         onKeyPress={handleKeyPress}
-                        className="pl-10 pr-4 h-12 text-base border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-gray-50 rounded-lg"
+                        className="pl-10 pr-10 h-12 text-base border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-gray-50 rounded-lg"
                       />
+                      {searchTerm && (
+                        <button
+                          onClick={() => setSearchTerm('')}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                          type="button"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                     <Button 
                       variant="ghost" 

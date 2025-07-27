@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, MapPin, ChevronDown } from 'lucide-react';
+import { Search, MapPin, ChevronDown, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TimeDropdown } from './TimeDropdown';
@@ -188,8 +188,17 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="pl-12 pr-4 py-4 text-lg border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl bg-gray-50"
+              className="pl-12 pr-12 py-4 text-lg border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl bg-gray-50"
             />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                type="button"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
           </div>
           
           {/* Time filters */}
@@ -279,8 +288,17 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="pl-12 pr-4 py-4 text-lg border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl"
+              className="pl-12 pr-12 py-4 text-lg border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl"
             />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                type="button"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
           </div>
           
           {/* Divider */}
