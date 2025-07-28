@@ -265,7 +265,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                     }`}
                     onClick={() => selectSuggestion(suggestion)}
                   >
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-start">
                       <div className="flex-1">
                         <div className="text-sm font-medium text-gray-900">
                           {suggestion.text}
@@ -274,7 +274,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                           {suggestion.place_name}
                         </div>
                       </div>
-                      <div className="text-xs text-gray-400 ml-2">
+                      <div className="text-xs text-gray-400 ml-2 shrink-0">
                         {suggestion.location_type}
                       </div>
                     </div>
@@ -393,7 +393,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                     }`}
                     onClick={() => selectSuggestion(suggestion)}
                   >
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-start">
                       <div className="flex-1">
                         <div className="text-sm font-medium text-gray-900">
                           {suggestion.text}
@@ -402,7 +402,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                           {suggestion.place_name}
                         </div>
                       </div>
-                      <div className="text-xs text-gray-400 ml-2">
+                      <div className="text-xs text-gray-400 ml-2 shrink-0">
                         {suggestion.location_type}
                       </div>
                     </div>
