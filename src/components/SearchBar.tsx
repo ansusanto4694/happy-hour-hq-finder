@@ -265,16 +265,14 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                     }`}
                     onClick={() => selectSuggestion(suggestion)}
                   >
-                    <div className="flex items-start">
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-gray-900">
-                          {suggestion.text}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {suggestion.place_name}
-                        </div>
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {suggestion.text}
                       </div>
-                      <div className="text-xs text-gray-400 ml-2 shrink-0">
+                      <div className="text-xs text-gray-500">
+                        {suggestion.place_name}
+                      </div>
+                      <div className="text-xs text-gray-400 mt-1">
                         {suggestion.location_type}
                       </div>
                     </div>
@@ -393,16 +391,14 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                     }`}
                     onClick={() => selectSuggestion(suggestion)}
                   >
-                    <div className="flex items-start">
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-gray-900">
-                          {suggestion.text}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {suggestion.place_name}
-                        </div>
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {suggestion.text}
                       </div>
-                      <div className="text-xs text-gray-400 ml-2 shrink-0">
+                      <div className="text-xs text-gray-500">
+                        {suggestion.place_name}
+                      </div>
+                      <div className="text-xs text-gray-400 mt-1">
                         {suggestion.location_type}
                       </div>
                     </div>
