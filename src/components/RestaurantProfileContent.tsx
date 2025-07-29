@@ -106,7 +106,9 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
             )}
 
             {/* Current Offers Section - Prominently displayed */}
-            <MerchantOffersSection restaurantId={restaurant.id} />
+            <div className="mb-12">
+              <MerchantOffersSection restaurantId={restaurant.id} />
+            </div>
 
             {/* Two Column Layout with adjusted widths */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
