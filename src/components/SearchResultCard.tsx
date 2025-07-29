@@ -47,32 +47,14 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
               </div>
             </div>
             
-            <div className="flex-1 min-w-0 space-y-2">
-              {/* Restaurant name and badges */}
-              <div className="flex items-start justify-between gap-3">
-                <h3 className="text-base font-semibold text-gray-900 break-words leading-tight">
-                  {restaurant.restaurant_name}
-                </h3>
-                <div className="flex flex-col gap-1">
-                  {hasActiveOffers && (
-                    <Badge 
-                      variant="default" 
-                      className="flex-shrink-0 text-xs px-2 py-1 font-medium bg-green-600 hover:bg-green-700"
-                    >
-                      Offer Available
-                    </Badge>
-                  )}
-                  <Badge 
-                    variant="secondary" 
-                    className="flex-shrink-0 text-xs px-2 py-1 font-medium"
-                  >
-                    {getTodaysHappyHour(restaurant.merchant_happy_hour || [])}
-                  </Badge>
-                </div>
-              </div>
+            <div className="flex-1 min-w-0">
+              {/* Restaurant name */}
+              <h3 className="text-base font-semibold text-gray-900 break-words leading-tight mb-1">
+                {restaurant.restaurant_name}
+              </h3>
               
-              {/* Address */}
-              <div className="text-xs text-gray-600 leading-snug">
+              {/* Address directly under name */}
+              <div className="text-xs text-gray-600 leading-snug mb-2">
                 <p className="break-words">
                   {restaurant.street_address}
                   {restaurant.street_address_line_2 && `, ${restaurant.street_address_line_2}`}
@@ -80,6 +62,24 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
                 <p>
                   {restaurant.city}, {restaurant.state} {restaurant.zip_code}
                 </p>
+              </div>
+              
+              {/* Badges row */}
+              <div className="flex flex-wrap gap-1 mb-2">
+                {hasActiveOffers && (
+                  <Badge 
+                    variant="default" 
+                    className="text-[10px] px-1.5 py-0.5 font-medium bg-green-600 hover:bg-green-700"
+                  >
+                    Offer Available
+                  </Badge>
+                )}
+                <Badge 
+                  variant="secondary" 
+                  className="text-[10px] px-1.5 py-0.5 font-medium"
+                >
+                  {getTodaysHappyHour(restaurant.merchant_happy_hour || [])}
+                </Badge>
               </div>
               
               {/* Phone and Categories in same row */}
