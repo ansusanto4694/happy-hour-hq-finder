@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { SearchBar } from './SearchBar';
+import { AuthButton } from './AuthButton';
 
 const Hero = () => {
   return (
@@ -13,6 +14,11 @@ const Hero = () => {
         <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white">
           Happy.Hour
         </h2>
+      </div>
+      
+      {/* Auth button in top right */}
+      <div className="absolute top-4 right-4 md:top-6 md:right-6 z-20">
+        <AuthButton />
       </div>
       
       {/* Decorative elements */}
