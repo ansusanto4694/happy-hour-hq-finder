@@ -16,6 +16,7 @@ import { RadiusOption, getRadiusMiles } from '@/components/RadiusFilter';
 const Results = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedRadius, setSelectedRadius] = useState<RadiusOption>('walking');
+  const [showOffersOnly, setShowOffersOnly] = useState(false);
   const [mobileView, setMobileView] = useState<'list' | 'map'>('list');
   const [searchAsMapMoves, setSearchAsMapMoves] = useState(false);
   const [mapBounds, setMapBounds] = useState<{ north: number; south: number; east: number; west: number } | null>(null);
@@ -46,7 +47,8 @@ const Results = () => {
     endTime, 
     location,
     searchAsMapMoves ? mapBounds : undefined,
-    isRadiusEnabled ? radiusMiles : undefined
+    isRadiusEnabled ? radiusMiles : undefined,
+    showOffersOnly
   );
 
   // Debug the merchants data being passed to SearchResults - ALWAYS LOG
@@ -119,6 +121,8 @@ const Results = () => {
                   selectedRadius={selectedRadius}
                   onRadiusChange={setSelectedRadius}
                   isRadiusEnabled={isRadiusEnabled}
+                  showOffersOnly={showOffersOnly}
+                  onShowOffersChange={setShowOffersOnly}
                 />
                 <ViewToggle view={mobileView} onViewChange={setMobileView} />
               </div>
@@ -207,6 +211,8 @@ const Results = () => {
                 selectedRadius={selectedRadius}
                 onRadiusChange={setSelectedRadius}
                 isRadiusEnabled={isRadiusEnabled}
+                showOffersOnly={showOffersOnly}
+                onShowOffersChange={setShowOffersOnly}
               />
             </div>
           </div>

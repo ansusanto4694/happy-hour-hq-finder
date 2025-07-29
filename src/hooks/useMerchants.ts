@@ -19,9 +19,9 @@ const calculateHaversineDistance = (lat1: number, lng1: number, lat2: number, ln
   return distance; // Distance in miles
 };
 
-export const useMerchants = (categoryIds?: string[], searchTerm?: string, startTime?: string, endTime?: string, location?: string, bounds?: { north: number; south: number; east: number; west: number }, radiusMiles?: number) => {
+export const useMerchants = (categoryIds?: string[], searchTerm?: string, startTime?: string, endTime?: string, location?: string, bounds?: { north: number; south: number; east: number; west: number }, radiusMiles?: number, showOffersOnly?: boolean) => {
   // Force fresh queries for restaurant searches to avoid caching issues
-  const queryKey = ['merchants', categoryIds, searchTerm, startTime, endTime, location, bounds, radiusMiles];
+  const queryKey = ['merchants', categoryIds, searchTerm, startTime, endTime, location, bounds, radiusMiles, showOffersOnly];
   
   return useQuery({
     queryKey,
@@ -29,7 +29,7 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
     gcTime: searchTerm?.toLowerCase().includes('restaurant') ? 0 : 10 * 60 * 1000, // React Query v5 uses gcTime instead of cacheTime
     queryFn: async () => {
       console.log('=== STARTING MERCHANT SEARCH ===');
-      console.log('Search parameters:', { categoryIds, searchTerm, startTime, endTime, location, bounds, radiusMiles });
+      console.log('Search parameters:', { categoryIds, searchTerm, startTime, endTime, location, bounds, radiusMiles, showOffersOnly });
       
       try {
       let query = supabase
@@ -372,6 +372,27 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
         });
         
         console.log('Merchants after time filtering:', filteredData);
+      }
+
+      // Apply offers filtering if specified
+      if (showOffersOnly && filteredData) {
+        console.log('Applying offers filtering');
+        
+        filteredData = filteredData.filter(merchant => {
+          if (!merchant.merchant_offers || merchant.merchant_offers.length === 0) {
+            return false;
+          }
+          
+          // Check if merchant has any active offers that haven't expired
+          const hasActiveOffers = merchant.merchant_offers.some((offer: any) => 
+            offer.is_active && new Date(offer.end_time) > new Date()
+          );
+          
+          console.log(`${merchant.restaurant_name} has active offers:`, hasActiveOffers);
+          return hasActiveOffers;
+        });
+        
+        console.log('Merchants after offers filtering:', filteredData?.length || 0);
       }
 
       console.log('Final merchants result:', filteredData);

@@ -5,6 +5,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { CategoryFilter } from './CategoryFilter';
 import { RadiusFilter, RadiusOption } from './RadiusFilter';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 interface MobileFilterDrawerProps {
   selectedCategories: string[];
@@ -12,6 +14,8 @@ interface MobileFilterDrawerProps {
   selectedRadius: RadiusOption;
   onRadiusChange: (radius: RadiusOption) => void;
   isRadiusEnabled: boolean;
+  showOffersOnly: boolean;
+  onShowOffersChange: (showOffers: boolean) => void;
 }
 
 export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
@@ -19,9 +23,11 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
   onCategoryChange,
   selectedRadius,
   onRadiusChange,
-  isRadiusEnabled
+  isRadiusEnabled,
+  showOffersOnly,
+  onShowOffersChange
 }) => {
-  const hasFilters = selectedCategories.length > 0 || selectedRadius !== 'blocks';
+  const hasFilters = selectedCategories.length > 0 || selectedRadius !== 'blocks' || showOffersOnly;
 
   return (
     <Sheet>
@@ -48,7 +54,21 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
         
         <div className="mt-6 overflow-y-auto h-[calc(100vh-120px)]">
           <div className="space-y-6">
-            {/* Category filter first */}
+            {/* Offers filter first */}
+            <div className="flex items-center justify-between">
+              <Label htmlFor="mobile-offers-toggle" className="text-sm font-medium">
+                Show offers only
+              </Label>
+              <Switch
+                id="mobile-offers-toggle"
+                checked={showOffersOnly}
+                onCheckedChange={onShowOffersChange}
+              />
+            </div>
+            
+            <Separator />
+            
+            {/* Category filter */}
             <CategoryFilter
               selectedCategories={selectedCategories}
               onCategoryChange={onCategoryChange}
