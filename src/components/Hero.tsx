@@ -32,10 +32,6 @@ const Hero = () => {
         </p>
         
         <SearchBar />
-        
-        <div className="mt-6 md:mt-8 text-white/80 text-xs sm:text-sm">
-          <p>Popular searches: <span className="text-yellow-200">2-for-1 drinks</span>, <span className="text-yellow-200">food specials</span>, <span className="text-yellow-200">rooftop bars</span></p>
-        </div>
       </div>
     </div>
   );
