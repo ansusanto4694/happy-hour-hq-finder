@@ -52,7 +52,9 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
             )
           ),
           merchant_offers (
-            id
+            id,
+            is_active,
+            end_time
           )
         `)
         .eq('is_active', true);
