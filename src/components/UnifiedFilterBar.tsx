@@ -120,8 +120,7 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
           {/* Categories section */}
           <div className="space-y-3">
             <h4 className="font-medium text-sm">Categories</h4>
-            <ScrollArea className="h-[300px]">
-              <div className={vertical ? "space-y-3" : "grid grid-cols-1 gap-3"}>
+            <div className={vertical ? "space-y-3" : "grid grid-cols-1 gap-3"}>
                 {parentCategories.map(parent => {
                   const subCategories = getSubCategories(parent.id);
                   const isExpanded = expandedCategories.includes(parent.id);
@@ -173,8 +172,7 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
                   );
                 })}
               </div>
-            </ScrollArea>
-          </div>
+            </div>
 
           {/* Distance filter */}
           <div className="space-y-3">
