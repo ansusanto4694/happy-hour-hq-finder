@@ -2,11 +2,8 @@ import React from 'react';
 import { Filter, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { CategoryFilter } from './CategoryFilter';
-import { RadiusFilter, RadiusOption } from './RadiusFilter';
-import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
+import { UnifiedFilterBar } from './UnifiedFilterBar';
+import { RadiusOption } from './RadiusFilter';
 
 interface MobileFilterDrawerProps {
   selectedCategories: string[];
@@ -27,7 +24,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
   showOffersOnly,
   onShowOffersChange
 }) => {
-  const hasFilters = selectedCategories.length > 0 || selectedRadius !== 'blocks' || showOffersOnly;
+  const hasFilters = selectedCategories.length > 0 || selectedRadius !== 'walking' || showOffersOnly;
 
   return (
     <Sheet>
@@ -53,36 +50,16 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
         </SheetHeader>
         
         <div className="mt-6 overflow-y-auto h-[calc(100vh-120px)]">
-          <div className="space-y-6">
-            {/* Offers filter first */}
-            <div className="flex items-center justify-between">
-              <Label htmlFor="mobile-offers-toggle" className="text-sm font-medium">
-                Show offers only
-              </Label>
-              <Switch
-                id="mobile-offers-toggle"
-                checked={showOffersOnly}
-                onCheckedChange={onShowOffersChange}
-              />
-            </div>
-            
-            <Separator />
-            
-            {/* Category filter */}
-            <CategoryFilter
-              selectedCategories={selectedCategories}
-              onCategoryChange={onCategoryChange}
-              vertical={true}
-            />
-            
-            <Separator />
-            
-            <RadiusFilter
-              selectedRadius={selectedRadius}
-              onRadiusChange={onRadiusChange}
-              isEnabled={isRadiusEnabled}
-            />
-          </div>
+          <UnifiedFilterBar
+            selectedCategories={selectedCategories}
+            onCategoryChange={onCategoryChange}
+            selectedRadius={selectedRadius}
+            onRadiusChange={onRadiusChange}
+            isRadiusEnabled={isRadiusEnabled}
+            showOffersOnly={showOffersOnly}
+            onShowOffersChange={onShowOffersChange}
+            vertical={true}
+          />
         </div>
       </SheetContent>
     </Sheet>

@@ -6,8 +6,7 @@ import { MobileSearchBar } from '@/components/MobileSearchBar';
 import { MobileFilterDrawer } from '@/components/MobileFilterDrawer';
 import { ViewToggle } from '@/components/ViewToggle';
 import { SearchResults } from '@/components/SearchResults';
-import { FilterSection } from '@/components/FilterSection';
-import { CategoryFilter } from '@/components/CategoryFilter';
+import { UnifiedFilterBar } from '@/components/UnifiedFilterBar';
 import { ResultsMap } from '@/components/ResultsMap';
 import { useMerchants } from '@/hooks/useMerchants';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -160,9 +159,14 @@ const Results = () => {
             {/* Tablet Controls */}
             <div className="flex items-center justify-between">
               <div className="bg-white rounded-lg shadow-sm p-3">
-                <CategoryFilter
+                <UnifiedFilterBar
                   selectedCategories={selectedCategories}
                   onCategoryChange={setSelectedCategories}
+                  selectedRadius={selectedRadius}
+                  onRadiusChange={setSelectedRadius}
+                  isRadiusEnabled={isRadiusEnabled}
+                  showOffersOnly={showOffersOnly}
+                  onShowOffersChange={setShowOffersOnly}
                 />
               </div>
             </div>
@@ -197,17 +201,12 @@ const Results = () => {
 
         {/* Desktop Layout (> 1280px) */}
         <div className="hidden xl:flex xl:gap-6">
-          {/* Fixed Far Left Sidebar - Filters */}
+          {/* Fixed Far Left Sidebar - Unified Filters */}
           <div className="w-80 flex-shrink-0">
             <div className="space-y-4 sticky top-32 z-40">
-              {/* Category filter first */}
-              <div className="bg-white rounded-lg shadow-sm p-4">
-                <CategoryFilter
-                  selectedCategories={selectedCategories}
-                  onCategoryChange={setSelectedCategories}
-                />
-              </div>
-              <FilterSection
+              <UnifiedFilterBar
+                selectedCategories={selectedCategories}
+                onCategoryChange={setSelectedCategories}
                 selectedRadius={selectedRadius}
                 onRadiusChange={setSelectedRadius}
                 isRadiusEnabled={isRadiusEnabled}
