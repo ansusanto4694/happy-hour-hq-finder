@@ -9,6 +9,7 @@ import { RestaurantDealsSection } from '@/components/RestaurantDealsSection';
 import { RestaurantEventsFeed } from '@/components/RestaurantEventsFeed';
 import { RestaurantProfileEditor } from '@/components/RestaurantProfileEditor';
 import { ReportIssueModal } from '@/components/ReportIssueModal';
+import { MerchantOffersSection } from '@/components/merchant-offers/MerchantOffersSection';
 import { useAuth } from '@/hooks/useAuth';
 
 interface Restaurant {
@@ -103,6 +104,9 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
                 ))}
               </div>
             )}
+
+            {/* Current Offers Section - Prominently displayed */}
+            <MerchantOffersSection restaurantId={restaurant.id} />
 
             {/* Two Column Layout with adjusted widths */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
