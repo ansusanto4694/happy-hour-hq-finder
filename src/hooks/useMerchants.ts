@@ -50,6 +50,9 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
               slug,
               parent_id
             )
+          ),
+          merchant_offers (
+            id
           )
         `)
         .eq('is_active', true);

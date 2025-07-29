@@ -15,6 +15,14 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
   onClick,
   isMobile = false
 }) => {
+  // Check if merchant has active offers that haven't expired
+  const now = new Date();
+  const hasActiveOffers = restaurant.merchant_offers && 
+    restaurant.merchant_offers.some((offer: any) => {
+      const endTime = new Date(offer.end_time || '');
+      return offer.is_active && endTime > now;
+    });
+
   return (
     <Card 
       className="hover:shadow-md transition-shadow cursor-pointer"
@@ -40,17 +48,27 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
             </div>
             
             <div className="flex-1 min-w-0 space-y-2">
-              {/* Restaurant name and happy hour badge */}
+              {/* Restaurant name and badges */}
               <div className="flex items-start justify-between gap-3">
                 <h3 className="text-base font-semibold text-gray-900 break-words leading-tight">
                   {restaurant.restaurant_name}
                 </h3>
-                <Badge 
-                  variant="secondary" 
-                  className="flex-shrink-0 text-xs px-2 py-1 font-medium"
-                >
-                  {getTodaysHappyHour(restaurant.merchant_happy_hour || [])}
-                </Badge>
+                <div className="flex flex-col gap-1">
+                  {hasActiveOffers && (
+                    <Badge 
+                      variant="default" 
+                      className="flex-shrink-0 text-xs px-2 py-1 font-medium bg-green-600 hover:bg-green-700"
+                    >
+                      Offer Available
+                    </Badge>
+                  )}
+                  <Badge 
+                    variant="secondary" 
+                    className="flex-shrink-0 text-xs px-2 py-1 font-medium"
+                  >
+                    {getTodaysHappyHour(restaurant.merchant_happy_hour || [])}
+                  </Badge>
+                </div>
               </div>
               
               {/* Address */}
@@ -151,9 +169,19 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
                   )}
                 </div>
                 
-                <Badge variant="secondary" className="flex-shrink-0 text-sm px-3 py-1">
-                  {getTodaysHappyHour(restaurant.merchant_happy_hour || [])}
-                </Badge>
+                <div className="flex flex-col gap-2">
+                  {hasActiveOffers && (
+                    <Badge 
+                      variant="default" 
+                      className="flex-shrink-0 text-sm px-3 py-1 bg-green-600 hover:bg-green-700"
+                    >
+                      Offer Available
+                    </Badge>
+                  )}
+                  <Badge variant="secondary" className="flex-shrink-0 text-sm px-3 py-1">
+                    {getTodaysHappyHour(restaurant.merchant_happy_hour || [])}
+                  </Badge>
+                </div>
               </div>
             </div>
           </div>
