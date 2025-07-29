@@ -57,7 +57,7 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
                   {hasActiveOffers && (
                     <Badge 
                       variant="default" 
-                      className="flex-shrink-0 text-xs px-1.5 py-0.5 font-medium bg-green-600 hover:bg-green-700"
+                      className="flex-shrink-0 text-xs px-1 py-0.5 font-medium bg-green-600 hover:bg-green-700"
                     >
                       Offer Available
                     </Badge>
@@ -173,7 +173,7 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
                   {hasActiveOffers && (
                     <Badge 
                       variant="default" 
-                      className="flex-shrink-0 text-xs px-2 py-0.5 bg-green-600 hover:bg-green-700"
+                      className="flex-shrink-0 text-xs px-1.5 py-0.5 bg-green-600 hover:bg-green-700"
                     >
                       Offer Available
                     </Badge>
