@@ -351,6 +351,50 @@ export type Database = {
           },
         ]
       }
+      merchant_offers: {
+        Row: {
+          created_at: string
+          end_time: string
+          id: string
+          is_active: boolean
+          offer_description: string | null
+          offer_name: string
+          start_time: string
+          store_id: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_time: string
+          id?: string
+          is_active?: boolean
+          offer_description?: string | null
+          offer_name: string
+          start_time: string
+          store_id: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_time?: string
+          id?: string
+          is_active?: boolean
+          offer_description?: string | null
+          offer_name?: string
+          start_time?: string
+          store_id?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_offers_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "Merchant"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
