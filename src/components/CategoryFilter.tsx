@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useCategoriesHierarchy } from '@/hooks/useCategories';
 
@@ -78,9 +79,10 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
         </div>
       )}
 
-      {/* Responsive grid layout - vertical when vertical prop is true */}
-      <div className={vertical ? "space-y-3" : "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-1 gap-3"}>
-        {parentCategories.map(parent => {
+      {/* Responsive grid layout with scroll area for desktop */}
+      <ScrollArea className="h-[400px]">
+        <div className={vertical ? "space-y-3" : "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-1 gap-3"}>
+          {parentCategories.map(parent => {
           const subCategories = getSubCategories(parent.id);
           const isExpanded = expandedCategories.includes(parent.id);
           const hasSubCategories = subCategories.length > 0;
@@ -130,7 +132,8 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
             </div>
           );
         })}
-      </div>
+        </div>
+      </ScrollArea>
     </div>
   );
 };
