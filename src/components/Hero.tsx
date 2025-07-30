@@ -12,7 +12,7 @@ const Hero = () => {
       {/* Company name in top left - mobile friendly positioning */}
       <div className="absolute top-4 left-4 md:top-6 md:left-6 z-20">
         <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white">
-          Happy.Hour
+          SipMunchYap
         </h2>
       </div>
       

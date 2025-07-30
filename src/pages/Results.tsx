@@ -97,7 +97,7 @@ const Results = () => {
                 className="text-xl md:text-2xl font-bold text-gray-900 cursor-pointer hover:text-orange-500 transition-colors absolute left-4"
                 onClick={handleGoHome}
               >
-                Happy.Hour
+                SipMunchYap
               </h1>
             )}
             <div className="max-w-4xl w-full">
