@@ -19,9 +19,9 @@ const calculateHaversineDistance = (lat1: number, lng1: number, lat2: number, ln
   return distance; // Distance in miles
 };
 
-export const useMerchants = (categoryIds?: string[], searchTerm?: string, startTime?: string, endTime?: string, location?: string, bounds?: { north: number; south: number; east: number; west: number }, radiusMiles?: number, showOffersOnly?: boolean) => {
+export const useMerchants = (categoryIds?: string[], searchTerm?: string, startTime?: string, endTime?: string, location?: string, bounds?: { north: number; south: number; east: number; west: number }, radiusMiles?: number, showOffersOnly?: boolean, selectedDays?: number[]) => {
   // Force fresh queries for restaurant searches to avoid caching issues
-  const queryKey = ['merchants', categoryIds, searchTerm, startTime, endTime, location, bounds, radiusMiles, showOffersOnly];
+  const queryKey = ['merchants', categoryIds, searchTerm, startTime, endTime, location, bounds, radiusMiles, showOffersOnly, selectedDays];
   
   return useQuery({
     queryKey,
@@ -29,7 +29,7 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
     gcTime: searchTerm?.toLowerCase().includes('restaurant') ? 0 : 10 * 60 * 1000, // React Query v5 uses gcTime instead of cacheTime
     queryFn: async () => {
       console.log('=== STARTING MERCHANT SEARCH ===');
-      console.log('Search parameters:', { categoryIds, searchTerm, startTime, endTime, location, bounds, radiusMiles, showOffersOnly });
+      console.log('Search parameters:', { categoryIds, searchTerm, startTime, endTime, location, bounds, radiusMiles, showOffersOnly, selectedDays });
       
       try {
       let query = supabase
@@ -372,6 +372,27 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
         });
         
         console.log('Merchants after time filtering:', filteredData);
+      }
+
+      // Apply day-of-week filtering if specified
+      if (selectedDays && selectedDays.length > 0 && filteredData) {
+        console.log('Applying day-of-week filtering:', selectedDays);
+        
+        filteredData = filteredData.filter(merchant => {
+          if (!merchant.merchant_happy_hour || merchant.merchant_happy_hour.length === 0) {
+            return false;
+          }
+
+          // Check if merchant has happy hours on any of the selected days
+          const hasHappyHourOnSelectedDays = merchant.merchant_happy_hour.some((hh: any) => 
+            selectedDays.includes(hh.day_of_week)
+          );
+          
+          console.log(`${merchant.restaurant_name} has happy hours on selected days:`, hasHappyHourOnSelectedDays);
+          return hasHappyHourOnSelectedDays;
+        });
+        
+        console.log('Merchants after day-of-week filtering:', filteredData?.length || 0);
       }
 
       // Apply offers filtering if specified

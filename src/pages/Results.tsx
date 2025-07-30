@@ -35,6 +35,10 @@ const Results = () => {
   const location = searchParams.get('location') || searchParams.get('zip') || '';
   const startTime = searchParams.get('startTime') || '';
   const endTime = searchParams.get('endTime') || '';
+  const selectedDays = (() => {
+    const daysParam = searchParams.get('days');
+    return daysParam ? daysParam.split(',').map(Number) : undefined;
+  })();
 
   // Check if radius filtering should be enabled (any location provided)
   const isRadiusEnabled = Boolean(location && location.trim());
@@ -48,7 +52,8 @@ const Results = () => {
     location,
     searchAsMapMoves ? mapBounds : undefined,
     isRadiusEnabled ? radiusMiles : undefined,
-    showOffersOnly
+    showOffersOnly,
+    selectedDays
   );
 
   // Debug the merchants data being passed to SearchResults - ALWAYS LOG

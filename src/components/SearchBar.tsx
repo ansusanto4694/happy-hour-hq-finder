@@ -29,6 +29,10 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
   const [location, setLocation] = useState(searchParams.get('location') || searchParams.get('zip') || '');
   const [startTime, setStartTime] = useState(searchParams.get('startTime') || '');
   const [endTime, setEndTime] = useState(searchParams.get('endTime') || '');
+  const [selectedDays, setSelectedDays] = useState<number[]>(() => {
+    const daysParam = searchParams.get('days');
+    return daysParam ? daysParam.split(',').map(Number) : [];
+  });
   
   // Location autocomplete state
   const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>([]);
@@ -129,6 +133,26 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
     }
   };
 
+  // Days of week data
+  const daysOfWeek = [
+    { label: 'Mon', value: 0 },
+    { label: 'Tue', value: 1 },
+    { label: 'Wed', value: 2 },
+    { label: 'Thu', value: 3 },
+    { label: 'Fri', value: 4 },
+    { label: 'Sat', value: 5 },
+    { label: 'Sun', value: 6 }
+  ];
+
+  // Handle day selection
+  const toggleDay = (dayValue: number) => {
+    setSelectedDays(prev => 
+      prev.includes(dayValue) 
+        ? prev.filter(day => day !== dayValue)
+        : [...prev, dayValue]
+    );
+  };
+
   // Close suggestions when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -153,7 +177,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
 
   const handleSearch = () => {
     console.log('=== SEARCH BAR DEBUG ===');
-    console.log('Searching for:', searchTerm, 'in location:', location, 'start time:', startTime, 'end time:', endTime);
+    console.log('Searching for:', searchTerm, 'in location:', location, 'start time:', startTime, 'end time:', endTime, 'selected days:', selectedDays);
     console.log('Search term length:', searchTerm.length);
     console.log('Search term trim:', searchTerm.trim());
     console.log('========================');
@@ -164,6 +188,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
     if (location) params.set('location', location);
     if (startTime) params.set('startTime', startTime);
     if (endTime) params.set('endTime', endTime);
+    if (selectedDays.length > 0) params.set('days', selectedDays.join(','));
     
     // Navigate to results page with parameters
     navigate(`/results?${params.toString()}`);
@@ -213,6 +238,27 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
               value={endTime}
               onChange={setEndTime}
             />
+          </div>
+          
+          {/* Day of week filters */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">Days of the week</label>
+            <div className="flex flex-wrap gap-2">
+              {daysOfWeek.map((day) => (
+                <button
+                  key={day.value}
+                  type="button"
+                  onClick={() => toggleDay(day.value)}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    selectedDays.includes(day.value)
+                      ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md'
+                      : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  {day.label}
+                </button>
+              ))}
+            </div>
           </div>
           
           {/* Location input with autocomplete */}
@@ -338,6 +384,29 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
               value={endTime}
               onChange={setEndTime}
             />
+          </div>
+          
+          {/* Divider */}
+          <div className="hidden lg:block w-px bg-gray-200 my-2"></div>
+          
+          {/* Day of week filters - compact version for results */}
+          <div className="lg:w-64">
+            <div className="flex flex-wrap gap-1 p-2">
+              {daysOfWeek.map((day) => (
+                <button
+                  key={day.value}
+                  type="button"
+                  onClick={() => toggleDay(day.value)}
+                  className={`px-2 py-1 rounded-lg text-xs font-medium transition-all duration-200 ${
+                    selectedDays.includes(day.value)
+                      ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {day.label}
+                </button>
+              ))}
+            </div>
           </div>
           
           {/* Divider */}
