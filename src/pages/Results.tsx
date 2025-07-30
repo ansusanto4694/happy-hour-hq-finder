@@ -91,18 +91,27 @@ const Results = () => {
       {/* Fixed Header */}
       <div className="bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-50">
         <div className="px-4 py-4 md:py-6">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center justify-between">
+            {/* Logo - Left aligned */}
             {!isMobile && (
-              <h1 
-                className="text-xl md:text-2xl font-bold text-gray-900 cursor-pointer hover:text-orange-500 transition-colors flex-shrink-0"
-                onClick={handleGoHome}
-              >
-                SipMunchYap
-              </h1>
+              <div className="flex-shrink-0">
+                <h1 
+                  className="text-xl md:text-2xl font-bold text-gray-900 cursor-pointer hover:text-orange-500 transition-colors"
+                  onClick={handleGoHome}
+                >
+                  SipMunchYap
+                </h1>
+              </div>
             )}
-            <div className="flex-1 max-w-4xl">
-              {isMobile ? <MobileSearchBar /> : <SearchBar variant="results" />}
+            
+            {/* Search Bar - Center aligned */}
+            <div className="flex-1 flex justify-center px-4">
+              <div className="w-full max-w-4xl">
+                {isMobile ? <MobileSearchBar /> : <SearchBar variant="results" />}
+              </div>
             </div>
+            
+            {/* Auth Button - Right aligned */}
             <div className="flex-shrink-0">
               <AuthButton />
             </div>
