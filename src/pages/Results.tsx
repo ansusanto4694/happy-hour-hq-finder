@@ -110,11 +110,6 @@ const Results = () => {
                 {isMobile ? <MobileSearchBar /> : <SearchBar variant="results" />}
               </div>
             </div>
-            
-            {/* Auth Button - Right aligned */}
-            <div className="flex-shrink-0">
-              <AuthButton />
-            </div>
           </div>
         </div>
       </div>

@@ -16,10 +16,6 @@ const Hero = () => {
         </h2>
       </div>
       
-      {/* Auth button in top right */}
-      <div className="absolute top-4 right-4 md:top-6 md:right-6 z-20">
-        <AuthButton />
-      </div>
       
       {/* Decorative elements */}
       <div className="absolute top-20 left-20 w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
