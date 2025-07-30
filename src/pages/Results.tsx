@@ -90,8 +90,8 @@ const Results = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Fixed Header */}
       <div className="bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
-          <div className="flex items-center justify-between gap-4">
+        <div className="px-4 py-4 md:py-6">
+          <div className="flex items-center gap-4">
             {!isMobile && (
               <h1 
                 className="text-xl md:text-2xl font-bold text-gray-900 cursor-pointer hover:text-orange-500 transition-colors flex-shrink-0"
@@ -100,7 +100,7 @@ const Results = () => {
                 SipMunchYap
               </h1>
             )}
-            <div className="flex-1 max-w-4xl mx-auto">
+            <div className="flex-1 max-w-4xl">
               {isMobile ? <MobileSearchBar /> : <SearchBar variant="results" />}
             </div>
             <div className="flex-shrink-0">
