@@ -244,7 +244,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 text-center block">Select days of the week</label>
             <div className="flex justify-center">
-              <div className="flex gap-2 justify-center">
+              <div className="flex flex-wrap gap-2 justify-center sm:flex-nowrap">
                 {daysOfWeek.map((day) => (
                   <button
                     key={day.value}
