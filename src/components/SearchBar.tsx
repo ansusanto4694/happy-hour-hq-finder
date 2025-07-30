@@ -242,22 +242,24 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
           
           {/* Day of week filters */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Days of the week</label>
-            <div className="flex flex-wrap gap-2">
-              {daysOfWeek.map((day) => (
-                <button
-                  key={day.value}
-                  type="button"
-                  onClick={() => toggleDay(day.value)}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                    selectedDays.includes(day.value)
-                      ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md'
-                      : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  {day.label}
-                </button>
-              ))}
+            <label className="text-sm font-medium text-gray-700 text-center block">Days of the week</label>
+            <div className="flex justify-center">
+              <div className="flex flex-wrap gap-2 justify-center max-w-md">
+                {daysOfWeek.map((day) => (
+                  <button
+                    key={day.value}
+                    type="button"
+                    onClick={() => toggleDay(day.value)}
+                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      selectedDays.includes(day.value)
+                        ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md'
+                        : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    {day.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
           
