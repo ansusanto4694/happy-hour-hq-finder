@@ -18,6 +18,8 @@ interface UnifiedFilterBarProps {
   isRadiusEnabled: boolean;
   showOffersOnly: boolean;
   onShowOffersChange: (showOffers: boolean) => void;
+  selectedDays: number[];
+  onDaysChange: (days: number[]) => void;
   vertical?: boolean;
 }
 
@@ -28,6 +30,16 @@ const RADIUS_OPTIONS: { value: RadiusOption; label: string; disabled?: boolean }
   { value: 'drive', label: 'Drive (within 5 miles)' },
 ];
 
+const DAYS_OF_WEEK = [
+  { label: 'Mon', value: 0 },
+  { label: 'Tue', value: 1 },
+  { label: 'Wed', value: 2 },
+  { label: 'Thu', value: 3 },
+  { label: 'Fri', value: 4 },
+  { label: 'Sat', value: 5 },
+  { label: 'Sun', value: 6 }
+];
+
 export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
   selectedCategories,
   onCategoryChange,
@@ -36,11 +48,14 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
   isRadiusEnabled,
   showOffersOnly,
   onShowOffersChange,
+  selectedDays,
+  onDaysChange,
   vertical = false,
 }) => {
   const { getParentCategories, getSubCategories, isLoading } = useCategoriesHierarchy();
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
   const [isDistanceExpanded, setIsDistanceExpanded] = useState(false);
+  const [isDaysExpanded, setIsDaysExpanded] = useState(false);
 
   const toggleCategory = (categoryId: string) => {
     console.log('Toggling category:', categoryId);
@@ -62,10 +77,18 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
     );
   };
 
+  const toggleDay = (dayValue: number) => {
+    const newSelected = selectedDays.includes(dayValue) 
+      ? selectedDays.filter(day => day !== dayValue)
+      : [...selectedDays, dayValue];
+    onDaysChange(newSelected);
+  };
+
   const clearAllFilters = () => {
     onCategoryChange([]);
     onRadiusChange('walking');
     onShowOffersChange(false);
+    onDaysChange([]);
   };
 
   if (isLoading) {
@@ -73,7 +96,7 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
   }
 
   const parentCategories = getParentCategories();
-  const hasAnyFilters = selectedCategories.length > 0 || selectedRadius !== 'walking' || showOffersOnly;
+  const hasAnyFilters = selectedCategories.length > 0 || selectedRadius !== 'walking' || showOffersOnly || selectedDays.length > 0;
 
   return (
     <Card className="h-fit">
@@ -173,6 +196,44 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
                 })}
               </div>
             </div>
+
+          {/* Days of the week filter */}
+          <div className="space-y-3">
+            <div className="border rounded-lg p-2 bg-white">
+              <div className="flex items-center justify-between mb-1">
+                <h4 className="font-medium text-sm">Days of the week</h4>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsDaysExpanded(!isDaysExpanded)}
+                  className="h-5 w-5 p-0"
+                >
+                  {isDaysExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                </Button>
+              </div>
+
+              <Collapsible open={isDaysExpanded}>
+                <CollapsibleContent className="space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    {DAYS_OF_WEEK.map((day) => (
+                      <button
+                        key={day.value}
+                        type="button"
+                        onClick={() => toggleDay(day.value)}
+                        className={`px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 ${
+                          selectedDays.includes(day.value)
+                            ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md'
+                            : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        {day.label}
+                      </button>
+                    ))}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            </div>
+          </div>
 
           {/* Distance filter */}
           <div className="space-y-3">

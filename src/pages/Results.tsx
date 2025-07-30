@@ -20,13 +20,14 @@ const Results = () => {
   const [mobileView, setMobileView] = useState<'list' | 'map'>('list');
   const [searchAsMapMoves, setSearchAsMapMoves] = useState(false);
   const [mapBounds, setMapBounds] = useState<{ north: number; south: number; east: number; west: number } | null>(null);
+  const [selectedDaysState, setSelectedDaysState] = useState<number[]>([]);
   // Persist map view state across view toggles
   const [mapViewState, setMapViewState] = useState({
     longitude: -122.4194,
     latitude: 37.7749,
     zoom: 12
   });
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
@@ -37,8 +38,20 @@ const Results = () => {
   const endTime = searchParams.get('endTime') || '';
   const selectedDays = (() => {
     const daysParam = searchParams.get('days');
-    return daysParam ? daysParam.split(',').map(Number) : undefined;
+    return daysParam ? daysParam.split(',').map(Number) : [];
   })();
+
+  // Handle day change with URL update
+  const handleDaysChange = (days: number[]) => {
+    setSelectedDaysState(days);
+    const newSearchParams = new URLSearchParams(searchParams);
+    if (days.length > 0) {
+      newSearchParams.set('days', days.join(','));
+    } else {
+      newSearchParams.delete('days');
+    }
+    setSearchParams(newSearchParams);
+  };
 
   // Check if radius filtering should be enabled (any location provided)
   const isRadiusEnabled = Boolean(location && location.trim());
@@ -135,6 +148,8 @@ const Results = () => {
                   isRadiusEnabled={isRadiusEnabled}
                   showOffersOnly={showOffersOnly}
                   onShowOffersChange={setShowOffersOnly}
+                  selectedDays={selectedDays}
+                  onDaysChange={handleDaysChange}
                 />
                 <ViewToggle view={mobileView} onViewChange={setMobileView} />
               </div>
@@ -180,6 +195,8 @@ const Results = () => {
                   isRadiusEnabled={isRadiusEnabled}
                   showOffersOnly={showOffersOnly}
                   onShowOffersChange={setShowOffersOnly}
+                  selectedDays={selectedDays}
+                  onDaysChange={handleDaysChange}
                 />
               </div>
             </div>
@@ -225,6 +242,8 @@ const Results = () => {
                 isRadiusEnabled={isRadiusEnabled}
                 showOffersOnly={showOffersOnly}
                 onShowOffersChange={setShowOffersOnly}
+                selectedDays={selectedDays}
+                onDaysChange={handleDaysChange}
               />
             </div>
           </div>

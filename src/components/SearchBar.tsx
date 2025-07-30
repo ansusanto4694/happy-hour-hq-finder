@@ -391,29 +391,6 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
           {/* Divider */}
           <div className="hidden lg:block w-px bg-gray-200 my-2"></div>
           
-          {/* Day of week filters - compact version for results */}
-          <div className="lg:w-64">
-            <div className="flex flex-wrap gap-1 p-2">
-              {daysOfWeek.map((day) => (
-                <button
-                  key={day.value}
-                  type="button"
-                  onClick={() => toggleDay(day.value)}
-                  className={`px-2 py-1 rounded-lg text-xs font-medium transition-all duration-200 ${
-                    selectedDays.includes(day.value)
-                      ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  {day.label}
-                </button>
-              ))}
-            </div>
-          </div>
-          
-          {/* Divider */}
-          <div className="hidden lg:block w-px bg-gray-200 my-2"></div>
-          
           {/* Location input with autocomplete */}
           <div className="lg:w-48 relative">
             <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 z-10" />

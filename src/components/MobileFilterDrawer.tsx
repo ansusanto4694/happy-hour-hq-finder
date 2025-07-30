@@ -13,6 +13,8 @@ interface MobileFilterDrawerProps {
   isRadiusEnabled: boolean;
   showOffersOnly: boolean;
   onShowOffersChange: (showOffers: boolean) => void;
+  selectedDays: number[];
+  onDaysChange: (days: number[]) => void;
 }
 
 export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
@@ -22,7 +24,9 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
   onRadiusChange,
   isRadiusEnabled,
   showOffersOnly,
-  onShowOffersChange
+  onShowOffersChange,
+  selectedDays,
+  onDaysChange,
 }) => {
   const hasFilters = selectedCategories.length > 0 || selectedRadius !== 'walking' || showOffersOnly;
 
@@ -58,6 +62,8 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
             isRadiusEnabled={isRadiusEnabled}
             showOffersOnly={showOffersOnly}
             onShowOffersChange={onShowOffersChange}
+            selectedDays={selectedDays}
+            onDaysChange={onDaysChange}
             vertical={true}
           />
         </div>
