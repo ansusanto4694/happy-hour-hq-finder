@@ -242,7 +242,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
           
           {/* Day of week filters */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 text-center block">Days of the week</label>
+            <label className="text-sm font-medium text-gray-700 text-center block">Select days of the week</label>
             <div className="flex justify-center">
               <div className="flex gap-2 justify-center">
                 {daysOfWeek.map((day) => (
