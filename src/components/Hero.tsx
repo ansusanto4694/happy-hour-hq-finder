@@ -23,13 +23,13 @@ const Hero = () => {
       
       {/* Main content - adjusted padding to avoid logo overlap */}
       <div className="relative z-10 max-w-4xl mx-auto px-6 text-center mt-16 sm:mt-12 md:mt-0">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-white mb-4 md:mb-6 leading-tight">
+        <h1 className="text-3xl sm:text-4xl md:text-4xl lg:text-6xl font-bold text-white mb-4 md:mb-6 leading-tight">
           Find the Best
           <span className="block text-yellow-200">Happy Hours</span>
           Near You
         </h1>
         
-        <p className="text-lg sm:text-xl md:text-2xl text-white/90 mb-6 md:mb-8 max-w-2xl mx-auto leading-relaxed">
+        <p className="text-lg sm:text-xl md:text-xl text-white/90 mb-6 md:mb-8 max-w-2xl mx-auto leading-relaxed">
           Discover amazing deals, great drinks, and perfect spots to unwind after work
         </p>
         
