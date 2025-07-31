@@ -15,16 +15,16 @@ const Contact = () => {
         </Link>
         <nav className="flex items-center space-x-4 md:space-x-6">
           <Link 
-            to="/" 
-            className="text-white/90 hover:text-white transition-colors text-sm md:text-base font-medium"
-          >
-            Home
-          </Link>
-          <Link 
             to="/about" 
             className="text-white/90 hover:text-white transition-colors text-sm md:text-base font-medium"
           >
             About
+          </Link>
+          <Link 
+            to="/contact" 
+            className="text-white/90 hover:text-white transition-colors text-sm md:text-base font-medium"
+          >
+            Contact
           </Link>
           <AuthButton />
         </nav>

@@ -15,10 +15,10 @@ const About = () => {
         </Link>
         <nav className="flex items-center space-x-4 md:space-x-6">
           <Link 
-            to="/" 
+            to="/about" 
             className="text-white/90 hover:text-white transition-colors text-sm md:text-base font-medium"
           >
-            Home
+            About
           </Link>
           <Link 
             to="/contact" 
