@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { SearchBar } from './SearchBar';
 import { AuthButton } from './AuthButton';
 
@@ -9,11 +10,26 @@ const Hero = () => {
       {/* Background overlay */}
       <div className="absolute inset-0 bg-black/20"></div>
       
-      {/* Company name in top left - mobile friendly positioning */}
-      <div className="absolute top-4 left-4 md:top-6 md:left-6 z-20">
+      {/* Header with company name and navigation */}
+      <div className="absolute top-4 left-4 right-4 md:top-6 md:left-6 md:right-6 z-20 flex justify-between items-center">
         <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white">
           SipMunchYap
         </h2>
+        <nav className="flex items-center space-x-4 md:space-x-6">
+          <Link 
+            to="/about" 
+            className="text-white/90 hover:text-white transition-colors text-sm md:text-base font-medium"
+          >
+            About
+          </Link>
+          <Link 
+            to="/contact" 
+            className="text-white/90 hover:text-white transition-colors text-sm md:text-base font-medium"
+          >
+            Contact
+          </Link>
+          <AuthButton />
+        </nav>
       </div>
       
       
