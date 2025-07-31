@@ -2,27 +2,34 @@ import React from 'react';
 
 const About = () => {
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-4xl mx-auto px-6 py-16">
-        <h1 className="text-4xl font-bold text-foreground mb-8">About Us</h1>
-        <div className="prose prose-lg text-foreground space-y-6">
-          <p className="text-xl leading-relaxed">
+    <div className="relative min-h-screen bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500 flex items-center justify-center overflow-hidden">
+      {/* Background overlay */}
+      <div className="absolute inset-0 bg-black/20"></div>
+      
+      {/* Decorative elements */}
+      <div className="absolute top-20 left-20 w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-32 right-20 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
+      
+      <div className="relative z-10 max-w-4xl mx-auto px-6 py-16">
+        <h1 className="text-4xl font-bold text-white mb-8 text-center">About Us</h1>
+        <div className="space-y-6 text-center">
+          <p className="text-xl leading-relaxed text-white/90">
             Why is it so hard to figure out if a restaurant or bar has a happy hour?
           </p>
           
-          <p className="text-2xl font-bold text-primary">
+          <p className="text-2xl font-bold text-yellow-200">
             FRET NO MORE!
           </p>
           
-          <p className="text-lg leading-relaxed">
+          <p className="text-lg leading-relaxed text-white/90">
             SipMunchYap is the newest and greatest way to discover happy hours, deals, and offers from local restaurants and bars.
           </p>
           
-          <p className="text-lg leading-relaxed">
+          <p className="text-lg leading-relaxed text-white/90">
             If you found this, we're currently operating in beta. We're also operating only in NY! We'll be adding more restaurants and bars every single week, so be sure to check back in and see what's new!
           </p>
           
-          <p className="text-lg leading-relaxed font-medium">
+          <p className="text-lg leading-relaxed font-medium text-white">
             Start planning your next social outing with your homies so you can sip, munch, and yap!
           </p>
         </div>
