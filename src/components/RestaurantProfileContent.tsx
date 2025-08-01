@@ -57,12 +57,12 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
-      <div className="max-w-6xl mx-auto space-y-8">
-        {/* Restaurant Basic Info Card */}
-        <Card className="bg-white shadow-lg">
+      <div className="max-w-7xl mx-auto">
+        {/* Restaurant Header Card */}
+        <Card className="bg-white shadow-lg mb-8">
           <CardContent className="p-8">
             {/* Header with Restaurant Name, Logo and Edit Button */}
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center justify-between mb-6">
               <div className="flex items-center space-x-4">
                 {/* Restaurant Logo */}
                 <div className="w-20 h-20 bg-white border-2 border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
@@ -90,9 +90,9 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
               )}
             </div>
 
-            {/* Category tags - positioned below name/logo, above address */}
+            {/* Category tags */}
             {restaurant.merchant_categories && restaurant.merchant_categories.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-8">
+              <div className="flex flex-wrap gap-2">
                 {restaurant.merchant_categories.map((merchantCategory) => (
                   <Badge 
                     key={merchantCategory.id} 
@@ -104,39 +104,58 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
                 ))}
               </div>
             )}
-
-            {/* Current Offers Section - Prominently displayed */}
-            <div className="mb-12">
-              <MerchantOffersSection restaurantId={restaurant.id} />
-            </div>
-
-            {/* Two Column Layout with adjusted widths */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Left Column - Narrower */}
-              <div className="lg:col-span-1 space-y-6">
-                <RestaurantContactInfo
-                  streetAddress={restaurant.street_address}
-                  streetAddressLine2={restaurant.street_address_line_2}
-                  city={restaurant.city}
-                  state={restaurant.state}
-                  zipCode={restaurant.zip_code}
-                  phoneNumber={restaurant.phone_number}
-                  website={restaurant.website}
-                />
-
-                <RestaurantHappyHours happyHours={restaurant.merchant_happy_hour || []} />
-              </div>
-
-              {/* Right Column - Wider for Happy Hour Deals */}
-              <div className="lg:col-span-2">
-                <RestaurantDealsSection restaurantId={restaurant.id} restaurant={restaurantWithIds} />
-              </div>
-            </div>
           </CardContent>
         </Card>
 
-        {/* Restaurant Events Feed */}
-        <RestaurantEventsFeed restaurantId={restaurant.id} />
+        {/* Two-Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Main Content - Left Column (3/4 width) */}
+          <div className="lg:col-span-3 space-y-8">
+            {/* Current Offers Section */}
+            <Card className="bg-white shadow-lg">
+              <CardContent className="p-6">
+                <MerchantOffersSection restaurantId={restaurant.id} />
+              </CardContent>
+            </Card>
+
+            {/* Happy Hour Deals Section */}
+            <Card className="bg-white shadow-lg">
+              <CardContent className="p-6">
+                <RestaurantDealsSection restaurantId={restaurant.id} restaurant={restaurantWithIds} />
+              </CardContent>
+            </Card>
+
+            {/* Restaurant Events Feed */}
+            <RestaurantEventsFeed restaurantId={restaurant.id} />
+          </div>
+
+          {/* Sidebar - Right Column (1/4 width, sticky) */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-8 space-y-6">
+              {/* Contact Information Card */}
+              <Card className="bg-white shadow-lg">
+                <CardContent className="p-6">
+                  <RestaurantContactInfo
+                    streetAddress={restaurant.street_address}
+                    streetAddressLine2={restaurant.street_address_line_2}
+                    city={restaurant.city}
+                    state={restaurant.state}
+                    zipCode={restaurant.zip_code}
+                    phoneNumber={restaurant.phone_number}
+                    website={restaurant.website}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Happy Hours Card */}
+              <Card className="bg-white shadow-lg">
+                <CardContent className="p-6">
+                  <RestaurantHappyHours happyHours={restaurant.merchant_happy_hour || []} />
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
