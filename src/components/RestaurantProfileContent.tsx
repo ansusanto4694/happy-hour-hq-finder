@@ -10,6 +10,7 @@ import { RestaurantEventsFeed } from '@/components/RestaurantEventsFeed';
 import { RestaurantProfileEditor } from '@/components/RestaurantProfileEditor';
 import { ReportIssueModal } from '@/components/ReportIssueModal';
 import { MerchantOffersSection } from '@/components/merchant-offers/MerchantOffersSection';
+import { useMerchantOffers } from '@/hooks/useMerchantOffers';
 import { useAuth } from '@/hooks/useAuth';
 
 interface Restaurant {
@@ -45,6 +46,7 @@ interface RestaurantProfileContentProps {
 
 export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> = ({ restaurant }) => {
   const { isAdmin } = useAuth();
+  const { data: offers } = useMerchantOffers(restaurant.id);
   
   // Transform the merchant_happy_hour data to include IDs for the editor
   const restaurantWithIds = {
@@ -111,12 +113,14 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Main Content - Left Column (3/4 width) */}
           <div className="lg:col-span-3 space-y-8">
-            {/* Current Offers Section */}
-            <Card className="bg-white shadow-lg">
-              <CardContent className="p-6">
-                <MerchantOffersSection restaurantId={restaurant.id} />
-              </CardContent>
-            </Card>
+            {/* Current Offers Section - Only show if offers exist */}
+            {offers && offers.length > 0 && (
+              <Card className="bg-white shadow-lg">
+                <CardContent className="p-6">
+                  <MerchantOffersSection restaurantId={restaurant.id} />
+                </CardContent>
+              </Card>
+            )}
 
             {/* Happy Hour Deals Section */}
             <Card className="bg-white shadow-lg">
