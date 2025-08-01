@@ -68,9 +68,6 @@ const Auth = () => {
         <Card>
           <CardHeader>
             <CardTitle>Authentication</CardTitle>
-            <CardDescription>
-              Access your account to manage restaurant information
-            </CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="signin" className="w-full">
