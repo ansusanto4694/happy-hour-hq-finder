@@ -12,6 +12,7 @@ import { useMerchants } from '@/hooks/useMerchants';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { RadiusOption, getRadiusMiles } from '@/components/RadiusFilter';
 import { AuthButton } from '@/components/AuthButton';
+import { SEOHead } from '@/components/SEOHead';
 
 const Results = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -104,8 +105,45 @@ const Results = () => {
     setMapViewState(newViewState);
   };
 
+  const seoTitle = location 
+    ? `Happy Hour in ${location} - Find the Best Deals | SipMunchYap`
+    : `Happy Hour Search Results | SipMunchYap`;
+  
+  const seoDescription = location
+    ? `Find the best happy hour deals in ${location}. Compare prices, discover local bars and restaurants, and save money on drinks and food.`
+    : `Discover amazing happy hour deals near you. Compare prices and find the best bars and restaurants for your night out.`;
+
   return (
     <div className="min-h-screen bg-gray-50">
+      <SEOHead 
+        title={seoTitle}
+        description={seoDescription}
+        keywords={`happy hour ${location}, bars ${location}, restaurants ${location}, drink deals, food specials, nightlife ${location}`}
+        location={location}
+        canonical={typeof window !== 'undefined' ? window.location.href : ''}
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "SearchResultsPage",
+          "name": seoTitle,
+          "description": seoDescription,
+          "url": typeof window !== 'undefined' ? window.location.href : '',
+          "mainEntity": {
+            "@type": "ItemList",
+            "numberOfItems": merchants?.length || 0,
+            "itemListElement": merchants?.map((merchant, index) => ({
+              "@type": "ListItem",
+              "position": index + 1,
+              "item": {
+                "@type": "Restaurant",
+                "name": merchant.restaurant_name,
+                "address": `${merchant.city}, ${merchant.state}`,
+                "telephone": merchant.phone_number,
+                "url": `${typeof window !== 'undefined' ? window.location.origin : ''}/restaurant/${merchant.id}`
+              }
+            })) || []
+          }
+        }}
+      />
       {/* Fixed Header */}
       <div className="bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-50">
         <div className="px-4 py-4 md:py-6">
