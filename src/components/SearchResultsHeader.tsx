@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface SearchResultsHeaderProps {
   resultsCount: number;
@@ -37,36 +38,38 @@ export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-3 border border-gray-200">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900">
-            Happy Hour Results
-            {searchTerm && <span className="text-orange-600"> for "{searchTerm}"</span>}
-          </h2>
-          <div className="text-sm text-gray-600 space-y-1">
-            <p>
-              {isMobile ? 
-                `${resultsCount} restaurants found` : 
-                `Showing ${startResult}-${endResult} of ${resultsCount} restaurants${totalPages > 1 ? ` (Page ${currentPage} of ${totalPages})` : ''}`
-              }
-            </p>
-            {(startTime || endTime || location || searchTerm) && (
-              <div className="flex flex-wrap gap-4 text-xs">
-                {searchTerm && (
-                  <span>Search: "{searchTerm}"</span>
-                )}
-                {startTime && endTime && (
-                  <span>Time: {formatTime(startTime)} - {formatTime(endTime)}</span>
-                )}
-                {location && (
-                  <span>Location: {location}</span>
-                )}
-              </div>
-            )}
+    <Card className="shadow-sm">
+      <CardContent className="p-3 sm:p-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">
+              Happy Hour Results
+              {searchTerm && <span className="text-orange-600"> for "{searchTerm}"</span>}
+            </h2>
+            <div className="text-sm text-gray-600 space-y-1">
+              <p>
+                {isMobile ? 
+                  `${resultsCount} restaurants found` : 
+                  `Showing ${startResult}-${endResult} of ${resultsCount} restaurants${totalPages > 1 ? ` (Page ${currentPage} of ${totalPages})` : ''}`
+                }
+              </p>
+              {(startTime || endTime || location || searchTerm) && (
+                <div className="flex flex-wrap gap-4 text-xs">
+                  {searchTerm && (
+                    <span>Search: "{searchTerm}"</span>
+                  )}
+                  {startTime && endTime && (
+                    <span>Time: {formatTime(startTime)} - {formatTime(endTime)}</span>
+                  )}
+                  {location && (
+                    <span>Location: {location}</span>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
