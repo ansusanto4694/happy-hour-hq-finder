@@ -124,7 +124,7 @@ const Results = () => {
             
             {/* Search Bar - Center aligned */}
             <div className="flex-1 flex justify-center px-4">
-              <div className="w-full max-w-4xl">
+              <div className="w-full max-w-7xl">
                 {isMobile ? <MobileSearchBar /> : <SearchBar variant="results" />}
               </div>
             </div>

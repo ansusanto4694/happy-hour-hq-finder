@@ -37,7 +37,7 @@ export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
   };
 
   return (
-    <Card style={{ border: '2px solid red' }} className="bg-red-50">
+    <Card>
       <CardContent className="p-3 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div>
