@@ -25,7 +25,8 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
 
   return (
     <Card 
-      className="hover:shadow-md transition-shadow cursor-pointer"
+      style={{ border: '2px solid blue' }}
+      className="hover:shadow-md transition-shadow cursor-pointer bg-blue-50"
       onClick={() => onClick(restaurant.id)}
     >
       <CardContent className="p-3 sm:p-6">
