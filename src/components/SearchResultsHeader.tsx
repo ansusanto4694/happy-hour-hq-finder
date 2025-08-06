@@ -39,7 +39,7 @@ export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
 
   return (
     <Card className="shadow-sm">
-      <CardContent className="p-3 sm:p-4">
+      <CardContent className="p-3 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div>
             <h2 className="text-lg font-semibold text-gray-900">
