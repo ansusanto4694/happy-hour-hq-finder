@@ -37,7 +37,7 @@ export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 border border-gray-200">
+    <div className="bg-white rounded-lg shadow-sm p-3 border border-gray-200">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
           <h2 className="text-lg font-semibold text-gray-900">
