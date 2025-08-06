@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -38,7 +37,7 @@ export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
   };
 
   return (
-    <Card className="shadow-sm">
+    <Card>
       <CardContent className="p-3 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div>
