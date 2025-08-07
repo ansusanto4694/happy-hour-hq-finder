@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, MapPin, Clock, ChevronDown, ChevronUp, X } from 'lucide-react';
+import { Search, MapPin, Clock, ChevronDown, ChevronUp, X, LocateFixed } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TimeDropdown } from './TimeDropdown';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
+import { useLocateMe } from '@/hooks/useLocateMe';
 
 interface LocationSuggestion {
   id: string;
@@ -32,6 +33,7 @@ export const MobileSearchBar = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const { locate, isLocating } = useLocateMe();
   
   // Refs
   const locationInputRef = useRef<HTMLInputElement>(null);
@@ -281,6 +283,25 @@ export const MobileSearchBar = () => {
                         className="pl-10 pr-10 h-12 text-base bg-gray-50 border-gray-200 rounded-lg"
                         autoComplete="off"
                       />
+                      {/* Locate me button */}
+                      <button
+                        type="button"
+                        aria-label="Use my location"
+                        onClick={async () => {
+                          const r = await locate();
+                          if (r?.display) {
+                            setLocation(r.display);
+                            setShowSuggestions(false);
+                          }
+                        }}
+                        className="absolute right-10 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors z-20"
+                      >
+                        {isLocating ? (
+                          <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+                        ) : (
+                          <LocateFixed className="w-4 h-4" />
+                        )}
+                      </button>
                       
                       {/* Clear button */}
                       {location && (

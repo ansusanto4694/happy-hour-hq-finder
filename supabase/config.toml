@@ -26,3 +26,9 @@ verify_jwt = false
 
 [functions.normalize-location]
 verify_jwt = false
+
+[functions.reverse-geocode]
+verify_jwt = false
+
+[functions.ip-geolocate]
+verify_jwt = false
