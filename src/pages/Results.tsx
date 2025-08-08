@@ -175,7 +175,7 @@ const Results = () => {
       <div className="pt-32 md:pt-32 px-4 py-6">
         {/* Mobile Layout (< 768px) */}
         {isMobile && (
-          <Drawer shouldScaleBackground={false} open={true} dismissible={false} handleOnly snapPoints={[0.25, 0.6, 1]} activeSnapPoint={0.25}>
+          <Drawer shouldScaleBackground={false} open={true} dismissible={false} handleOnly snapPoints={[0.12, 0.6, 1]} activeSnapPoint={0.12}>
             <div className="max-w-7xl mx-auto">
               {/* Fixed Mobile Controls */}
               <div className="sticky top-32 md:top-32 z-40 bg-gray-50 pb-4 mb-4">
@@ -208,7 +208,7 @@ const Results = () => {
             </div>
 
             {/* Bottom Drawer - List view */}
-            <DrawerContent className="h-[75vh]">
+            <DrawerContent className="max-h-[85vh]">
               <div className="flex-1 min-h-0 overflow-y-auto px-2 sm:px-4 pb-4">
                 <SearchResults
                   merchants={merchants}
