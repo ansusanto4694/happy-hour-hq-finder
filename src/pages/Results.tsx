@@ -175,7 +175,7 @@ const Results = () => {
       <div className="pt-32 md:pt-32 px-4 py-6">
         {/* Mobile Layout (< 768px) */}
         {isMobile && (
-          <Drawer shouldScaleBackground={false} defaultOpen snapPoints={[0.2, 0.6, 1]} activeSnapPoint={0.2}>
+          <Drawer shouldScaleBackground={false} open={true} dismissible={false} snapPoints={[0.25, 0.6, 1]} activeSnapPoint={0.25}>
             <div className="max-w-7xl mx-auto">
               {/* Fixed Mobile Controls */}
               <div className="sticky top-32 md:top-32 z-40 bg-gray-50 pb-4 mb-4">
