@@ -4,8 +4,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { SearchBar } from '@/components/SearchBar';
 import { MobileSearchBar } from '@/components/MobileSearchBar';
 import { MobileFilterDrawer } from '@/components/MobileFilterDrawer';
-import { Button } from '@/components/ui/button';
-import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
+
+import { Drawer, DrawerContent } from '@/components/ui/drawer';
 import { SearchResults } from '@/components/SearchResults';
 import { UnifiedFilterBar } from '@/components/UnifiedFilterBar';
 import { ResultsMap } from '@/components/ResultsMap';
@@ -175,7 +175,7 @@ const Results = () => {
       <div className="pt-32 md:pt-32 px-4 py-6">
         {/* Mobile Layout (< 768px) */}
         {isMobile && (
-          <Drawer shouldScaleBackground={false}>
+          <Drawer shouldScaleBackground={false} defaultOpen snapPoints={[0.2, 0.6, 1]} activeSnapPoint={0.2}>
             <div className="max-w-7xl mx-auto">
               {/* Fixed Mobile Controls */}
               <div className="sticky top-32 md:top-32 z-40 bg-gray-50 pb-4 mb-4">
@@ -191,9 +191,6 @@ const Results = () => {
                     selectedDays={selectedDays}
                     onDaysChange={handleDaysChange}
                   />
-                  <DrawerTrigger asChild>
-                    <Button size="sm" variant="secondary">List</Button>
-                  </DrawerTrigger>
                 </div>
               </div>
 
@@ -211,7 +208,7 @@ const Results = () => {
             </div>
 
             {/* Bottom Drawer - List view */}
-            <DrawerContent className="h-[75vh]">
+            <DrawerContent className="max-h-[80vh]">
               <div className="px-2 sm:px-4 pb-4">
                 <SearchResults
                   merchants={merchants}
