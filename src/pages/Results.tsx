@@ -29,10 +29,11 @@ const Results = () => {
     latitude: 37.7749,
     zoom: 12
   });
+  // Control Vaul snap point to allow dragging both up and down
+  const [activeSnap, setActiveSnap] = useState<string | number>(0.12);
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-
   // Extract search parameters
   const searchTerm = searchParams.get('search') || '';
   const location = searchParams.get('location') || searchParams.get('zip') || '';
@@ -175,7 +176,7 @@ const Results = () => {
       <div className="pt-32 md:pt-32 px-4 py-6">
         {/* Mobile Layout (< 768px) */}
         {isMobile && (
-          <Drawer shouldScaleBackground={false} open={true} dismissible={false} handleOnly snapPoints={[0.12, 0.6, 1]} activeSnapPoint={0.12}>
+          <Drawer shouldScaleBackground={false} open={true} dismissible={false} handleOnly snapPoints={[0.12, 0.6, 1]} activeSnapPoint={activeSnap} setActiveSnapPoint={setActiveSnap} snapToSequentialPoint fadeFromIndex={1}>
             <div className="max-w-7xl mx-auto">
               {/* Fixed Mobile Controls */}
               <div className="sticky top-32 md:top-32 z-40 bg-gray-50 pb-4 mb-4">
