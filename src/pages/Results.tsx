@@ -4,7 +4,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { SearchBar } from '@/components/SearchBar';
 import { MobileSearchBar } from '@/components/MobileSearchBar';
 import { MobileFilterDrawer } from '@/components/MobileFilterDrawer';
-import { ViewToggle } from '@/components/ViewToggle';
+import { Button } from '@/components/ui/button';
+import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 import { SearchResults } from '@/components/SearchResults';
 import { UnifiedFilterBar } from '@/components/UnifiedFilterBar';
 import { ResultsMap } from '@/components/ResultsMap';
@@ -18,7 +19,7 @@ const Results = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedRadius, setSelectedRadius] = useState<RadiusOption>('walking');
   const [showOffersOnly, setShowOffersOnly] = useState(false);
-  const [mobileView, setMobileView] = useState<'list' | 'map'>('list');
+  const [mobileView, setMobileView] = useState<'list' | 'map'>('map');
   const [searchAsMapMoves, setSearchAsMapMoves] = useState(false);
   const [mapBounds, setMapBounds] = useState<{ north: number; south: number; east: number; west: number } | null>(null);
   const [selectedDaysState, setSelectedDaysState] = useState<number[]>([]);
@@ -174,39 +175,31 @@ const Results = () => {
       <div className="pt-32 md:pt-32 px-4 py-6">
         {/* Mobile Layout (< 768px) */}
         {isMobile && (
-          <div className="max-w-7xl mx-auto">
-            {/* Fixed Mobile Controls */}
-            <div className="sticky top-32 md:top-32 z-40 bg-gray-50 pb-4 mb-4">
-              <div className="flex items-center justify-between gap-3">
-                <MobileFilterDrawer
-                  selectedCategories={selectedCategories}
-                  onCategoryChange={setSelectedCategories}
-                  selectedRadius={selectedRadius}
-                  onRadiusChange={setSelectedRadius}
-                  isRadiusEnabled={isRadiusEnabled}
-                  showOffersOnly={showOffersOnly}
-                  onShowOffersChange={setShowOffersOnly}
-                  selectedDays={selectedDays}
-                  onDaysChange={handleDaysChange}
-                />
-                <ViewToggle view={mobileView} onViewChange={setMobileView} />
+          <Drawer shouldScaleBackground={false}>
+            <div className="max-w-7xl mx-auto">
+              {/* Fixed Mobile Controls */}
+              <div className="sticky top-32 md:top-32 z-40 bg-gray-50 pb-4 mb-4">
+                <div className="flex items-center justify-between gap-3">
+                  <MobileFilterDrawer
+                    selectedCategories={selectedCategories}
+                    onCategoryChange={setSelectedCategories}
+                    selectedRadius={selectedRadius}
+                    onRadiusChange={setSelectedRadius}
+                    isRadiusEnabled={isRadiusEnabled}
+                    showOffersOnly={showOffersOnly}
+                    onShowOffersChange={setShowOffersOnly}
+                    selectedDays={selectedDays}
+                    onDaysChange={handleDaysChange}
+                  />
+                  <DrawerTrigger asChild>
+                    <Button size="sm" variant="secondary">List</Button>
+                  </DrawerTrigger>
+                </div>
               </div>
-            </div>
 
-            {/* Mobile Content */}
-            {mobileView === 'list' ? (
-              <SearchResults 
-                merchants={merchants}
-                isLoading={isLoading}
-                error={error}
-                startTime={startTime}
-                endTime={endTime}
-                location={location}
-                isMobile={true}
-              />
-            ) : (
+              {/* Map - default visible */}
               <div className="h-[calc(100vh-220px)] rounded-lg overflow-hidden">
-                <ResultsMap 
+                <ResultsMap
                   restaurants={merchants || []}
                   onMapMove={handleMapMove}
                   searchAsMapMoves={searchAsMapMoves}
@@ -215,8 +208,23 @@ const Results = () => {
                   onViewStateChange={handleViewStateChange}
                 />
               </div>
-            )}
-          </div>
+            </div>
+
+            {/* Bottom Drawer - List view */}
+            <DrawerContent className="h-[75vh]">
+              <div className="px-2 sm:px-4 pb-4">
+                <SearchResults
+                  merchants={merchants}
+                  isLoading={isLoading}
+                  error={error}
+                  startTime={startTime}
+                  endTime={endTime}
+                  location={location}
+                  isMobile={true}
+                />
+              </div>
+            </DrawerContent>
+          </Drawer>
         )}
 
         {/* Tablet Layout (768px - 1280px) */}
