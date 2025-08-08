@@ -48,7 +48,9 @@ const DrawerContent = React.forwardRef<
       )}
       {...props}
     >
-      <DrawerHandle className="mx-auto my-2 h-2 w-[64px] rounded-full bg-muted" />
+      <DrawerHandle aria-label="Drag to expand or collapse results" className="mx-auto my-2 py-4 px-4 select-none">
+        <div className="pointer-events-none mx-auto h-3 w-40 rounded-full bg-muted" />
+      </DrawerHandle>
       {children}
     </DrawerPrimitive.Content>
   </DrawerPortal>
