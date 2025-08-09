@@ -15,6 +15,7 @@ interface MobileFilterDrawerProps {
   onShowOffersChange: (showOffers: boolean) => void;
   selectedDays: number[];
   onDaysChange: (days: number[]) => void;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
@@ -27,12 +28,13 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
   onShowOffersChange,
   selectedDays,
   onDaysChange,
+  onOpenChange,
 }) => {
   const [open, setOpen] = React.useState(false);
   const hasFilters = selectedCategories.length > 0 || selectedRadius !== 'walking' || showOffersOnly;
 
   return (
-    <Drawer open={open} onOpenChange={setOpen} shouldScaleBackground={false}>
+    <Drawer open={open} onOpenChange={(v) => { setOpen(v); try { typeof onOpenChange === 'function' && onOpenChange(v); } catch {} }} shouldScaleBackground={false}>
       <DrawerTrigger asChild>
         <Button 
           variant="outline" 

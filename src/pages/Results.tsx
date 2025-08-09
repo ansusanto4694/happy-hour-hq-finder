@@ -32,6 +32,7 @@ const Results = () => {
   });
   // Control Vaul snap point to allow dragging both up and down
   const [activeSnap, setActiveSnap] = useState<string | number>(0.12);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -207,7 +208,7 @@ const Results = () => {
               />
 
             {/* Floating grab handle to ensure peek on mobile */}
-            <DrawerHandle className="fixed bottom-[calc(env(safe-area-inset-bottom)+56px)] left-1/2 -translate-x-1/2 z-[110] px-4 py-3 rounded-full bg-background/90 shadow-lg backdrop-blur">
+            <DrawerHandle className={`fixed bottom-[calc(env(safe-area-inset-bottom)+56px)] left-1/2 -translate-x-1/2 z-[110] px-4 py-3 rounded-full bg-background/90 shadow-lg backdrop-blur ${filtersOpen ? 'pointer-events-none' : ''}`}>
               <div className="pointer-events-none h-1.5 w-12 rounded-full bg-muted" />
             </DrawerHandle>
             </div>
@@ -232,6 +233,7 @@ const Results = () => {
                       onShowOffersChange={setShowOffersOnly}
                       selectedDays={selectedDays}
                       onDaysChange={handleDaysChange}
+                      onOpenChange={setFiltersOpen}
                     />
                   }
                 />
