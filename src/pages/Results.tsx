@@ -212,9 +212,9 @@ const Results = () => {
       {isMobile ? (
         <div className="fixed inset-0 top-[128px] bottom-0">
           {!filtersOpen && (
-            <Drawer shouldScaleBackground={false} open={true} dismissible={false} handleOnly snapPoints={[0.12, 0.6, 1]} activeSnapPoint={activeSnap} setActiveSnapPoint={setActiveSnap} snapToSequentialPoint fadeFromIndex={1}>
-              <div className="h-full w-full">
-                {/* Map - default visible unless Filters drawer is open (avoid mobile GPU crash) */}
+            <>
+              {/* Map container - outside drawer to prevent touch interference */}
+              <div className="absolute inset-0 w-full h-full">
                 <ResultsMap
                   restaurants={merchants || []}
                   onMapMove={handleMapMove}
@@ -223,41 +223,43 @@ const Results = () => {
                   viewState={mapViewState}
                   onViewStateChange={handleViewStateChange}
                 />
+              </div>
 
+              <Drawer shouldScaleBackground={false} open={true} dismissible={false} handleOnly snapPoints={[0.12, 0.6, 1]} activeSnapPoint={activeSnap} setActiveSnapPoint={setActiveSnap} snapToSequentialPoint fadeFromIndex={1}>
                 {/* Floating grab handle to ensure peek on mobile */}
                 <DrawerHandle className="fixed bottom-[calc(env(safe-area-inset-bottom)+56px)] left-1/2 -translate-x-1/2 z-[110] px-4 py-3 rounded-full bg-background/90 shadow-lg backdrop-blur">
                   <div className="pointer-events-none h-1.5 w-12 rounded-full bg-muted" />
                 </DrawerHandle>
-              </div>
               
-              <DrawerContent showOverlay={false} className="max-h-[85vh]">
-                <div className="flex-1 min-h-0 overflow-y-auto px-2 sm:px-4 pb-4">
-                  <SearchResults
-                    merchants={merchants}
-                    isLoading={isLoading}
-                    error={error}
-                    startTime={startTime}
-                    endTime={endTime}
-                    location={location}
-                    isMobile={true}
-                    headerRightContent={
-                      <MobileFilterDrawer
-                        selectedCategories={selectedCategories}
-                        onCategoryChange={setSelectedCategories}
-                        selectedRadius={selectedRadius}
-                        onRadiusChange={setSelectedRadius}
-                        isRadiusEnabled={isRadiusEnabled}
-                        showOffersOnly={showOffersOnly}
-                        onShowOffersChange={setShowOffersOnly}
-                        selectedDays={selectedDays}
-                        onDaysChange={handleDaysChange}
-                        onOpenChange={setFiltersOpen}
-                      />
-                    }
-                  />
-                </div>
-              </DrawerContent>
-            </Drawer>
+                <DrawerContent showOverlay={false} className="max-h-[85vh]">
+                  <div className="flex-1 min-h-0 overflow-y-auto px-2 sm:px-4 pb-4">
+                    <SearchResults
+                      merchants={merchants}
+                      isLoading={isLoading}
+                      error={error}
+                      startTime={startTime}
+                      endTime={endTime}
+                      location={location}
+                      isMobile={true}
+                      headerRightContent={
+                        <MobileFilterDrawer
+                          selectedCategories={selectedCategories}
+                          onCategoryChange={setSelectedCategories}
+                          selectedRadius={selectedRadius}
+                          onRadiusChange={setSelectedRadius}
+                          isRadiusEnabled={isRadiusEnabled}
+                          showOffersOnly={showOffersOnly}
+                          onShowOffersChange={setShowOffersOnly}
+                          selectedDays={selectedDays}
+                          onDaysChange={handleDaysChange}
+                          onOpenChange={setFiltersOpen}
+                        />
+                      }
+                    />
+                  </div>
+                </DrawerContent>
+              </Drawer>
+            </>
           )}
 
           {/* Filters Fullscreen Modal - avoids WebGL/drawer issues on mobile */}

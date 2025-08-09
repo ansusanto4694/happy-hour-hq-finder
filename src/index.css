@@ -109,4 +109,10 @@
     position: fixed;
     width: 100%;
   }
+
+  /* Ensure proper touch handling for maps */
+  .mapboxgl-canvas-container,
+  .mapboxgl-canvas {
+    touch-action: pan-x pan-y !important;
+  }
 }
