@@ -196,21 +196,24 @@ const Results = () => {
         {isMobile && (
           <Drawer shouldScaleBackground={false} open={true} dismissible={false} handleOnly snapPoints={[0.12, 0.6, 1]} activeSnapPoint={activeSnap} setActiveSnapPoint={setActiveSnap} snapToSequentialPoint fadeFromIndex={1}>
             <div className="max-w-7xl mx-auto">
-
-              {/* Map - default visible */}
-              <ResultsMap
-                restaurants={merchants || []}
-                onMapMove={handleMapMove}
-                searchAsMapMoves={searchAsMapMoves}
-                onToggleSearchAsMapMoves={setSearchAsMapMoves}
-                viewState={mapViewState}
-                onViewStateChange={handleViewStateChange}
-              />
+              {/* Map - default visible unless Filters drawer is open (avoid mobile GPU crash) */}
+              {!filtersOpen && (
+                <ResultsMap
+                  restaurants={merchants || []}
+                  onMapMove={handleMapMove}
+                  searchAsMapMoves={searchAsMapMoves}
+                  onToggleSearchAsMapMoves={setSearchAsMapMoves}
+                  viewState={mapViewState}
+                  onViewStateChange={handleViewStateChange}
+                />
+              )}
 
             {/* Floating grab handle to ensure peek on mobile */}
-            <DrawerHandle className={`fixed bottom-[calc(env(safe-area-inset-bottom)+56px)] left-1/2 -translate-x-1/2 z-[110] px-4 py-3 rounded-full bg-background/90 shadow-lg backdrop-blur ${filtersOpen ? 'pointer-events-none' : ''}`}>
-              <div className="pointer-events-none h-1.5 w-12 rounded-full bg-muted" />
-            </DrawerHandle>
+            {!filtersOpen && (
+              <DrawerHandle className="fixed bottom-[calc(env(safe-area-inset-bottom)+56px)] left-1/2 -translate-x-1/2 z-[110] px-4 py-3 rounded-full bg-background/90 shadow-lg backdrop-blur">
+                <div className="pointer-events-none h-1.5 w-12 rounded-full bg-muted" />
+              </DrawerHandle>
+            )}
             </div>
             <DrawerContent className="max-h-[85vh]">
               <div className="flex-1 min-h-0 overflow-y-auto px-2 sm:px-4 pb-4">
