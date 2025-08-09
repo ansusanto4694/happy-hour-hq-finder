@@ -139,7 +139,7 @@ const Results = () => {
     : `Discover amazing happy hour deals near you. Compare prices and find the best bars and restaurants for your night out.`;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`bg-gray-50 ${isMobile ? 'h-screen overflow-hidden' : 'min-h-screen'}`}>
       <SEOHead 
         title={seoTitle}
         description={seoDescription}
