@@ -140,7 +140,7 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
   }, [onMapMove]);
 
   return isMobile ? (
-    <div className="w-full h-full relative touch-pan-x touch-pan-y">
+    <div className="w-full h-full relative touch-none">
       <Map
         ref={mapRef}
         {...viewState}
@@ -151,6 +151,11 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
         }}
         onMoveEnd={handleMoveEnd}
         style={{ width: '100%', height: '100%' }}
+        dragPan={true}
+        scrollZoom={false}
+        doubleClickZoom={false}
+        touchZoomRotate={true}
+        touchPitch={false}
         mapStyle="mapbox://styles/mapbox/streets-v12"
         mapboxAccessToken="pk.eyJ1IjoiYW5zdXNhbnRvNDY5NCIsImEiOiJjbWNudDdob28weTZlMmtxMTBmbDc5YTM4In0.qwR9SIqDBrETlROMvhnKvw"
       >
