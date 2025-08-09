@@ -102,20 +102,19 @@
   }
 
   /* Prevent mobile scroll on results page */
-  html.mobile-no-scroll,
-  html.mobile-no-scroll body {
+  html.mobile-no-scroll {
     overflow: hidden;
     height: 100vh;
     position: fixed;
     width: 100%;
   }
-
-  /* Ensure proper touch handling for maps */
-  .mapboxgl-canvas-container,
-  .mapboxgl-canvas {
-    touch-action: manipulation !important;
-  }
   
+  html.mobile-no-scroll body {
+    overflow: hidden;
+    height: 100vh;
+    width: 100%;
+  }
+
   /* Prevent zoom on double tap for everything except map */
   * {
     touch-action: manipulation;
@@ -127,6 +126,12 @@
   .mapboxgl-map,
   .mapboxgl-canvas-container,
   .mapboxgl-canvas {
+    touch-action: auto !important;
+  }
+  
+  /* Enable interactions for modal content */
+  .mobile-search-modal,
+  .mobile-search-modal * {
     touch-action: auto !important;
   }
 }

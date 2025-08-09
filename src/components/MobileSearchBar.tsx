@@ -236,7 +236,7 @@ export const MobileSearchBar = () => {
             </CollapsibleTrigger>
             
             <CollapsibleContent>
-              <div className="fixed inset-0 bg-white z-50 flex flex-col">
+              <div className="fixed inset-0 bg-white z-50 flex flex-col mobile-search-modal">
                 {/* Header with search bar */}
                 <div className="flex-shrink-0 p-4 border-b border-gray-200">
                   <div className="flex items-center gap-3">
