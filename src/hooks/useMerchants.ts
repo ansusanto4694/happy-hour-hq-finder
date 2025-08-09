@@ -411,8 +411,15 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
           const hasActiveOffers = merchant.merchant_offers.some((offer: any) => {
             if (!offer.is_active) return false;
             if (!offer.end_time) return true;
-            const t = new Date(offer.end_time).getTime();
-            return !Number.isNaN(t) && t > Date.now();
+            
+            // Parse the end_time - handle both timestamp and date string formats
+            const endTime = new Date(offer.end_time);
+            const isValidEndTime = !isNaN(endTime.getTime());
+            const currentTime = new Date();
+            
+            console.log(`Checking offer for ${merchant.restaurant_name}: end_time=${offer.end_time}, parsed=${endTime}, valid=${isValidEndTime}, expired=${isValidEndTime && endTime < currentTime}`);
+            
+            return isValidEndTime && endTime > currentTime;
           });
           
           console.log(`${merchant.restaurant_name} has active offers:`, hasActiveOffers);
