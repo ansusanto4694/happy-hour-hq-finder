@@ -47,6 +47,9 @@ const Results = () => {
     const daysParam = searchParams.get('days');
     return daysParam ? daysParam.split(',').map(Number) : [];
   })();
+  const latParam = searchParams.get('lat');
+  const lngParam = searchParams.get('lng');
+  const coords = latParam && lngParam ? { latitude: parseFloat(latParam), longitude: parseFloat(lngParam) } : null;
 
   // On mobile, default to user's current city using LocateMe (GPS with IP fallback)
   React.useEffect(() => {
@@ -85,7 +88,8 @@ const Results = () => {
     startTime, 
     endTime, 
     location,
-    searchAsMapMoves ? mapBounds : undefined,
+    coords,
+    searchAsMapMoves ? mapBounds || undefined : undefined,
     isRadiusEnabled ? radiusMiles : undefined,
     showOffersOnly,
     selectedDays

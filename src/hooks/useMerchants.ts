@@ -19,9 +19,9 @@ const calculateHaversineDistance = (lat1: number, lng1: number, lat2: number, ln
   return distance; // Distance in miles
 };
 
-export const useMerchants = (categoryIds?: string[], searchTerm?: string, startTime?: string, endTime?: string, location?: string, bounds?: { north: number; south: number; east: number; west: number }, radiusMiles?: number, showOffersOnly?: boolean, selectedDays?: number[]) => {
+export const useMerchants = (categoryIds?: string[], searchTerm?: string, startTime?: string, endTime?: string, location?: string, coords?: { latitude: number; longitude: number } | null, bounds?: { north: number; south: number; east: number; west: number }, radiusMiles?: number, showOffersOnly?: boolean, selectedDays?: number[]) => {
   // Force fresh queries for restaurant searches to avoid caching issues
-  const queryKey = ['merchants', categoryIds, searchTerm, startTime, endTime, location, bounds, radiusMiles, showOffersOnly, selectedDays];
+  const queryKey = ['merchants', categoryIds, searchTerm, startTime, endTime, location, coords?.latitude, coords?.longitude, bounds, radiusMiles, showOffersOnly, selectedDays];
   
   return useQuery({
     queryKey,
@@ -221,50 +221,58 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
 
       console.log('Raw merchant data from database:', data);
 
-      // Apply radius filtering if specified (must have location)
+      // Keep original dataset for potential fallbacks
+      const dataAll = data;
+      // Apply radius filtering if specified (must have location or coords)
       let filteredData = data;
-      if (radiusMiles && location) {
-        console.log('Applying radius filtering:', radiusMiles, 'miles from', location);
+      if (radiusMiles && (coords || location)) {
+        console.log('Applying radius filtering:', radiusMiles, 'miles from', coords || location);
         
         try {
-          // Enhanced location matching - prioritize zip code for consistency
-          let locationData = null;
-          const trimmedLocation = location.trim().toLowerCase();
-          
-          // Strategy 1: First check for zip codes in the location string
-          const zipMatch = location.match(/\b\d{5}\b/);
-          if (zipMatch) {
-            const { data: zipCachedLocation, error: zipCacheError } = await supabase
-              .from('location_cache')
-              .select('latitude, longitude')
-              .eq('original_input', zipMatch[0])
-              .single();
-              
-            if (!zipCacheError && zipCachedLocation) {
-              locationData = zipCachedLocation;
-              console.log('Found zip code in cache:', locationData);
-            }
+          // Use provided coordinates if available; otherwise, resolve from location string
+          let locationData: { latitude: number; longitude: number } | null = null;
+          if (coords && typeof coords.latitude === 'number' && typeof coords.longitude === 'number') {
+            locationData = coords;
+            console.log('Using coordinates from URL:', locationData);
           }
           
-          // Strategy 2: If no zip code found, try exact cache match
-          if (!locationData) {
-            const { data: cachedLocation, error: cacheError } = await supabase
-              .from('location_cache')
-              .select('latitude, longitude')
-              .eq('original_input', trimmedLocation)
-              .single();
-
-            if (!cacheError && cachedLocation) {
-              locationData = cachedLocation;
-              console.log('Found exact location in cache:', locationData);
-            }
-          }
-          
-          if (!locationData) {
-            console.log('Cache strategies failed, trying additional fallbacks...');
+          if (!locationData && location) {
+            // Enhanced location matching - prioritize zip code for consistency
+            const trimmedLocation = location.trim().toLowerCase();
             
-            // Strategy 3: Try city name extraction for Mapbox formatted strings
+            // Strategy 1: First check for zip codes in the location string
+            const zipMatch = location.match(/\b\d{5}\b/);
+            if (zipMatch) {
+              const { data: zipCachedLocation, error: zipCacheError } = await supabase
+                .from('location_cache')
+                .select('latitude, longitude')
+                .eq('original_input', zipMatch[0])
+                .single();
+                
+              if (!zipCacheError && zipCachedLocation) {
+                locationData = zipCachedLocation as any;
+                console.log('Found zip code in cache:', locationData);
+              }
+            }
+            
+            // Strategy 2: If no zip code found, try exact cache match
             if (!locationData) {
+              const { data: cachedLocation, error: cacheError } = await supabase
+                .from('location_cache')
+                .select('latitude, longitude')
+                .eq('original_input', trimmedLocation)
+                .single();
+
+              if (!cacheError && cachedLocation) {
+                locationData = cachedLocation as any;
+                console.log('Found exact location in cache:', locationData);
+              }
+            }
+            
+            if (!locationData) {
+              console.log('Cache strategies failed, trying additional fallbacks...');
+              
+              // Strategy 3: Try city name extraction for Mapbox formatted strings
               const cityMatch = location.match(/^([^,]+)/);
               if (cityMatch) {
                 const cityName = cityMatch[1].trim().toLowerCase();
@@ -275,30 +283,28 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
                   .single();
                   
                 if (!cityCacheError && cityCachedLocation) {
-                  locationData = cityCachedLocation;
+                  locationData = cityCachedLocation as any;
                   console.log('Found city name in cache:', locationData);
                 }
               }
-            }
-            
-            // Strategy 4: Normalize the location using edge function as final fallback
-            if (!locationData) {
-              console.log('Cache strategies failed, normalizing location:', location);
               
-              // Normalize the location using the edge function
-              const { data: normalizedLocation, error: normalizeError } = await supabase.functions.invoke('normalize-location', {
-                body: { location }
-              });
+              // Strategy 4: Normalize the location using edge function as final fallback
+              if (!locationData) {
+                console.log('Cache strategies failed, normalizing location:', location);
+                const { data: normalizedLocation, error: normalizeError } = await supabase.functions.invoke('normalize-location', {
+                  body: { location }
+                });
 
-              if (normalizeError) {
-                console.error('Error normalizing location:', normalizeError);
-                console.log('Skipping radius filter due to normalization error');
-              } else if (normalizedLocation) {
-                locationData = {
-                  latitude: normalizedLocation.latitude,
-                  longitude: normalizedLocation.longitude
-                };
-                console.log('Normalized location:', locationData);
+                if (normalizeError) {
+                  console.error('Error normalizing location:', normalizeError);
+                  console.log('Skipping radius filter due to normalization error');
+                } else if (normalizedLocation) {
+                  locationData = {
+                    latitude: (normalizedLocation as any).latitude,
+                    longitude: (normalizedLocation as any).longitude
+                  };
+                  console.log('Normalized location:', locationData);
+                }
               }
             }
           }
@@ -306,18 +312,15 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
           if (locationData) {
             filteredData = data?.filter(merchant => {
               if (!merchant.latitude || !merchant.longitude) return false;
-              
               const distance = calculateHaversineDistance(
-                locationData.latitude,
-                locationData.longitude,
+                locationData!.latitude,
+                locationData!.longitude,
                 parseFloat(merchant.latitude.toString()),
                 parseFloat(merchant.longitude.toString())
               );
-              
               console.log(`Distance from ${merchant.restaurant_name}: ${distance.toFixed(2)} miles`);
               return distance <= radiusMiles;
             });
-            
             console.log(`Merchants after radius filtering (${radiusMiles} miles):`, filteredData?.length || 0);
           } else {
             console.log('Could not get location coordinates for radius filtering, returning empty results');

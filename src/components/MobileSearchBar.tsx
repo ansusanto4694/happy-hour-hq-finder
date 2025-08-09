@@ -90,12 +90,16 @@ export const MobileSearchBar = () => {
     setSelectedSuggestionIndex(-1);
     locationInputRef.current?.focus();
 
-    // Auto-search when a location is selected
+    // Auto-search when a location is selected with coordinates
     const params = new URLSearchParams();
     if (searchTerm) params.set('search', searchTerm);
     if (startTime) params.set('startTime', startTime);
     if (endTime) params.set('endTime', endTime);
     params.set('location', suggestion.place_name);
+    if (suggestion.center?.length === 2) {
+      params.set('lat', String(suggestion.center[1])); // [lng, lat]
+      params.set('lng', String(suggestion.center[0]));
+    }
     navigate(`/results?${params.toString()}`);
     setIsExpanded(false);
   };
@@ -159,12 +163,27 @@ export const MobileSearchBar = () => {
     };
   }, []);
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     const params = new URLSearchParams();
     if (searchTerm) params.set('search', searchTerm);
     if (location) params.set('location', location);
     if (startTime) params.set('startTime', startTime);
     if (endTime) params.set('endTime', endTime);
+
+    // Pre-normalize location to include coordinates
+    try {
+      if (location) {
+        const { data: normalizedLocation, error: normalizeError } = await supabase.functions.invoke('normalize-location', {
+          body: { location }
+        });
+        if (!normalizeError && normalizedLocation?.latitude && normalizedLocation?.longitude) {
+          params.set('lat', String(normalizedLocation.latitude));
+          params.set('lng', String(normalizedLocation.longitude));
+        }
+      }
+    } catch (e) {
+      console.error('Mobile location normalization failed:', e);
+    }
     
     navigate(`/results?${params.toString()}`);
     setIsExpanded(false);

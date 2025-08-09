@@ -177,7 +177,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
     };
   }, []);
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     console.log('=== SEARCH BAR DEBUG ===');
     console.log('Searching for:', searchTerm, 'in location:', location, 'start time:', startTime, 'end time:', endTime, 'selected days:', selectedDays);
     console.log('Search term length:', searchTerm.length);
@@ -191,6 +191,21 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
     if (startTime) params.set('startTime', startTime);
     if (endTime) params.set('endTime', endTime);
     if (selectedDays.length > 0) params.set('days', selectedDays.join(','));
+
+    // Pre-normalize location to include coordinates for reliable radius filtering
+    try {
+      if (location) {
+        const { data: normalizedLocation, error: normalizeError } = await supabase.functions.invoke('normalize-location', {
+          body: { location }
+        });
+        if (!normalizeError && normalizedLocation?.latitude && normalizedLocation?.longitude) {
+          params.set('lat', String(normalizedLocation.latitude));
+          params.set('lng', String(normalizedLocation.longitude));
+        }
+      }
+    } catch (e) {
+      console.error('Location normalization failed, proceeding without coords:', e);
+    }
     
     // Navigate to results page with parameters
     navigate(`/results?${params.toString()}`);
