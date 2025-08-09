@@ -11,6 +11,7 @@ interface SearchResultsHeaderProps {
   resultsPerPage?: number;
   searchTerm?: string;
   isMobile?: boolean;
+  rightContent?: React.ReactNode;
 }
 
 export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
@@ -22,7 +23,8 @@ export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
   totalPages = 1,
   resultsPerPage = 20,
   searchTerm,
-  isMobile = false
+  isMobile = false,
+  rightContent
 }) => {
   const startResult = (currentPage - 1) * resultsPerPage + 1;
   const endResult = Math.min(currentPage * resultsPerPage, resultsCount);
@@ -40,7 +42,7 @@ export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
     <Card>
       <CardContent className="p-3 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div className={isMobile ? 'invisible' : undefined}>
+          <div className={isMobile ? 'hidden' : undefined}>
             <h2 className="text-lg font-semibold text-gray-900">
               Happy Hour Results
               {searchTerm && <span className="text-orange-600"> for "{searchTerm}"</span>}
@@ -67,6 +69,10 @@ export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
               )}
             </div>
           </div>
+
+          {isMobile && rightContent ? (
+            <div className="mt-1">{rightContent}</div>
+          ) : null}
         </div>
       </CardContent>
     </Card>

@@ -178,22 +178,6 @@ const Results = () => {
         {isMobile && (
           <Drawer shouldScaleBackground={false} open={true} dismissible={false} handleOnly snapPoints={[0.12, 0.6, 1]} activeSnapPoint={activeSnap} setActiveSnapPoint={setActiveSnap} snapToSequentialPoint fadeFromIndex={1}>
             <div className="max-w-7xl mx-auto">
-              {/* Fixed Mobile Controls */}
-              <div className="sticky top-32 md:top-32 z-40 bg-gray-50 pb-4 mb-4">
-                <div className="flex items-center justify-between gap-3">
-                  <MobileFilterDrawer
-                    selectedCategories={selectedCategories}
-                    onCategoryChange={setSelectedCategories}
-                    selectedRadius={selectedRadius}
-                    onRadiusChange={setSelectedRadius}
-                    isRadiusEnabled={isRadiusEnabled}
-                    showOffersOnly={showOffersOnly}
-                    onShowOffersChange={setShowOffersOnly}
-                    selectedDays={selectedDays}
-                    onDaysChange={handleDaysChange}
-                  />
-                </div>
-              </div>
 
               {/* Map - default visible */}
               <div className="h-[calc(100vh-220px)] rounded-lg overflow-hidden">
@@ -219,6 +203,19 @@ const Results = () => {
                   endTime={endTime}
                   location={location}
                   isMobile={true}
+                  headerRightContent={
+                    <MobileFilterDrawer
+                      selectedCategories={selectedCategories}
+                      onCategoryChange={setSelectedCategories}
+                      selectedRadius={selectedRadius}
+                      onRadiusChange={setSelectedRadius}
+                      isRadiusEnabled={isRadiusEnabled}
+                      showOffersOnly={showOffersOnly}
+                      onShowOffersChange={setShowOffersOnly}
+                      selectedDays={selectedDays}
+                      onDaysChange={handleDaysChange}
+                    />
+                  }
                 />
               </div>
             </DrawerContent>
