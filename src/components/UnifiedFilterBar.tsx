@@ -121,6 +121,8 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
               id="offers-toggle"
               checked={showOffersOnly}
               onCheckedChange={onShowOffersChange}
+              onPointerDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
             />
           </div>
 

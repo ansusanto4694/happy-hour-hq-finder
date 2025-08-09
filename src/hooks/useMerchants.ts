@@ -405,9 +405,12 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
           }
           
           // Check if merchant has any active offers that haven't expired
-          const hasActiveOffers = merchant.merchant_offers.some((offer: any) => 
-            offer.is_active && new Date(offer.end_time) > new Date()
-          );
+          const hasActiveOffers = merchant.merchant_offers.some((offer: any) => {
+            if (!offer.is_active) return false;
+            if (!offer.end_time) return true;
+            const t = new Date(offer.end_time).getTime();
+            return !Number.isNaN(t) && t > Date.now();
+          });
           
           console.log(`${merchant.restaurant_name} has active offers:`, hasActiveOffers);
           return hasActiveOffers;
