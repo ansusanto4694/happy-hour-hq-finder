@@ -115,7 +115,7 @@
     width: 100%;
   }
 
-  /* Prevent zoom on double tap for everything except map */
+  /* Prevent zoom on double tap for everything except map and modals */
   * {
     touch-action: manipulation;
   }
@@ -131,7 +131,9 @@
   
   /* Enable interactions for modal content */
   .mobile-search-modal,
-  .mobile-search-modal * {
+  .mobile-search-modal *,
+  .mobile-filter-modal,
+  .mobile-filter-modal * {
     touch-action: auto !important;
   }
 }

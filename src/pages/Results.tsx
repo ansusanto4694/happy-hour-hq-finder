@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { SearchBar } from '@/components/SearchBar';
 import { MobileSearchBar } from '@/components/MobileSearchBar';
 import { MobileFilterDrawer } from '@/components/MobileFilterDrawer';
+import { MobileFilterModal } from '@/components/MobileFilterModal';
 
 import { Drawer, DrawerContent, DrawerHandle, DrawerHeader, DrawerTitle, DrawerClose } from '@/components/ui/drawer';
 import { SearchResults } from '@/components/SearchResults';
@@ -262,34 +263,20 @@ const Results = () => {
             </>
           )}
 
-          {/* Filters Fullscreen Modal - avoids WebGL/drawer issues on mobile */}
-          {filtersOpen && (
-            <div className="fixed inset-0 z-[200]">
-              <div className="absolute inset-0 bg-black/50" onClick={() => setFiltersOpen(false)} />
-              <div className="absolute inset-0 bg-background flex flex-col">
-                <div className="relative border-b p-4">
-                  <button aria-label="Close filters" onClick={() => setFiltersOpen(false)} className="absolute left-4 top-3 p-2 rounded-md hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring">
-                    <X className="h-5 w-5" />
-                  </button>
-                  <h2 className="text-lg font-semibold leading-none tracking-tight text-center">Filters</h2>
-                </div>
-                <div className="flex-1 overflow-y-auto px-4 pb-6 pt-4">
-                  <UnifiedFilterBar
-                    selectedCategories={selectedCategories}
-                    onCategoryChange={setSelectedCategories}
-                    selectedRadius={selectedRadius}
-                    onRadiusChange={setSelectedRadius}
-                    isRadiusEnabled={isRadiusEnabled}
-                    showOffersOnly={showOffersOnly}
-                    onShowOffersChange={setShowOffersOnly}
-                    selectedDays={selectedDays}
-                    onDaysChange={handleDaysChange}
-                    vertical={true}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Mobile Filter Modal */}
+          <MobileFilterModal
+            isOpen={filtersOpen}
+            onClose={() => setFiltersOpen(false)}
+            selectedCategories={selectedCategories}
+            onCategoryChange={setSelectedCategories}
+            selectedRadius={selectedRadius}
+            onRadiusChange={setSelectedRadius}
+            isRadiusEnabled={isRadiusEnabled}
+            showOffersOnly={showOffersOnly}
+            onShowOffersChange={setShowOffersOnly}
+            selectedDays={selectedDays}
+            onDaysChange={handleDaysChange}
+          />
         </div>
       ) : (
         <div className="pt-32 md:pt-32 px-4 py-6">
