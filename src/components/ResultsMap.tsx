@@ -140,7 +140,7 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
   }, [onMapMove]);
 
   return isMobile ? (
-    <div className="h-screen w-full relative">
+    <div className="w-full relative" style={{ height: '100dvh' }}>
       <Map
         ref={mapRef}
         {...viewState}

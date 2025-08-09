@@ -5,7 +5,7 @@ import { SearchBar } from '@/components/SearchBar';
 import { MobileSearchBar } from '@/components/MobileSearchBar';
 import { MobileFilterDrawer } from '@/components/MobileFilterDrawer';
 
-import { Drawer, DrawerContent } from '@/components/ui/drawer';
+import { Drawer, DrawerContent, DrawerHandle } from '@/components/ui/drawer';
 import { SearchResults } from '@/components/SearchResults';
 import { UnifiedFilterBar } from '@/components/UnifiedFilterBar';
 import { ResultsMap } from '@/components/ResultsMap';
@@ -205,9 +205,12 @@ const Results = () => {
                 viewState={mapViewState}
                 onViewStateChange={handleViewStateChange}
               />
-            </div>
 
-            {/* Bottom Drawer - List view */}
+            {/* Floating grab handle to ensure peek on mobile */}
+            <DrawerHandle className="fixed bottom-[max(env(safe-area-inset-bottom),12px)] left-1/2 -translate-x-1/2 z-[110] px-4 py-3 rounded-full bg-background/90 shadow-lg backdrop-blur">
+              <div className="pointer-events-none h-1.5 w-12 rounded-full bg-muted" />
+            </DrawerHandle>
+            </div>
             <DrawerContent className="max-h-[85vh]">
               <div className="flex-1 min-h-0 overflow-y-auto px-2 sm:px-4 pb-4">
                 <SearchResults
