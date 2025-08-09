@@ -207,7 +207,7 @@ const Results = () => {
               />
 
             {/* Floating grab handle to ensure peek on mobile */}
-            <DrawerHandle className="fixed bottom-[max(env(safe-area-inset-bottom),12px)] left-1/2 -translate-x-1/2 z-[110] px-4 py-3 rounded-full bg-background/90 shadow-lg backdrop-blur">
+            <DrawerHandle className="fixed bottom-[calc(env(safe-area-inset-bottom)+32px)] left-1/2 -translate-x-1/2 z-[110] px-4 py-3 rounded-full bg-background/90 shadow-lg backdrop-blur">
               <div className="pointer-events-none h-1.5 w-12 rounded-full bg-muted" />
             </DrawerHandle>
             </div>
