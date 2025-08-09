@@ -5,7 +5,7 @@ import { SearchBar } from '@/components/SearchBar';
 import { MobileSearchBar } from '@/components/MobileSearchBar';
 import { MobileFilterDrawer } from '@/components/MobileFilterDrawer';
 
-import { Drawer, DrawerContent, DrawerHandle } from '@/components/ui/drawer';
+import { Drawer, DrawerContent, DrawerHandle, DrawerHeader, DrawerTitle, DrawerClose } from '@/components/ui/drawer';
 import { SearchResults } from '@/components/SearchResults';
 import { UnifiedFilterBar } from '@/components/UnifiedFilterBar';
 import { ResultsMap } from '@/components/ResultsMap';
@@ -15,6 +15,7 @@ import { RadiusOption, getRadiusMiles } from '@/components/RadiusFilter';
 import { AuthButton } from '@/components/AuthButton';
 import { SEOHead } from '@/components/SEOHead';
 import { useLocateMe } from '@/hooks/useLocateMe';
+import { X } from 'lucide-react';
 
 const Results = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -194,8 +195,9 @@ const Results = () => {
       <div className="pt-32 md:pt-32 px-4 py-6">
         {/* Mobile Layout (< 768px) */}
         {isMobile && (
-          <Drawer shouldScaleBackground={false} open={true} dismissible={false} handleOnly snapPoints={[0.12, 0.6, 1]} activeSnapPoint={activeSnap} setActiveSnapPoint={setActiveSnap} snapToSequentialPoint fadeFromIndex={1}>
-            <div className="max-w-7xl mx-auto">
+          <>
+            <Drawer shouldScaleBackground={false} open={true} dismissible={false} handleOnly snapPoints={[0.12, 0.6, 1]} activeSnapPoint={activeSnap} setActiveSnapPoint={setActiveSnap} snapToSequentialPoint fadeFromIndex={1}>
+              <div className="max-w-7xl mx-auto">
               {/* Map - default visible unless Filters drawer is open (avoid mobile GPU crash) */}
               {!filtersOpen && (
                 <ResultsMap
@@ -215,34 +217,66 @@ const Results = () => {
               </DrawerHandle>
             )}
             </div>
-            <DrawerContent className="max-h-[85vh]">
-              <div className="flex-1 min-h-0 overflow-y-auto px-2 sm:px-4 pb-4">
-                <SearchResults
-                  merchants={merchants}
-                  isLoading={isLoading}
-                  error={error}
-                  startTime={startTime}
-                  endTime={endTime}
-                  location={location}
-                  isMobile={true}
-                  headerRightContent={
-                    <MobileFilterDrawer
-                      selectedCategories={selectedCategories}
-                      onCategoryChange={setSelectedCategories}
-                      selectedRadius={selectedRadius}
-                      onRadiusChange={setSelectedRadius}
-                      isRadiusEnabled={isRadiusEnabled}
-                      showOffersOnly={showOffersOnly}
-                      onShowOffersChange={setShowOffersOnly}
-                      selectedDays={selectedDays}
-                      onDaysChange={handleDaysChange}
-                      onOpenChange={setFiltersOpen}
-                    />
-                  }
-                />
-              </div>
-            </DrawerContent>
+            {!filtersOpen && (
+              <DrawerContent className="max-h-[85vh]">
+                <div className="flex-1 min-h-0 overflow-y-auto px-2 sm:px-4 pb-4">
+                  <SearchResults
+                    merchants={merchants}
+                    isLoading={isLoading}
+                    error={error}
+                    startTime={startTime}
+                    endTime={endTime}
+                    location={location}
+                    isMobile={true}
+                    headerRightContent={
+                      <MobileFilterDrawer
+                        selectedCategories={selectedCategories}
+                        onCategoryChange={setSelectedCategories}
+                        selectedRadius={selectedRadius}
+                        onRadiusChange={setSelectedRadius}
+                        isRadiusEnabled={isRadiusEnabled}
+                        showOffersOnly={showOffersOnly}
+                        onShowOffersChange={setShowOffersOnly}
+                        selectedDays={selectedDays}
+                        onDaysChange={handleDaysChange}
+                        onOpenChange={setFiltersOpen}
+                      />
+                    }
+                  />
+                </div>
+              </DrawerContent>
+            )}
           </Drawer>
+
+          {/* Filters Fullscreen Modal - avoids WebGL/drawer issues on mobile */}
+          {filtersOpen && (
+            <div className="fixed inset-0 z-[200]">
+              <div className="absolute inset-0 bg-black/50" onClick={() => setFiltersOpen(false)} />
+              <div className="absolute inset-0 bg-background flex flex-col">
+                <div className="relative border-b p-4">
+                  <button aria-label="Close filters" onClick={() => setFiltersOpen(false)} className="absolute left-4 top-3 p-2 rounded-md hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring">
+                    <X className="h-5 w-5" />
+                  </button>
+                  <h2 className="text-lg font-semibold leading-none tracking-tight text-center">Filters</h2>
+                </div>
+                <div className="flex-1 overflow-y-auto px-4 pb-6 pt-4">
+                  <UnifiedFilterBar
+                    selectedCategories={selectedCategories}
+                    onCategoryChange={setSelectedCategories}
+                    selectedRadius={selectedRadius}
+                    onRadiusChange={setSelectedRadius}
+                    isRadiusEnabled={isRadiusEnabled}
+                    showOffersOnly={showOffersOnly}
+                    onShowOffersChange={setShowOffersOnly}
+                    selectedDays={selectedDays}
+                    onDaysChange={handleDaysChange}
+                    vertical={true}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+          </>
         )}
 
         {/* Tablet Layout (768px - 1280px) */}
