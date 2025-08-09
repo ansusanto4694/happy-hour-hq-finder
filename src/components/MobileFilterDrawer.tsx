@@ -28,10 +28,11 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
   selectedDays,
   onDaysChange,
 }) => {
+  const [open, setOpen] = React.useState(false);
   const hasFilters = selectedCategories.length > 0 || selectedRadius !== 'walking' || showOffersOnly;
 
   return (
-    <Drawer>
+    <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
         <Button 
           variant="outline" 
@@ -47,6 +48,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
           )}
         </Button>
       </DrawerTrigger>
+      {open && <div className="fixed inset-0 z-[199]" aria-hidden="true" />}
 
       <DrawerContent className="z-[200] h-[96dvh]">
         <DrawerHeader className="relative border-b">
