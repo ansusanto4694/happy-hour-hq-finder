@@ -40,7 +40,7 @@ export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
     <Card>
       <CardContent className="p-3 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div>
+          <div className={isMobile ? 'invisible' : undefined}>
             <h2 className="text-lg font-semibold text-gray-900">
               Happy Hour Results
               {searchTerm && <span className="text-orange-600"> for "{searchTerm}"</span>}
