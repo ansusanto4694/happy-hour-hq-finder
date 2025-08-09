@@ -1,7 +1,7 @@
 import React from 'react';
 import { Filter, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerClose } from '@/components/ui/drawer';
 import { UnifiedFilterBar } from './UnifiedFilterBar';
 import { RadiusOption } from './RadiusFilter';
 
@@ -31,8 +31,8 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
   const hasFilters = selectedCategories.length > 0 || selectedRadius !== 'walking' || showOffersOnly;
 
   return (
-    <Sheet>
-      <SheetTrigger asChild>
+    <Drawer>
+      <DrawerTrigger asChild>
         <Button 
           variant="outline" 
           size="sm"
@@ -46,14 +46,19 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
             </span>
           )}
         </Button>
-      </SheetTrigger>
-      
-      <SheetContent side="left" className="w-[280px] sm:w-[320px]">
-        <SheetHeader>
-          <SheetTitle>Filters</SheetTitle>
-        </SheetHeader>
-        
-        <div className="mt-6 overflow-y-auto h-[calc(100vh-120px)]">
+      </DrawerTrigger>
+
+      <DrawerContent className="z-[200] h-[96dvh]">
+        <DrawerHeader className="relative border-b">
+          <DrawerClose asChild>
+            <button aria-label="Close filters" className="absolute left-4 top-3 p-2 rounded-md hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring">
+              <X className="h-5 w-5" />
+            </button>
+          </DrawerClose>
+          <DrawerTitle>Filters</DrawerTitle>
+        </DrawerHeader>
+
+        <div className="mt-4 overflow-y-auto h-[calc(96dvh-72px)] px-4 pb-6">
           <UnifiedFilterBar
             selectedCategories={selectedCategories}
             onCategoryChange={onCategoryChange}
@@ -67,7 +72,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
             vertical={true}
           />
         </div>
-      </SheetContent>
-    </Sheet>
+      </DrawerContent>
+    </Drawer>
   );
 };
