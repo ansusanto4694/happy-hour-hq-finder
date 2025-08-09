@@ -100,4 +100,13 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Prevent mobile scroll on results page */
+  html.mobile-no-scroll,
+  html.mobile-no-scroll body {
+    overflow: hidden;
+    height: 100vh;
+    position: fixed;
+    width: 100%;
+  }
 }
