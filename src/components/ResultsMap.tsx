@@ -139,7 +139,58 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
     }
   }, [onMapMove]);
 
-  return (
+  return isMobile ? (
+    <div className="h-screen w-full relative">
+      <Map
+        ref={mapRef}
+        {...viewState}
+        onMove={evt => {
+          const newViewState = evt.viewState;
+          setViewState(newViewState);
+          onViewStateChange?.(newViewState);
+        }}
+        onMoveEnd={handleMoveEnd}
+        style={{ width: '100%', height: '100%' }}
+        mapStyle="mapbox://styles/mapbox/streets-v12"
+        mapboxAccessToken="pk.eyJ1IjoiYW5zdXNhbnRvNDY5NCIsImEiOiJjbWNudDdob28weTZlMmtxMTBmbDc5YTM4In0.qwR9SIqDBrETlROMvhnKvw"
+      >
+        <NavigationControl position="top-right" />
+        {restaurants
+          .filter(restaurant => restaurant.latitude && restaurant.longitude)
+          .map((restaurant) => (
+            <Marker
+              key={restaurant.id}
+              longitude={restaurant.longitude!}
+              latitude={restaurant.latitude!}
+              anchor="bottom"
+            >
+              <div 
+                className="bg-red-500 rounded-full w-6 h-6 flex items-center justify-center shadow-lg border-2 border-white cursor-pointer hover:bg-red-600 transition-colors"
+                title={restaurant.restaurant_name}
+                onClick={() => handleRestaurantClick(restaurant)}
+                onMouseEnter={(event) => handleMarkerHover(restaurant, event)}
+                onMouseLeave={handleMarkerLeave}
+              >
+                <div className="w-2 h-2 bg-white rounded-full"></div>
+              </div>
+            </Marker>
+          ))}
+      </Map>
+
+      <MerchantMapPreviewCard
+        restaurant={selectedRestaurant!}
+        position={mousePosition}
+        isVisible={!!selectedRestaurant}
+        isMobile={true}
+        onNavigate={() => {
+          if (selectedRestaurant) {
+            navigate(`/restaurant/${selectedRestaurant.id}`);
+          }
+        }}
+        onClose={() => setSelectedRestaurant(null)}
+      />
+    </div>
+  ) : (
     <Card className="h-full">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
@@ -165,7 +216,6 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
             onMove={evt => {
               const newViewState = evt.viewState;
               setViewState(newViewState);
-              // Notify parent of view state change
               onViewStateChange?.(newViewState);
             }}
             onMoveEnd={handleMoveEnd}

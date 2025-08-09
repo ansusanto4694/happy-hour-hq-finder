@@ -14,6 +14,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { RadiusOption, getRadiusMiles } from '@/components/RadiusFilter';
 import { AuthButton } from '@/components/AuthButton';
 import { SEOHead } from '@/components/SEOHead';
+import { useLocateMe } from '@/hooks/useLocateMe';
 
 const Results = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -34,6 +35,7 @@ const Results = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { locate } = useLocateMe();
   // Extract search parameters
   const searchTerm = searchParams.get('search') || '';
   const location = searchParams.get('location') || searchParams.get('zip') || '';
@@ -44,6 +46,21 @@ const Results = () => {
     return daysParam ? daysParam.split(',').map(Number) : [];
   })();
 
+  // On mobile, default to user's current city using LocateMe (GPS with IP fallback)
+  React.useEffect(() => {
+    if (!isMobile || location) return;
+    (async () => {
+      const r = await locate();
+      if (r?.display) {
+        const newSearchParams = new URLSearchParams(searchParams);
+        newSearchParams.set('location', r.display);
+        setSearchParams(newSearchParams);
+        if (r.latitude && r.longitude) {
+          setMapViewState({ longitude: r.longitude, latitude: r.latitude, zoom: 13 });
+        }
+      }
+    })();
+  }, [isMobile, location]);
   // Handle day change with URL update
   const handleDaysChange = (days: number[]) => {
     setSelectedDaysState(days);
@@ -58,7 +75,7 @@ const Results = () => {
 
   // Check if radius filtering should be enabled (any location provided)
   const isRadiusEnabled = Boolean(location && location.trim());
-  const radiusMiles = getRadiusMiles(selectedRadius);
+  const radiusMiles = isMobile ? 1 : getRadiusMiles(selectedRadius);
 
   const { data: merchants, isLoading, error } = useMerchants(
     selectedCategories, 
@@ -180,16 +197,14 @@ const Results = () => {
             <div className="max-w-7xl mx-auto">
 
               {/* Map - default visible */}
-              <div className="h-[calc(100vh-220px)] rounded-lg overflow-hidden">
-                <ResultsMap
-                  restaurants={merchants || []}
-                  onMapMove={handleMapMove}
-                  searchAsMapMoves={searchAsMapMoves}
-                  onToggleSearchAsMapMoves={setSearchAsMapMoves}
-                  viewState={mapViewState}
-                  onViewStateChange={handleViewStateChange}
-                />
-              </div>
+              <ResultsMap
+                restaurants={merchants || []}
+                onMapMove={handleMapMove}
+                searchAsMapMoves={searchAsMapMoves}
+                onToggleSearchAsMapMoves={setSearchAsMapMoves}
+                viewState={mapViewState}
+                onViewStateChange={handleViewStateChange}
+              />
             </div>
 
             {/* Bottom Drawer - List view */}
