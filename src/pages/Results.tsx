@@ -223,7 +223,7 @@ const Results = () => {
             )}
             </div>
             {!filtersOpen && (
-              <DrawerContent className="max-h-[85vh]">
+              <DrawerContent showOverlay={false} className="max-h-[85vh]">
                 <div className="flex-1 min-h-0 overflow-y-auto px-2 sm:px-4 pb-4">
                   <SearchResults
                     merchants={merchants}
