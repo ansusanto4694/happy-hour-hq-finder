@@ -77,7 +77,7 @@ const Results = () => {
 
   // Check if radius filtering should be enabled (any location provided)
   const isRadiusEnabled = Boolean(location && location.trim());
-  const radiusMiles = isMobile ? 1 : getRadiusMiles(selectedRadius);
+  const radiusMiles = getRadiusMiles(selectedRadius);
 
   const { data: merchants, isLoading, error } = useMerchants(
     selectedCategories, 
@@ -196,7 +196,8 @@ const Results = () => {
         {/* Mobile Layout (< 768px) */}
         {isMobile && (
           <>
-            <Drawer shouldScaleBackground={false} open={true} dismissible={false} handleOnly snapPoints={[0.12, 0.6, 1]} activeSnapPoint={activeSnap} setActiveSnapPoint={setActiveSnap} snapToSequentialPoint fadeFromIndex={1}>
+            {!filtersOpen && (
+              <Drawer shouldScaleBackground={false} open={true} dismissible={false} handleOnly snapPoints={[0.12, 0.6, 1]} activeSnapPoint={activeSnap} setActiveSnapPoint={setActiveSnap} snapToSequentialPoint fadeFromIndex={1}>
               <div className="max-w-7xl mx-auto">
               {/* Map - default visible unless Filters drawer is open (avoid mobile GPU crash) */}
               {!filtersOpen && (
@@ -246,7 +247,7 @@ const Results = () => {
                 </div>
               </DrawerContent>
             )}
-          </Drawer>
+            </Drawer>)}
 
           {/* Filters Fullscreen Modal - avoids WebGL/drawer issues on mobile */}
           {filtersOpen && (
