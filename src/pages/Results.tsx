@@ -195,16 +195,13 @@ const Results = () => {
         </div>
       </div>
 
-      {/* Content with top padding to account for fixed header */}
-      <div className="pt-32 md:pt-32 px-4 py-6">
-        {/* Mobile Layout (< 768px) */}
-        {isMobile && (
-          <>
-            {!filtersOpen && (
-              <Drawer shouldScaleBackground={false} open={true} dismissible={false} handleOnly snapPoints={[0.12, 0.6, 1]} activeSnapPoint={activeSnap} setActiveSnapPoint={setActiveSnap} snapToSequentialPoint fadeFromIndex={1}>
-              <div className="max-w-7xl mx-auto">
-              {/* Map - default visible unless Filters drawer is open (avoid mobile GPU crash) */}
-              {!filtersOpen && (
+      {/* Mobile: Fixed layout with no scroll */}
+      {isMobile ? (
+        <div className="fixed inset-0 top-[128px] bottom-0">
+          {!filtersOpen && (
+            <Drawer shouldScaleBackground={false} open={true} dismissible={false} handleOnly snapPoints={[0.12, 0.6, 1]} activeSnapPoint={activeSnap} setActiveSnapPoint={setActiveSnap} snapToSequentialPoint fadeFromIndex={1}>
+              <div className="h-full w-full">
+                {/* Map - default visible unless Filters drawer is open (avoid mobile GPU crash) */}
                 <ResultsMap
                   restaurants={merchants || []}
                   onMapMove={handleMapMove}
@@ -213,16 +210,13 @@ const Results = () => {
                   viewState={mapViewState}
                   onViewStateChange={handleViewStateChange}
                 />
-              )}
 
-            {/* Floating grab handle to ensure peek on mobile */}
-            {!filtersOpen && (
-              <DrawerHandle className="fixed bottom-[calc(env(safe-area-inset-bottom)+56px)] left-1/2 -translate-x-1/2 z-[110] px-4 py-3 rounded-full bg-background/90 shadow-lg backdrop-blur">
-                <div className="pointer-events-none h-1.5 w-12 rounded-full bg-muted" />
-              </DrawerHandle>
-            )}
-            </div>
-            {!filtersOpen && (
+                {/* Floating grab handle to ensure peek on mobile */}
+                <DrawerHandle className="fixed bottom-[calc(env(safe-area-inset-bottom)+56px)] left-1/2 -translate-x-1/2 z-[110] px-4 py-3 rounded-full bg-background/90 shadow-lg backdrop-blur">
+                  <div className="pointer-events-none h-1.5 w-12 rounded-full bg-muted" />
+                </DrawerHandle>
+              </div>
+              
               <DrawerContent showOverlay={false} className="max-h-[85vh]">
                 <div className="flex-1 min-h-0 overflow-y-auto px-2 sm:px-4 pb-4">
                   <SearchResults
@@ -250,8 +244,8 @@ const Results = () => {
                   />
                 </div>
               </DrawerContent>
-            )}
-            </Drawer>)}
+            </Drawer>
+          )}
 
           {/* Filters Fullscreen Modal - avoids WebGL/drawer issues on mobile */}
           {filtersOpen && (
@@ -281,15 +275,62 @@ const Results = () => {
               </div>
             </div>
           )}
-          </>
-        )}
+        </div>
+      ) : (
+        <div className="pt-32 md:pt-32 px-4 py-6">
+          {/* Tablet Layout (768px - 1280px) */}
+          {!isMobile && (
+            <div className="xl:hidden max-w-7xl mx-auto space-y-6">
+              {/* Tablet Controls */}
+              <div className="flex items-center justify-between">
+                <div className="bg-white rounded-lg shadow-sm p-3">
+                  <UnifiedFilterBar
+                    selectedCategories={selectedCategories}
+                    onCategoryChange={setSelectedCategories}
+                    selectedRadius={selectedRadius}
+                    onRadiusChange={setSelectedRadius}
+                    isRadiusEnabled={isRadiusEnabled}
+                    showOffersOnly={showOffersOnly}
+                    onShowOffersChange={setShowOffersOnly}
+                    selectedDays={selectedDays}
+                    onDaysChange={handleDaysChange}
+                  />
+                </div>
+              </div>
 
-        {/* Tablet Layout (768px - 1280px) */}
-        {!isMobile && (
-          <div className="xl:hidden max-w-7xl mx-auto space-y-6">
-            {/* Tablet Controls */}
-            <div className="flex items-center justify-between">
-              <div className="bg-white rounded-lg shadow-sm p-3">
+              {/* Tablet Results and Map Side by Side */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="lg:col-span-1">
+                  <SearchResults 
+                    merchants={merchants}
+                    isLoading={isLoading}
+                    error={error}
+                    startTime={startTime}
+                    endTime={endTime}
+                    location={location}
+                  />
+                </div>
+                <div className="lg:col-span-1">
+                  <div className="sticky top-48 z-30">
+                    <ResultsMap 
+                      restaurants={merchants || []}
+                      onMapMove={handleMapMove}
+                      searchAsMapMoves={searchAsMapMoves}
+                      onToggleSearchAsMapMoves={setSearchAsMapMoves}
+                      viewState={mapViewState}
+                      onViewStateChange={handleViewStateChange}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Desktop Layout (> 1280px) */}
+          <div className="hidden xl:flex xl:gap-6">
+            {/* Fixed Far Left Sidebar - Unified Filters */}
+            <div className="w-80 flex-shrink-0">
+              <div className="space-y-4 sticky top-32 z-40">
                 <UnifiedFilterBar
                   selectedCategories={selectedCategories}
                   onCategoryChange={setSelectedCategories}
@@ -304,80 +345,34 @@ const Results = () => {
               </div>
             </div>
 
-            {/* Tablet Results and Map Side by Side */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="lg:col-span-1">
-                <SearchResults 
-                  merchants={merchants}
-                  isLoading={isLoading}
-                  error={error}
-                  startTime={startTime}
-                  endTime={endTime}
-                  location={location}
+            {/* Scrollable Main Content Area - Results */}
+            <div className="flex-1 min-w-0">
+              <SearchResults 
+                merchants={merchants}
+                isLoading={isLoading}
+                error={error}
+                startTime={startTime}
+                endTime={endTime}
+                location={location}
+              />
+            </div>
+
+            {/* Fixed Right Side - Map */}
+            <div className="w-[28rem] flex-shrink-0">
+              <div className="sticky top-32 z-30">
+                <ResultsMap 
+                  restaurants={merchants || []}
+                  onMapMove={handleMapMove}
+                  searchAsMapMoves={searchAsMapMoves}
+                  onToggleSearchAsMapMoves={setSearchAsMapMoves}
+                  viewState={mapViewState}
+                  onViewStateChange={handleViewStateChange}
                 />
               </div>
-              <div className="lg:col-span-1">
-                <div className="sticky top-48 z-30">
-                  <ResultsMap 
-                    restaurants={merchants || []}
-                    onMapMove={handleMapMove}
-                    searchAsMapMoves={searchAsMapMoves}
-                    onToggleSearchAsMapMoves={setSearchAsMapMoves}
-                    viewState={mapViewState}
-                    onViewStateChange={handleViewStateChange}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Desktop Layout (> 1280px) */}
-        <div className="hidden xl:flex xl:gap-6">
-          {/* Fixed Far Left Sidebar - Unified Filters */}
-          <div className="w-80 flex-shrink-0">
-            <div className="space-y-4 sticky top-32 z-40">
-              <UnifiedFilterBar
-                selectedCategories={selectedCategories}
-                onCategoryChange={setSelectedCategories}
-                selectedRadius={selectedRadius}
-                onRadiusChange={setSelectedRadius}
-                isRadiusEnabled={isRadiusEnabled}
-                showOffersOnly={showOffersOnly}
-                onShowOffersChange={setShowOffersOnly}
-                selectedDays={selectedDays}
-                onDaysChange={handleDaysChange}
-              />
-            </div>
-          </div>
-
-          {/* Scrollable Main Content Area - Results */}
-          <div className="flex-1 min-w-0">
-            <SearchResults 
-              merchants={merchants}
-              isLoading={isLoading}
-              error={error}
-              startTime={startTime}
-              endTime={endTime}
-              location={location}
-            />
-          </div>
-
-          {/* Fixed Right Side - Map */}
-          <div className="w-[28rem] flex-shrink-0">
-            <div className="sticky top-32 z-30">
-              <ResultsMap 
-                restaurants={merchants || []}
-                onMapMove={handleMapMove}
-                searchAsMapMoves={searchAsMapMoves}
-                onToggleSearchAsMapMoves={setSearchAsMapMoves}
-                viewState={mapViewState}
-                onViewStateChange={handleViewStateChange}
-              />
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
