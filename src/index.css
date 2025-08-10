@@ -127,6 +127,7 @@
   .mapboxgl-canvas-container,
   .mapboxgl-canvas {
     touch-action: none !important;
+    overscroll-behavior: contain;
   }
   
   /* Enable interactions for modal content */
