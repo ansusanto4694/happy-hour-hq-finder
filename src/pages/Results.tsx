@@ -68,18 +68,10 @@ const Results = () => {
     })();
   }, [isMobile, location]);
 
-  // Prevent mobile scroll on this page
-  React.useEffect(() => {
-    if (isMobile) {
-      document.documentElement.classList.add('mobile-no-scroll');
-    } else {
-      document.documentElement.classList.remove('mobile-no-scroll');
-    }
-    
-    return () => {
-      document.documentElement.classList.remove('mobile-no-scroll');
-    };
-  }, [isMobile]);
+  // Removed global html scroll lock to avoid iOS gesture conflicts with map gestures.
+  // The page container already uses h-screen overflow-hidden on mobile.
+  // (Previously toggled 'mobile-no-scroll' class on <html> here)
+
   // Handle day change with URL update
   const handleDaysChange = (days: number[]) => {
     setSelectedDaysState(days);

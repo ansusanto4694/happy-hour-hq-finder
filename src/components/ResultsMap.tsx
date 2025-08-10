@@ -140,7 +140,7 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
   }, [onMapMove]);
 
   return isMobile ? (
-    <div className="w-full h-full relative touch-none">
+    <div className="map-container w-full h-full relative">
       <Map
         ref={mapRef}
         {...viewState}
