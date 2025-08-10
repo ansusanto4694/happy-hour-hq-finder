@@ -145,7 +145,7 @@ const Results = () => {
     : `Discover amazing happy hour deals near you. Compare prices and find the best bars and restaurants for your night out.`;
 
   return (
-    <div className={`bg-gray-50 ${isMobile ? 'h-screen overflow-hidden' : 'min-h-screen'}`}>
+    <div className={`bg-gray-50 ${isMobile ? 'h-screen overflow-hidden overscroll-none' : 'min-h-screen'}`}>
       <SEOHead 
         title={seoTitle}
         description={seoDescription}
@@ -203,11 +203,11 @@ const Results = () => {
 
       {/* Mobile: Fixed layout with no scroll */}
       {isMobile ? (
-        <div className="fixed inset-0 top-[128px] bottom-0">
+        <div className="fixed inset-0 top-[128px] bottom-0 overscroll-none">
           {!filtersOpen && (
             <>
               {/* Map container - outside drawer to prevent touch interference */}
-              <div className="absolute inset-0 w-full h-full">
+              <div className="absolute inset-0 w-full h-full map-container overscroll-none">
                 <ResultsMap
                   restaurants={merchants || []}
                   onMapMove={handleMapMove}
