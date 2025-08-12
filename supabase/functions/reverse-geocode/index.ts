@@ -29,7 +29,7 @@ serve(async (req) => {
       );
     }
 
-    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${token}&types=place,locality,neighborhood,postcode&limit=1&country=US`;
+    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${token}&types=place,locality,neighborhood,postcode&limit=5&country=US`;
 
     const resp = await fetch(url);
     if (!resp.ok) {
@@ -53,23 +53,42 @@ serve(async (req) => {
       );
     }
 
-    // Determine city and region from context
+    // Determine city, region, and postal code from context
     let city = '';
     let region = '';
+    let postalCode = '';
     let locationType = 'place';
 
     if (Array.isArray(feature.place_type) && feature.place_type.includes('neighborhood')) {
       locationType = 'neighborhood';
+    } else if (Array.isArray(feature.place_type) && feature.place_type.includes('locality')) {
+      locationType = 'locality';
     } else if (Array.isArray(feature.place_type) && feature.place_type.includes('postcode')) {
       locationType = 'postcode';
     }
 
+    // Prefer borough/locality when available (e.g., Brooklyn over New York)
+    let cityLocality = '';
+    let cityPlace = '';
+
     for (const ctx of feature.context || []) {
-      if (ctx.id?.startsWith('place.')) city = ctx.text;
+      if (ctx.id?.startsWith('locality.')) cityLocality = ctx.text;
+      if (ctx.id?.startsWith('place.')) cityPlace = ctx.text;
       if (ctx.id?.startsWith('region.')) {
         const short = (ctx.short_code || '').replace(/us-/i, '');
         region = (short || ctx.text || '').toUpperCase();
       }
+      if (ctx.id?.startsWith('postcode.')) {
+        postalCode = ctx.text;
+      }
+    }
+
+    if (Array.isArray(feature.place_type) && feature.place_type.includes('locality') && feature.text) {
+      city = feature.text;
+    } else if (cityLocality) {
+      city = cityLocality;
+    } else if (!city && cityPlace) {
+      city = cityPlace;
     }
 
     // Fallbacks
@@ -77,6 +96,13 @@ serve(async (req) => {
     if (!region && feature.place_name) {
       const parts = String(feature.place_name).split(', ').map((p: string) => p.trim());
       if (parts.length >= 2) region = parts[1].toUpperCase();
+    }
+    // If postal code still missing, look for a postcode feature among results
+    if (!postalCode) {
+      const postcodeFeature = features.find((f: any) => Array.isArray(f.place_type) && f.place_type.includes('postcode'));
+      if (postcodeFeature?.text) {
+        postalCode = postcodeFeature.text;
+      }
     }
 
     // Normalize common US state name to postal abbreviation when obvious
@@ -105,6 +131,7 @@ serve(async (req) => {
         place_name: feature.place_name,
         latitude,
         longitude,
+        postal_code: postalCode,
         location_type: locationType,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

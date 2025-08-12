@@ -30,7 +30,8 @@ export function useLocateMe() {
     const city = data?.city || '';
     const region = data?.region || '';
     const place = data?.place_name || '';
-    const display = city && region ? `${city}, ${region}` : (place || `${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+    const postal = data?.postal_code || '';
+    const display = city && region ? `${city}, ${region}${postal ? ` ${postal}` : ''}` : (place || `${lat.toFixed(4)}, ${lng.toFixed(4)}`);
     return { display, latitude: lat, longitude: lng };
   };
 
