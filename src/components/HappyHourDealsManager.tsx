@@ -19,7 +19,10 @@ export const HappyHourDealsManager: React.FC<HappyHourDealsManagerProps> = ({ re
   const [formData, setFormData] = useState<DealFormData>({
     deal_title: '',
     deal_description: '',
-    active: true
+    active: true,
+    source_url: '',
+    source_label: '',
+    is_verified: false
   });
   
   const {
@@ -33,7 +36,14 @@ export const HappyHourDealsManager: React.FC<HappyHourDealsManagerProps> = ({ re
   } = useHappyHourDeals(restaurantId);
 
   const resetForm = () => {
-    setFormData({ deal_title: '', deal_description: '', active: true });
+    setFormData({
+      deal_title: '',
+      deal_description: '',
+      active: true,
+      source_url: '',
+      source_label: '',
+      is_verified: false,
+    });
     setEditingDeal(null);
   };
 
@@ -42,7 +52,10 @@ export const HappyHourDealsManager: React.FC<HappyHourDealsManagerProps> = ({ re
     setFormData({
       deal_title: deal.deal_title,
       deal_description: deal.deal_description || '',
-      active: deal.active
+      active: deal.active,
+      source_url: deal.source_url || '',
+      source_label: deal.source_label || '',
+      is_verified: deal.is_verified ?? false,
     });
   };
 

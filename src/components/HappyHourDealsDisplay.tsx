@@ -14,6 +14,9 @@ interface HappyHourDeal {
   deal_title: string;
   deal_description: string | null;
   active: boolean;
+  is_verified: boolean;
+  source_url: string | null;
+  source_label: string | null;
 }
 
 export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ restaurantId }) => {
@@ -22,7 +25,7 @@ export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ re
     queryFn: async () => {
       const { data, error } = await supabase
         .from('happy_hour_deals')
-        .select('id, deal_title, deal_description, active')
+        .select('id, deal_title, deal_description, active, is_verified, source_url, source_label')
         .eq('restaurant_id', restaurantId)
         .eq('active', true)
         .order('display_order', { ascending: true })
@@ -71,9 +74,24 @@ export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ re
     <div className="space-y-3">
       {deals.map((deal) => (
         <div key={deal.id} className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-          <div className="flex items-start justify-between">
+          <div className="flex items-start justify-between gap-3">
             <div className="flex-1">
-              <h3 className="font-semibold text-gray-900 mb-1">{deal.deal_title}</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold text-gray-900 mb-1">{deal.deal_title}</h3>
+                {deal.is_verified && (
+                  <Badge variant="secondary" className="bg-green-100 text-green-800">Verified</Badge>
+                )}
+                {deal.source_url && (
+                  <a
+                    href={deal.source_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-blue-700 underline"
+                  >
+                    {deal.source_label || 'Source'}
+                  </a>
+                )}
+              </div>
               {deal.deal_description && (
                 <div className="text-gray-700 text-sm prose prose-sm max-w-none">
                   <ReactMarkdown

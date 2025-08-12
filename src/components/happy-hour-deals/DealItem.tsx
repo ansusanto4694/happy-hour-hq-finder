@@ -73,6 +73,20 @@ export const DealItem: React.FC<DealItemProps> = ({
             <Badge variant={deal.active ? "default" : "secondary"} className="flex-shrink-0">
               {deal.active ? "Active" : "Inactive"}
             </Badge>
+            {deal.is_verified && (
+              <Badge variant="secondary" className="flex-shrink-0">Verified</Badge>
+            )}
+            {deal.source_url && (
+              <a
+                href={deal.source_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-blue-600 underline ml-1 truncate max-w-[140px]"
+                title={deal.source_url}
+              >
+                {deal.source_label || 'Source'}
+              </a>
+            )}
           </div>
           {deal.deal_description && (
             <div className="text-sm text-gray-600 prose prose-sm max-w-none">

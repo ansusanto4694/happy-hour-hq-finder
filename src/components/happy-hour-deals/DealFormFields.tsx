@@ -59,6 +59,33 @@ export const DealFormFields: React.FC<DealFormFieldsProps> = ({
         />
         <label className="text-sm font-medium">Active</label>
       </div>
+
+      <div className="space-y-3 border rounded-md p-3">
+        <div className="flex items-center space-x-2">
+          <Switch
+            checked={formData.is_verified}
+            onCheckedChange={(checked) => setFormData({ ...formData, is_verified: checked })}
+          />
+          <label className="text-sm font-medium">Verified</label>
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Source URL {formData.is_verified ? '*' : ''}</label>
+          <Input
+            value={formData.source_url}
+            onChange={(e) => setFormData({ ...formData, source_url: e.target.value })}
+            placeholder="https://example.com/menu"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Source Label</label>
+          <Input
+            value={formData.source_label}
+            onChange={(e) => setFormData({ ...formData, source_label: e.target.value })}
+            placeholder="e.g., Official menu"
+          />
+        </div>
+        <p className="text-xs text-gray-500">If Verified is enabled, a source URL is required.</p>
+      </div>
     </>
   );
 };

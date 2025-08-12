@@ -33,6 +33,11 @@ export const DealForm: React.FC<DealFormProps> = ({
       return;
     }
 
+    if (formData.is_verified && !formData.source_url.trim()) {
+      toast({ title: 'Error', description: 'Source URL is required to mark a deal as verified.' });
+      return;
+    }
+
     onSubmit(formData);
   };
 
