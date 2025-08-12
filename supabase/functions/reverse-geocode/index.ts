@@ -32,14 +32,25 @@ serve(async (req) => {
     const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${token}&types=place,locality,neighborhood,postcode&limit=5&country=US`;
 
     const resp = await fetch(url);
+    let data: any = null;
     if (!resp.ok) {
-      return new Response(
-        JSON.stringify({ error: `Mapbox error: ${resp.status}` }),
-        { status: resp.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      const primaryErr = await resp.text().catch(() => '');
+      console.error('Mapbox primary error:', resp.status, primaryErr);
+      // Fallback: simplify query (drop types) and reduce precision
+      const fallbackUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude.toFixed(6)},${latitude.toFixed(6)}.json?access_token=${token}&limit=5&country=US`;
+      const resp2 = await fetch(fallbackUrl);
+      if (!resp2.ok) {
+        const fallbackErr = await resp2.text().catch(() => '');
+        return new Response(
+          JSON.stringify({ error: `Mapbox error: ${resp.status}`, details: primaryErr, fallback_status: resp2.status, fallback_details: fallbackErr }),
+          { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      data = await resp2.json();
+    } else {
+      data = await resp.json();
     }
 
-    const data = await resp.json();
     const features = Array.isArray(data?.features) ? data.features : [];
     const feature = features.find((f: any) => Array.isArray(f.place_type) && f.place_type.includes('neighborhood'))
       || features.find((f: any) => Array.isArray(f.place_type) && f.place_type.includes('locality'))
