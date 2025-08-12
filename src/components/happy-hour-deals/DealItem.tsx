@@ -6,7 +6,7 @@ import { Edit, Trash2, GripVertical } from 'lucide-react';
 import { HappyHourDeal } from './types';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
-
+import { format } from 'date-fns';
 interface DealItemProps {
   deal: HappyHourDeal;
   provided: DraggableProvided;
@@ -88,6 +88,11 @@ export const DealItem: React.FC<DealItemProps> = ({
               </a>
             )}
           </div>
+          {deal.is_verified && deal.verified_at && (
+            <div className="text-xs text-gray-500">
+              Last verified on {format(new Date(deal.verified_at), 'MMM d, yyyy')}
+            </div>
+          )}
           {deal.deal_description && (
             <div className="text-sm text-gray-600 prose prose-sm max-w-none">
               <ReactMarkdown

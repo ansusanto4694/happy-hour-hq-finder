@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
+import { format } from 'date-fns';
 
 interface HappyHourDealsDisplayProps {
   restaurantId: number;
@@ -15,6 +16,7 @@ interface HappyHourDeal {
   deal_description: string | null;
   active: boolean;
   is_verified: boolean;
+  verified_at: string | null;
   source_url: string | null;
   source_label: string | null;
 }
@@ -25,7 +27,7 @@ export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ re
     queryFn: async () => {
       const { data, error } = await supabase
         .from('happy_hour_deals')
-        .select('id, deal_title, deal_description, active, is_verified, source_url, source_label')
+        .select('id, deal_title, deal_description, active, is_verified, verified_at, source_url, source_label')
         .eq('restaurant_id', restaurantId)
         .eq('active', true)
         .order('display_order', { ascending: true })
@@ -92,6 +94,11 @@ export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ re
                   </a>
                 )}
               </div>
+              {deal.is_verified && deal.verified_at && (
+                <div className="text-xs text-gray-500 mt-0.5">
+                  Last verified on {format(new Date(deal.verified_at), 'MMM d, yyyy')}
+                </div>
+              )}
               {deal.deal_description && (
                 <div className="text-gray-700 text-sm prose prose-sm max-w-none">
                   <ReactMarkdown
