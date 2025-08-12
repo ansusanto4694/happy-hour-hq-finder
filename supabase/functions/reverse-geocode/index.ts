@@ -40,7 +40,11 @@ serve(async (req) => {
     }
 
     const data = await resp.json();
-    const feature = data?.features?.[0];
+    const features = Array.isArray(data?.features) ? data.features : [];
+    const feature = features.find((f: any) => Array.isArray(f.place_type) && f.place_type.includes('neighborhood'))
+      || features.find((f: any) => Array.isArray(f.place_type) && f.place_type.includes('locality'))
+      || features.find((f: any) => Array.isArray(f.place_type) && f.place_type.includes('place'))
+      || features[0];
 
     if (!feature) {
       return new Response(
@@ -62,7 +66,10 @@ serve(async (req) => {
 
     for (const ctx of feature.context || []) {
       if (ctx.id?.startsWith('place.')) city = ctx.text;
-      if (ctx.id?.startsWith('region.')) region = (ctx.short_code?.replace('us-', '') || ctx.text || '').toUpperCase();
+      if (ctx.id?.startsWith('region.')) {
+        const short = (ctx.short_code || '').replace(/us-/i, '');
+        region = (short || ctx.text || '').toUpperCase();
+      }
     }
 
     // Fallbacks
@@ -71,6 +78,25 @@ serve(async (req) => {
       const parts = String(feature.place_name).split(', ').map((p: string) => p.trim());
       if (parts.length >= 2) region = parts[1].toUpperCase();
     }
+
+    // Normalize common US state name to postal abbreviation when obvious
+    // Mapbox sometimes provides full state names in ctx.text; convert popular ones we rely on
+    const usStateMap: Record<string, string> = {
+      'NEW YORK': 'NY',
+      'CALIFORNIA': 'CA',
+      'TEXAS': 'TX',
+      'FLORIDA': 'FL',
+      'ILLINOIS': 'IL',
+      'PENNSYLVANIA': 'PA',
+      'OHIO': 'OH',
+      'GEORGIA': 'GA',
+      'NORTH CAROLINA': 'NC',
+      'MICHIGAN': 'MI',
+    };
+    if (usStateMap[region]) {
+      region = usStateMap[region];
+    }
+
 
     return new Response(
       JSON.stringify({
