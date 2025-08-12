@@ -29,7 +29,7 @@ serve(async (req) => {
       );
     }
 
-    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${token}&types=place,locality,neighborhood,postcode&limit=5&country=US`;
+    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${token}&types=place,locality,neighborhood,postcode&country=US`;
 
     const resp = await fetch(url);
     let data: any = null;
