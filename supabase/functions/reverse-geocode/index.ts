@@ -62,18 +62,41 @@ serve(async (req) => {
       locationType = 'neighborhood';
     } else if (Array.isArray(feature.place_type) && feature.place_type.includes('postcode')) {
       locationType = 'postcode';
+    } else if (Array.isArray(feature.place_type) && feature.place_type.includes('locality')) {
+      locationType = 'locality';
     }
 
+    // Collect possible city candidates from context (prefer district/borough, then locality, then place)
+    let districtCandidate = '';
+    let localityCandidate = '';
+    let placeCandidate = '';
+
     for (const ctx of feature.context || []) {
-      if (ctx.id?.startsWith('place.')) city = ctx.text;
+      if (ctx.id?.startsWith('district.')) districtCandidate = ctx.text;
+      if (ctx.id?.startsWith('locality.')) localityCandidate = ctx.text;
+      if (ctx.id?.startsWith('place.')) placeCandidate = ctx.text;
       if (ctx.id?.startsWith('region.')) {
         const short = (ctx.short_code || '').replace(/us-/i, '');
         region = (short || ctx.text || '').toUpperCase();
       }
     }
 
+    // Choose best city label
+    city = districtCandidate || localityCandidate || placeCandidate || '';
+
     // Fallbacks
-    if (!city && feature.text) city = feature.text;
+    if (!city) {
+      // If the selected feature itself is a city/borough/locality, use its text
+      if (Array.isArray(feature.place_type)) {
+        if (feature.place_type.includes('place') || feature.place_type.includes('locality')) {
+          city = feature.text || '';
+        } else if (feature.place_type.includes('neighborhood')) {
+          // For neighborhoods, using the borough/district (if available) generally matches our DB better
+          city = districtCandidate || localityCandidate || placeCandidate || feature.text || '';
+        }
+      }
+    }
+
     if (!region && feature.place_name) {
       const parts = String(feature.place_name).split(', ').map((p: string) => p.trim());
       if (parts.length >= 2) region = parts[1].toUpperCase();
