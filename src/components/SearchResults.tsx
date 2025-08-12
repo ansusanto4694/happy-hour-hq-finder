@@ -27,7 +27,6 @@ interface SearchResultsProps {
   endTime?: string;
   location?: string;
   isMobile?: boolean;
-  headerRightContent?: React.ReactNode;
 }
 
 const RESULTS_PER_PAGE = 30;
@@ -39,8 +38,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   startTime, 
   endTime, 
   location,
-  isMobile = false,
-  headerRightContent
+  isMobile = false
 }) => {
   const { handleRestaurantClick } = useSearchResultsNavigation();
   const [displayedResults, setDisplayedResults] = useState<any[]>([]);
@@ -217,7 +215,6 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
         resultsPerPage={RESULTS_PER_PAGE}
         searchTerm={searchTerm}
         isMobile={isMobile}
-        rightContent={headerRightContent}
       />
       
       <div className="space-y-3">

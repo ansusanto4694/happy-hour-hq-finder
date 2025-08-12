@@ -100,41 +100,4 @@
   body {
     @apply bg-background text-foreground;
   }
-
-  /* Prevent mobile scroll on results page */
-  html.mobile-no-scroll {
-    overflow: hidden;
-    height: 100vh;
-    position: fixed;
-    width: 100%;
-  }
-  
-  html.mobile-no-scroll body {
-    overflow: hidden;
-    height: 100vh;
-    width: 100%;
-  }
-
-  /* Prevent zoom on double tap for everything except map and modals */
-  * {
-    touch-action: auto;
-  }
-  
-  /* Allow all touch gestures specifically for map containers */
-  .map-container,
-  .map-container *,
-  .mapboxgl-map,
-  .mapboxgl-canvas-container,
-  .mapboxgl-canvas {
-    touch-action: none !important;
-    overscroll-behavior: contain;
-  }
-  
-  /* Enable interactions for modal content */
-  .mobile-search-modal,
-  .mobile-search-modal *,
-  .mobile-filter-modal,
-  .mobile-filter-modal * {
-    touch-action: auto !important;
-  }
 }

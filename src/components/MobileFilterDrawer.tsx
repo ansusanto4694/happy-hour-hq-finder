@@ -1,8 +1,8 @@
 import React from 'react';
-import { Filter } from 'lucide-react';
+import { Filter, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
-
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { UnifiedFilterBar } from './UnifiedFilterBar';
 import { RadiusOption } from './RadiusFilter';
 
 interface MobileFilterDrawerProps {
@@ -15,7 +15,6 @@ interface MobileFilterDrawerProps {
   onShowOffersChange: (showOffers: boolean) => void;
   selectedDays: number[];
   onDaysChange: (days: number[]) => void;
-  onOpenChange?: (open: boolean) => void;
 }
 
 export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
@@ -28,25 +27,47 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
   onShowOffersChange,
   selectedDays,
   onDaysChange,
-  onOpenChange,
 }) => {
-  
   const hasFilters = selectedCategories.length > 0 || selectedRadius !== 'walking' || showOffersOnly;
 
   return (
-    <Button 
-      variant="outline" 
-      size="sm"
-      onClick={() => onOpenChange?.(true)}
-      className={`relative ${hasFilters ? 'border-orange-500 text-orange-600' : ''}`}
-    >
-      <Filter className="w-4 h-4 mr-2" />
-      Filters
-      {hasFilters && (
-        <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-          {selectedCategories.length}
-        </span>
-      )}
-    </Button>
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button 
+          variant="outline" 
+          size="sm"
+          className={`relative ${hasFilters ? 'border-orange-500 text-orange-600' : ''}`}
+        >
+          <Filter className="w-4 h-4 mr-2" />
+          Filters
+          {hasFilters && (
+            <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+              {selectedCategories.length}
+            </span>
+          )}
+        </Button>
+      </SheetTrigger>
+      
+      <SheetContent side="left" className="w-[280px] sm:w-[320px]">
+        <SheetHeader>
+          <SheetTitle>Filters</SheetTitle>
+        </SheetHeader>
+        
+        <div className="mt-6 overflow-y-auto h-[calc(100vh-120px)]">
+          <UnifiedFilterBar
+            selectedCategories={selectedCategories}
+            onCategoryChange={onCategoryChange}
+            selectedRadius={selectedRadius}
+            onRadiusChange={onRadiusChange}
+            isRadiusEnabled={isRadiusEnabled}
+            showOffersOnly={showOffersOnly}
+            onShowOffersChange={onShowOffersChange}
+            selectedDays={selectedDays}
+            onDaysChange={onDaysChange}
+            vertical={true}
+          />
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 };

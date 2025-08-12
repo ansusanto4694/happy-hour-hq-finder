@@ -89,19 +89,6 @@ export const MobileSearchBar = () => {
     setShowSuggestions(false);
     setSelectedSuggestionIndex(-1);
     locationInputRef.current?.focus();
-
-    // Auto-search when a location is selected with coordinates
-    const params = new URLSearchParams();
-    if (searchTerm) params.set('search', searchTerm);
-    if (startTime) params.set('startTime', startTime);
-    if (endTime) params.set('endTime', endTime);
-    params.set('location', suggestion.place_name);
-    if (suggestion.center?.length === 2) {
-      params.set('lat', String(suggestion.center[1])); // [lng, lat]
-      params.set('lng', String(suggestion.center[0]));
-    }
-    navigate(`/results?${params.toString()}`);
-    setIsExpanded(false);
   };
 
   // Handle keyboard navigation
@@ -163,27 +150,12 @@ export const MobileSearchBar = () => {
     };
   }, []);
 
-  const handleSearch = async () => {
+  const handleSearch = () => {
     const params = new URLSearchParams();
     if (searchTerm) params.set('search', searchTerm);
     if (location) params.set('location', location);
     if (startTime) params.set('startTime', startTime);
     if (endTime) params.set('endTime', endTime);
-
-    // Pre-normalize location to include coordinates
-    try {
-      if (location) {
-        const { data: normalizedLocation, error: normalizeError } = await supabase.functions.invoke('normalize-location', {
-          body: { location }
-        });
-        if (!normalizeError && normalizedLocation?.latitude && normalizedLocation?.longitude) {
-          params.set('lat', String(normalizedLocation.latitude));
-          params.set('lng', String(normalizedLocation.longitude));
-        }
-      }
-    } catch (e) {
-      console.error('Mobile location normalization failed:', e);
-    }
     
     navigate(`/results?${params.toString()}`);
     setIsExpanded(false);
@@ -236,7 +208,7 @@ export const MobileSearchBar = () => {
             </CollapsibleTrigger>
             
             <CollapsibleContent>
-              <div className="fixed inset-0 bg-white z-50 flex flex-col mobile-search-modal">
+              <div className="fixed inset-0 bg-white z-50 flex flex-col">
                 {/* Header with search bar */}
                 <div className="flex-shrink-0 p-4 border-b border-gray-200">
                   <div className="flex items-center gap-3">
@@ -320,14 +292,6 @@ export const MobileSearchBar = () => {
                           if (r?.display) {
                             setLocation(r.display);
                             setShowSuggestions(false);
-                            // Auto-search after locating
-                            const params = new URLSearchParams();
-                            if (searchTerm) params.set('search', searchTerm);
-                            if (startTime) params.set('startTime', startTime);
-                            if (endTime) params.set('endTime', endTime);
-                            params.set('location', r.display);
-                            navigate(`/results?${params.toString()}`);
-                            setIsExpanded(false);
                           }
                         }}
                         className="absolute right-10 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors z-20"

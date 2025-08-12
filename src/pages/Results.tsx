@@ -4,9 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { SearchBar } from '@/components/SearchBar';
 import { MobileSearchBar } from '@/components/MobileSearchBar';
 import { MobileFilterDrawer } from '@/components/MobileFilterDrawer';
-import { MobileFilterModal } from '@/components/MobileFilterModal';
-
-import { Drawer, DrawerContent, DrawerHandle, DrawerHeader, DrawerTitle, DrawerClose } from '@/components/ui/drawer';
+import { ViewToggle } from '@/components/ViewToggle';
 import { SearchResults } from '@/components/SearchResults';
 import { UnifiedFilterBar } from '@/components/UnifiedFilterBar';
 import { ResultsMap } from '@/components/ResultsMap';
@@ -15,14 +13,12 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { RadiusOption, getRadiusMiles } from '@/components/RadiusFilter';
 import { AuthButton } from '@/components/AuthButton';
 import { SEOHead } from '@/components/SEOHead';
-import { useLocateMe } from '@/hooks/useLocateMe';
-import { X } from 'lucide-react';
 
 const Results = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedRadius, setSelectedRadius] = useState<RadiusOption>('walking');
   const [showOffersOnly, setShowOffersOnly] = useState(false);
-  const [mobileView, setMobileView] = useState<'list' | 'map'>('map');
+  const [mobileView, setMobileView] = useState<'list' | 'map'>('list');
   const [searchAsMapMoves, setSearchAsMapMoves] = useState(false);
   const [mapBounds, setMapBounds] = useState<{ north: number; south: number; east: number; west: number } | null>(null);
   const [selectedDaysState, setSelectedDaysState] = useState<number[]>([]);
@@ -32,13 +28,10 @@ const Results = () => {
     latitude: 37.7749,
     zoom: 12
   });
-  // Control Vaul snap point to allow dragging both up and down
-  const [activeSnap, setActiveSnap] = useState<string | number>(0.12);
-  const [filtersOpen, setFiltersOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { locate } = useLocateMe();
+
   // Extract search parameters
   const searchTerm = searchParams.get('search') || '';
   const location = searchParams.get('location') || searchParams.get('zip') || '';
@@ -48,29 +41,6 @@ const Results = () => {
     const daysParam = searchParams.get('days');
     return daysParam ? daysParam.split(',').map(Number) : [];
   })();
-  const latParam = searchParams.get('lat');
-  const lngParam = searchParams.get('lng');
-  const coords = latParam && lngParam ? { latitude: parseFloat(latParam), longitude: parseFloat(lngParam) } : null;
-
-  // On mobile, default to user's current city using LocateMe (GPS with IP fallback)
-  React.useEffect(() => {
-    if (!isMobile || location) return;
-    (async () => {
-      const r = await locate();
-      if (r?.display) {
-        const newSearchParams = new URLSearchParams(searchParams);
-        newSearchParams.set('location', r.display);
-        setSearchParams(newSearchParams);
-        if (r.latitude && r.longitude) {
-          setMapViewState({ longitude: r.longitude, latitude: r.latitude, zoom: 13 });
-        }
-      }
-    })();
-  }, [isMobile, location]);
-
-  // Removed global html scroll lock to avoid iOS gesture conflicts with map gestures.
-  // The page container already uses h-screen overflow-hidden on mobile.
-  // (Previously toggled 'mobile-no-scroll' class on <html> here)
 
   // Handle day change with URL update
   const handleDaysChange = (days: number[]) => {
@@ -94,8 +64,7 @@ const Results = () => {
     startTime, 
     endTime, 
     location,
-    coords,
-    searchAsMapMoves ? mapBounds || undefined : undefined,
+    searchAsMapMoves ? mapBounds : undefined,
     isRadiusEnabled ? radiusMiles : undefined,
     showOffersOnly,
     selectedDays
@@ -145,7 +114,7 @@ const Results = () => {
     : `Discover amazing happy hour deals near you. Compare prices and find the best bars and restaurants for your night out.`;
 
   return (
-    <div className={`bg-gray-50 ${isMobile ? 'h-screen overflow-hidden overscroll-none' : 'min-h-screen'}`}>
+    <div className="min-h-screen bg-gray-50">
       <SEOHead 
         title={seoTitle}
         description={seoDescription}
@@ -201,14 +170,43 @@ const Results = () => {
         </div>
       </div>
 
-      {/* Mobile: Fixed layout with no scroll */}
-      {isMobile ? (
-        <div className="fixed inset-0 top-[128px] bottom-0 overscroll-none">
-          {!filtersOpen && (
-            <>
-              {/* Map container - outside drawer to prevent touch interference */}
-              <div className="absolute inset-0 w-full h-full map-container overscroll-none">
-                <ResultsMap
+      {/* Content with top padding to account for fixed header */}
+      <div className="pt-32 md:pt-32 px-4 py-6">
+        {/* Mobile Layout (< 768px) */}
+        {isMobile && (
+          <div className="max-w-7xl mx-auto">
+            {/* Fixed Mobile Controls */}
+            <div className="sticky top-32 md:top-32 z-40 bg-gray-50 pb-4 mb-4">
+              <div className="flex items-center justify-between gap-3">
+                <MobileFilterDrawer
+                  selectedCategories={selectedCategories}
+                  onCategoryChange={setSelectedCategories}
+                  selectedRadius={selectedRadius}
+                  onRadiusChange={setSelectedRadius}
+                  isRadiusEnabled={isRadiusEnabled}
+                  showOffersOnly={showOffersOnly}
+                  onShowOffersChange={setShowOffersOnly}
+                  selectedDays={selectedDays}
+                  onDaysChange={handleDaysChange}
+                />
+                <ViewToggle view={mobileView} onViewChange={setMobileView} />
+              </div>
+            </div>
+
+            {/* Mobile Content */}
+            {mobileView === 'list' ? (
+              <SearchResults 
+                merchants={merchants}
+                isLoading={isLoading}
+                error={error}
+                startTime={startTime}
+                endTime={endTime}
+                location={location}
+                isMobile={true}
+              />
+            ) : (
+              <div className="h-[calc(100vh-220px)] rounded-lg overflow-hidden">
+                <ResultsMap 
                   restaurants={merchants || []}
                   onMapMove={handleMapMove}
                   searchAsMapMoves={searchAsMapMoves}
@@ -217,114 +215,16 @@ const Results = () => {
                   onViewStateChange={handleViewStateChange}
                 />
               </div>
+            )}
+          </div>
+        )}
 
-              <Drawer modal={false} shouldScaleBackground={false} open={true} dismissible={false} handleOnly snapPoints={[0.12, 0.6, 1]} activeSnapPoint={activeSnap} setActiveSnapPoint={setActiveSnap} snapToSequentialPoint fadeFromIndex={1}>
-                {/* Floating grab handle to ensure peek on mobile */}
-                <DrawerHandle className="fixed bottom-[calc(env(safe-area-inset-bottom)+56px)] left-1/2 -translate-x-1/2 z-[110] px-4 py-3 rounded-full bg-background/90 shadow-lg backdrop-blur">
-                  <div className="pointer-events-none h-1.5 w-12 rounded-full bg-muted" />
-                </DrawerHandle>
-              
-                <DrawerContent showOverlay={false} className="max-h-[85vh]">
-                  <div className="flex-1 min-h-0 overflow-y-auto px-2 sm:px-4 pb-4">
-                    <SearchResults
-                      merchants={merchants}
-                      isLoading={isLoading}
-                      error={error}
-                      startTime={startTime}
-                      endTime={endTime}
-                      location={location}
-                      isMobile={true}
-                      headerRightContent={
-                        <MobileFilterDrawer
-                          selectedCategories={selectedCategories}
-                          onCategoryChange={setSelectedCategories}
-                          selectedRadius={selectedRadius}
-                          onRadiusChange={setSelectedRadius}
-                          isRadiusEnabled={isRadiusEnabled}
-                          showOffersOnly={showOffersOnly}
-                          onShowOffersChange={setShowOffersOnly}
-                          selectedDays={selectedDays}
-                          onDaysChange={handleDaysChange}
-                          onOpenChange={setFiltersOpen}
-                        />
-                      }
-                    />
-                  </div>
-                </DrawerContent>
-              </Drawer>
-            </>
-          )}
-
-          {/* Mobile Filter Modal */}
-          <MobileFilterModal
-            isOpen={filtersOpen}
-            onClose={() => setFiltersOpen(false)}
-            selectedCategories={selectedCategories}
-            onCategoryChange={setSelectedCategories}
-            selectedRadius={selectedRadius}
-            onRadiusChange={setSelectedRadius}
-            isRadiusEnabled={isRadiusEnabled}
-            showOffersOnly={showOffersOnly}
-            onShowOffersChange={setShowOffersOnly}
-            selectedDays={selectedDays}
-            onDaysChange={handleDaysChange}
-          />
-        </div>
-      ) : (
-        <div className="pt-32 md:pt-32 px-4 py-6">
-          {/* Tablet Layout (768px - 1280px) */}
-          {!isMobile && (
-            <div className="xl:hidden max-w-7xl mx-auto space-y-6">
-              {/* Tablet Controls */}
-              <div className="flex items-center justify-between">
-                <div className="bg-white rounded-lg shadow-sm p-3">
-                  <UnifiedFilterBar
-                    selectedCategories={selectedCategories}
-                    onCategoryChange={setSelectedCategories}
-                    selectedRadius={selectedRadius}
-                    onRadiusChange={setSelectedRadius}
-                    isRadiusEnabled={isRadiusEnabled}
-                    showOffersOnly={showOffersOnly}
-                    onShowOffersChange={setShowOffersOnly}
-                    selectedDays={selectedDays}
-                    onDaysChange={handleDaysChange}
-                  />
-                </div>
-              </div>
-
-              {/* Tablet Results and Map Side by Side */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="lg:col-span-1">
-                  <SearchResults 
-                    merchants={merchants}
-                    isLoading={isLoading}
-                    error={error}
-                    startTime={startTime}
-                    endTime={endTime}
-                    location={location}
-                  />
-                </div>
-                <div className="lg:col-span-1">
-                  <div className="sticky top-48 z-30">
-                    <ResultsMap 
-                      restaurants={merchants || []}
-                      onMapMove={handleMapMove}
-                      searchAsMapMoves={searchAsMapMoves}
-                      onToggleSearchAsMapMoves={setSearchAsMapMoves}
-                      viewState={mapViewState}
-                      onViewStateChange={handleViewStateChange}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Desktop Layout (> 1280px) */}
-          <div className="hidden xl:flex xl:gap-6">
-            {/* Fixed Far Left Sidebar - Unified Filters */}
-            <div className="w-80 flex-shrink-0">
-              <div className="space-y-4 sticky top-32 z-40">
+        {/* Tablet Layout (768px - 1280px) */}
+        {!isMobile && (
+          <div className="xl:hidden max-w-7xl mx-auto space-y-6">
+            {/* Tablet Controls */}
+            <div className="flex items-center justify-between">
+              <div className="bg-white rounded-lg shadow-sm p-3">
                 <UnifiedFilterBar
                   selectedCategories={selectedCategories}
                   onCategoryChange={setSelectedCategories}
@@ -339,34 +239,80 @@ const Results = () => {
               </div>
             </div>
 
-            {/* Scrollable Main Content Area - Results */}
-            <div className="flex-1 min-w-0">
-              <SearchResults 
-                merchants={merchants}
-                isLoading={isLoading}
-                error={error}
-                startTime={startTime}
-                endTime={endTime}
-                location={location}
-              />
-            </div>
-
-            {/* Fixed Right Side - Map */}
-            <div className="w-[28rem] flex-shrink-0">
-              <div className="sticky top-32 z-30">
-                <ResultsMap 
-                  restaurants={merchants || []}
-                  onMapMove={handleMapMove}
-                  searchAsMapMoves={searchAsMapMoves}
-                  onToggleSearchAsMapMoves={setSearchAsMapMoves}
-                  viewState={mapViewState}
-                  onViewStateChange={handleViewStateChange}
+            {/* Tablet Results and Map Side by Side */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="lg:col-span-1">
+                <SearchResults 
+                  merchants={merchants}
+                  isLoading={isLoading}
+                  error={error}
+                  startTime={startTime}
+                  endTime={endTime}
+                  location={location}
                 />
+              </div>
+              <div className="lg:col-span-1">
+                <div className="sticky top-48 z-30">
+                  <ResultsMap 
+                    restaurants={merchants || []}
+                    onMapMove={handleMapMove}
+                    searchAsMapMoves={searchAsMapMoves}
+                    onToggleSearchAsMapMoves={setSearchAsMapMoves}
+                    viewState={mapViewState}
+                    onViewStateChange={handleViewStateChange}
+                  />
+                </div>
               </div>
             </div>
           </div>
+        )}
+
+        {/* Desktop Layout (> 1280px) */}
+        <div className="hidden xl:flex xl:gap-6">
+          {/* Fixed Far Left Sidebar - Unified Filters */}
+          <div className="w-80 flex-shrink-0">
+            <div className="space-y-4 sticky top-32 z-40">
+              <UnifiedFilterBar
+                selectedCategories={selectedCategories}
+                onCategoryChange={setSelectedCategories}
+                selectedRadius={selectedRadius}
+                onRadiusChange={setSelectedRadius}
+                isRadiusEnabled={isRadiusEnabled}
+                showOffersOnly={showOffersOnly}
+                onShowOffersChange={setShowOffersOnly}
+                selectedDays={selectedDays}
+                onDaysChange={handleDaysChange}
+              />
+            </div>
+          </div>
+
+          {/* Scrollable Main Content Area - Results */}
+          <div className="flex-1 min-w-0">
+            <SearchResults 
+              merchants={merchants}
+              isLoading={isLoading}
+              error={error}
+              startTime={startTime}
+              endTime={endTime}
+              location={location}
+            />
+          </div>
+
+          {/* Fixed Right Side - Map */}
+          <div className="w-[28rem] flex-shrink-0">
+            <div className="sticky top-32 z-30">
+              <ResultsMap 
+                restaurants={merchants || []}
+                onMapMove={handleMapMove}
+                searchAsMapMoves={searchAsMapMoves}
+                onToggleSearchAsMapMoves={setSearchAsMapMoves}
+                viewState={mapViewState}
+                onViewStateChange={handleViewStateChange}
+              />
+            </div>
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };
