@@ -60,8 +60,13 @@ export type Database = {
           deal_title: string
           display_order: number | null
           id: string
+          is_verified: boolean
           restaurant_id: number
+          source_label: string | null
+          source_url: string | null
           updated_at: string
+          verified_at: string | null
+          verified_by: string | null
         }
         Insert: {
           active?: boolean
@@ -70,8 +75,13 @@ export type Database = {
           deal_title: string
           display_order?: number | null
           id?: string
+          is_verified?: boolean
           restaurant_id: number
+          source_label?: string | null
+          source_url?: string | null
           updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Update: {
           active?: boolean
@@ -80,8 +90,13 @@ export type Database = {
           deal_title?: string
           display_order?: number | null
           id?: string
+          is_verified?: boolean
           restaurant_id?: number
+          source_label?: string | null
+          source_url?: string | null
           updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Relationships: [
           {
@@ -89,6 +104,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "Merchant"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "happy_hour_deals_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
