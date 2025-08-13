@@ -1,7 +1,7 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getPublicRestaurants, RestaurantPublic } from '@/utils/restaurantService';
-import { generateSearchVariations, createSearchConditions, debugSearchVariations } from '@/utils/searchUtils';
 
 // Helper function to calculate distance between two coordinates using Haversine formula
 const calculateHaversineDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
@@ -16,6 +16,21 @@ const calculateHaversineDistance = (lat1: number, lng1: number, lat2: number, ln
     
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
+};
+
+// Helper function to normalize location and get bounds
+const normalizeLocation = async (location: string) => {
+  try {
+    const { data, error } = await supabase.functions.invoke('normalize-location', {
+      body: { location }
+    });
+    
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.warn('Location normalization failed:', error);
+    return null;
+  }
 };
 
 interface UseMerchantsProps {
@@ -49,14 +64,32 @@ export const useMerchants = ({
   const { data: merchants, isLoading, error } = useQuery({
     queryKey: ['merchants', { categoryIds, searchTerm, startTime, endTime, location, bounds, radiusMiles, showOffersOnly, selectedDays }],
     queryFn: async () => {
-      console.log('=== STARTING MERCHANT SEARCH (SECURE) ===');
+      console.log('=== STARTING MERCHANT SEARCH (ANONYMOUS FRIENDLY) ===');
       console.log('Search parameters:', { categoryIds, searchTerm, startTime, endTime, location, bounds, radiusMiles, showOffersOnly, selectedDays });
       
       try {
+        // First, normalize the location if provided to get proper bounds
+        let effectiveBounds = bounds;
+        let locationData = null;
+        
+        if (location && !bounds) {
+          console.log('Normalizing location:', location);
+          locationData = await normalizeLocation(location);
+          if (locationData && locationData.north_lat && locationData.south_lat) {
+            effectiveBounds = {
+              north: locationData.north_lat,
+              south: locationData.south_lat,
+              east: locationData.east_lng,
+              west: locationData.west_lng
+            };
+            console.log('Location normalized to bounds:', effectiveBounds);
+          }
+        }
+
         // Get basic restaurant data from public view
         let restaurants = await getPublicRestaurants({
           searchTerm,
-          bounds
+          bounds: effectiveBounds
         });
 
         console.log('Found restaurants from public view:', restaurants.length);
@@ -73,11 +106,11 @@ export const useMerchants = ({
             restaurants = restaurants.filter(r => merchantIdsFromCategories.includes(r.id));
             console.log('After category filter:', restaurants.length);
           } catch (error) {
-            console.warn('Category filtering failed, skipping:', error);
+            console.warn('Category filtering failed, continuing without it:', error);
           }
         }
 
-        // Filter by offers if specified (requires additional query)
+        // Filter by offers if specified
         if (showOffersOnly) {
           try {
             const { data: merchantsWithOffers } = await supabase
@@ -89,11 +122,11 @@ export const useMerchants = ({
             restaurants = restaurants.filter(r => merchantIdsWithOffers.includes(r.id));
             console.log('After offers filter:', restaurants.length);
           } catch (error) {
-            console.warn('Offers filtering failed, skipping:', error);
+            console.warn('Offers filtering failed, continuing without it:', error);
           }
         }
 
-        // Filter by happy hour times if specified (requires additional query for authenticated users)
+        // Filter by happy hour times if specified
         if ((startTime || endTime || selectedDays) && selectedDays && selectedDays.length > 0) {
           try {
             const { data: happyHours } = await supabase
@@ -118,33 +151,56 @@ export const useMerchants = ({
               console.log('After happy hour filter:', restaurants.length);
             }
           } catch (error) {
-            console.warn('Happy hour filtering requires authentication, skipping:', error);
+            console.warn('Happy hour filtering failed, continuing without it:', error);
           }
         }
 
-        // Filter by distance if bounds and radius are specified
-        if (bounds && radiusMiles) {
-          const centerLat = (bounds.north + bounds.south) / 2;
-          const centerLng = (bounds.east + bounds.west) / 2;
+        // Apply radius filtering if we have location data and radius
+        if (radiusMiles && (effectiveBounds || locationData)) {
+          let centerLat, centerLng;
           
-          restaurants = restaurants.filter(restaurant => {
-            if (!restaurant.latitude || !restaurant.longitude) return false;
-            
-            const distance = calculateHaversineDistance(
-              centerLat, 
-              centerLng, 
-              restaurant.latitude, 
-              restaurant.longitude
-            );
-            
-            return distance <= radiusMiles;
-          });
+          if (locationData && locationData.latitude && locationData.longitude) {
+            // Use the exact coordinates from location normalization
+            centerLat = locationData.latitude;
+            centerLng = locationData.longitude;
+          } else if (effectiveBounds) {
+            // Calculate center from bounds
+            centerLat = (effectiveBounds.north + effectiveBounds.south) / 2;
+            centerLng = (effectiveBounds.east + effectiveBounds.west) / 2;
+          }
           
-          console.log('After radius filter:', restaurants.length);
+          if (centerLat && centerLng) {
+            restaurants = restaurants.filter(restaurant => {
+              if (!restaurant.latitude || !restaurant.longitude) return false;
+              
+              const distance = calculateHaversineDistance(
+                centerLat, 
+                centerLng, 
+                restaurant.latitude, 
+                restaurant.longitude
+              );
+              
+              const withinRadius = distance <= radiusMiles;
+              if (!withinRadius) {
+                console.log(`Filtered out ${restaurant.restaurant_name} - distance: ${distance.toFixed(2)} miles > ${radiusMiles} miles`);
+              }
+              
+              return withinRadius;
+            });
+            
+            console.log(`After radius filter (${radiusMiles} miles from ${centerLat}, ${centerLng}):`, restaurants.length);
+          }
         }
 
         console.log('=== FINAL MERCHANT RESULTS ===');
         console.log('Total merchants found:', restaurants.length);
+        if (restaurants.length > 0) {
+          console.log('Sample results:', restaurants.slice(0, 3).map(r => ({
+            name: r.restaurant_name,
+            address: `${r.city}, ${r.state}`,
+            coords: r.latitude && r.longitude ? `${r.latitude}, ${r.longitude}` : 'No coords'
+          })));
+        }
         
         return restaurants as RestaurantPublic[];
       } catch (error) {
