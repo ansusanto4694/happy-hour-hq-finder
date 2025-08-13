@@ -140,8 +140,11 @@ export const useMerchants = ({
               // Filter by time if specified
               if (startTime || endTime) {
                 filteredHappyHours = happyHours.filter(hh => {
-                  if (startTime && hh.happy_hour_start > startTime) return false;
-                  if (endTime && hh.happy_hour_end < endTime) return false;
+                  // Show places where happy hour overlaps with the requested time window
+                  // If user specifies startTime, happy hour should still be active at that time (end >= startTime)
+                  if (startTime && hh.happy_hour_end < startTime) return false;
+                  // If user specifies endTime, happy hour should have started by that time (start <= endTime)  
+                  if (endTime && hh.happy_hour_start > endTime) return false;
                   return true;
                 });
               }
