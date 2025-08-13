@@ -170,7 +170,8 @@ const Results = () => {
               "item": {
                 "@type": "Restaurant",
                 "name": merchant.restaurant_name,
-                "address": `${merchant.city}, ${merchant.state}`,
+                "address": `${merchant.street_address}, ${merchant.city}, ${merchant.state}`,
+                "telephone": merchant.phone_number,
                 "url": `${typeof window !== 'undefined' ? window.location.origin : ''}/restaurant/${merchant.id}`
               }
             })) || []

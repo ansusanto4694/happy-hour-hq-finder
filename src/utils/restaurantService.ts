@@ -4,9 +4,13 @@ import { supabase } from '@/integrations/supabase/client';
 export interface RestaurantPublic {
   id: number;
   restaurant_name: string;
+  street_address: string;
+  street_address_line_2: string | null;
   city: string;
   state: string;
   zip_code: string;
+  phone_number: string | null;
+  website: string | null;
   latitude: number | null;
   longitude: number | null;
   logo_url: string | null;
@@ -16,10 +20,12 @@ export interface RestaurantPublic {
 }
 
 export interface RestaurantFull extends RestaurantPublic {
-  street_address: string;
-  street_address_line_2: string | null;
-  phone_number: string | null;
-  website: string | null;
+  // Verification fields that remain protected
+  verification_source_url: string | null;
+  verification_source_label: string | null;
+  verification_is_verified: boolean;
+  verification_verified_at: string | null;
+  verification_verified_by: string | null;
 }
 
 // Helper function to get public restaurant data (for search results)

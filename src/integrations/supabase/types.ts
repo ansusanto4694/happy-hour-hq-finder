@@ -526,9 +526,13 @@ export type Database = {
           latitude: number | null
           logo_url: string | null
           longitude: number | null
+          phone_number: string | null
           restaurant_name: string | null
           state: string | null
+          street_address: string | null
+          street_address_line_2: string | null
           updated_at: string | null
+          website: string | null
           zip_code: string | null
         }
         Insert: {
@@ -539,9 +543,13 @@ export type Database = {
           latitude?: number | null
           logo_url?: string | null
           longitude?: number | null
+          phone_number?: string | null
           restaurant_name?: string | null
           state?: string | null
+          street_address?: string | null
+          street_address_line_2?: string | null
           updated_at?: string | null
+          website?: string | null
           zip_code?: string | null
         }
         Update: {
@@ -552,9 +560,13 @@ export type Database = {
           latitude?: number | null
           logo_url?: string | null
           longitude?: number | null
+          phone_number?: string | null
           restaurant_name?: string | null
           state?: string | null
+          street_address?: string | null
+          street_address_line_2?: string | null
           updated_at?: string | null
+          website?: string | null
           zip_code?: string | null
         }
         Relationships: []

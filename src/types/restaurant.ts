@@ -3,10 +3,8 @@ import { RestaurantPublic } from '@/utils/restaurantService';
 // Extended type that includes both public and potentially private data
 // This allows components to work with both public and full restaurant data
 export interface RestaurantDisplay extends RestaurantPublic {
-  street_address: string; // Required for compatibility
-  street_address_line_2?: string | null;
-  phone_number?: string | null;
-  website?: string | null;
+  // All contact info is now included in RestaurantPublic
+  // Additional fields for component compatibility
   merchant_happy_hour?: Array<{
     day_of_week: number;
     happy_hour_start: string;
@@ -31,11 +29,10 @@ export interface RestaurantDisplay extends RestaurantPublic {
   }>;
 }
 
-// Helper function to convert public restaurant data to display format
+// Helper function to convert public restaurant data to display format  
 export const convertToDisplayRestaurant = (restaurant: RestaurantPublic): RestaurantDisplay => {
   return {
     ...restaurant,
-    street_address: `${restaurant.city}, ${restaurant.state}`, // Fallback for address
     merchant_happy_hour: [],
     merchant_categories: [],
     merchant_offers: []
