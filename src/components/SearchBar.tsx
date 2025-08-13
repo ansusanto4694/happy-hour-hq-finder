@@ -3,7 +3,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Search, MapPin, ChevronDown, X, LocateFixed } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { TimeDropdown } from './TimeDropdown';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useLocateMe } from '@/hooks/useLocateMe';
@@ -28,12 +27,6 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
   // Initialize state from URL parameters when available
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
   const [location, setLocation] = useState(searchParams.get('location') || searchParams.get('zip') || '');
-  const [startTime, setStartTime] = useState(searchParams.get('startTime') || '');
-  const [endTime, setEndTime] = useState(searchParams.get('endTime') || '');
-  const [selectedDays, setSelectedDays] = useState<number[]>(() => {
-    const daysParam = searchParams.get('days');
-    return daysParam ? daysParam.split(',').map(Number) : [];
-  });
   
   // Location autocomplete state
   const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>([]);
@@ -135,25 +128,6 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
     }
   };
 
-  // Days of week data
-  const daysOfWeek = [
-    { label: 'Mon', value: 0 },
-    { label: 'Tue', value: 1 },
-    { label: 'Wed', value: 2 },
-    { label: 'Thu', value: 3 },
-    { label: 'Fri', value: 4 },
-    { label: 'Sat', value: 5 },
-    { label: 'Sun', value: 6 }
-  ];
-
-  // Handle day selection
-  const toggleDay = (dayValue: number) => {
-    setSelectedDays(prev => 
-      prev.includes(dayValue) 
-        ? prev.filter(day => day !== dayValue)
-        : [...prev, dayValue]
-    );
-  };
 
   // Close suggestions when clicking outside
   useEffect(() => {
@@ -179,7 +153,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
 
   const handleSearch = () => {
     console.log('=== SEARCH BAR DEBUG ===');
-    console.log('Searching for:', searchTerm, 'in location:', location, 'start time:', startTime, 'end time:', endTime, 'selected days:', selectedDays);
+    console.log('Searching for:', searchTerm, 'in location:', location);
     console.log('Search term length:', searchTerm.length);
     console.log('Search term trim:', searchTerm.trim());
     console.log('========================');
@@ -188,9 +162,6 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
     const params = new URLSearchParams();
     if (searchTerm) params.set('search', searchTerm);
     if (location) params.set('location', location);
-    if (startTime) params.set('startTime', startTime);
-    if (endTime) params.set('endTime', endTime);
-    if (selectedDays.length > 0) params.set('days', selectedDays.join(','));
     
     // Navigate to results page with parameters
     navigate(`/results?${params.toString()}`);
@@ -228,42 +199,6 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
             )}
           </div>
           
-          {/* Time filters */}
-          <div className="grid grid-cols-2 gap-4">
-            <TimeDropdown
-              placeholder="Starting at..."
-              value={startTime}
-              onChange={setStartTime}
-            />
-            <TimeDropdown
-              placeholder="Ending at..."
-              value={endTime}
-              onChange={setEndTime}
-            />
-          </div>
-          
-          {/* Day of week filters */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 text-center block">Select days of the week</label>
-            <div className="flex justify-center">
-              <div className="flex flex-wrap gap-2 justify-center sm:flex-nowrap">
-                {daysOfWeek.map((day) => (
-                  <button
-                    key={day.value}
-                    type="button"
-                    onClick={() => toggleDay(day.value)}
-                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                      selectedDays.includes(day.value)
-                        ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md'
-                        : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    {day.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
           
           {/* Location input with autocomplete */}
           <div className="relative">
@@ -388,32 +323,8 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
           {/* Divider */}
           <div className="hidden lg:block w-px bg-gray-200 my-2"></div>
           
-          {/* Starting time dropdown */}
-          <div className="lg:w-40">
-            <TimeDropdown
-              placeholder="Starting at..."
-              value={startTime}
-              onChange={setStartTime}
-            />
-          </div>
-          
-          {/* Divider */}
-          <div className="hidden lg:block w-px bg-gray-200 my-2"></div>
-          
-          {/* Ending time dropdown */}
-          <div className="lg:w-40">
-            <TimeDropdown
-              placeholder="Ending at..."
-              value={endTime}
-              onChange={setEndTime}
-            />
-          </div>
-          
-          {/* Divider */}
-          <div className="hidden lg:block w-px bg-gray-200 my-2"></div>
-          
           {/* Location input with autocomplete */}
-          <div className="lg:w-48 relative">
+          <div className="lg:w-64 relative">
             <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 z-10" />
             <Input
               ref={locationInputRef}
