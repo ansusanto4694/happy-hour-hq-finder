@@ -15,6 +15,10 @@ interface MobileFilterDrawerProps {
   onShowOffersChange: (showOffers: boolean) => void;
   selectedDays: number[];
   onDaysChange: (days: number[]) => void;
+  startTime: string;
+  endTime: string;
+  onStartTimeChange: (time: string) => void;
+  onEndTimeChange: (time: string) => void;
 }
 
 export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
@@ -27,8 +31,12 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
   onShowOffersChange,
   selectedDays,
   onDaysChange,
+  startTime,
+  endTime,
+  onStartTimeChange,
+  onEndTimeChange,
 }) => {
-  const hasFilters = selectedCategories.length > 0 || selectedRadius !== 'walking' || showOffersOnly;
+  const hasFilters = selectedCategories.length > 0 || selectedRadius !== 'walking' || showOffersOnly || selectedDays.length > 0 || startTime || endTime;
 
   return (
     <Sheet>
@@ -54,18 +62,22 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
         </SheetHeader>
         
         <div className="mt-6 overflow-y-auto h-[calc(100vh-120px)]">
-          <UnifiedFilterBar
-            selectedCategories={selectedCategories}
-            onCategoryChange={onCategoryChange}
-            selectedRadius={selectedRadius}
-            onRadiusChange={onRadiusChange}
-            isRadiusEnabled={isRadiusEnabled}
-            showOffersOnly={showOffersOnly}
-            onShowOffersChange={onShowOffersChange}
-            selectedDays={selectedDays}
-            onDaysChange={onDaysChange}
-            vertical={true}
-          />
+            <UnifiedFilterBar
+              selectedCategories={selectedCategories}
+              onCategoryChange={onCategoryChange}
+              selectedRadius={selectedRadius}
+              onRadiusChange={onRadiusChange}
+              isRadiusEnabled={isRadiusEnabled}
+              showOffersOnly={showOffersOnly}
+              onShowOffersChange={onShowOffersChange}
+              selectedDays={selectedDays}
+              onDaysChange={onDaysChange}
+              startTime={startTime}
+              endTime={endTime}
+              onStartTimeChange={onStartTimeChange}
+              onEndTimeChange={onEndTimeChange}
+              vertical={true}
+            />
         </div>
       </SheetContent>
     </Sheet>

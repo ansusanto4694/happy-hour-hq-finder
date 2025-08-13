@@ -154,8 +154,6 @@ export const MobileSearchBar = () => {
     const params = new URLSearchParams();
     if (searchTerm) params.set('search', searchTerm);
     if (location) params.set('location', location);
-    if (startTime) params.set('startTime', startTime);
-    if (endTime) params.set('endTime', endTime);
     
     navigate(`/results?${params.toString()}`);
     setIsExpanded(false);
@@ -167,7 +165,7 @@ export const MobileSearchBar = () => {
     }
   };
 
-  const hasFilters = location || startTime || endTime;
+  const hasFilters = location;
 
   return (
     <div className="bg-white rounded-lg shadow-sm border">
@@ -245,28 +243,6 @@ export const MobileSearchBar = () => {
 
                 {/* Scrollable content */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-6">
-                  {/* Time filters */}
-                  <div className="space-y-3">
-                    <h3 className="text-lg font-semibold text-gray-900">When are you going?</h3>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700">Start Time</label>
-                        <TimeDropdown
-                          placeholder="Start"
-                          value={startTime}
-                          onChange={setStartTime}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700">End Time</label>
-                        <TimeDropdown
-                          placeholder="End"
-                          value={endTime}
-                          onChange={setEndTime}
-                        />
-                      </div>
-                    </div>
-                  </div>
                   
                   {/* Location */}
                   <div className="space-y-3">

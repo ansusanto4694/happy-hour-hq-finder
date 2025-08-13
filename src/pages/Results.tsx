@@ -15,6 +15,10 @@ import { AuthButton } from '@/components/AuthButton';
 import { SEOHead } from '@/components/SEOHead';
 
 const Results = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const isMobile = useIsMobile();
+
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedRadius, setSelectedRadius] = useState<RadiusOption>('walking');
   const [showOffersOnly, setShowOffersOnly] = useState(false);
@@ -22,15 +26,14 @@ const Results = () => {
   const [searchAsMapMoves, setSearchAsMapMoves] = useState(false);
   const [mapBounds, setMapBounds] = useState<{ north: number; south: number; east: number; west: number } | null>(null);
   const [selectedDaysState, setSelectedDaysState] = useState<number[]>([]);
+  const [startTimeState, setStartTimeState] = useState(searchParams.get('startTime') || '');
+  const [endTimeState, setEndTimeState] = useState(searchParams.get('endTime') || '');
   // Persist map view state across view toggles
   const [mapViewState, setMapViewState] = useState({
     longitude: -122.4194,
     latitude: 37.7749,
     zoom: 12
   });
-  const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const isMobile = useIsMobile();
 
   // Extract search parameters
   const searchTerm = searchParams.get('search') || '';
@@ -54,15 +57,42 @@ const Results = () => {
     setSearchParams(newSearchParams);
   };
 
+  // Handle time changes with URL update
+  const handleStartTimeChange = (time: string) => {
+    setStartTimeState(time);
+    const newSearchParams = new URLSearchParams(searchParams);
+    if (time) {
+      newSearchParams.set('startTime', time);
+    } else {
+      newSearchParams.delete('startTime');
+    }
+    setSearchParams(newSearchParams);
+  };
+
+  const handleEndTimeChange = (time: string) => {
+    setEndTimeState(time);
+    const newSearchParams = new URLSearchParams(searchParams);
+    if (time) {
+      newSearchParams.set('endTime', time);
+    } else {
+      newSearchParams.delete('endTime');
+    }
+    setSearchParams(newSearchParams);
+  };
+
   // Check if radius filtering should be enabled (any location provided)
   const isRadiusEnabled = Boolean(location && location.trim());
   const radiusMiles = getRadiusMiles(selectedRadius);
 
+  // Use filter state or URL params for time values  
+  const currentStartTime = startTimeState || startTime;
+  const currentEndTime = endTimeState || endTime;
+
   const { data: merchants, isLoading, error } = useMerchants(
     selectedCategories, 
     searchTerm, 
-    startTime, 
-    endTime, 
+    currentStartTime, 
+    currentEndTime, 
     location,
     searchAsMapMoves ? mapBounds : undefined,
     isRadiusEnabled ? radiusMiles : undefined,
@@ -188,6 +218,10 @@ const Results = () => {
                   onShowOffersChange={setShowOffersOnly}
                   selectedDays={selectedDays}
                   onDaysChange={handleDaysChange}
+                  startTime={currentStartTime}
+                  endTime={currentEndTime}
+                  onStartTimeChange={handleStartTimeChange}
+                  onEndTimeChange={handleEndTimeChange}
                 />
                 <ViewToggle view={mobileView} onViewChange={setMobileView} />
               </div>
@@ -195,15 +229,15 @@ const Results = () => {
 
             {/* Mobile Content */}
             {mobileView === 'list' ? (
-              <SearchResults 
-                merchants={merchants}
-                isLoading={isLoading}
-                error={error}
-                startTime={startTime}
-                endTime={endTime}
-                location={location}
-                isMobile={true}
-              />
+                <SearchResults 
+                  merchants={merchants}
+                  isLoading={isLoading}
+                  error={error}
+                  startTime={currentStartTime}
+                  endTime={currentEndTime}
+                  location={location}
+                  isMobile={true}
+                />
             ) : (
               <div className="h-[calc(100vh-220px)] rounded-lg overflow-hidden">
                 <ResultsMap 
@@ -225,31 +259,35 @@ const Results = () => {
             {/* Tablet Controls */}
             <div className="flex items-center justify-between">
               <div className="bg-white rounded-lg shadow-sm p-3">
-                <UnifiedFilterBar
-                  selectedCategories={selectedCategories}
-                  onCategoryChange={setSelectedCategories}
-                  selectedRadius={selectedRadius}
-                  onRadiusChange={setSelectedRadius}
-                  isRadiusEnabled={isRadiusEnabled}
-                  showOffersOnly={showOffersOnly}
-                  onShowOffersChange={setShowOffersOnly}
-                  selectedDays={selectedDays}
-                  onDaysChange={handleDaysChange}
-                />
+              <UnifiedFilterBar
+                selectedCategories={selectedCategories}
+                onCategoryChange={setSelectedCategories}
+                selectedRadius={selectedRadius}
+                onRadiusChange={setSelectedRadius}
+                isRadiusEnabled={isRadiusEnabled}
+                showOffersOnly={showOffersOnly}
+                onShowOffersChange={setShowOffersOnly}
+                selectedDays={selectedDays}
+                onDaysChange={handleDaysChange}
+                startTime={currentStartTime}
+                endTime={currentEndTime}
+                onStartTimeChange={handleStartTimeChange}
+                onEndTimeChange={handleEndTimeChange}
+              />
               </div>
             </div>
 
             {/* Tablet Results and Map Side by Side */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="lg:col-span-1">
-                <SearchResults 
-                  merchants={merchants}
-                  isLoading={isLoading}
-                  error={error}
-                  startTime={startTime}
-                  endTime={endTime}
-                  location={location}
-                />
+            <SearchResults 
+              merchants={merchants}
+              isLoading={isLoading}
+              error={error}
+              startTime={currentStartTime}
+              endTime={currentEndTime}
+              location={location}
+            />
               </div>
               <div className="lg:col-span-1">
                 <div className="sticky top-48 z-30">
@@ -272,30 +310,34 @@ const Results = () => {
           {/* Fixed Far Left Sidebar - Unified Filters */}
           <div className="w-80 flex-shrink-0">
             <div className="space-y-4 sticky top-32 z-40">
-              <UnifiedFilterBar
-                selectedCategories={selectedCategories}
-                onCategoryChange={setSelectedCategories}
-                selectedRadius={selectedRadius}
-                onRadiusChange={setSelectedRadius}
-                isRadiusEnabled={isRadiusEnabled}
-                showOffersOnly={showOffersOnly}
-                onShowOffersChange={setShowOffersOnly}
-                selectedDays={selectedDays}
-                onDaysChange={handleDaysChange}
-              />
+                <UnifiedFilterBar
+                  selectedCategories={selectedCategories}
+                  onCategoryChange={setSelectedCategories}
+                  selectedRadius={selectedRadius}
+                  onRadiusChange={setSelectedRadius}
+                  isRadiusEnabled={isRadiusEnabled}
+                  showOffersOnly={showOffersOnly}
+                  onShowOffersChange={setShowOffersOnly}
+                  selectedDays={selectedDays}
+                  onDaysChange={handleDaysChange}
+                  startTime={currentStartTime}
+                  endTime={currentEndTime}
+                  onStartTimeChange={handleStartTimeChange}
+                  onEndTimeChange={handleEndTimeChange}
+                />
             </div>
           </div>
 
           {/* Scrollable Main Content Area - Results */}
           <div className="flex-1 min-w-0">
-            <SearchResults 
-              merchants={merchants}
-              isLoading={isLoading}
-              error={error}
-              startTime={startTime}
-              endTime={endTime}
-              location={location}
-            />
+                 <SearchResults 
+                  merchants={merchants}
+                  isLoading={isLoading}
+                  error={error}
+                  startTime={currentStartTime}
+                  endTime={currentEndTime}
+                  location={location}
+                />
           </div>
 
           {/* Fixed Right Side - Map */}

@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useCategoriesHierarchy } from '@/hooks/useCategories';
 import { RadiusOption } from './RadiusFilter';
+import { TimeDropdown } from './TimeDropdown';
 
 interface UnifiedFilterBarProps {
   selectedCategories: string[];
@@ -20,6 +21,10 @@ interface UnifiedFilterBarProps {
   onShowOffersChange: (showOffers: boolean) => void;
   selectedDays: number[];
   onDaysChange: (days: number[]) => void;
+  startTime: string;
+  endTime: string;
+  onStartTimeChange: (time: string) => void;
+  onEndTimeChange: (time: string) => void;
   vertical?: boolean;
 }
 
@@ -50,12 +55,17 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
   onShowOffersChange,
   selectedDays,
   onDaysChange,
+  startTime,
+  endTime,
+  onStartTimeChange,
+  onEndTimeChange,
   vertical = false,
 }) => {
   const { getParentCategories, getSubCategories, isLoading } = useCategoriesHierarchy();
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
   const [isDistanceExpanded, setIsDistanceExpanded] = useState(false);
   const [isDaysExpanded, setIsDaysExpanded] = useState(false);
+  const [isTimeExpanded, setIsTimeExpanded] = useState(false);
 
   const toggleCategory = (categoryId: string) => {
     console.log('Toggling category:', categoryId);
@@ -89,6 +99,8 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
     onRadiusChange('walking');
     onShowOffersChange(false);
     onDaysChange([]);
+    onStartTimeChange('');
+    onEndTimeChange('');
   };
 
   if (isLoading) {
@@ -96,7 +108,7 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
   }
 
   const parentCategories = getParentCategories();
-  const hasAnyFilters = selectedCategories.length > 0 || selectedRadius !== 'walking' || showOffersOnly || selectedDays.length > 0;
+  const hasAnyFilters = selectedCategories.length > 0 || selectedRadius !== 'walking' || showOffersOnly || selectedDays.length > 0 || startTime || endTime;
 
   return (
     <Card className="h-fit">
@@ -196,6 +208,46 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
                 })}
               </div>
             </div>
+
+          {/* Time filters */}
+          <div className="space-y-3">
+            <div className="border rounded-lg p-2 bg-white">
+              <div className="flex items-center justify-between mb-1">
+                <h4 className="font-medium text-sm">Happy hour time</h4>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsTimeExpanded(!isTimeExpanded)}
+                  className="h-5 w-5 p-0"
+                >
+                  {isTimeExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                </Button>
+              </div>
+
+              <Collapsible open={isTimeExpanded}>
+                <CollapsibleContent className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-gray-700">Start Time</label>
+                      <TimeDropdown
+                        placeholder="Start"
+                        value={startTime}
+                        onChange={onStartTimeChange}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-gray-700">End Time</label>
+                      <TimeDropdown
+                        placeholder="End"
+                        value={endTime}
+                        onChange={onEndTimeChange}
+                      />
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            </div>
+          </div>
 
           {/* Days of the week filter */}
           <div className="space-y-3">
