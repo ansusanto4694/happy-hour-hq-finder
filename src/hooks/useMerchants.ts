@@ -63,26 +63,34 @@ export const useMerchants = ({
 
         // Filter by categories if specified
         if (categoryIds && categoryIds.length > 0) {
-          const { data: categoryMerchants } = await supabase
-            .from('merchant_categories')
-            .select('merchant_id')
-            .in('category_id', categoryIds);
-          
-          const merchantIdsFromCategories = categoryMerchants?.map(cm => cm.merchant_id) || [];
-          restaurants = restaurants.filter(r => merchantIdsFromCategories.includes(r.id));
-          console.log('After category filter:', restaurants.length);
+          try {
+            const { data: categoryMerchants } = await supabase
+              .from('merchant_categories')
+              .select('merchant_id')
+              .in('category_id', categoryIds);
+            
+            const merchantIdsFromCategories = categoryMerchants?.map(cm => cm.merchant_id) || [];
+            restaurants = restaurants.filter(r => merchantIdsFromCategories.includes(r.id));
+            console.log('After category filter:', restaurants.length);
+          } catch (error) {
+            console.warn('Category filtering failed, skipping:', error);
+          }
         }
 
         // Filter by offers if specified (requires additional query)
         if (showOffersOnly) {
-          const { data: merchantsWithOffers } = await supabase
-            .from('merchant_offers')
-            .select('store_id')
-            .eq('is_active', true);
-          
-          const merchantIdsWithOffers = merchantsWithOffers?.map(mo => mo.store_id) || [];
-          restaurants = restaurants.filter(r => merchantIdsWithOffers.includes(r.id));
-          console.log('After offers filter:', restaurants.length);
+          try {
+            const { data: merchantsWithOffers } = await supabase
+              .from('merchant_offers')
+              .select('store_id')
+              .eq('is_active', true);
+            
+            const merchantIdsWithOffers = merchantsWithOffers?.map(mo => mo.store_id) || [];
+            restaurants = restaurants.filter(r => merchantIdsWithOffers.includes(r.id));
+            console.log('After offers filter:', restaurants.length);
+          } catch (error) {
+            console.warn('Offers filtering failed, skipping:', error);
+          }
         }
 
         // Filter by happy hour times if specified (requires additional query for authenticated users)
