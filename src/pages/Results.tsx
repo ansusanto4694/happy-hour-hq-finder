@@ -13,7 +13,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { RadiusOption, getRadiusMiles } from '@/components/RadiusFilter';
 import { AuthButton } from '@/components/AuthButton';
 import { SEOHead } from '@/components/SEOHead';
-import { RestaurantDisplay, convertToDisplayRestaurant } from '@/types/restaurant';
 
 const Results = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -89,20 +88,17 @@ const Results = () => {
   const currentStartTime = startTimeState || startTime;
   const currentEndTime = endTimeState || endTime;
 
-  const { merchants, isLoading, error } = useMerchants({
-    categoryIds: selectedCategories, 
+  const { data: merchants, isLoading, error } = useMerchants(
+    selectedCategories, 
     searchTerm, 
-    startTime: currentStartTime, 
-    endTime: currentEndTime, 
+    currentStartTime, 
+    currentEndTime, 
     location,
-    bounds: searchAsMapMoves ? mapBounds : undefined,
-    radiusMiles: isRadiusEnabled ? radiusMiles : undefined,
+    searchAsMapMoves ? mapBounds : undefined,
+    isRadiusEnabled ? radiusMiles : undefined,
     showOffersOnly,
     selectedDays
-  });
-
-  // Convert public restaurant data to display format for components
-  const displayMerchants: RestaurantDisplay[] = merchants?.map(convertToDisplayRestaurant) || [];
+  );
 
   // Debug the merchants data being passed to SearchResults - ALWAYS LOG
   console.log('=== RESULTS PAGE DEBUG ===');
@@ -170,7 +166,7 @@ const Results = () => {
               "item": {
                 "@type": "Restaurant",
                 "name": merchant.restaurant_name,
-                "address": `${merchant.street_address}, ${merchant.city}, ${merchant.state}`,
+                "address": `${merchant.city}, ${merchant.state}`,
                 "telephone": merchant.phone_number,
                 "url": `${typeof window !== 'undefined' ? window.location.origin : ''}/restaurant/${merchant.id}`
               }
@@ -234,7 +230,7 @@ const Results = () => {
             {/* Mobile Content */}
             {mobileView === 'list' ? (
                 <SearchResults 
-                  merchants={displayMerchants}
+                  merchants={merchants}
                   isLoading={isLoading}
                   error={error}
                   startTime={currentStartTime}
@@ -245,7 +241,7 @@ const Results = () => {
             ) : (
               <div className="h-[calc(100vh-220px)] rounded-lg overflow-hidden">
                 <ResultsMap 
-                  restaurants={displayMerchants}
+                  restaurants={merchants || []}
                   onMapMove={handleMapMove}
                   searchAsMapMoves={searchAsMapMoves}
                   onToggleSearchAsMapMoves={setSearchAsMapMoves}
@@ -285,7 +281,7 @@ const Results = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="lg:col-span-1">
             <SearchResults 
-              merchants={displayMerchants}
+              merchants={merchants}
               isLoading={isLoading}
               error={error}
               startTime={currentStartTime}
@@ -296,7 +292,7 @@ const Results = () => {
               <div className="lg:col-span-1">
                 <div className="sticky top-48 z-30">
                   <ResultsMap 
-                    restaurants={displayMerchants}
+                    restaurants={merchants || []}
                     onMapMove={handleMapMove}
                     searchAsMapMoves={searchAsMapMoves}
                     onToggleSearchAsMapMoves={setSearchAsMapMoves}
@@ -335,7 +331,7 @@ const Results = () => {
           {/* Scrollable Main Content Area - Results */}
           <div className="flex-1 min-w-0">
                  <SearchResults 
-                  merchants={displayMerchants}
+                  merchants={merchants}
                   isLoading={isLoading}
                   error={error}
                   startTime={currentStartTime}
@@ -348,7 +344,7 @@ const Results = () => {
           <div className="w-[28rem] flex-shrink-0">
             <div className="sticky top-32 z-30">
               <ResultsMap 
-                restaurants={displayMerchants}
+                restaurants={merchants || []}
                 onMapMove={handleMapMove}
                 searchAsMapMoves={searchAsMapMoves}
                 onToggleSearchAsMapMoves={setSearchAsMapMoves}

@@ -107,13 +107,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "happy_hour_deals_restaurant_id_fkey"
-            columns: ["restaurant_id"]
-            isOneToOne: false
-            referencedRelation: "restaurants_public"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "happy_hour_deals_verified_by_fkey"
             columns: ["verified_by"]
             isOneToOne: false
@@ -186,11 +179,6 @@ export type Database = {
           street_address: string
           street_address_line_2: string | null
           updated_at: string
-          verification_is_verified: boolean
-          verification_source_label: string | null
-          verification_source_url: string | null
-          verification_verified_at: string | null
-          verification_verified_by: string | null
           website: string | null
           zip_code: string
         }
@@ -209,11 +197,6 @@ export type Database = {
           street_address: string
           street_address_line_2?: string | null
           updated_at?: string
-          verification_is_verified?: boolean
-          verification_source_label?: string | null
-          verification_source_url?: string | null
-          verification_verified_at?: string | null
-          verification_verified_by?: string | null
           website?: string | null
           zip_code: string
         }
@@ -232,23 +215,10 @@ export type Database = {
           street_address?: string
           street_address_line_2?: string | null
           updated_at?: string
-          verification_is_verified?: boolean
-          verification_source_label?: string | null
-          verification_source_url?: string | null
-          verification_verified_at?: string | null
-          verification_verified_by?: string | null
           website?: string | null
           zip_code?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "merchant_verification_verified_by_fkey"
-            columns: ["verification_verified_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       merchant_categories: {
         Row: {
@@ -282,13 +252,6 @@ export type Database = {
             columns: ["merchant_id"]
             isOneToOne: false
             referencedRelation: "Merchant"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "merchant_categories_merchant_id_fkey"
-            columns: ["merchant_id"]
-            isOneToOne: false
-            referencedRelation: "restaurants_public"
             referencedColumns: ["id"]
           },
         ]
@@ -332,13 +295,6 @@ export type Database = {
             referencedRelation: "Merchant"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "restaurant_events_restaurant_id_fkey"
-            columns: ["restaurant_id"]
-            isOneToOne: false
-            referencedRelation: "restaurants_public"
-            referencedColumns: ["id"]
-          },
         ]
       }
       merchant_happy_hour: {
@@ -377,13 +333,6 @@ export type Database = {
             referencedRelation: "Merchant"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "restaurant_happy_hour_store_id_fkey"
-            columns: ["store_id"]
-            isOneToOne: false
-            referencedRelation: "restaurants_public"
-            referencedColumns: ["id"]
-          },
         ]
       }
       merchant_listing_issue: {
@@ -420,13 +369,6 @@ export type Database = {
             columns: ["merchant_id"]
             isOneToOne: false
             referencedRelation: "Merchant"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "merchant_listing_issue_merchant_id_fkey"
-            columns: ["merchant_id"]
-            isOneToOne: false
-            referencedRelation: "restaurants_public"
             referencedColumns: ["id"]
           },
         ]
@@ -473,13 +415,6 @@ export type Database = {
             referencedRelation: "Merchant"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "merchant_offers_store_id_fkey"
-            columns: ["store_id"]
-            isOneToOne: false
-            referencedRelation: "restaurants_public"
-            referencedColumns: ["id"]
-          },
         ]
       }
       profiles: {
@@ -517,85 +452,12 @@ export type Database = {
       }
     }
     Views: {
-      restaurants_public: {
-        Row: {
-          city: string | null
-          created_at: string | null
-          id: number | null
-          is_active: boolean | null
-          latitude: number | null
-          logo_url: string | null
-          longitude: number | null
-          phone_number: string | null
-          restaurant_name: string | null
-          state: string | null
-          street_address: string | null
-          street_address_line_2: string | null
-          updated_at: string | null
-          website: string | null
-          zip_code: string | null
-        }
-        Insert: {
-          city?: string | null
-          created_at?: string | null
-          id?: number | null
-          is_active?: boolean | null
-          latitude?: number | null
-          logo_url?: string | null
-          longitude?: number | null
-          phone_number?: string | null
-          restaurant_name?: string | null
-          state?: string | null
-          street_address?: string | null
-          street_address_line_2?: string | null
-          updated_at?: string | null
-          website?: string | null
-          zip_code?: string | null
-        }
-        Update: {
-          city?: string | null
-          created_at?: string | null
-          id?: number | null
-          is_active?: boolean | null
-          latitude?: number | null
-          logo_url?: string | null
-          longitude?: number | null
-          phone_number?: string | null
-          restaurant_name?: string | null
-          state?: string | null
-          street_address?: string | null
-          street_address_line_2?: string | null
-          updated_at?: string | null
-          website?: string | null
-          zip_code?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: Database["public"]["Enums"]["app_role"]
-      }
-      get_restaurant_details: {
-        Args: { restaurant_id: number }
-        Returns: {
-          id: number
-          restaurant_name: string
-          street_address: string
-          street_address_line_2: string
-          city: string
-          state: string
-          zip_code: string
-          phone_number: string
-          website: string
-          latitude: number
-          longitude: number
-          logo_url: string
-          is_active: boolean
-          created_at: string
-          updated_at: string
-        }[]
       }
       is_admin: {
         Args: Record<PropertyKey, never>
