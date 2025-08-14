@@ -142,13 +142,23 @@ const Results = () => {
   const handleMapMove = (bounds: { north: number; south: number; east: number; west: number }) => {
     setMapBounds(bounds);
     
-    // On mobile, show "search this area" button when map is moved
+    // On mobile, show "search this area" button when map is moved to a significantly different area
     if (isMobile) {
-      // If we're already using map search and user moves map, show button again
-      if (isUsingMapSearch) {
-        setShowSearchThisArea(true);
-        setIsUsingMapSearch(false); // Reset map search mode
-        setSearchedBounds(null); // Clear previous searched bounds
+      // If we're already using map search, check if user moved to a significantly different area
+      if (isUsingMapSearch && searchedBounds) {
+        // Calculate if the center of the map has moved significantly (not just zoom)
+        const currentCenterLat = (bounds.north + bounds.south) / 2;
+        const currentCenterLng = (bounds.east + bounds.west) / 2;
+        const searchedCenterLat = (searchedBounds.north + searchedBounds.south) / 2;
+        const searchedCenterLng = (searchedBounds.east + searchedBounds.west) / 2;
+        
+        // Check if moved more than ~0.01 degrees (roughly 1km)
+        const latDiff = Math.abs(currentCenterLat - searchedCenterLat);
+        const lngDiff = Math.abs(currentCenterLng - searchedCenterLng);
+        
+        if (latDiff > 0.01 || lngDiff > 0.01) {
+          setShowSearchThisArea(true);
+        }
       } 
       // If this is the first move from initial position, show button
       else if (!hasMapMoved) {
