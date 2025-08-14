@@ -119,6 +119,18 @@ const Results = () => {
     console.log('================================');
   }, [merchants]);
 
+  // Prevent body scroll on mobile
+  React.useEffect(() => {
+    if (isMobile) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
+      };
+    }
+  }, [isMobile]);
+
   const handleGoHome = () => {
     navigate('/');
   };
@@ -145,7 +157,7 @@ const Results = () => {
     : `Discover amazing happy hour deals near you. Compare prices and find the best bars and restaurants for your night out.`;
 
   return (
-    <div className={`min-h-screen bg-gray-50 ${isMobile ? 'overflow-hidden' : ''}`}>
+    <div className={`${isMobile ? 'h-screen overflow-hidden' : 'min-h-screen'} bg-gray-50`}>
       <SEOHead 
         title={seoTitle}
         description={seoDescription}
@@ -176,8 +188,8 @@ const Results = () => {
         }}
       />
       {/* Fixed Header */}
-      <div className="bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-50">
-        <div className="px-4 py-4 md:py-6">
+      <div className={`bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-50 ${isMobile ? 'h-16' : ''}`}>
+        <div className={`px-4 ${isMobile ? 'py-2' : 'py-4 md:py-6'}`}>
           <div className="flex items-center justify-between">
             {/* Logo - Left aligned */}
             {!isMobile && (
@@ -203,9 +215,9 @@ const Results = () => {
 
       {/* Mobile Layout - Full Screen Map */}
       {isMobile && (
-        <div className="fixed inset-0 pt-32 overflow-hidden">
+        <div className="fixed inset-0 pt-16 overflow-hidden">
           {/* Full Screen Map */}
-          <div className="h-full w-full">
+          <div className="h-full w-full overflow-hidden">
             <ResultsMap 
               restaurants={merchants || []}
               onMapMove={handleMapMove}
