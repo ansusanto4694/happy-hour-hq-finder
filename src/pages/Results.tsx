@@ -22,6 +22,7 @@ const Results = () => {
   const [selectedRadius, setSelectedRadius] = useState<RadiusOption>('walking');
   const [showOffersOnly, setShowOffersOnly] = useState(false);
   const [isListDrawerOpen, setIsListDrawerOpen] = useState(false);
+  const [selectedMapMerchant, setSelectedMapMerchant] = useState<any>(null);
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [searchAsMapMoves, setSearchAsMapMoves] = useState(false);
   const [mapBounds, setMapBounds] = useState<{ north: number; south: number; east: number; west: number } | null>(null);
@@ -225,6 +226,7 @@ const Results = () => {
               viewState={mapViewState}
               onViewStateChange={handleViewStateChange}
               isMobile={true}
+              onMerchantSelect={setSelectedMapMerchant}
             />
           </div>
           
@@ -249,14 +251,20 @@ const Results = () => {
               document.addEventListener('touchmove', handleTouchMove);
               document.addEventListener('touchend', handleTouchEnd);
             }}
-            onClick={() => setIsListDrawerOpen(true)}
+            onClick={() => {
+              setSelectedMapMerchant(null);
+              setIsListDrawerOpen(true);
+            }}
           >
             <div className="flex items-center justify-center pt-3">
               <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
             </div>
             <div className="px-4 pt-2">
               <p className="text-sm text-gray-600 text-center font-medium">
-                {merchants?.length || 0} results • Swipe up for list
+                {selectedMapMerchant 
+                  ? `${selectedMapMerchant.restaurant_name} • Tap to view profile`
+                  : `${merchants?.length || 0} results • Swipe up for list`
+                }
               </p>
             </div>
           </div>
@@ -266,6 +274,8 @@ const Results = () => {
             isOpen={isListDrawerOpen}
             onOpenChange={setIsListDrawerOpen}
             merchants={merchants || []}
+            selectedMapMerchant={selectedMapMerchant}
+            onSelectedMapMerchantChange={setSelectedMapMerchant}
             isLoading={isLoading}
             error={error}
             startTime={currentStartTime}

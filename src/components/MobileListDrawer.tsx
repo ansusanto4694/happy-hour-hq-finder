@@ -10,11 +10,15 @@ import {
   DrawerTrigger,
 } from '@/components/ui/drawer';
 import { GripHorizontal } from 'lucide-react';
+import { SearchResultCard } from '@/components/SearchResultCard';
+import { useSearchResultsNavigation } from '@/hooks/useSearchResultsNavigation';
 
 interface MobileListDrawerProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   merchants: any[];
+  selectedMapMerchant?: any;
+  onSelectedMapMerchantChange?: (merchant: any) => void;
   isLoading: boolean;
   error: any;
   startTime: string;
@@ -37,6 +41,8 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
   isOpen,
   onOpenChange,
   merchants,
+  selectedMapMerchant,
+  onSelectedMapMerchantChange,
   isLoading,
   error,
   startTime,
@@ -54,6 +60,8 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
   onStartTimeChange,
   onEndTimeChange,
 }) => {
+  const { handleRestaurantClick } = useSearchResultsNavigation();
+
   return (
     <Drawer open={isOpen} onOpenChange={onOpenChange}>
       <DrawerContent className="max-h-[85vh]">
@@ -82,15 +90,34 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
         </DrawerHeader>
         
         <div className="px-4 pb-4 overflow-auto">
-          <SearchResults 
-            merchants={merchants}
-            isLoading={isLoading}
-            error={error}
-            startTime={startTime}
-            endTime={endTime}
-            location={location}
-            isMobile={true}
-          />
+          {selectedMapMerchant ? (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Selected Restaurant</h3>
+                <button 
+                  onClick={() => onSelectedMapMerchantChange?.(null)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  Back to List
+                </button>
+              </div>
+              <SearchResultCard 
+                restaurant={selectedMapMerchant}
+                onClick={handleRestaurantClick}
+                isMobile={true}
+              />
+            </div>
+          ) : (
+            <SearchResults 
+              merchants={merchants}
+              isLoading={isLoading}
+              error={error}
+              startTime={startTime}
+              endTime={endTime}
+              location={location}
+              isMobile={true}
+            />
+          )}
         </div>
       </DrawerContent>
     </Drawer>

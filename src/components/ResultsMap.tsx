@@ -28,6 +28,7 @@ interface ResultsMapProps {
   viewState?: { longitude: number; latitude: number; zoom: number };
   onViewStateChange?: (viewState: { longitude: number; latitude: number; zoom: number }) => void;
   isMobile?: boolean;
+  onMerchantSelect?: (restaurant: Restaurant | null) => void;
 }
 
 export const ResultsMap: React.FC<ResultsMapProps> = ({ 
@@ -37,7 +38,8 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
   onToggleSearchAsMapMoves,
   viewState: externalViewState,
   onViewStateChange,
-  isMobile: mobileOverride
+  isMobile: mobileOverride,
+  onMerchantSelect
 }) => {
   const [viewState, setViewState] = useState(externalViewState || {
     longitude: -122.4194,
@@ -56,13 +58,14 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
   // Handle restaurant marker click
   const handleRestaurantClick = useCallback((restaurant: Restaurant) => {
     if (isMobile) {
-      // On mobile, show preview card at bottom instead of navigating
+      // On mobile, notify parent about merchant selection
+      onMerchantSelect?.(restaurant);
       setSelectedRestaurant(restaurant);
     } else {
       // On desktop, navigate directly
       navigate(`/restaurant/${restaurant.id}`);
     }
-  }, [navigate, isMobile]);
+  }, [navigate, isMobile, onMerchantSelect]);
 
   // Handle marker hover (desktop only)
   const handleMarkerHover = useCallback((restaurant: Restaurant, event: React.MouseEvent) => {
@@ -158,6 +161,13 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
           style={{ width: '100%', height: '100%' }}
           mapStyle="mapbox://styles/mapbox/streets-v12"
           mapboxAccessToken="pk.eyJ1IjoiYW5zdXNhbnRvNDY5NCIsImEiOiJjbWNudDdob28weTZlMmtxMTBmbDc5YTM4In0.qwR9SIqDBrETlROMvhnKvw"
+          onClick={() => {
+            // Clear selected merchant when clicking on map
+            if (isMobile) {
+              onMerchantSelect?.(null);
+              setSelectedRestaurant(null);
+            }
+          }}
         >
           {/* No Navigation Controls on Mobile */}
           
