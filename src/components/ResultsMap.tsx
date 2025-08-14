@@ -27,6 +27,7 @@ interface ResultsMapProps {
   onToggleSearchAsMapMoves?: (enabled: boolean) => void;
   viewState?: { longitude: number; latitude: number; zoom: number };
   onViewStateChange?: (viewState: { longitude: number; latitude: number; zoom: number }) => void;
+  isMobile?: boolean;
 }
 
 export const ResultsMap: React.FC<ResultsMapProps> = ({ 
@@ -35,7 +36,8 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
   searchAsMapMoves = false,
   onToggleSearchAsMapMoves,
   viewState: externalViewState,
-  onViewStateChange
+  onViewStateChange,
+  isMobile: mobileOverride
 }) => {
   const [viewState, setViewState] = useState(externalViewState || {
     longitude: -122.4194,
@@ -49,7 +51,7 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
 
   const mapRef = useRef<any>(null);
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
+  const isMobile = mobileOverride ?? useIsMobile();
 
   // Handle restaurant marker click
   const handleRestaurantClick = useCallback((restaurant: Restaurant) => {
@@ -139,6 +141,67 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
     }
   }, [onMapMove]);
 
+  // Mobile full-screen map
+  if (isMobile) {
+    return (
+      <div className="map-container h-full w-full relative">
+        <Map
+          ref={mapRef}
+          {...viewState}
+          onMove={evt => {
+            const newViewState = evt.viewState;
+            setViewState(newViewState);
+            // Notify parent of view state change
+            onViewStateChange?.(newViewState);
+          }}
+          onMoveEnd={handleMoveEnd}
+          style={{ width: '100%', height: '100%' }}
+          mapStyle="mapbox://styles/mapbox/streets-v12"
+          mapboxAccessToken="pk.eyJ1IjoiYW5zdXNhbnRvNDY5NCIsImEiOiJjbWNudDdob28weTZlMmtxMTBmbDc5YTM4In0.qwR9SIqDBrETlROMvhnKvw"
+        >
+          {/* No Navigation Controls on Mobile */}
+          
+          {/* Restaurant Markers - Only show if coordinates exist */}
+          {restaurants
+            .filter(restaurant => restaurant.latitude && restaurant.longitude)
+            .map((restaurant) => (
+              <Marker
+                key={restaurant.id}
+                longitude={restaurant.longitude!}
+                latitude={restaurant.latitude!}
+                anchor="bottom"
+              >
+                <div 
+                  className="bg-red-500 rounded-full w-6 h-6 flex items-center justify-center shadow-lg border-2 border-white cursor-pointer active:bg-red-600 transition-colors"
+                  title={restaurant.restaurant_name}
+                  onClick={() => handleRestaurantClick(restaurant)}
+                  onTouchStart={(event) => handleMarkerHover(restaurant, event as any)}
+                  onTouchEnd={handleMarkerLeave}
+                >
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                </div>
+              </Marker>
+            ))}
+        </Map>
+        
+        {/* Merchant Preview Card for mobile */}
+        <MerchantMapPreviewCard
+          restaurant={selectedRestaurant!}
+          position={mousePosition}
+          isVisible={!!selectedRestaurant}
+          isMobile={isMobile}
+          onNavigate={() => {
+            if (selectedRestaurant) {
+              navigate(`/restaurant/${selectedRestaurant.id}`);
+            }
+          }}
+          onClose={() => setSelectedRestaurant(null)}
+        />
+      </div>
+    );
+  }
+
+  // Desktop/tablet map with card wrapper
   return (
     <Card className="h-full">
       <CardHeader className="pb-3">
@@ -202,9 +265,9 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
         
         {/* Merchant Preview Card - positioned outside map container to avoid clipping */}
         <MerchantMapPreviewCard
-          restaurant={isMobile ? selectedRestaurant! : hoveredRestaurant!}
+          restaurant={hoveredRestaurant!}
           position={mousePosition}
-          isVisible={isMobile ? !!selectedRestaurant : !!hoveredRestaurant}
+          isVisible={!!hoveredRestaurant}
           isMobile={isMobile}
           onNavigate={() => {
             if (selectedRestaurant) {

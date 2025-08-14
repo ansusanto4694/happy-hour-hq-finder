@@ -201,62 +201,65 @@ const Results = () => {
         </div>
       </div>
 
-      {/* Content with top padding to account for fixed header */}
-      <div className="pt-32 md:pt-32 px-4 py-6">
-        {/* Mobile Layout (< 768px) */}
-        {isMobile && (
-          <div className="max-w-7xl mx-auto">
-            {/* Map as Default View */}
-            <div className="h-[calc(100vh-140px)] rounded-lg overflow-hidden relative">
-              <ResultsMap 
-                restaurants={merchants || []}
-                onMapMove={handleMapMove}
-                searchAsMapMoves={searchAsMapMoves}
-                onToggleSearchAsMapMoves={setSearchAsMapMoves}
-                viewState={mapViewState}
-                onViewStateChange={handleViewStateChange}
-              />
-              
-              {/* Peek Handle at Bottom */}
-              <div 
-                className="absolute bottom-0 left-0 right-0 bg-white rounded-t-lg shadow-lg z-10 cursor-pointer"
-                onClick={() => setIsListDrawerOpen(true)}
-              >
-                <div className="flex items-center justify-center py-2">
-                  <div className="w-12 h-1 bg-gray-300 rounded-full" />
-                </div>
-                <div className="px-4 pb-3">
-                  <p className="text-sm text-gray-600 text-center">
-                    {merchants?.length || 0} results • Swipe up for list
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* List Drawer */}
-            <MobileListDrawer
-              isOpen={isListDrawerOpen}
-              onOpenChange={setIsListDrawerOpen}
-              merchants={merchants || []}
-              isLoading={isLoading}
-              error={error}
-              startTime={currentStartTime}
-              endTime={currentEndTime}
-              location={location}
-              selectedCategories={selectedCategories}
-              onCategoryChange={setSelectedCategories}
-              selectedRadius={selectedRadius}
-              onRadiusChange={setSelectedRadius}
-              isRadiusEnabled={isRadiusEnabled}
-              showOffersOnly={showOffersOnly}
-              onShowOffersChange={setShowOffersOnly}
-              selectedDays={selectedDays}
-              onDaysChange={handleDaysChange}
-              onStartTimeChange={handleStartTimeChange}
-              onEndTimeChange={handleEndTimeChange}
+      {/* Mobile Layout - Full Screen Map */}
+      {isMobile && (
+        <div className="fixed inset-0 pt-32">
+          {/* Full Screen Map */}
+          <div className="h-full w-full">
+            <ResultsMap 
+              restaurants={merchants || []}
+              onMapMove={handleMapMove}
+              searchAsMapMoves={searchAsMapMoves}
+              onToggleSearchAsMapMoves={setSearchAsMapMoves}
+              viewState={mapViewState}
+              onViewStateChange={handleViewStateChange}
+              isMobile={true}
             />
           </div>
-        )}
+          
+          {/* Floating Peek Handle at Bottom */}
+          <div 
+            className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl z-50 cursor-pointer h-16"
+            onClick={() => setIsListDrawerOpen(true)}
+            style={{ height: 'calc(100vh / 8)' }}
+          >
+            <div className="flex items-center justify-center pt-3">
+              <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
+            </div>
+            <div className="px-4 pt-2">
+              <p className="text-sm text-gray-600 text-center font-medium">
+                {merchants?.length || 0} results • Swipe up for list
+              </p>
+            </div>
+          </div>
+
+          {/* List Drawer */}
+          <MobileListDrawer
+            isOpen={isListDrawerOpen}
+            onOpenChange={setIsListDrawerOpen}
+            merchants={merchants || []}
+            isLoading={isLoading}
+            error={error}
+            startTime={currentStartTime}
+            endTime={currentEndTime}
+            location={location}
+            selectedCategories={selectedCategories}
+            onCategoryChange={setSelectedCategories}
+            selectedRadius={selectedRadius}
+            onRadiusChange={setSelectedRadius}
+            isRadiusEnabled={isRadiusEnabled}
+            showOffersOnly={showOffersOnly}
+            onShowOffersChange={setShowOffersOnly}
+            selectedDays={selectedDays}
+            onDaysChange={handleDaysChange}
+            onStartTimeChange={handleStartTimeChange}
+            onEndTimeChange={handleEndTimeChange}
+          />
+        </div>
+      )}
+
+      {/* Desktop/Tablet Content with padding */}
+      <div className={`${isMobile ? 'hidden' : 'pt-32 px-4 py-6'}`}>
 
         {/* Tablet Layout (768px - 1280px) */}
         {!isMobile && (
