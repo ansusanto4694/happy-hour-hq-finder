@@ -95,9 +95,9 @@ const Results = () => {
     searchTerm, 
     currentStartTime, 
     currentEndTime, 
-    location,
+    searchAsMapMoves ? undefined : location, // Clear location when searching map area
     searchAsMapMoves ? mapBounds : undefined,
-    isRadiusEnabled ? radiusMiles : undefined,
+    searchAsMapMoves ? undefined : (isRadiusEnabled ? radiusMiles : undefined), // Clear radius when searching map area
     showOffersOnly,
     selectedDays
   );
