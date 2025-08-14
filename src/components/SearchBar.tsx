@@ -324,7 +324,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
           <div className="hidden lg:block w-px bg-gray-200 my-2"></div>
           
           {/* Location input with autocomplete */}
-          <div className="lg:w-64 relative">
+          <div className="flex-1 lg:flex-1 relative">
             <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 z-10" />
             <Input
               ref={locationInputRef}
