@@ -15,7 +15,6 @@ interface MobileListDrawerProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   merchants: any[];
-  trigger?: React.ReactNode;
   isLoading: boolean;
   error: any;
   startTime: string;
@@ -38,7 +37,6 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
   isOpen,
   onOpenChange,
   merchants,
-  trigger,
   isLoading,
   error,
   startTime,
@@ -58,7 +56,6 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
 }) => {
   return (
     <Drawer open={isOpen} onOpenChange={onOpenChange}>
-      {trigger && <DrawerTrigger asChild>{trigger}</DrawerTrigger>}
       <DrawerContent className="max-h-[85vh]">
         <DrawerHeader className="pb-4">
           <div className="flex items-center justify-center mb-2">

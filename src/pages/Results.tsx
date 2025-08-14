@@ -4,7 +4,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { SearchBar } from '@/components/SearchBar';
 import { MobileSearchBar } from '@/components/MobileSearchBar';
 import { MobileListDrawer } from '@/components/MobileListDrawer';
-import { MobileFilterDrawer } from '@/components/MobileFilterDrawer';
 import { SearchResults } from '@/components/SearchResults';
 import { UnifiedFilterBar } from '@/components/UnifiedFilterBar';
 import { ResultsMap } from '@/components/ResultsMap';
@@ -229,23 +228,41 @@ const Results = () => {
             />
           </div>
           
-          {/* List Drawer with Peek Handle */}
+          {/* Swipeable Peek Handle */}
+          <div 
+            className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl z-50"
+            style={{ height: 'calc(100vh / 8)' }}
+            onTouchStart={(e) => {
+              const startY = e.touches[0].clientY;
+              const handleTouchMove = (moveE: TouchEvent) => {
+                const currentY = moveE.touches[0].clientY;
+                const deltaY = startY - currentY;
+                if (deltaY > 50) { // Swipe up threshold
+                  setIsListDrawerOpen(true);
+                  document.removeEventListener('touchmove', handleTouchMove);
+                }
+              };
+              const handleTouchEnd = () => {
+                document.removeEventListener('touchmove', handleTouchMove);
+                document.removeEventListener('touchend', handleTouchEnd);
+              };
+              document.addEventListener('touchmove', handleTouchMove);
+              document.addEventListener('touchend', handleTouchEnd);
+            }}
+            onClick={() => setIsListDrawerOpen(true)}
+          >
+            <div className="flex items-center justify-center pt-3">
+              <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
+            </div>
+            <div className="px-4 pt-2">
+              <p className="text-sm text-gray-600 text-center font-medium">
+                {merchants?.length || 0} results • Swipe up for list
+              </p>
+            </div>
+          </div>
+
+          {/* List Drawer */}
           <MobileListDrawer
-            trigger={
-              <div 
-                className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl z-50 cursor-pointer"
-                style={{ height: 'calc(100vh / 8)' }}
-              >
-                <div className="flex items-center justify-center pt-3">
-                  <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
-                </div>
-                <div className="px-4 pt-2">
-                  <p className="text-sm text-gray-600 text-center font-medium">
-                    {merchants?.length || 0} results • Swipe up for list
-                  </p>
-                </div>
-              </div>
-            }
             isOpen={isListDrawerOpen}
             onOpenChange={setIsListDrawerOpen}
             merchants={merchants || []}
