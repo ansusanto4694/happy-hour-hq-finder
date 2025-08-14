@@ -145,7 +145,7 @@ const Results = () => {
     : `Discover amazing happy hour deals near you. Compare prices and find the best bars and restaurants for your night out.`;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen bg-gray-50 ${isMobile ? 'overflow-hidden' : ''}`}>
       <SEOHead 
         title={seoTitle}
         description={seoDescription}
@@ -203,7 +203,7 @@ const Results = () => {
 
       {/* Mobile Layout - Full Screen Map */}
       {isMobile && (
-        <div className="fixed inset-0 pt-32">
+        <div className="fixed inset-0 pt-32 overflow-hidden">
           {/* Full Screen Map */}
           <div className="h-full w-full">
             <ResultsMap 
@@ -217,24 +217,23 @@ const Results = () => {
             />
           </div>
           
-          {/* Floating Peek Handle at Bottom */}
-          <div 
-            className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl z-50 cursor-pointer h-16"
-            onClick={() => setIsListDrawerOpen(true)}
-            style={{ height: 'calc(100vh / 8)' }}
-          >
-            <div className="flex items-center justify-center pt-3">
-              <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
-            </div>
-            <div className="px-4 pt-2">
-              <p className="text-sm text-gray-600 text-center font-medium">
-                {merchants?.length || 0} results • Swipe up for list
-              </p>
-            </div>
-          </div>
-
-          {/* List Drawer */}
+          {/* List Drawer with Peek Handle */}
           <MobileListDrawer
+            trigger={
+              <div 
+                className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl z-50 cursor-pointer"
+                style={{ height: 'calc(100vh / 8)' }}
+              >
+                <div className="flex items-center justify-center pt-3">
+                  <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
+                </div>
+                <div className="px-4 pt-2">
+                  <p className="text-sm text-gray-600 text-center font-medium">
+                    {merchants?.length || 0} results • Swipe up for list
+                  </p>
+                </div>
+              </div>
+            }
             isOpen={isListDrawerOpen}
             onOpenChange={setIsListDrawerOpen}
             merchants={merchants || []}
