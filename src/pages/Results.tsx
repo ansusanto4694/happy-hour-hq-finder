@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { SearchBar } from '@/components/SearchBar';
 import { MobileSearchBar } from '@/components/MobileSearchBar';
+import { MobileListDrawer } from '@/components/MobileListDrawer';
 import { MobileFilterDrawer } from '@/components/MobileFilterDrawer';
-import { ViewToggle } from '@/components/ViewToggle';
 import { SearchResults } from '@/components/SearchResults';
 import { UnifiedFilterBar } from '@/components/UnifiedFilterBar';
 import { ResultsMap } from '@/components/ResultsMap';
@@ -22,7 +22,8 @@ const Results = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedRadius, setSelectedRadius] = useState<RadiusOption>('walking');
   const [showOffersOnly, setShowOffersOnly] = useState(false);
-  const [mobileView, setMobileView] = useState<'list' | 'map'>('list');
+  const [isListDrawerOpen, setIsListDrawerOpen] = useState(false);
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [searchAsMapMoves, setSearchAsMapMoves] = useState(false);
   const [mapBounds, setMapBounds] = useState<{ north: number; south: number; east: number; west: number } | null>(null);
   const [selectedDaysState, setSelectedDaysState] = useState<number[]>([]);
@@ -205,51 +206,55 @@ const Results = () => {
         {/* Mobile Layout (< 768px) */}
         {isMobile && (
           <div className="max-w-7xl mx-auto">
-            {/* Fixed Mobile Controls */}
-            <div className="sticky top-32 md:top-32 z-40 bg-gray-50 pb-4 mb-4">
-              <div className="flex items-center justify-between gap-3">
-                <MobileFilterDrawer
-                  selectedCategories={selectedCategories}
-                  onCategoryChange={setSelectedCategories}
-                  selectedRadius={selectedRadius}
-                  onRadiusChange={setSelectedRadius}
-                  isRadiusEnabled={isRadiusEnabled}
-                  showOffersOnly={showOffersOnly}
-                  onShowOffersChange={setShowOffersOnly}
-                  selectedDays={selectedDays}
-                  onDaysChange={handleDaysChange}
-                  startTime={currentStartTime}
-                  endTime={currentEndTime}
-                  onStartTimeChange={handleStartTimeChange}
-                  onEndTimeChange={handleEndTimeChange}
-                />
-                <ViewToggle view={mobileView} onViewChange={setMobileView} />
+            {/* Map as Default View */}
+            <div className="h-[calc(100vh-140px)] rounded-lg overflow-hidden relative">
+              <ResultsMap 
+                restaurants={merchants || []}
+                onMapMove={handleMapMove}
+                searchAsMapMoves={searchAsMapMoves}
+                onToggleSearchAsMapMoves={setSearchAsMapMoves}
+                viewState={mapViewState}
+                onViewStateChange={handleViewStateChange}
+              />
+              
+              {/* Peek Handle at Bottom */}
+              <div 
+                className="absolute bottom-0 left-0 right-0 bg-white rounded-t-lg shadow-lg z-10 cursor-pointer"
+                onClick={() => setIsListDrawerOpen(true)}
+              >
+                <div className="flex items-center justify-center py-2">
+                  <div className="w-12 h-1 bg-gray-300 rounded-full" />
+                </div>
+                <div className="px-4 pb-3">
+                  <p className="text-sm text-gray-600 text-center">
+                    {merchants?.length || 0} results • Swipe up for list
+                  </p>
+                </div>
               </div>
             </div>
 
-            {/* Mobile Content */}
-            {mobileView === 'list' ? (
-                <SearchResults 
-                  merchants={merchants}
-                  isLoading={isLoading}
-                  error={error}
-                  startTime={currentStartTime}
-                  endTime={currentEndTime}
-                  location={location}
-                  isMobile={true}
-                />
-            ) : (
-              <div className="h-[calc(100vh-220px)] rounded-lg overflow-hidden">
-                <ResultsMap 
-                  restaurants={merchants || []}
-                  onMapMove={handleMapMove}
-                  searchAsMapMoves={searchAsMapMoves}
-                  onToggleSearchAsMapMoves={setSearchAsMapMoves}
-                  viewState={mapViewState}
-                  onViewStateChange={handleViewStateChange}
-                />
-              </div>
-            )}
+            {/* List Drawer */}
+            <MobileListDrawer
+              isOpen={isListDrawerOpen}
+              onOpenChange={setIsListDrawerOpen}
+              merchants={merchants || []}
+              isLoading={isLoading}
+              error={error}
+              startTime={currentStartTime}
+              endTime={currentEndTime}
+              location={location}
+              selectedCategories={selectedCategories}
+              onCategoryChange={setSelectedCategories}
+              selectedRadius={selectedRadius}
+              onRadiusChange={setSelectedRadius}
+              isRadiusEnabled={isRadiusEnabled}
+              showOffersOnly={showOffersOnly}
+              onShowOffersChange={setShowOffersOnly}
+              selectedDays={selectedDays}
+              onDaysChange={handleDaysChange}
+              onStartTimeChange={handleStartTimeChange}
+              onEndTimeChange={handleEndTimeChange}
+            />
           </div>
         )}
 
