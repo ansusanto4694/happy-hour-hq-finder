@@ -28,7 +28,6 @@ interface ResultsMapProps {
   viewState?: { longitude: number; latitude: number; zoom: number };
   onViewStateChange?: (viewState: { longitude: number; latitude: number; zoom: number }) => void;
   isMobile?: boolean;
-  onMerchantSelect?: (restaurant: Restaurant | null) => void;
 }
 
 export const ResultsMap: React.FC<ResultsMapProps> = ({ 
@@ -38,8 +37,7 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
   onToggleSearchAsMapMoves,
   viewState: externalViewState,
   onViewStateChange,
-  isMobile: mobileOverride,
-  onMerchantSelect
+  isMobile: mobileOverride
 }) => {
   const [viewState, setViewState] = useState(externalViewState || {
     longitude: -122.4194,
@@ -58,14 +56,13 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
   // Handle restaurant marker click
   const handleRestaurantClick = useCallback((restaurant: Restaurant) => {
     if (isMobile) {
-      // On mobile, notify parent about merchant selection
-      onMerchantSelect?.(restaurant);
+      // On mobile, show preview card at bottom instead of navigating
       setSelectedRestaurant(restaurant);
     } else {
       // On desktop, navigate directly
       navigate(`/restaurant/${restaurant.id}`);
     }
-  }, [navigate, isMobile, onMerchantSelect]);
+  }, [navigate, isMobile]);
 
   // Handle marker hover (desktop only)
   const handleMarkerHover = useCallback((restaurant: Restaurant, event: React.MouseEvent) => {
@@ -161,13 +158,6 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
           style={{ width: '100%', height: '100%' }}
           mapStyle="mapbox://styles/mapbox/streets-v12"
           mapboxAccessToken="pk.eyJ1IjoiYW5zdXNhbnRvNDY5NCIsImEiOiJjbWNudDdob28weTZlMmtxMTBmbDc5YTM4In0.qwR9SIqDBrETlROMvhnKvw"
-          onClick={() => {
-            // Clear selected merchant when clicking on map
-            if (isMobile) {
-              onMerchantSelect?.(null);
-              setSelectedRestaurant(null);
-            }
-          }}
         >
           {/* No Navigation Controls on Mobile */}
           
@@ -185,11 +175,8 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
                   className="bg-red-500 rounded-full w-6 h-6 flex items-center justify-center shadow-lg border-2 border-white cursor-pointer active:bg-red-600 transition-colors"
                   title={restaurant.restaurant_name}
                   onClick={() => handleRestaurantClick(restaurant)}
-                  onTouchEnd={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleRestaurantClick(restaurant);
-                  }}
+                  onTouchStart={(event) => handleMarkerHover(restaurant, event as any)}
+                  onTouchEnd={handleMarkerLeave}
                 >
                   <div className="w-2 h-2 bg-white rounded-full"></div>
                 </div>
