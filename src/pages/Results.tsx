@@ -28,6 +28,8 @@ const Results = () => {
   const [selectedDaysState, setSelectedDaysState] = useState<number[]>([]);
   const [hasMapMoved, setHasMapMoved] = useState(false);
   const [showSearchThisArea, setShowSearchThisArea] = useState(false);
+  const [searchedBounds, setSearchedBounds] = useState<{ north: number; south: number; east: number; west: number } | null>(null);
+  const [isUsingMapSearch, setIsUsingMapSearch] = useState(false);
   const [startTimeState, setStartTimeState] = useState(searchParams.get('startTime') || '');
   const [endTimeState, setEndTimeState] = useState(searchParams.get('endTime') || '');
   // Persist map view state across view toggles
@@ -95,9 +97,9 @@ const Results = () => {
     searchTerm, 
     currentStartTime, 
     currentEndTime, 
-    searchAsMapMoves ? undefined : location, // Clear location when searching map area
-    searchAsMapMoves ? mapBounds : undefined,
-    searchAsMapMoves ? undefined : (isRadiusEnabled ? radiusMiles : undefined), // Clear radius when searching map area
+    isUsingMapSearch ? undefined : location, // Clear location when using map search
+    isUsingMapSearch ? searchedBounds : undefined, // Use the saved searched bounds, not live bounds
+    isUsingMapSearch ? undefined : (isRadiusEnabled ? radiusMiles : undefined), // Clear radius when using map search
     showOffersOnly,
     selectedDays
   );
@@ -139,21 +141,28 @@ const Results = () => {
   // Handle map bounds change to potentially filter results
   const handleMapMove = (bounds: { north: number; south: number; east: number; west: number }) => {
     setMapBounds(bounds);
+    
     // On mobile, show "search this area" button when map is moved
-    if (isMobile && !hasMapMoved) {
-      setHasMapMoved(true);
-      setShowSearchThisArea(true);
-    }
-    if (searchAsMapMoves) {
-      console.log('Map moved to bounds, updating search:', bounds);
+    if (isMobile) {
+      // If we're already using map search and user moves map, show button again
+      if (isUsingMapSearch) {
+        setShowSearchThisArea(true);
+        setIsUsingMapSearch(false); // Reset map search mode
+        setSearchedBounds(null); // Clear previous searched bounds
+      } 
+      // If this is the first move from initial position, show button
+      else if (!hasMapMoved) {
+        setHasMapMoved(true);
+        setShowSearchThisArea(true);
+      }
     }
   };
 
   // Handle search this area button click
   const handleSearchThisArea = () => {
-    setSearchAsMapMoves(true);
-    setShowSearchThisArea(false);
-    // Trigger a re-fetch with current map bounds
+    setSearchedBounds(mapBounds); // Save the current bounds for searching
+    setIsUsingMapSearch(true); // Enable map search mode
+    setShowSearchThisArea(false); // Hide the button
     console.log('Searching this area with bounds:', mapBounds);
   };
 
@@ -247,7 +256,7 @@ const Results = () => {
             <ResultsMap 
               restaurants={merchants || []}
               onMapMove={handleMapMove}
-              searchAsMapMoves={searchAsMapMoves}
+              searchAsMapMoves={false} // Disable constant search as map moves
               onToggleSearchAsMapMoves={setSearchAsMapMoves}
               viewState={mapViewState}
               onViewStateChange={handleViewStateChange}
