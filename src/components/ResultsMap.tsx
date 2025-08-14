@@ -185,8 +185,11 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
                   className="bg-red-500 rounded-full w-6 h-6 flex items-center justify-center shadow-lg border-2 border-white cursor-pointer active:bg-red-600 transition-colors"
                   title={restaurant.restaurant_name}
                   onClick={() => handleRestaurantClick(restaurant)}
-                  onTouchStart={(event) => handleMarkerHover(restaurant, event as any)}
-                  onTouchEnd={handleMarkerLeave}
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleRestaurantClick(restaurant);
+                  }}
                 >
                   <div className="w-2 h-2 bg-white rounded-full"></div>
                 </div>
