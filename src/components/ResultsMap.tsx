@@ -172,13 +172,19 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
                 anchor="bottom"
               >
                 <div 
-                  className="bg-red-500 rounded-full w-6 h-6 flex items-center justify-center shadow-lg border-2 border-white cursor-pointer active:bg-red-600 transition-colors"
+                  className={`rounded-full flex items-center justify-center shadow-lg border-2 border-white cursor-pointer transition-all duration-200 ${
+                    selectedRestaurant?.id === restaurant.id 
+                      ? 'bg-blue-500 w-8 h-8 shadow-xl' 
+                      : 'bg-red-500 w-6 h-6 active:bg-red-600'
+                  }`}
                   title={restaurant.restaurant_name}
                   onClick={() => handleRestaurantClick(restaurant)}
                   onTouchStart={(event) => handleMarkerHover(restaurant, event as any)}
                   onTouchEnd={handleMarkerLeave}
                 >
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                  <div className={`bg-white rounded-full ${
+                    selectedRestaurant?.id === restaurant.id ? 'w-3 h-3' : 'w-2 h-2'
+                  }`}></div>
                 </div>
               </Marker>
             ))}
