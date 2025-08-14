@@ -26,6 +26,8 @@ const Results = () => {
   const [searchAsMapMoves, setSearchAsMapMoves] = useState(false);
   const [mapBounds, setMapBounds] = useState<{ north: number; south: number; east: number; west: number } | null>(null);
   const [selectedDaysState, setSelectedDaysState] = useState<number[]>([]);
+  const [hasMapMoved, setHasMapMoved] = useState(false);
+  const [showSearchThisArea, setShowSearchThisArea] = useState(false);
   const [startTimeState, setStartTimeState] = useState(searchParams.get('startTime') || '');
   const [endTimeState, setEndTimeState] = useState(searchParams.get('endTime') || '');
   // Persist map view state across view toggles
@@ -137,9 +139,22 @@ const Results = () => {
   // Handle map bounds change to potentially filter results
   const handleMapMove = (bounds: { north: number; south: number; east: number; west: number }) => {
     setMapBounds(bounds);
+    // On mobile, show "search this area" button when map is moved
+    if (isMobile && !hasMapMoved) {
+      setHasMapMoved(true);
+      setShowSearchThisArea(true);
+    }
     if (searchAsMapMoves) {
       console.log('Map moved to bounds, updating search:', bounds);
     }
+  };
+
+  // Handle search this area button click
+  const handleSearchThisArea = () => {
+    setSearchAsMapMoves(true);
+    setShowSearchThisArea(false);
+    // Trigger a re-fetch with current map bounds
+    console.log('Searching this area with bounds:', mapBounds);
   };
 
   // Handle map view state changes to persist across view toggles
@@ -211,6 +226,18 @@ const Results = () => {
           </div>
         </div>
       </div>
+
+      {/* Search This Area Button - Mobile Only */}
+      {isMobile && showSearchThisArea && (
+        <div className="fixed top-20 left-4 right-4 z-50">
+          <button
+            onClick={handleSearchThisArea}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-medium shadow-lg transition-colors duration-200"
+          >
+            Search this area
+          </button>
+        </div>
+      )}
 
       {/* Mobile Layout - Full Screen Map */}
       {isMobile && (
