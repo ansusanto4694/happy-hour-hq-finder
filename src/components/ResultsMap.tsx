@@ -23,8 +23,8 @@ interface Restaurant {
 interface ResultsMapProps {
   restaurants?: Restaurant[];
   onMapMove?: (bounds: { north: number; south: number; east: number; west: number }) => void;
-  searchAsMapMoves?: boolean;
-  onToggleSearchAsMapMoves?: (enabled: boolean) => void;
+  showSearchThisArea?: boolean;
+  onSearchThisArea?: () => void;
   viewState?: { longitude: number; latitude: number; zoom: number };
   onViewStateChange?: (viewState: { longitude: number; latitude: number; zoom: number }) => void;
   isMobile?: boolean;
@@ -33,8 +33,8 @@ interface ResultsMapProps {
 export const ResultsMap: React.FC<ResultsMapProps> = ({ 
   restaurants = [], 
   onMapMove,
-  searchAsMapMoves = false,
-  onToggleSearchAsMapMoves,
+  showSearchThisArea = false,
+  onSearchThisArea,
   viewState: externalViewState,
   onViewStateChange,
   isMobile: mobileOverride
@@ -92,10 +92,10 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
     setHoveredRestaurant(null);
   }, [isMobile]);
 
-  // Update map center based on restaurants with coordinates (only when not using search as map moves)
+  // Update map center based on restaurants with coordinates (only when not manually searching)
   useEffect(() => {
-    // Skip automatic centering/zooming if search as map moves is enabled
-    if (searchAsMapMoves) return;
+    // Skip automatic centering/zooming if user is using manual map search
+    if (showSearchThisArea) return;
     
     const restaurantsWithCoords = restaurants.filter(
       restaurant => restaurant.latitude && restaurant.longitude
@@ -117,7 +117,7 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
       // Notify parent of view state change
       onViewStateChange?.(newViewState);
     }
-  }, [restaurants, searchAsMapMoves]);
+  }, [restaurants, showSearchThisArea]);
 
   // Sync with external viewState when it changes
   useEffect(() => {
@@ -213,15 +213,15 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-semibold">Map View</CardTitle>
-          {onToggleSearchAsMapMoves && (
+          {showSearchThisArea && onSearchThisArea && (
             <Button
-              variant={searchAsMapMoves ? "default" : "outline"}
+              variant="default"
               size="sm"
-              onClick={() => onToggleSearchAsMapMoves(!searchAsMapMoves)}
+              onClick={onSearchThisArea}
               className="flex items-center gap-2"
             >
               <MapIcon className="h-4 w-4" />
-              Search as map moves
+              Search this area
             </Button>
           )}
         </div>

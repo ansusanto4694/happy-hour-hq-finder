@@ -23,7 +23,7 @@ const Results = () => {
   const [showOffersOnly, setShowOffersOnly] = useState(false);
   const [isListDrawerOpen, setIsListDrawerOpen] = useState(false);
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
-  const [searchAsMapMoves, setSearchAsMapMoves] = useState(false);
+  const [showSearchThisAreaDesktop, setShowSearchThisAreaDesktop] = useState(false);
   const [mapBounds, setMapBounds] = useState<{ north: number; south: number; east: number; west: number } | null>(null);
   const [selectedDaysState, setSelectedDaysState] = useState<number[]>([]);
   const [hasMapMoved, setHasMapMoved] = useState(false);
@@ -165,6 +165,28 @@ const Results = () => {
         setHasMapMoved(true);
         setShowSearchThisArea(true);
       }
+    } else {
+      // On desktop, show "search this area" button when map is moved
+      if (isUsingMapSearch && searchedBounds) {
+        // Calculate if the center of the map has moved significantly
+        const currentCenterLat = (bounds.north + bounds.south) / 2;
+        const currentCenterLng = (bounds.east + bounds.west) / 2;
+        const searchedCenterLat = (searchedBounds.north + searchedBounds.south) / 2;
+        const searchedCenterLng = (searchedBounds.east + searchedBounds.west) / 2;
+        
+        // Check if moved more than ~0.01 degrees (roughly 1km)
+        const latDiff = Math.abs(currentCenterLat - searchedCenterLat);
+        const lngDiff = Math.abs(currentCenterLng - searchedCenterLng);
+        
+        if (latDiff > 0.01 || lngDiff > 0.01) {
+          setShowSearchThisAreaDesktop(true);
+        }
+      } 
+      // If this is the first move from initial position, show button
+      else if (!hasMapMoved) {
+        setHasMapMoved(true);
+        setShowSearchThisAreaDesktop(true);
+      }
     }
   };
 
@@ -172,7 +194,8 @@ const Results = () => {
   const handleSearchThisArea = () => {
     setSearchedBounds(mapBounds); // Save the current bounds for searching
     setIsUsingMapSearch(true); // Enable map search mode
-    setShowSearchThisArea(false); // Hide the button
+    setShowSearchThisArea(false); // Hide the mobile button
+    setShowSearchThisAreaDesktop(false); // Hide the desktop button
     console.log('Searching this area with bounds:', mapBounds);
   };
 
@@ -266,8 +289,8 @@ const Results = () => {
             <ResultsMap 
               restaurants={merchants || []}
               onMapMove={handleMapMove}
-              searchAsMapMoves={false} // Disable constant search as map moves
-              onToggleSearchAsMapMoves={setSearchAsMapMoves}
+              showSearchThisArea={false} // Mobile uses fixed button
+              onSearchThisArea={handleSearchThisArea}
               viewState={mapViewState}
               onViewStateChange={handleViewStateChange}
               isMobile={true}
@@ -376,8 +399,8 @@ const Results = () => {
                   <ResultsMap 
                     restaurants={merchants || []}
                     onMapMove={handleMapMove}
-                    searchAsMapMoves={searchAsMapMoves}
-                    onToggleSearchAsMapMoves={setSearchAsMapMoves}
+                    showSearchThisArea={showSearchThisAreaDesktop}
+                    onSearchThisArea={handleSearchThisArea}
                     viewState={mapViewState}
                     onViewStateChange={handleViewStateChange}
                   />
@@ -428,8 +451,8 @@ const Results = () => {
               <ResultsMap 
                 restaurants={merchants || []}
                 onMapMove={handleMapMove}
-                searchAsMapMoves={searchAsMapMoves}
-                onToggleSearchAsMapMoves={setSearchAsMapMoves}
+                showSearchThisArea={showSearchThisAreaDesktop}
+                onSearchThisArea={handleSearchThisArea}
                 viewState={mapViewState}
                 onViewStateChange={handleViewStateChange}
               />
