@@ -75,7 +75,7 @@ export const MerchantMapPreviewCard: React.FC<MerchantMapPreviewCardProps> = ({
             {onClose && (
               <button 
                 onClick={onClose}
-                className="ml-2 p-2 text-gray-400 hover:text-gray-600"
+                className="ml-2 w-11 h-11 flex items-center justify-center text-gray-400 hover:text-gray-600"
               >
                 ×
               </button>

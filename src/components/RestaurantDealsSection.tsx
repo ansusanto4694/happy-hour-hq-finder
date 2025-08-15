@@ -43,7 +43,7 @@ export const RestaurantDealsSection: React.FC<RestaurantDealsSectionProps> = ({ 
             {isAdmin && <HappyHourDealsManager restaurantId={restaurantId} />}
             <CollapsibleTrigger asChild>
               <button 
-                className="p-1 hover:bg-gray-100 rounded transition-colors"
+                className="w-11 h-11 flex items-center justify-center hover:bg-gray-100 rounded transition-colors"
                 aria-label={isOpen ? "Collapse happy hour menu" : "Expand happy hour menu"}
               >
                 {isOpen ? (

@@ -143,7 +143,7 @@ export const RestaurantEventsFeed: React.FC<RestaurantEventsFeedProps> = ({ rest
                   {/* Share Button */}
                   <button
                     onClick={() => handleShare(event)}
-                    className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                    className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
                     title="Share event"
                   >
                     <Share className="w-5 h-5 text-gray-600" />
