@@ -142,21 +142,18 @@ const Results = () => {
   const handleMapMove = (bounds: { north: number; south: number; east: number; west: number }) => {
     setMapBounds(bounds);
     
-    // On mobile, show "search this area" button when map is moved to a significantly different area
+    // Show "search this area" button whenever the map moves, regardless of distance
     if (isMobile) {
-      // If we're already using map search, check if user moved to a significantly different area
+      // Always show search button when map moves on mobile
       if (isUsingMapSearch && searchedBounds) {
-        // Calculate if the center of the map has moved significantly (not just zoom)
-        const currentCenterLat = (bounds.north + bounds.south) / 2;
-        const currentCenterLng = (bounds.east + bounds.west) / 2;
-        const searchedCenterLat = (searchedBounds.north + searchedBounds.south) / 2;
-        const searchedCenterLng = (searchedBounds.east + searchedBounds.west) / 2;
+        // Compare current bounds with searched bounds - any difference shows button
+        const boundsChanged = 
+          bounds.north !== searchedBounds.north ||
+          bounds.south !== searchedBounds.south ||
+          bounds.east !== searchedBounds.east ||
+          bounds.west !== searchedBounds.west;
         
-        // Check if moved more than ~0.01 degrees (roughly 1km)
-        const latDiff = Math.abs(currentCenterLat - searchedCenterLat);
-        const lngDiff = Math.abs(currentCenterLng - searchedCenterLng);
-        
-        if (latDiff > 0.01 || lngDiff > 0.01) {
+        if (boundsChanged) {
           setShowSearchThisArea(true);
         }
       } 
@@ -166,19 +163,16 @@ const Results = () => {
         setShowSearchThisArea(true);
       }
     } else {
-      // On desktop, show "search this area" button when map is moved
+      // On desktop, show "search this area" button whenever map moves
       if (isUsingMapSearch && searchedBounds) {
-        // Calculate if the center of the map has moved significantly
-        const currentCenterLat = (bounds.north + bounds.south) / 2;
-        const currentCenterLng = (bounds.east + bounds.west) / 2;
-        const searchedCenterLat = (searchedBounds.north + searchedBounds.south) / 2;
-        const searchedCenterLng = (searchedBounds.east + searchedBounds.west) / 2;
+        // Compare current bounds with searched bounds - any difference shows button
+        const boundsChanged = 
+          bounds.north !== searchedBounds.north ||
+          bounds.south !== searchedBounds.south ||
+          bounds.east !== searchedBounds.east ||
+          bounds.west !== searchedBounds.west;
         
-        // Check if moved more than ~0.01 degrees (roughly 1km)
-        const latDiff = Math.abs(currentCenterLat - searchedCenterLat);
-        const lngDiff = Math.abs(currentCenterLng - searchedCenterLng);
-        
-        if (latDiff > 0.01 || lngDiff > 0.01) {
+        if (boundsChanged) {
           setShowSearchThisAreaDesktop(true);
         }
       } 
