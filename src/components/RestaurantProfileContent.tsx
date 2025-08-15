@@ -2,6 +2,8 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Share } from 'lucide-react';
 import { RestaurantBasicInfo } from '@/components/RestaurantBasicInfo';
 import { RestaurantContactInfo } from '@/components/RestaurantContactInfo';
 import { RestaurantHappyHours } from '@/components/RestaurantHappyHours';
@@ -12,6 +14,7 @@ import { ReportIssueModal } from '@/components/ReportIssueModal';
 import { MerchantOffersSection } from '@/components/merchant-offers/MerchantOffersSection';
 import { useMerchantOffers } from '@/hooks/useMerchantOffers';
 import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
 
 interface Restaurant {
   id: number;
@@ -47,6 +50,7 @@ interface RestaurantProfileContentProps {
 export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> = ({ restaurant }) => {
   const { isAdmin } = useAuth();
   const { data: offers } = useMerchantOffers(restaurant.id);
+  const { toast } = useToast();
   
   // Transform the merchant_happy_hour data to include IDs for the editor
   const restaurantWithIds = {
@@ -55,6 +59,22 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
       ...hh,
       id: `${restaurant.id}-${hh.day_of_week}`, // Create a unique ID
     }))
+  };
+
+  const handleShareProfile = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: "Link copied!",
+        description: "Restaurant profile link has been copied to your clipboard.",
+      });
+    } catch (err) {
+      toast({
+        title: "Copy failed",
+        description: "Unable to copy link. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -80,16 +100,26 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
                 </div>
                 <h1 className="text-3xl font-bold text-gray-900">{restaurant.restaurant_name}</h1>
               </div>
-              {isAdmin ? (
-                <RestaurantProfileEditor restaurant={restaurantWithIds} />
-              ) : (
-                <div className="hidden sm:block">
-                  <ReportIssueModal
-                    merchantId={restaurant.id}
-                    merchantName={restaurant.restaurant_name}
-                  />
-                </div>
-              )}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="mobile-icon"
+                  onClick={handleShareProfile}
+                  aria-label="Share restaurant profile"
+                >
+                  <Share className="h-4 w-4" />
+                </Button>
+                {isAdmin ? (
+                  <RestaurantProfileEditor restaurant={restaurantWithIds} />
+                ) : (
+                  <div className="hidden sm:block">
+                    <ReportIssueModal
+                      merchantId={restaurant.id}
+                      merchantName={restaurant.restaurant_name}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Category tags */}
