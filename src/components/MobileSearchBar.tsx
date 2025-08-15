@@ -185,7 +185,7 @@ export const MobileSearchBar = () => {
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm('')}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors w-11 h-11 flex items-center justify-center"
                 type="button"
               >
                 <X className="w-4 h-4" />
@@ -223,7 +223,7 @@ export const MobileSearchBar = () => {
                       {searchTerm && (
                         <button
                           onClick={() => setSearchTerm('')}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors w-11 h-11 flex items-center justify-center"
                           type="button"
                         >
                           <X className="w-4 h-4" />
@@ -287,7 +287,7 @@ export const MobileSearchBar = () => {
                             setShowSuggestions(false);
                             setLocationSuggestions([]);
                           }}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors z-20"
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors z-20 w-11 h-11 flex items-center justify-center"
                           type="button"
                         >
                           <X className="w-4 h-4" />
