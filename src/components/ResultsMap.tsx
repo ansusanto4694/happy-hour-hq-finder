@@ -25,6 +25,7 @@ interface ResultsMapProps {
   onMapMove?: (bounds: { north: number; south: number; east: number; west: number }) => void;
   showSearchThisArea?: boolean;
   onSearchThisArea?: () => void;
+  isUsingMapSearch?: boolean;
   viewState?: { longitude: number; latitude: number; zoom: number };
   onViewStateChange?: (viewState: { longitude: number; latitude: number; zoom: number }) => void;
   isMobile?: boolean;
@@ -35,6 +36,7 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
   onMapMove,
   showSearchThisArea = false,
   onSearchThisArea,
+  isUsingMapSearch = false,
   viewState: externalViewState,
   onViewStateChange,
   isMobile: mobileOverride
@@ -95,7 +97,7 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
   // Update map center based on restaurants with coordinates (only when not manually searching)
   useEffect(() => {
     // Skip automatic centering/zooming if user is using manual map search
-    if (showSearchThisArea) return;
+    if (isUsingMapSearch) return;
     
     const restaurantsWithCoords = restaurants.filter(
       restaurant => restaurant.latitude && restaurant.longitude
@@ -117,7 +119,7 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
       // Notify parent of view state change
       onViewStateChange?.(newViewState);
     }
-  }, [restaurants, showSearchThisArea]);
+  }, [restaurants, isUsingMapSearch]);
 
   // Sync with external viewState when it changes
   useEffect(() => {

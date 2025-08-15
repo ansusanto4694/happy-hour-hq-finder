@@ -291,6 +291,7 @@ const Results = () => {
               onMapMove={handleMapMove}
               showSearchThisArea={false} // Mobile uses fixed button
               onSearchThisArea={handleSearchThisArea}
+              isUsingMapSearch={isUsingMapSearch}
               viewState={mapViewState}
               onViewStateChange={handleViewStateChange}
               isMobile={true}
@@ -401,6 +402,7 @@ const Results = () => {
                     onMapMove={handleMapMove}
                     showSearchThisArea={showSearchThisAreaDesktop}
                     onSearchThisArea={handleSearchThisArea}
+                    isUsingMapSearch={isUsingMapSearch}
                     viewState={mapViewState}
                     onViewStateChange={handleViewStateChange}
                   />
@@ -453,6 +455,7 @@ const Results = () => {
                 onMapMove={handleMapMove}
                 showSearchThisArea={showSearchThisAreaDesktop}
                 onSearchThisArea={handleSearchThisArea}
+                isUsingMapSearch={isUsingMapSearch}
                 viewState={mapViewState}
                 onViewStateChange={handleViewStateChange}
               />
