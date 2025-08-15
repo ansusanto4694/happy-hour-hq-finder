@@ -24,6 +24,11 @@ const buttonVariants = cva(
         sm: "h-11 rounded-md px-3",
         lg: "h-12 rounded-md px-8",
         icon: "h-11 w-11",
+        // Mobile-specific variants for guaranteed accessibility
+        mobile: "h-11 px-4 py-2 min-h-[44px]",
+        "mobile-sm": "h-11 rounded-md px-3 min-h-[44px]",
+        "mobile-lg": "h-12 rounded-md px-6 min-h-[48px]",
+        "mobile-icon": "h-11 w-11 min-h-[44px] min-w-[44px]",
       },
     },
     defaultVariants: {
