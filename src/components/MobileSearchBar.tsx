@@ -270,7 +270,7 @@ export const MobileSearchBar = () => {
                             setShowSuggestions(false);
                           }
                         }}
-                        className="absolute right-10 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors z-20"
+                        className="absolute right-10 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors z-20 w-11 h-11 flex items-center justify-center"
                       >
                         {isLocating ? (
                           <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
