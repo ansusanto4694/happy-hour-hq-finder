@@ -7,13 +7,34 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
   }
   public: {
     Tables: {
+      business: {
+        Row: {
+          business_name: string
+          created_at: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          business_name: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          business_name?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           created_at: string | null
@@ -107,6 +128,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "happy_hour_deals_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "happy_hour_deals_verified_by_fkey"
             columns: ["verified_by"]
             isOneToOne: false
@@ -165,6 +193,7 @@ export type Database = {
       }
       Merchant: {
         Row: {
+          business_id: string | null
           city: string
           created_at: string
           geocoded_at: string | null
@@ -179,10 +208,16 @@ export type Database = {
           street_address: string
           street_address_line_2: string | null
           updated_at: string
+          verification_is_verified: boolean
+          verification_source_label: string | null
+          verification_source_url: string | null
+          verification_verified_at: string | null
+          verification_verified_by: string | null
           website: string | null
           zip_code: string
         }
         Insert: {
+          business_id?: string | null
           city: string
           created_at?: string
           geocoded_at?: string | null
@@ -197,10 +232,16 @@ export type Database = {
           street_address: string
           street_address_line_2?: string | null
           updated_at?: string
+          verification_is_verified?: boolean
+          verification_source_label?: string | null
+          verification_source_url?: string | null
+          verification_verified_at?: string | null
+          verification_verified_by?: string | null
           website?: string | null
           zip_code: string
         }
         Update: {
+          business_id?: string | null
           city?: string
           created_at?: string
           geocoded_at?: string | null
@@ -215,10 +256,30 @@ export type Database = {
           street_address?: string
           street_address_line_2?: string | null
           updated_at?: string
+          verification_is_verified?: boolean
+          verification_source_label?: string | null
+          verification_source_url?: string | null
+          verification_verified_at?: string | null
+          verification_verified_by?: string | null
           website?: string | null
           zip_code?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "Merchant_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_verification_verified_by_fkey"
+            columns: ["verification_verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       merchant_categories: {
         Row: {
@@ -252,6 +313,13 @@ export type Database = {
             columns: ["merchant_id"]
             isOneToOne: false
             referencedRelation: "Merchant"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_categories_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
             referencedColumns: ["id"]
           },
         ]
@@ -295,6 +363,13 @@ export type Database = {
             referencedRelation: "Merchant"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "restaurant_events_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       merchant_happy_hour: {
@@ -333,6 +408,13 @@ export type Database = {
             referencedRelation: "Merchant"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "restaurant_happy_hour_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       merchant_listing_issue: {
@@ -369,6 +451,13 @@ export type Database = {
             columns: ["merchant_id"]
             isOneToOne: false
             referencedRelation: "Merchant"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_listing_issue_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
             referencedColumns: ["id"]
           },
         ]
@@ -415,6 +504,13 @@ export type Database = {
             referencedRelation: "Merchant"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "merchant_offers_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       profiles: {
@@ -452,19 +548,92 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      restaurants_public: {
+        Row: {
+          city: string | null
+          created_at: string | null
+          id: number | null
+          is_active: boolean | null
+          latitude: number | null
+          logo_url: string | null
+          longitude: number | null
+          phone_number: string | null
+          restaurant_name: string | null
+          state: string | null
+          street_address: string | null
+          street_address_line_2: string | null
+          updated_at: string | null
+          website: string | null
+          zip_code: string | null
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string | null
+          id?: number | null
+          is_active?: boolean | null
+          latitude?: number | null
+          logo_url?: string | null
+          longitude?: number | null
+          phone_number?: string | null
+          restaurant_name?: string | null
+          state?: string | null
+          street_address?: string | null
+          street_address_line_2?: string | null
+          updated_at?: string | null
+          website?: string | null
+          zip_code?: string | null
+        }
+        Update: {
+          city?: string | null
+          created_at?: string | null
+          id?: number | null
+          is_active?: boolean | null
+          latitude?: number | null
+          logo_url?: string | null
+          longitude?: number | null
+          phone_number?: string | null
+          restaurant_name?: string | null
+          state?: string | null
+          street_address?: string | null
+          street_address_line_2?: string | null
+          updated_at?: string | null
+          website?: string | null
+          zip_code?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      get_restaurant_details: {
+        Args: { restaurant_id: number }
+        Returns: {
+          city: string
+          created_at: string
+          id: number
+          is_active: boolean
+          latitude: number
+          logo_url: string
+          longitude: number
+          phone_number: string
+          restaurant_name: string
+          state: string
+          street_address: string
+          street_address_line_2: string
+          updated_at: string
+          website: string
+          zip_code: string
+        }[]
+      }
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
       update_merchant_coordinates: {
-        Args: { merchant_id: number; latitude: number; longitude: number }
+        Args: { latitude: number; longitude: number; merchant_id: number }
         Returns: undefined
       }
     }
