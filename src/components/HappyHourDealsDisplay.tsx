@@ -77,47 +77,58 @@ export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ re
       {deals.map((deal) => (
         <div key={deal.id} className="bg-orange-50 p-4 rounded-lg border border-orange-200">
           <div className="flex items-start justify-between gap-3">
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-gray-900 mb-1">{deal.deal_title}</h3>
+            <div className="flex-1 min-w-0 overflow-hidden">
+              <div className="flex flex-wrap items-center gap-2 mb-1">
+                <h3 className="font-semibold text-gray-900 break-words">{deal.deal_title}</h3>
                 {deal.is_verified && (
-                  <Badge variant="secondary" className="bg-green-100 text-green-800">Verified</Badge>
+                  <Badge variant="secondary" className="bg-green-100 text-green-800 flex-shrink-0">Verified</Badge>
                 )}
                 {deal.source_url && (
                   <a
                     href={deal.source_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs text-blue-700 underline"
+                    className="text-xs text-blue-700 underline break-all max-w-full"
+                    title={deal.source_url}
                   >
-                    {deal.source_label || 'Source'}
+                    {deal.source_label || "Source"}
                   </a>
                 )}
               </div>
               {deal.is_verified && deal.verified_at && (
-                <div className="text-xs text-gray-500 mt-0.5">
-                  Last verified on {format(new Date(deal.verified_at), 'MMM d, yyyy')}
+                <div className="text-xs text-gray-500 mt-0.5 break-words">
+                  Last verified on {format(new Date(deal.verified_at), "MMM d, yyyy")}
                 </div>
               )}
               {deal.deal_description && (
-                <div className="text-gray-700 text-sm prose prose-sm max-w-none">
+                <div className="text-gray-700 text-sm prose prose-sm max-w-none break-words overflow-hidden">
                   <ReactMarkdown
                     components={{
                       p: ({ children }) => {
                         // Handle paragraphs with only non-breaking spaces (empty lines)
-                        if (children === '&nbsp;') {
+                        if (children === "&nbsp;") {
                           return <div className="h-4">&nbsp;</div>;
                         }
-                        return <p className="mb-0 leading-normal">{children}</p>;
+                        return <p className="mb-0 leading-normal break-words">{children}</p>;
                       },
                       strong: ({ children }) => <strong className="font-bold">{children}</strong>,
                       em: ({ children }) => <em className="italic">{children}</em>,
                       u: ({ children }) => <u className="underline">{children}</u>,
                       s: ({ children }) => <s className="line-through">{children}</s>,
-                      h1: ({ children }) => <h1 className="text-lg font-bold mb-1 leading-normal">{children}</h1>,
-                      h2: ({ children }) => <h2 className="text-base font-bold mb-1 leading-normal">{children}</h2>,
-                      small: ({ children }) => <small className="text-xs leading-normal">{children}</small>,
+                      h1: ({ children }) => <h1 className="text-lg font-bold mb-1 leading-normal break-words">{children}</h1>,
+                      h2: ({ children }) => <h2 className="text-base font-bold mb-1 leading-normal break-words">{children}</h2>,
+                      small: ({ children }) => <small className="text-xs leading-normal break-words">{children}</small>,
                       br: () => <br />,
+                      a: ({ href, children }) => (
+                        <a 
+                          href={href} 
+                          className="text-blue-700 underline break-all" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                        >
+                          {children}
+                        </a>
+                      ),
                     }}
                     remarkPlugins={[]}
                     rehypePlugins={[rehypeRaw]}
