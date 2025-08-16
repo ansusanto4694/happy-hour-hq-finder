@@ -27,6 +27,7 @@ export const MobileSearchBar = () => {
   const [location, setLocation] = useState(searchParams.get('location') || searchParams.get('zip') || '');
   const [startTime, setStartTime] = useState(searchParams.get('startTime') || '');
   const [endTime, setEndTime] = useState(searchParams.get('endTime') || '');
+  const [gpsCoordinates, setGpsCoordinates] = useState<{lat: number; lng: number} | null>(null);
   
   // Location autocomplete state
   const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>([]);
@@ -71,6 +72,8 @@ export const MobileSearchBar = () => {
   // Handle location input change with debounce
   const handleLocationChange = (value: string) => {
     setLocation(value);
+    // Clear GPS coordinates when manually editing location
+    setGpsCoordinates(null);
     
     // Clear existing debounce
     if (debounceRef.current) {
@@ -88,6 +91,8 @@ export const MobileSearchBar = () => {
     setLocation(suggestion.place_name);
     setShowSuggestions(false);
     setSelectedSuggestionIndex(-1);
+    // Clear GPS coordinates when selecting a suggestion (this is not GPS location)
+    setGpsCoordinates(null);
     locationInputRef.current?.focus();
   };
 
@@ -154,6 +159,13 @@ export const MobileSearchBar = () => {
     const params = new URLSearchParams();
     if (searchTerm) params.set('search', searchTerm);
     if (location) params.set('location', location);
+    
+    // If we have GPS coordinates from locate me, include them
+    if (gpsCoordinates) {
+      params.set('lat', gpsCoordinates.lat.toString());
+      params.set('lng', gpsCoordinates.lng.toString());
+      params.set('useGPS', 'true');
+    }
     
     navigate(`/results?${params.toString()}`);
     setIsExpanded(false);
@@ -268,6 +280,10 @@ export const MobileSearchBar = () => {
                           if (r?.display) {
                             setLocation(r.display);
                             setShowSuggestions(false);
+                            // Store GPS coordinates for search
+                            if (r.latitude && r.longitude) {
+                              setGpsCoordinates({ lat: r.latitude, lng: r.longitude });
+                            }
                           }
                         }}
                         className="absolute right-10 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors z-20 w-11 h-11 flex items-center justify-center"

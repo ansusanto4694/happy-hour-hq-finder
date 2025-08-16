@@ -44,6 +44,9 @@ const Results = () => {
   const location = searchParams.get('location') || searchParams.get('zip') || '';
   const startTime = searchParams.get('startTime') || '';
   const endTime = searchParams.get('endTime') || '';
+  const useGPS = searchParams.get('useGPS') === 'true';
+  const gpsLat = searchParams.get('lat') ? parseFloat(searchParams.get('lat')!) : null;
+  const gpsLng = searchParams.get('lng') ? parseFloat(searchParams.get('lng')!) : null;
   const selectedDays = (() => {
     const daysParam = searchParams.get('days');
     return daysParam ? daysParam.split(',').map(Number) : [];
@@ -84,9 +87,10 @@ const Results = () => {
     setSearchParams(newSearchParams);
   };
 
-  // Check if radius filtering should be enabled (any location provided)
-  const isRadiusEnabled = Boolean(location && location.trim());
-  const radiusMiles = getRadiusMiles(selectedRadius);
+  // Check if radius filtering should be enabled (location OR GPS coordinates provided)
+  const isRadiusEnabled = Boolean((location && location.trim()) || (useGPS && gpsLat && gpsLng));
+  // Force walking distance (1 mile) when using GPS, otherwise use selected radius
+  const radiusMiles = useGPS && gpsLat && gpsLng ? 1 : getRadiusMiles(selectedRadius);
 
   // Use filter state or URL params for time values  
   const currentStartTime = startTimeState || startTime;
@@ -101,7 +105,8 @@ const Results = () => {
     isUsingMapSearch ? searchedBounds : undefined, // Use the saved searched bounds, not live bounds
     isUsingMapSearch ? undefined : (isRadiusEnabled ? radiusMiles : undefined), // Clear radius when using map search
     showOffersOnly,
-    selectedDays
+    selectedDays,
+    useGPS && gpsLat && gpsLng ? { lat: gpsLat, lng: gpsLng } : undefined // GPS coordinates
   );
 
   // Debug the merchants data being passed to SearchResults - ALWAYS LOG
@@ -417,6 +422,7 @@ const Results = () => {
                   selectedRadius={selectedRadius}
                   onRadiusChange={setSelectedRadius}
                   isRadiusEnabled={isRadiusEnabled}
+                  useGPS={useGPS && gpsLat && gpsLng}
                   showOffersOnly={showOffersOnly}
                   onShowOffersChange={setShowOffersOnly}
                   selectedDays={selectedDays}

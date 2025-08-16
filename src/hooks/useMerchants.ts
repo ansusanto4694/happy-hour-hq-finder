@@ -19,9 +19,9 @@ const calculateHaversineDistance = (lat1: number, lng1: number, lat2: number, ln
   return distance; // Distance in miles
 };
 
-export const useMerchants = (categoryIds?: string[], searchTerm?: string, startTime?: string, endTime?: string, location?: string, bounds?: { north: number; south: number; east: number; west: number }, radiusMiles?: number, showOffersOnly?: boolean, selectedDays?: number[]) => {
+export const useMerchants = (categoryIds?: string[], searchTerm?: string, startTime?: string, endTime?: string, location?: string, bounds?: { north: number; south: number; east: number; west: number }, radiusMiles?: number, showOffersOnly?: boolean, selectedDays?: number[], gpsCoordinates?: { lat: number; lng: number }) => {
   // Force fresh queries for restaurant searches to avoid caching issues
-  const queryKey = ['merchants', categoryIds, searchTerm, startTime, endTime, location, bounds, radiusMiles, showOffersOnly, selectedDays];
+  const queryKey = ['merchants', categoryIds, searchTerm, startTime, endTime, location, bounds, radiusMiles, showOffersOnly, selectedDays, gpsCoordinates];
   
   return useQuery({
     queryKey,
@@ -29,7 +29,7 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
     gcTime: searchTerm?.toLowerCase().includes('restaurant') ? 0 : 10 * 60 * 1000, // React Query v5 uses gcTime instead of cacheTime
     queryFn: async () => {
       console.log('=== STARTING MERCHANT SEARCH ===');
-      console.log('Search parameters:', { categoryIds, searchTerm, startTime, endTime, location, bounds, radiusMiles, showOffersOnly, selectedDays });
+      console.log('Search parameters:', { categoryIds, searchTerm, startTime, endTime, location, bounds, radiusMiles, showOffersOnly, selectedDays, gpsCoordinates });
       
       try {
       let query = supabase
@@ -221,84 +221,93 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
 
       console.log('Raw merchant data from database:', data);
 
-      // Apply radius filtering if specified (must have location)
+      // Apply radius filtering if specified (must have location or GPS coordinates)
       let filteredData = data;
-      if (radiusMiles && location) {
-        console.log('Applying radius filtering:', radiusMiles, 'miles from', location);
+      if (radiusMiles && (location || gpsCoordinates)) {
+        console.log('Applying radius filtering:', radiusMiles, 'miles from', location || 'GPS location');
         
         try {
-          // Enhanced location matching - prioritize zip code for consistency
+          // If we have GPS coordinates, use them directly
           let locationData = null;
-          const trimmedLocation = location.trim().toLowerCase();
+          if (gpsCoordinates) {
+            locationData = {
+              latitude: gpsCoordinates.lat,
+              longitude: gpsCoordinates.lng
+            };
+            console.log('Using GPS coordinates for radius filtering:', locationData);
+          } else {
+            // Enhanced location matching - prioritize zip code for consistency
+            const trimmedLocation = location.trim().toLowerCase();
           
-          // Strategy 1: First check for zip codes in the location string
-          const zipMatch = location.match(/\b\d{5}\b/);
-          if (zipMatch) {
-            const { data: zipCachedLocation, error: zipCacheError } = await supabase
-              .from('location_cache')
-              .select('latitude, longitude')
-              .eq('original_input', zipMatch[0])
-              .single();
-              
-            if (!zipCacheError && zipCachedLocation) {
-              locationData = zipCachedLocation;
-              console.log('Found zip code in cache:', locationData);
-            }
-          }
-          
-          // Strategy 2: If no zip code found, try exact cache match
-          if (!locationData) {
-            const { data: cachedLocation, error: cacheError } = await supabase
-              .from('location_cache')
-              .select('latitude, longitude')
-              .eq('original_input', trimmedLocation)
-              .single();
-
-            if (!cacheError && cachedLocation) {
-              locationData = cachedLocation;
-              console.log('Found exact location in cache:', locationData);
-            }
-          }
-          
-          if (!locationData) {
-            console.log('Cache strategies failed, trying additional fallbacks...');
-            
-            // Strategy 3: Try city name extraction for Mapbox formatted strings
-            if (!locationData) {
-              const cityMatch = location.match(/^([^,]+)/);
-              if (cityMatch) {
-                const cityName = cityMatch[1].trim().toLowerCase();
-                const { data: cityCachedLocation, error: cityCacheError } = await supabase
-                  .from('location_cache')
-                  .select('latitude, longitude')
-                  .ilike('original_input', `%${cityName}%`)
-                  .single();
-                  
-                if (!cityCacheError && cityCachedLocation) {
-                  locationData = cityCachedLocation;
-                  console.log('Found city name in cache:', locationData);
-                }
+            // Strategy 1: First check for zip codes in the location string
+            const zipMatch = location.match(/\b\d{5}\b/);
+            if (zipMatch) {
+              const { data: zipCachedLocation, error: zipCacheError } = await supabase
+                .from('location_cache')
+                .select('latitude, longitude')
+                .eq('original_input', zipMatch[0])
+                .single();
+                
+              if (!zipCacheError && zipCachedLocation) {
+                locationData = zipCachedLocation;
+                console.log('Found zip code in cache:', locationData);
               }
             }
-            
-            // Strategy 4: Normalize the location using edge function as final fallback
+          
+            // Strategy 2: If no zip code found, try exact cache match
             if (!locationData) {
-              console.log('Cache strategies failed, normalizing location:', location);
-              
-              // Normalize the location using the edge function
-              const { data: normalizedLocation, error: normalizeError } = await supabase.functions.invoke('normalize-location', {
-                body: { location }
-              });
+              const { data: cachedLocation, error: cacheError } = await supabase
+                .from('location_cache')
+                .select('latitude, longitude')
+                .eq('original_input', trimmedLocation)
+                .single();
 
-              if (normalizeError) {
-                console.error('Error normalizing location:', normalizeError);
-                console.log('Skipping radius filter due to normalization error');
-              } else if (normalizedLocation) {
-                locationData = {
-                  latitude: normalizedLocation.latitude,
-                  longitude: normalizedLocation.longitude
-                };
-                console.log('Normalized location:', locationData);
+              if (!cacheError && cachedLocation) {
+                locationData = cachedLocation;
+                console.log('Found exact location in cache:', locationData);
+              }
+            }
+          
+            if (!locationData) {
+              console.log('Cache strategies failed, trying additional fallbacks...');
+              
+              // Strategy 3: Try city name extraction for Mapbox formatted strings
+              if (!locationData) {
+                const cityMatch = location.match(/^([^,]+)/);
+                if (cityMatch) {
+                  const cityName = cityMatch[1].trim().toLowerCase();
+                  const { data: cityCachedLocation, error: cityCacheError } = await supabase
+                    .from('location_cache')
+                    .select('latitude, longitude')
+                    .ilike('original_input', `%${cityName}%`)
+                    .single();
+                    
+                  if (!cityCacheError && cityCachedLocation) {
+                    locationData = cityCachedLocation;
+                    console.log('Found city name in cache:', locationData);
+                  }
+                }
+              }
+            
+              // Strategy 4: Normalize the location using edge function as final fallback
+              if (!locationData) {
+                console.log('Cache strategies failed, normalizing location:', location);
+                
+                // Normalize the location using the edge function
+                const { data: normalizedLocation, error: normalizeError } = await supabase.functions.invoke('normalize-location', {
+                  body: { location }
+                });
+
+                if (normalizeError) {
+                  console.error('Error normalizing location:', normalizeError);
+                  console.log('Skipping radius filter due to normalization error');
+                } else if (normalizedLocation) {
+                  locationData = {
+                    latitude: normalizedLocation.latitude,
+                    longitude: normalizedLocation.longitude
+                  };
+                  console.log('Normalized location:', locationData);
+                }
               }
             }
           }

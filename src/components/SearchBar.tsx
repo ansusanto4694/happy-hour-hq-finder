@@ -71,6 +71,8 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
   // Handle location input change with debounce
   const handleLocationChange = (value: string) => {
     setLocation(value);
+    // Clear GPS coordinates when manually editing location
+    setGpsCoordinates(null);
     
     // Clear existing debounce
     if (debounceRef.current) {
@@ -88,6 +90,8 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
     setLocation(suggestion.place_name);
     setShowSuggestions(false);
     setSelectedSuggestionIndex(-1);
+    // Clear GPS coordinates when selecting a suggestion (this is not GPS location)
+    setGpsCoordinates(null);
     locationInputRef.current?.focus();
   };
 
@@ -151,9 +155,13 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
     };
   }, []);
 
+  // Track GPS coordinates when using locate me
+  const [gpsCoordinates, setGpsCoordinates] = useState<{lat: number; lng: number} | null>(null);
+
   const handleSearch = () => {
     console.log('=== SEARCH BAR DEBUG ===');
     console.log('Searching for:', searchTerm, 'in location:', location);
+    console.log('GPS coordinates:', gpsCoordinates);
     console.log('Search term length:', searchTerm.length);
     console.log('Search term trim:', searchTerm.trim());
     console.log('========================');
@@ -162,6 +170,13 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
     const params = new URLSearchParams();
     if (searchTerm) params.set('search', searchTerm);
     if (location) params.set('location', location);
+    
+    // If we have GPS coordinates from locate me, include them
+    if (gpsCoordinates) {
+      params.set('lat', gpsCoordinates.lat.toString());
+      params.set('lng', gpsCoordinates.lng.toString());
+      params.set('useGPS', 'true');
+    }
     
     // Navigate to results page with parameters
     navigate(`/results?${params.toString()}`);
@@ -222,6 +237,10 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                 if (r?.display) {
                   setLocation(r.display);
                   setShowSuggestions(false);
+                  // Store GPS coordinates for search
+                  if (r.latitude && r.longitude) {
+                    setGpsCoordinates({ lat: r.latitude, lng: r.longitude });
+                  }
                 }
               }}
               className="absolute right-12 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors z-20 w-11 h-11 flex items-center justify-center"
@@ -345,6 +364,10 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                 if (r?.display) {
                   setLocation(r.display);
                   setShowSuggestions(false);
+                  // Store GPS coordinates for search
+                  if (r.latitude && r.longitude) {
+                    setGpsCoordinates({ lat: r.latitude, lng: r.longitude });
+                  }
                 }
               }}
               className="absolute right-12 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors z-20 w-11 h-11 flex items-center justify-center"

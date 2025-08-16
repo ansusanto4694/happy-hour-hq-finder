@@ -8,12 +8,14 @@ interface RadiusFilterProps {
   selectedRadius: RadiusOption;
   onRadiusChange: (radius: RadiusOption) => void;
   isEnabled: boolean;
+  useGPS?: boolean;
 }
 
 export const RadiusFilter: React.FC<RadiusFilterProps> = ({
   selectedRadius,
   onRadiusChange,
-  isEnabled
+  isEnabled,
+  useGPS = false
 }) => {
   const radiusOptions = [
     { value: 'blocks' as const, label: 'Nearby (within .25 miles)', miles: 0.25 },
@@ -33,12 +35,17 @@ export const RadiusFilter: React.FC<RadiusFilterProps> = ({
             Enter a location to enable
           </span>
         )}
+        {useGPS && (
+          <span className="text-xs text-blue-600 font-medium">
+            Using GPS location (1 mile)
+          </span>
+        )}
       </div>
       
       <RadioGroup
-        value={selectedRadius || 'walking'}
+        value={useGPS ? 'walking' : (selectedRadius || 'walking')}
         onValueChange={(value) => onRadiusChange(value as RadiusOption)}
-        disabled={!isEnabled}
+        disabled={!isEnabled || useGPS}
         className="space-y-2"
       >
         {radiusOptions.map((option) => (
@@ -46,12 +53,12 @@ export const RadiusFilter: React.FC<RadiusFilterProps> = ({
             <RadioGroupItem 
               value={option.value} 
               id={option.value}
-              disabled={!isEnabled}
+              disabled={!isEnabled || useGPS}
             />
             <Label 
               htmlFor={option.value}
               className={`text-sm cursor-pointer ${
-                !isEnabled ? 'text-gray-400' : 'text-gray-700'
+                !isEnabled || useGPS ? 'text-gray-400' : 'text-gray-700'
               }`}
             >
               {option.label}

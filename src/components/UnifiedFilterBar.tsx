@@ -17,6 +17,7 @@ interface UnifiedFilterBarProps {
   selectedRadius: RadiusOption;
   onRadiusChange: (radius: RadiusOption) => void;
   isRadiusEnabled: boolean;
+  useGPS?: boolean;
   showOffersOnly: boolean;
   onShowOffersChange: (showOffers: boolean) => void;
   selectedDays: number[];
@@ -51,6 +52,7 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
   selectedRadius,
   onRadiusChange,
   isRadiusEnabled,
+  useGPS = false,
   showOffersOnly,
   onShowOffersChange,
   selectedDays,
