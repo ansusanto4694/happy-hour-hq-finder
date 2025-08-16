@@ -29,7 +29,7 @@ interface UnifiedFilterBarProps {
 }
 
 const RADIUS_OPTIONS: { value: RadiusOption; label: string; disabled?: boolean }[] = [
-  { value: 'blocks', label: 'Within 5 blocks' },
+  { value: 'blocks', label: 'Nearby (within .25 miles)' },
   { value: 'walking', label: 'Walking (within 1 mile)' },
   { value: 'bike', label: 'Bike (within 3 miles)' },
   { value: 'drive', label: 'Drive (within 5 miles)' },
