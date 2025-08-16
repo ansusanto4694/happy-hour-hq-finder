@@ -422,7 +422,7 @@ const Results = () => {
                   selectedRadius={selectedRadius}
                   onRadiusChange={setSelectedRadius}
                   isRadiusEnabled={isRadiusEnabled}
-                  useGPS={useGPS && gpsLat && gpsLng}
+                  useGPS={useGPS && gpsLat !== null && gpsLng !== null}
                   showOffersOnly={showOffersOnly}
                   onShowOffersChange={setShowOffersOnly}
                   selectedDays={selectedDays}
