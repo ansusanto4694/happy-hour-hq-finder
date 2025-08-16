@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { MerchantMapPreviewCard } from '@/components/MerchantMapPreviewCard';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Map as MapIcon } from 'lucide-react';
+import { useUserLocation } from '@/hooks/useUserLocation';
+import { Map as MapIcon, MapPin } from 'lucide-react';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 interface Restaurant {
@@ -54,6 +55,7 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
   const mapRef = useRef<any>(null);
   const navigate = useNavigate();
   const isMobile = mobileOverride ?? useIsMobile();
+  const { userLocation } = useUserLocation();
 
   // Handle restaurant marker click
   const handleRestaurantClick = useCallback((restaurant: Restaurant) => {
@@ -163,6 +165,24 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
         >
           {/* No Navigation Controls on Mobile */}
           
+          {/* User Location Marker */}
+          {userLocation && (
+            <Marker
+              longitude={userLocation.longitude}
+              latitude={userLocation.latitude}
+              anchor="center"
+            >
+              <div className="relative">
+                {/* Outer pulse ring */}
+                <div className="absolute inset-0 bg-blue-500 rounded-full w-8 h-8 opacity-30 animate-ping"></div>
+                {/* Inner blue dot */}
+                <div className="bg-blue-500 rounded-full w-4 h-4 border-2 border-white shadow-lg relative z-10 flex items-center justify-center">
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                </div>
+              </div>
+            </Marker>
+          )}
+          
           {/* Restaurant Markers - Only show if coordinates exist */}
           {restaurants
             .filter(restaurant => restaurant.latitude && restaurant.longitude)
@@ -246,6 +266,24 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
           >
             {/* Navigation Controls */}
             <NavigationControl position="top-right" />
+            
+            {/* User Location Marker */}
+            {userLocation && (
+              <Marker
+                longitude={userLocation.longitude}
+                latitude={userLocation.latitude}
+                anchor="center"
+              >
+                <div className="relative">
+                  {/* Outer pulse ring */}
+                  <div className="absolute inset-0 bg-blue-500 rounded-full w-8 h-8 opacity-30 animate-ping"></div>
+                  {/* Inner blue dot */}
+                  <div className="bg-blue-500 rounded-full w-4 h-4 border-2 border-white shadow-lg relative z-10 flex items-center justify-center">
+                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                  </div>
+                </div>
+              </Marker>
+            )}
             
             {/* Restaurant Markers - Only show if coordinates exist */}
             {restaurants
