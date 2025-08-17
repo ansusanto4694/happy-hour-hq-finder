@@ -38,6 +38,8 @@ const Results = () => {
     latitude: 37.7749,
     zoom: 12
   });
+  // Track hovered restaurant for map icon highlighting (desktop only)
+  const [hoveredRestaurantId, setHoveredRestaurantId] = useState<number | null>(null);
 
   // Extract search parameters
   const searchTerm = searchParams.get('search') || '';
@@ -392,6 +394,7 @@ const Results = () => {
               startTime={currentStartTime}
               endTime={currentEndTime}
               location={location}
+              onRestaurantHover={setHoveredRestaurantId}
             />
               </div>
               <div className="lg:col-span-1">
@@ -404,6 +407,7 @@ const Results = () => {
                     isUsingMapSearch={isUsingMapSearch}
                     viewState={mapViewState}
                     onViewStateChange={handleViewStateChange}
+                    hoveredRestaurantId={hoveredRestaurantId}
                   />
                 </div>
               </div>
@@ -437,28 +441,30 @@ const Results = () => {
 
           {/* Scrollable Main Content Area - Results */}
           <div className="flex-1 min-w-0">
-                 <SearchResults 
-                  merchants={merchants}
-                  isLoading={isLoading}
-                  error={error}
-                  startTime={currentStartTime}
-                  endTime={currentEndTime}
-                  location={location}
-                />
+            <SearchResults 
+              merchants={merchants}
+              isLoading={isLoading}
+              error={error}
+              startTime={currentStartTime}
+              endTime={currentEndTime}
+              location={location}
+              onRestaurantHover={setHoveredRestaurantId}
+            />
           </div>
 
           {/* Fixed Right Side - Map */}
           <div className="w-[28rem] flex-shrink-0">
             <div className="sticky top-32 z-30">
-              <ResultsMap 
-                restaurants={merchants || []}
-                onMapMove={handleMapMove}
-                showSearchThisArea={showSearchThisAreaDesktop}
-                onSearchThisArea={handleSearchThisArea}
-                isUsingMapSearch={isUsingMapSearch}
-                viewState={mapViewState}
-                onViewStateChange={handleViewStateChange}
-              />
+                <ResultsMap 
+                  restaurants={merchants || []}
+                  onMapMove={handleMapMove}
+                  showSearchThisArea={showSearchThisAreaDesktop}
+                  onSearchThisArea={handleSearchThisArea}
+                  isUsingMapSearch={isUsingMapSearch}
+                  viewState={mapViewState}
+                  onViewStateChange={handleViewStateChange}
+                  hoveredRestaurantId={hoveredRestaurantId}
+                />
             </div>
           </div>
         </div>
