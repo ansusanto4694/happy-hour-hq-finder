@@ -41,6 +41,11 @@ const Results = () => {
   // Track hovered restaurant for map icon highlighting (desktop only)
   const [hoveredRestaurantId, setHoveredRestaurantId] = useState<number | null>(null);
 
+  // Debug hover state changes
+  React.useEffect(() => {
+    console.log('Hovered restaurant ID changed to:', hoveredRestaurantId);
+  }, [hoveredRestaurantId]);
+
   // Extract search parameters
   const searchTerm = searchParams.get('search') || '';
   const location = searchParams.get('location') || searchParams.get('zip') || '';
@@ -296,6 +301,7 @@ const Results = () => {
               viewState={mapViewState}
               onViewStateChange={handleViewStateChange}
               isMobile={true}
+              hoveredRestaurantId={hoveredRestaurantId}
             />
           </div>
           

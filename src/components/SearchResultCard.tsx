@@ -29,8 +29,18 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
     <Card 
       className="hover:shadow-md transition-shadow cursor-pointer"
       onClick={() => onClick(restaurant.id)}
-      onMouseEnter={() => !isMobile && onHover?.(restaurant.id)}
-      onMouseLeave={() => !isMobile && onHover?.(null)}
+      onMouseEnter={() => {
+        if (!isMobile && onHover) {
+          console.log('Hovering over restaurant:', restaurant.id, restaurant.restaurant_name);
+          onHover(restaurant.id);
+        }
+      }}
+      onMouseLeave={() => {
+        if (!isMobile && onHover) {
+          console.log('Leaving restaurant hover:', restaurant.id);
+          onHover(null);
+        }
+      }}
     >
       <CardContent className="p-3 sm:p-6">
         {isMobile ? (

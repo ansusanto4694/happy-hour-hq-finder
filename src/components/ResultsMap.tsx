@@ -305,7 +305,10 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
                     }`}
                     title={restaurant.restaurant_name}
                     onClick={() => handleRestaurantClick(restaurant)}
-                    onMouseEnter={(event) => handleMarkerHover(restaurant, event)}
+                    onMouseEnter={(event) => {
+                      console.log('Map marker hover for restaurant:', restaurant.id, 'Current hovered ID:', hoveredRestaurantId);
+                      handleMarkerHover(restaurant, event);
+                    }}
                     onMouseLeave={handleMarkerLeave}
                   >
                     <div className="w-2 h-2 bg-white rounded-full"></div>
