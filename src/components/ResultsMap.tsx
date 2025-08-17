@@ -297,10 +297,10 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
                   latitude={restaurant.latitude!}
                   anchor="bottom"
                 >
-                  <div 
+                   <div 
                     className={`rounded-full w-6 h-6 flex items-center justify-center shadow-lg border-2 border-white cursor-pointer transition-colors ${
                       hoveredRestaurantId === restaurant.id 
-                        ? 'bg-[#BF40BF] hover:bg-[#A030A0]' 
+                        ? 'bg-bright-blue hover:bg-bright-blue/80' 
                         : 'bg-red-500 hover:bg-red-600'
                     }`}
                     title={restaurant.restaurant_name}
