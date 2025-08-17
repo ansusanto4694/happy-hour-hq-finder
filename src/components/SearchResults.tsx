@@ -27,7 +27,6 @@ interface SearchResultsProps {
   endTime?: string;
   location?: string;
   isMobile?: boolean;
-  onRestaurantHover?: (restaurantId: number | null) => void;
 }
 
 const RESULTS_PER_PAGE = 30;
@@ -39,8 +38,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   startTime, 
   endTime, 
   location,
-  isMobile = false,
-  onRestaurantHover
+  isMobile = false
 }) => {
   const { handleRestaurantClick } = useSearchResultsNavigation();
   const [displayedResults, setDisplayedResults] = useState<any[]>([]);
@@ -226,7 +224,6 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
             restaurant={restaurant}
             onClick={handleRestaurantClick}
             isMobile={isMobile}
-            onHover={onRestaurantHover}
           />
         ))}
       </div>
