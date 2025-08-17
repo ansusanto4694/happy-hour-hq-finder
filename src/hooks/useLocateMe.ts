@@ -13,12 +13,16 @@ export function useLocateMe() {
   const { toast } = useToast();
   const [isLocating, setIsLocating] = useState(false);
 
-  const getPosition = () => new Promise<GeolocationPosition>((resolve, reject) => {
+  const getPosition = (attempt = 1) => new Promise<GeolocationPosition>((resolve, reject) => {
     if (!('geolocation' in navigator)) return reject(new Error('Geolocation not supported'));
+    
+    // Use longer timeout on first attempt, shorter on retries
+    const timeout = attempt === 1 ? 15000 : 8000;
+    
     navigator.geolocation.getCurrentPosition(resolve, reject, {
       enableHighAccuracy: true,
-      timeout: 8000,
-      maximumAge: 60_000,
+      timeout,
+      maximumAge: attempt === 1 ? 0 : 60_000, // Force fresh location on first attempt
     });
   });
 
@@ -49,16 +53,23 @@ export function useLocateMe() {
   const locate = async (): Promise<LocateResult | null> => {
     setIsLocating(true);
     try {
-      try {
-        const pos = await getPosition();
-        const r = await reverseGeocode(pos.coords.latitude, pos.coords.longitude);
-        toast({ title: 'Location detected', description: r.display });
-        return { ...r, method: 'gps' };
-      } catch (gpsError) {
-        // Fallback to IP-based geolocation
-        const r = await ipGeolocate();
-        toast({ title: 'Using approximate location', description: r.display });
-        return { ...r, method: 'ip' };
+      // Try GPS with retry mechanism
+      let gpsResult = null;
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+          const pos = await getPosition(attempt);
+          const r = await reverseGeocode(pos.coords.latitude, pos.coords.longitude);
+          toast({ title: 'Location detected', description: r.display });
+          return { ...r, method: 'gps' };
+        } catch (gpsError) {
+          console.log(`GPS attempt ${attempt} failed:`, gpsError);
+          if (attempt === 2) {
+            // After 2 GPS attempts failed, fallback to IP
+            const r = await ipGeolocate();
+            toast({ title: 'Using approximate location', description: r.display });
+            return { ...r, method: 'ip' };
+          }
+        }
       }
     } catch (e) {
       console.error('locate me failed:', e);
