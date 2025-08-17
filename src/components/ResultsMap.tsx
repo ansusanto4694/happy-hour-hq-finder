@@ -30,6 +30,7 @@ interface ResultsMapProps {
   viewState?: { longitude: number; latitude: number; zoom: number };
   onViewStateChange?: (viewState: { longitude: number; latitude: number; zoom: number }) => void;
   isMobile?: boolean;
+  hoveredRestaurantId?: number | null;
 }
 
 export const ResultsMap: React.FC<ResultsMapProps> = ({ 
@@ -40,7 +41,8 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
   isUsingMapSearch = false,
   viewState: externalViewState,
   onViewStateChange,
-  isMobile: mobileOverride
+  isMobile: mobileOverride,
+  hoveredRestaurantId
 }) => {
   const [viewState, setViewState] = useState(externalViewState || {
     longitude: -122.4194,
@@ -197,8 +199,13 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
                   className={`rounded-full flex items-center justify-center shadow-lg border-2 border-white cursor-pointer transition-all duration-200 ${
                     selectedRestaurant?.id === restaurant.id 
                       ? 'bg-blue-500 w-8 h-8 shadow-xl' 
-                      : 'bg-red-500 w-6 h-6 active:bg-red-600'
+                      : hoveredRestaurantId === restaurant.id
+                        ? 'w-6 h-6' 
+                        : 'bg-red-500 w-6 h-6 active:bg-red-600'
                   }`}
+                  style={{
+                    backgroundColor: hoveredRestaurantId === restaurant.id ? '#BF40BF' : undefined
+                  }}
                   title={restaurant.restaurant_name}
                   onClick={() => handleRestaurantClick(restaurant)}
                   onTouchStart={(event) => handleMarkerHover(restaurant, event as any)}
@@ -296,7 +303,12 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
                   anchor="bottom"
                 >
                   <div 
-                    className="bg-red-500 rounded-full w-6 h-6 flex items-center justify-center shadow-lg border-2 border-white cursor-pointer hover:bg-red-600 transition-colors"
+                    className={`rounded-full w-6 h-6 flex items-center justify-center shadow-lg border-2 border-white cursor-pointer transition-colors ${
+                      hoveredRestaurantId === restaurant.id ? '' : 'bg-red-500 hover:bg-red-600'
+                    }`}
+                    style={{
+                      backgroundColor: hoveredRestaurantId === restaurant.id ? '#BF40BF' : undefined
+                    }}
                     title={restaurant.restaurant_name}
                     onClick={() => handleRestaurantClick(restaurant)}
                     onMouseEnter={(event) => handleMarkerHover(restaurant, event)}

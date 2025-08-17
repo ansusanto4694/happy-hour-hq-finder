@@ -32,6 +32,7 @@ const Results = () => {
   const [isUsingMapSearch, setIsUsingMapSearch] = useState(false);
   const [startTimeState, setStartTimeState] = useState(searchParams.get('startTime') || '');
   const [endTimeState, setEndTimeState] = useState(searchParams.get('endTime') || '');
+  const [hoveredRestaurantId, setHoveredRestaurantId] = useState<number | null>(null);
   // Persist map view state across view toggles
   const [mapViewState, setMapViewState] = useState({
     longitude: -122.4194,
@@ -392,6 +393,7 @@ const Results = () => {
               startTime={currentStartTime}
               endTime={currentEndTime}
               location={location}
+              onRestaurantHover={setHoveredRestaurantId}
             />
               </div>
               <div className="lg:col-span-1">
@@ -404,6 +406,7 @@ const Results = () => {
                     isUsingMapSearch={isUsingMapSearch}
                     viewState={mapViewState}
                     onViewStateChange={handleViewStateChange}
+                    hoveredRestaurantId={hoveredRestaurantId}
                   />
                 </div>
               </div>
@@ -444,6 +447,7 @@ const Results = () => {
                   startTime={currentStartTime}
                   endTime={currentEndTime}
                   location={location}
+                  onRestaurantHover={setHoveredRestaurantId}
                 />
           </div>
 
@@ -458,6 +462,7 @@ const Results = () => {
                 isUsingMapSearch={isUsingMapSearch}
                 viewState={mapViewState}
                 onViewStateChange={handleViewStateChange}
+                hoveredRestaurantId={hoveredRestaurantId}
               />
             </div>
           </div>

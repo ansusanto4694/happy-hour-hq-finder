@@ -8,12 +8,14 @@ interface SearchResultCardProps {
   restaurant: any;
   onClick: (restaurantId: number) => void;
   isMobile?: boolean;
+  onHover?: (restaurantId: number | null) => void;
 }
 
 export const SearchResultCard: React.FC<SearchResultCardProps> = ({ 
   restaurant, 
   onClick,
-  isMobile = false
+  isMobile = false,
+  onHover
 }) => {
   // Check if merchant has active offers that haven't expired
   const now = new Date();
@@ -27,6 +29,8 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
     <Card 
       className="hover:shadow-md transition-shadow cursor-pointer"
       onClick={() => onClick(restaurant.id)}
+      onMouseEnter={() => onHover?.(restaurant.id)}
+      onMouseLeave={() => onHover?.(null)}
     >
       <CardContent className="p-3 sm:p-6">
         {isMobile ? (
