@@ -37,15 +37,15 @@ export const RadiusFilter: React.FC<RadiusFilterProps> = ({
         )}
         {useGPS && (
           <span className="text-xs text-blue-600 font-medium">
-            Using GPS location (1 mile)
+            Using GPS location
           </span>
         )}
       </div>
       
       <RadioGroup
-        value={useGPS ? 'walking' : (selectedRadius || 'walking')}
+        value={selectedRadius || 'walking'}
         onValueChange={(value) => onRadiusChange(value as RadiusOption)}
-        disabled={!isEnabled || useGPS}
+        disabled={!isEnabled}
         className="space-y-2"
       >
         {radiusOptions.map((option) => (
@@ -53,12 +53,12 @@ export const RadiusFilter: React.FC<RadiusFilterProps> = ({
             <RadioGroupItem 
               value={option.value} 
               id={option.value}
-              disabled={!isEnabled || useGPS}
+              disabled={!isEnabled}
             />
             <Label 
               htmlFor={option.value}
               className={`text-sm cursor-pointer ${
-                !isEnabled || useGPS ? 'text-gray-400' : 'text-gray-700'
+                !isEnabled ? 'text-gray-400' : 'text-gray-700'
               }`}
             >
               {option.label}

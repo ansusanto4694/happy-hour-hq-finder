@@ -89,8 +89,8 @@ const Results = () => {
 
   // Check if radius filtering should be enabled (location OR GPS coordinates provided)
   const isRadiusEnabled = Boolean((location && location.trim()) || (useGPS && gpsLat && gpsLng));
-  // Force walking distance (1 mile) when using GPS, otherwise use selected radius
-  const radiusMiles = useGPS && gpsLat && gpsLng ? 1 : getRadiusMiles(selectedRadius);
+  // Use selected radius for both GPS and location-based searches
+  const radiusMiles = getRadiusMiles(selectedRadius);
 
   // Use filter state or URL params for time values  
   const currentStartTime = startTimeState || startTime;
@@ -422,7 +422,7 @@ const Results = () => {
                   selectedRadius={selectedRadius}
                   onRadiusChange={setSelectedRadius}
                   isRadiusEnabled={isRadiusEnabled}
-                  useGPS={useGPS && gpsLat !== null && gpsLng !== null}
+                  useGPS={false}
                   showOffersOnly={showOffersOnly}
                   onShowOffersChange={setShowOffersOnly}
                   selectedDays={selectedDays}
