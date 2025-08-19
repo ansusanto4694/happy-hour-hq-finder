@@ -9,7 +9,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { Button } from "@/components/ui/button";
-import { SearchResultCard } from './SearchResultCard';
+import { CarouselCard } from './CarouselCard';
 import { HomepageCarousel as CarouselType } from '@/hooks/useHomepageCarousels';
 
 interface HomepageCarouselProps {
@@ -33,9 +33,9 @@ export const HomepageCarousel: React.FC<HomepageCarouselProps> = ({ carousel }) 
   }
 
   return (
-    <div className="bg-card rounded-lg border p-6 mb-6">
+    <div className="bg-card rounded-lg border p-4 mb-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3">
         <div>
           <h2 className="text-xl font-semibold text-foreground">{carousel.name}</h2>
           {carousel.description && (
@@ -67,20 +67,17 @@ export const HomepageCarousel: React.FC<HomepageCarouselProps> = ({ carousel }) 
       >
         <CarouselContent className="-ml-2 md:-ml-4">
           {carousel.merchants.map((merchantData) => (
-            <CarouselItem key={merchantData.id} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
-              <SearchResultCard
-                restaurant={{
-                  ...merchantData.merchant,
-                  distance: null, // Not applicable for carousels
-                }}
-                onClick={(restaurantId) => navigate(`/restaurant/${restaurantId}`)}
+            <CarouselItem key={merchantData.id} className="pl-2 md:pl-4 basis-1/3 lg:basis-1/4 xl:basis-1/5">
+              <CarouselCard
+                merchant={merchantData.merchant}
+                onClick={(merchantId) => navigate(`/restaurant/${merchantId}`)}
               />
             </CarouselItem>
           ))}
         </CarouselContent>
         
         {/* Navigation buttons - positioned in top right */}
-        <div className="absolute -top-16 right-0 flex space-x-1">
+        <div className="absolute -top-12 right-0 flex space-x-1">
           <CarouselPrevious className="relative translate-y-0 left-auto top-auto h-8 w-8" />
           <CarouselNext className="relative translate-y-0 right-auto top-auto h-8 w-8" />
         </div>
