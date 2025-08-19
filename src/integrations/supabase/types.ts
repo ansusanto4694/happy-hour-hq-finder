@@ -35,6 +35,64 @@ export type Database = {
         }
         Relationships: []
       }
+      carousel_merchants: {
+        Row: {
+          added_at: string
+          carousel_id: string
+          created_at: string
+          display_order: number
+          id: string
+          is_active: boolean
+          merchant_id: number
+          removed_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          added_at?: string
+          carousel_id: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          merchant_id: number
+          removed_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          added_at?: string
+          carousel_id?: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          merchant_id?: number
+          removed_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "carousel_merchants_carousel_id_fkey"
+            columns: ["carousel_id"]
+            isOneToOne: false
+            referencedRelation: "homepage_carousels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carousel_merchants_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "Merchant"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carousel_merchants_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           created_at: string | null
@@ -142,6 +200,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      homepage_carousels: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       location_cache: {
         Row: {
