@@ -296,12 +296,15 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
                   longitude={restaurant.longitude!}
                   latitude={restaurant.latitude!}
                   anchor="bottom"
+                  style={{
+                    zIndex: hoveredRestaurantId === restaurant.id ? 1000 : 1
+                  }}
                 >
                    <div 
                     className={`rounded-full flex items-center justify-center shadow-lg border-2 border-white cursor-pointer transition-all duration-300 ${
                       hoveredRestaurantId === restaurant.id 
-                        ? 'bg-bright-blue hover:bg-bright-blue/80 w-9 h-9 scale-110 relative z-50' 
-                        : 'bg-red-500 hover:bg-red-600 w-6 h-6 scale-100 relative z-10'
+                        ? 'bg-bright-blue hover:bg-bright-blue/80 w-9 h-9 scale-110' 
+                        : 'bg-red-500 hover:bg-red-600 w-6 h-6 scale-100'
                     }`}
                     title={restaurant.restaurant_name}
                     onClick={() => handleRestaurantClick(restaurant)}
