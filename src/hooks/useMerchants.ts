@@ -19,9 +19,9 @@ const calculateHaversineDistance = (lat1: number, lng1: number, lat2: number, ln
   return distance; // Distance in miles
 };
 
-export const useMerchants = (categoryIds?: string[], searchTerm?: string, startTime?: string, endTime?: string, location?: string, bounds?: { north: number; south: number; east: number; west: number }, radiusMiles?: number, showOffersOnly?: boolean, selectedDays?: number[], gpsCoordinates?: { lat: number; lng: number }) => {
+export const useMerchants = (categoryIds?: string[], searchTerm?: string, startTime?: string, endTime?: string, location?: string, bounds?: { north: number; south: number; east: number; west: number }, radiusMiles?: number, showOffersOnly?: boolean, selectedDays?: number[], gpsCoordinates?: { lat: number; lng: number }, carouselId?: string) => {
   // Force fresh queries for restaurant searches to avoid caching issues
-  const queryKey = ['merchants', categoryIds, searchTerm, startTime, endTime, location, bounds, radiusMiles, showOffersOnly, selectedDays, gpsCoordinates];
+  const queryKey = ['merchants', categoryIds, searchTerm, startTime, endTime, location, bounds, radiusMiles, showOffersOnly, selectedDays, gpsCoordinates, carouselId];
   
   return useQuery({
     queryKey,
@@ -29,7 +29,7 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
     gcTime: searchTerm?.toLowerCase().includes('restaurant') ? 0 : 10 * 60 * 1000, // React Query v5 uses gcTime instead of cacheTime
     queryFn: async () => {
       console.log('=== STARTING MERCHANT SEARCH ===');
-      console.log('Search parameters:', { categoryIds, searchTerm, startTime, endTime, location, bounds, radiusMiles, showOffersOnly, selectedDays, gpsCoordinates });
+      console.log('Search parameters:', { categoryIds, searchTerm, startTime, endTime, location, bounds, radiusMiles, showOffersOnly, selectedDays, gpsCoordinates, carouselId });
       
       try {
       let query = supabase
@@ -60,6 +60,32 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
         .eq('is_active', true);
 
       let merchantIds: number[] | null = null;
+
+      // Handle carousel filtering if carouselId is provided
+      if (carouselId) {
+        console.log('Filtering by carousel ID:', carouselId);
+        
+        const { data: carouselMerchants, error: carouselError } = await supabase
+          .from('carousel_merchants')
+          .select('merchant_id')
+          .eq('carousel_id', carouselId)
+          .eq('is_active', true);
+
+        if (carouselError) {
+          console.error('Error fetching carousel merchants:', carouselError);
+          throw carouselError;
+        }
+
+        merchantIds = carouselMerchants?.map(cm => cm.merchant_id) || [];
+        console.log('Merchant IDs from carousel:', merchantIds);
+
+        if (merchantIds.length === 0) {
+          console.log('No merchants found in carousel');
+          return [];
+        }
+
+        query = query.in('id', merchantIds);
+      }
 
       // If search term is provided, find merchants with matching names, happy hour deals OR categories
       if (searchTerm && searchTerm.trim()) {

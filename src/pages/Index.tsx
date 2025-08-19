@@ -1,6 +1,7 @@
 
 import React from 'react';
 import Hero from '@/components/Hero';
+import { HomepageCarousels } from '@/components/HomepageCarousels';
 import { SEOHead } from '@/components/SEOHead';
 
 const Index = () => {
@@ -13,6 +14,7 @@ const Index = () => {
         canonical={typeof window !== 'undefined' ? window.location.href : ''}
       />
       <Hero />
+      <HomepageCarousels />
     </div>
   );
 };

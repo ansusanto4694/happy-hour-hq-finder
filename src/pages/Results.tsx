@@ -54,6 +54,8 @@ const Results = () => {
   const useGPS = searchParams.get('useGPS') === 'true';
   const gpsLat = searchParams.get('lat') ? parseFloat(searchParams.get('lat')!) : null;
   const gpsLng = searchParams.get('lng') ? parseFloat(searchParams.get('lng')!) : null;
+  const carouselId = searchParams.get('carousel') || undefined;
+  const carouselName = searchParams.get('carouselName') || undefined;
   const selectedDays = (() => {
     const daysParam = searchParams.get('days');
     return daysParam ? daysParam.split(',').map(Number) : [];
@@ -113,7 +115,8 @@ const Results = () => {
     isUsingMapSearch ? undefined : (isRadiusEnabled ? radiusMiles : undefined), // Clear radius when using map search
     showOffersOnly,
     selectedDays,
-    useGPS && gpsLat && gpsLng ? { lat: gpsLat, lng: gpsLng } : undefined // GPS coordinates
+    useGPS && gpsLat && gpsLng ? { lat: gpsLat, lng: gpsLng } : undefined, // GPS coordinates
+    carouselId // Carousel filtering
   );
 
   // Debug the merchants data being passed to SearchResults - ALWAYS LOG
@@ -210,20 +213,24 @@ const Results = () => {
     setMapViewState(newViewState);
   };
 
-  const seoTitle = location 
-    ? `Happy Hour in ${location} - Find the Best Deals | SipMunchYap`
-    : `Happy Hour Search Results | SipMunchYap`;
+  const seoTitle = carouselName 
+    ? `${carouselName} - Featured Restaurants | SipMunchYap`
+    : location 
+      ? `Happy Hour in ${location} - Find the Best Deals | SipMunchYap`
+      : `Happy Hour Search Results | SipMunchYap`;
   
-  const seoDescription = location
-    ? `Find the best happy hour deals in ${location}. Compare prices, discover local bars and restaurants, and save money on drinks and food.`
-    : `Discover amazing happy hour deals near you. Compare prices and find the best bars and restaurants for your night out.`;
+  const seoDescription = carouselName
+    ? `Discover our ${carouselName} collection of handpicked restaurants and bars. Find the best happy hour deals curated just for you.`
+    : location
+      ? `Find the best happy hour deals in ${location}. Compare prices, discover local bars and restaurants, and save money on drinks and food.`
+      : `Discover amazing happy hour deals near you. Compare prices and find the best bars and restaurants for your night out.`;
 
   return (
     <div className={`${isMobile ? 'h-screen overflow-hidden' : 'min-h-screen'} bg-gray-50`}>
       <SEOHead 
         title={seoTitle}
         description={seoDescription}
-        keywords={`happy hour ${location}, bars ${location}, restaurants ${location}, drink deals, food specials, nightlife ${location}`}
+        keywords={carouselName ? `${carouselName}, featured restaurants, curated restaurants, happy hour deals` : `happy hour ${location}, bars ${location}, restaurants ${location}, drink deals, food specials, nightlife ${location}`}
         location={location}
         canonical={typeof window !== 'undefined' ? window.location.href : ''}
         structuredData={{
