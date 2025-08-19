@@ -2,9 +2,16 @@ import React from 'react';
 import { useHomepageCarousels } from '@/hooks/useHomepageCarousels';
 import { HomepageCarousel } from './HomepageCarousel';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export const HomepageCarousels: React.FC = () => {
   const { data: carousels, isLoading, error } = useHomepageCarousels();
+  const isMobile = useIsMobile();
+
+  // Don't render carousels on mobile
+  if (isMobile) {
+    return null;
+  }
 
   if (isLoading) {
     return (
