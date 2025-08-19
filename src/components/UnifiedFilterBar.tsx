@@ -126,8 +126,8 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {/* Show offers only toggle */}
-          <div className="flex items-center justify-between">
+          {/* Show offers only toggle - Hidden for now */}
+          <div className="hidden flex items-center justify-between">
             <Label htmlFor="offers-toggle" className="text-sm font-medium">
               Show offers only
             </Label>
