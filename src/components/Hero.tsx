@@ -22,6 +22,12 @@ const Hero = () => {
           >
             About
           </Link>
+          <Link 
+            to="/contact" 
+            className="text-white/90 hover:text-white transition-colors text-sm md:text-base font-medium"
+          >
+            Contact
+          </Link>
           <AuthButton />
         </nav>
       </div>
