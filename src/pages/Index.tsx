@@ -6,7 +6,7 @@ import { SEOHead } from '@/components/SEOHead';
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500">
       <SEOHead 
         title="SipMunchYap - Find the Best Happy Hours Near You"
         description="Discover amazing happy hour deals, restaurants, and bars in your area. Compare prices, find deals, and plan your perfect night out with SipMunchYap."
