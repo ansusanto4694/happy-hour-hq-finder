@@ -53,7 +53,7 @@ export const HomepageCarousels: React.FC = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-8">
+    <div className="max-w-6xl mx-auto px-6 py-8 bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500">
       <div className="space-y-8">
         {carousels.map((carousel) => (
           <HomepageCarousel key={carousel.id} carousel={carousel} />
