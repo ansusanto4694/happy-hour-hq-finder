@@ -13,21 +13,21 @@ interface CarouselCardProps {
 export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick }) => {
   return (
     <Card 
-      className="cursor-pointer hover:shadow-md transition-shadow duration-200 bg-card border border-border h-24"
+      className="cursor-pointer hover:shadow-md transition-shadow duration-200 bg-card border border-border h-32"
       onClick={() => onClick(merchant.id.toString())}
     >
-      <CardContent className="p-3 h-full flex items-center space-x-3">
+      <CardContent className="p-4 h-full flex items-start space-x-4">
         {/* Logo */}
-        <div className="flex-shrink-0 w-18 h-18 rounded-lg overflow-hidden bg-muted flex items-center justify-center">
+        <div className="flex-shrink-0 w-24 h-24 bg-white border border-border rounded-lg flex items-center justify-center overflow-hidden">
           {merchant.logo_url ? (
             <img
               src={merchant.logo_url}
               alt={`${merchant.restaurant_name} logo`}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain"
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-              <span className="text-primary font-semibold text-lg">
+              <span className="text-primary font-semibold text-xl">
                 {merchant.restaurant_name.charAt(0).toUpperCase()}
               </span>
             </div>
@@ -35,8 +35,8 @@ export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick })
         </div>
         
         {/* Merchant Name */}
-        <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-foreground text-sm truncate">
+        <div className="flex-1 min-w-0 pt-2">
+          <h3 className="font-semibold text-foreground text-lg leading-tight">
             {merchant.restaurant_name}
           </h3>
         </div>
