@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import {
@@ -18,6 +18,28 @@ interface HomepageCarouselProps {
 export const HomepageCarousel: React.FC<HomepageCarouselProps> = ({ carousel }) => {
   const navigate = useNavigate();
   const [api, setApi] = useState<CarouselApi>();
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(false);
+
+  useEffect(() => {
+    if (!api) {
+      return;
+    }
+
+    const updateCanScroll = () => {
+      setCanScrollPrev(api.canScrollPrev());
+      setCanScrollNext(api.canScrollNext());
+    };
+
+    updateCanScroll();
+    api.on('reInit', updateCanScroll);
+    api.on('select', updateCanScroll);
+
+    return () => {
+      api.off('reInit', updateCanScroll);
+      api.off('select', updateCanScroll);
+    };
+  }, [api]);
 
   const handleViewAll = () => {
     // Navigate to results page with carousel filter
@@ -60,7 +82,7 @@ export const HomepageCarousel: React.FC<HomepageCarouselProps> = ({ carousel }) 
               size="sm"
               onClick={scrollPrev}
               className="h-8 w-8 p-0"
-              disabled={!api}
+              disabled={!canScrollPrev}
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -69,7 +91,7 @@ export const HomepageCarousel: React.FC<HomepageCarouselProps> = ({ carousel }) 
               size="sm"
               onClick={scrollNext}
               className="h-8 w-8 p-0"
-              disabled={!api}
+              disabled={!canScrollNext}
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
