@@ -1,12 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
+  type CarouselApi,
 } from "@/components/ui/carousel";
 import { Button } from "@/components/ui/button";
 import { CarouselCard } from './CarouselCard';
@@ -18,6 +17,7 @@ interface HomepageCarouselProps {
 
 export const HomepageCarousel: React.FC<HomepageCarouselProps> = ({ carousel }) => {
   const navigate = useNavigate();
+  const [api, setApi] = useState<CarouselApi>();
 
   const handleViewAll = () => {
     // Navigate to results page with carousel filter
@@ -26,6 +26,14 @@ export const HomepageCarousel: React.FC<HomepageCarouselProps> = ({ carousel }) 
     searchParams.set('carousel', carousel.id);
     searchParams.set('carouselName', carousel.name);
     navigate(`/results?${searchParams.toString()}`);
+  };
+
+  const scrollPrev = () => {
+    api?.scrollPrev();
+  };
+
+  const scrollNext = () => {
+    api?.scrollNext();
   };
 
   if (!carousel.merchants.length) {
@@ -47,8 +55,24 @@ export const HomepageCarousel: React.FC<HomepageCarouselProps> = ({ carousel }) 
         <div className="flex items-center space-x-2">
           {/* Navigation buttons */}
           <div className="flex space-x-1">
-            <CarouselPrevious className="relative translate-y-0 left-auto top-auto h-8 w-8" />
-            <CarouselNext className="relative translate-y-0 right-auto top-auto h-8 w-8" />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={scrollPrev}
+              className="h-8 w-8 p-0"
+              disabled={!api}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={scrollNext}
+              className="h-8 w-8 p-0"
+              disabled={!api}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
           </div>
           
           <Button
@@ -69,6 +93,7 @@ export const HomepageCarousel: React.FC<HomepageCarouselProps> = ({ carousel }) 
           align: "start",
           loop: false,
         }}
+        setApi={setApi}
         className="w-full"
       >
         <CarouselContent className="-ml-2 md:-ml-4">
