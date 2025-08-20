@@ -7,8 +7,6 @@ import { AuthButton } from './AuthButton';
 const Hero = () => {
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background overlay */}
-      <div className="absolute inset-0 bg-black/20"></div>
       
       {/* Header with company name and navigation */}
       <div className="absolute top-4 left-4 right-4 md:top-6 md:left-6 md:right-6 z-20 flex justify-between items-center">
