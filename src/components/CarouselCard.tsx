@@ -18,7 +18,7 @@ export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick })
     >
       <CardContent className="p-3 h-full flex items-center space-x-3">
         {/* Logo */}
-        <div className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden bg-muted flex items-center justify-center">
+        <div className="flex-shrink-0 w-18 h-18 rounded-lg overflow-hidden bg-muted flex items-center justify-center">
           {merchant.logo_url ? (
             <img
               src={merchant.logo_url}
