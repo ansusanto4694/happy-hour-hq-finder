@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ChevronRight } from 'lucide-react';
 import { MobileCarouselCard } from './MobileCarouselCard';
 import { HomepageCarousel as CarouselType } from '@/hooks/useHomepageCarousels';
 import { useSearchResultsNavigation } from '@/hooks/useSearchResultsNavigation';
@@ -33,9 +34,10 @@ export const MobileCarousel: React.FC<MobileCarouselProps> = ({ carousel }) => {
         </div>
         <button
           onClick={handleViewAll}
-          className="text-sm font-medium text-yellow-200 hover:text-yellow-100 transition-colors px-3 py-1 rounded-full bg-white/10"
+          className="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
+          aria-label="View all merchants"
         >
-          View All
+          <ChevronRight className="w-5 h-5 text-white" />
         </button>
       </div>
 
