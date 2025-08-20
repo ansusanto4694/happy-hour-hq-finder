@@ -30,9 +30,6 @@ export const MobileCarousel: React.FC<MobileCarouselProps> = ({ carousel }) => {
       <div className="flex items-center justify-between p-4 pb-2">
         <div>
           <h3 className="text-lg font-semibold text-white">{carousel.name}</h3>
-          {carousel.description && (
-            <p className="text-sm text-white/80 mt-1">{carousel.description}</p>
-          )}
         </div>
         <button
           onClick={handleViewAll}
