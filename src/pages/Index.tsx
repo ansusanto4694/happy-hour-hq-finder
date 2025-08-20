@@ -52,7 +52,7 @@ const Index = () => {
         
         {/* Header with company name, search bar, and navigation */}
         <div className="bg-white/10 backdrop-blur-sm border-b border-white/20">
-          <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="w-full px-8 py-4">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl md:text-3xl font-bold text-white">
                 SipMunchYap
