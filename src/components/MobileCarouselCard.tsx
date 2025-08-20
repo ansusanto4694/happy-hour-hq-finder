@@ -28,15 +28,15 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
       style={{ scrollSnapAlign: 'start' }}
     >
       {/* Merchant logo or initial */}
-      <div className="w-20 h-20 mx-auto mb-3 rounded-full bg-white/30 flex items-center justify-center overflow-hidden">
+      <div className="w-20 h-20 mx-auto mb-3 bg-white border border-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
         {merchant.logo_url ? (
           <img 
             src={merchant.logo_url} 
-            alt={merchant.restaurant_name}
-            className="w-full h-full object-cover"
+            alt={`${merchant.restaurant_name} logo`}
+            className="w-full h-full object-contain p-2"
           />
         ) : (
-          <span className="text-white font-bold text-xl">
+          <span className="text-gray-500 font-bold text-xl">
             {merchant.restaurant_name.charAt(0).toUpperCase()}
           </span>
         )}
