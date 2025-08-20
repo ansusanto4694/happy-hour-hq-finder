@@ -45,6 +45,12 @@ export const HomepageCarousel: React.FC<HomepageCarouselProps> = ({ carousel }) 
         
         {/* Controls */}
         <div className="flex items-center space-x-2">
+          {/* Navigation buttons */}
+          <div className="flex space-x-1">
+            <CarouselPrevious className="relative translate-y-0 left-auto top-auto h-8 w-8" />
+            <CarouselNext className="relative translate-y-0 right-auto top-auto h-8 w-8" />
+          </div>
+          
           <Button
             variant="outline"
             size="sm"
@@ -75,12 +81,6 @@ export const HomepageCarousel: React.FC<HomepageCarouselProps> = ({ carousel }) 
             </CarouselItem>
           ))}
         </CarouselContent>
-        
-        {/* Navigation buttons - positioned in top right */}
-        <div className="absolute -top-12 right-0 flex space-x-1">
-          <CarouselPrevious className="relative translate-y-0 left-auto top-auto h-8 w-8" />
-          <CarouselNext className="relative translate-y-0 right-auto top-auto h-8 w-8" />
-        </div>
       </Carousel>
     </div>
   );
