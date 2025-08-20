@@ -23,6 +23,11 @@ export type HomepageCarousel = {
       latitude?: number;
       longitude?: number;
       logo_url?: string;
+      merchant_happy_hour?: Array<{
+        day_of_week: number;
+        happy_hour_start: string;
+        happy_hour_end: string;
+      }>;
     };
   }>;
 };
@@ -55,7 +60,12 @@ export const useHomepageCarousels = () => {
               latitude,
               longitude,
               logo_url,
-              is_active
+              is_active,
+              merchant_happy_hour (
+                day_of_week,
+                happy_hour_start,
+                happy_hour_end
+              )
             )
           )
         `)

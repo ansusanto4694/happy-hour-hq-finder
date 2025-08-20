@@ -1,16 +1,24 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
+import { getTodaysHappyHour } from "@/utils/timeUtils";
 
 interface CarouselCardProps {
   merchant: {
     id: number;
     restaurant_name: string;
     logo_url?: string | null;
+    merchant_happy_hour?: Array<{
+      day_of_week: number;
+      happy_hour_start: string;
+      happy_hour_end: string;
+    }>;
   };
   onClick: (merchantId: string) => void;
 }
 
 export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick }) => {
+  const todaysHappyHour = merchant.merchant_happy_hour ? getTodaysHappyHour(merchant.merchant_happy_hour) : 'No Happy Hour Today';
+  
   return (
     <Card 
       className="cursor-pointer hover:shadow-md transition-shadow duration-200 bg-card border border-border h-32"
@@ -34,11 +42,14 @@ export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick })
           )}
         </div>
         
-        {/* Merchant Name */}
+        {/* Merchant Name and Happy Hour */}
         <div className="flex-1 min-w-0 pt-2">
           <h3 className="font-semibold text-foreground text-lg leading-tight">
             {merchant.restaurant_name}
           </h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            {todaysHappyHour}
+          </p>
         </div>
       </CardContent>
     </Card>
