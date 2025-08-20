@@ -6,7 +6,7 @@ import { AuthButton } from './AuthButton';
 
 const Hero = () => {
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500 flex items-center justify-center overflow-hidden">
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background overlay */}
       <div className="absolute inset-0 bg-black/20"></div>
       
