@@ -3,6 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { SearchBar } from './SearchBar';
 import { AuthButton } from './AuthButton';
+import { MobileCarousels } from './MobileCarousels';
 
 const Hero = () => {
   return (
@@ -48,6 +49,9 @@ const Hero = () => {
         </p>
         
         <SearchBar />
+        
+        {/* Mobile carousels */}
+        <MobileCarousels />
       </div>
     </div>
   );
