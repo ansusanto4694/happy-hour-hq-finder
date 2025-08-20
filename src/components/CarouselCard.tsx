@@ -1,18 +1,11 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
 interface CarouselCardProps {
   merchant: {
     id: number;
     restaurant_name: string;
     logo_url?: string | null;
-    merchant_categories?: Array<{
-      id: string;
-      categories: {
-        name: string;
-      };
-    }>;
   };
   onClick: (merchantId: string) => void;
 }
@@ -20,7 +13,7 @@ interface CarouselCardProps {
 export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick }) => {
   return (
     <Card 
-      className="cursor-pointer hover:shadow-md transition-shadow duration-200 bg-card border border-border h-40"
+      className="cursor-pointer hover:shadow-md transition-shadow duration-200 bg-card border border-border h-32"
       onClick={() => onClick(merchant.id.toString())}
     >
       <CardContent className="p-4 h-full flex items-start space-x-4">
@@ -41,34 +34,11 @@ export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick })
           )}
         </div>
         
-        {/* Merchant Name and Categories */}
+        {/* Merchant Name */}
         <div className="flex-1 min-w-0 pt-2">
-          <h3 className="font-semibold text-foreground text-lg leading-tight mb-2">
+          <h3 className="font-semibold text-foreground text-lg leading-tight">
             {merchant.restaurant_name}
           </h3>
-          
-          {/* Categories */}
-          {merchant.merchant_categories && merchant.merchant_categories.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {merchant.merchant_categories.slice(0, 3).map((merchantCategory) => (
-                <Badge 
-                  key={merchantCategory.id} 
-                  variant="outline" 
-                  className="text-xs px-2 py-1 font-normal"
-                >
-                  {merchantCategory.categories.name}
-                </Badge>
-              ))}
-              {merchant.merchant_categories.length > 3 && (
-                <Badge 
-                  variant="outline" 
-                  className="text-xs px-2 py-1 font-normal text-muted-foreground"
-                >
-                  +{merchant.merchant_categories.length - 3}
-                </Badge>
-              )}
-            </div>
-          )}
         </div>
       </CardContent>
     </Card>
