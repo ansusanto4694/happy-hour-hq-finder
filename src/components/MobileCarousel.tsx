@@ -20,8 +20,8 @@ export const MobileCarousel: React.FC<MobileCarouselProps> = ({ carousel }) => {
 
   const handleViewAll = () => {
     const params = new URLSearchParams();
-    params.set('carousel_id', carousel.id.toString());
-    params.set('carousel_name', carousel.name);
+    params.set('carousel', carousel.id.toString());
+    params.set('carouselName', carousel.name);
     navigate(`/results?${params.toString()}`);
   };
 
