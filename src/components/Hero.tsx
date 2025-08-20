@@ -7,7 +7,7 @@ import { MobileCarousels } from './MobileCarousels';
 
 const Hero = () => {
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <div className="relative min-h-screen overflow-hidden pb-8">
       
       {/* Header with company name and navigation */}
       <div className="absolute top-4 left-4 right-4 md:top-6 md:left-6 md:right-6 z-20 flex justify-between items-center">
@@ -37,7 +37,7 @@ const Hero = () => {
       <div className="absolute bottom-32 right-20 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
       
       {/* Main content - adjusted padding to avoid logo overlap */}
-      <div className="relative z-10 max-w-4xl mx-auto px-6 text-center mt-16 sm:mt-12 md:mt-0">
+      <div className="relative z-10 max-w-4xl mx-auto px-6 text-center pt-20 sm:pt-24 md:pt-32">
         <h1 className="text-3xl sm:text-4xl md:text-4xl lg:text-6xl font-bold text-white mb-4 md:mb-6 leading-tight">
           Find the Best
           <span className="block text-yellow-200">Happy Hours</span>

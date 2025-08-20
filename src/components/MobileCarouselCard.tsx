@@ -24,11 +24,11 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
   return (
     <div 
       onClick={onClick}
-      className="flex-shrink-0 w-36 bg-white/20 backdrop-blur-sm rounded-lg p-3 cursor-pointer"
+      className="flex-shrink-0 w-64 bg-white/20 backdrop-blur-sm rounded-lg p-4 cursor-pointer mr-2"
       style={{ scrollSnapAlign: 'start' }}
     >
       {/* Merchant logo or initial */}
-      <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-white/30 flex items-center justify-center overflow-hidden">
+      <div className="w-20 h-20 mx-auto mb-3 rounded-full bg-white/30 flex items-center justify-center overflow-hidden">
         {merchant.logo_url ? (
           <img 
             src={merchant.logo_url} 
@@ -36,25 +36,25 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
             className="w-full h-full object-cover"
           />
         ) : (
-          <span className="text-white font-bold text-lg">
+          <span className="text-white font-bold text-xl">
             {merchant.restaurant_name.charAt(0).toUpperCase()}
           </span>
         )}
       </div>
 
       {/* Merchant name */}
-      <h4 className="text-white font-medium text-sm text-center mb-2 line-clamp-2">
+      <h4 className="text-white font-medium text-base text-center mb-3 line-clamp-2 px-1">
         {merchant.restaurant_name}
       </h4>
 
       {/* Happy hour status */}
       <div className="text-center">
         {todaysHappyHourText !== 'No Happy Hour Today' ? (
-          <span className="text-xs text-yellow-200 bg-white/20 px-2 py-1 rounded-full">
+          <span className="text-sm text-yellow-200 bg-white/20 px-3 py-1.5 rounded-full">
             {todaysHappyHourText}
           </span>
         ) : (
-          <span className="text-xs text-white/60">
+          <span className="text-sm text-white/60">
             No happy hour today
           </span>
         )}
