@@ -57,7 +57,7 @@ const Index = () => {
               <img 
                 src="/lovable-uploads/f30134b8-b54d-491a-b6bc-fc7a20199dd2.png" 
                 alt="SipMunchYap Logo" 
-                className="h-24 md:h-32 w-auto"
+                className="h-32 md:h-48 w-auto"
               />
               
               {/* Search bar in header */}
