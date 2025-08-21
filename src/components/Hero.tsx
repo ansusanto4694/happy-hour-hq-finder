@@ -11,9 +11,11 @@ const Hero = () => {
       
       {/* Header with company name and navigation */}
       <div className="absolute top-4 left-4 right-4 md:top-6 md:left-6 md:right-6 z-20 flex justify-between items-center">
-        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white">
-          SipMunchYap
-        </h2>
+        <img 
+          src="/lovable-uploads/f30134b8-b54d-491a-b6bc-fc7a20199dd2.png" 
+          alt="SipMunchYap Logo" 
+          className="h-8 sm:h-10 md:h-12 w-auto"
+        />
         <nav className="flex items-center space-x-4 md:space-x-6">
           <Link 
             to="/about" 

@@ -54,9 +54,11 @@ const Index = () => {
         <div className="bg-white/10 backdrop-blur-sm border-b border-white/20">
           <div className="w-full px-8 py-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl md:text-3xl font-bold text-white">
-                SipMunchYap
-              </h2>
+              <img 
+                src="/lovable-uploads/f30134b8-b54d-491a-b6bc-fc7a20199dd2.png" 
+                alt="SipMunchYap Logo" 
+                className="h-8 md:h-10 w-auto"
+              />
               
               {/* Search bar in header */}
               <div className="flex-1 mx-8">
