@@ -57,7 +57,7 @@ const Index = () => {
               <img 
                 src="/lovable-uploads/f30134b8-b54d-491a-b6bc-fc7a20199dd2.png" 
                 alt="SipMunchYap Logo" 
-                className="h-20 md:h-24 w-auto"
+                className="h-24 md:h-32 w-auto"
               />
               
               {/* Search bar in header */}
@@ -65,21 +65,21 @@ const Index = () => {
                 <SearchBar variant="results" />
               </div>
               
-              <nav className="flex items-center space-x-6">
-                <Link 
-                  to="/about" 
-                  className="text-white/90 hover:text-white transition-colors text-base font-medium"
-                >
-                  About
-                </Link>
-                <Link 
-                  to="/contact" 
-                  className="text-white/90 hover:text-white transition-colors text-base font-medium"
-                >
-                  Contact
-                </Link>
-                <AuthButton />
-              </nav>
+               <nav className="flex items-center space-x-4">
+                 <Link 
+                   to="/about" 
+                   className="text-white/90 hover:text-white transition-colors text-sm font-medium"
+                 >
+                   About
+                 </Link>
+                 <Link 
+                   to="/contact" 
+                   className="text-white/90 hover:text-white transition-colors text-sm font-medium"
+                 >
+                   Contact
+                 </Link>
+                 <AuthButton />
+               </nav>
             </div>
           </div>
         </div>
