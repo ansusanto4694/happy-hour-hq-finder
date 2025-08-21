@@ -14,7 +14,7 @@ const Hero = () => {
         <img 
           src="/lovable-uploads/f30134b8-b54d-491a-b6bc-fc7a20199dd2.png" 
           alt="SipMunchYap Logo" 
-          className="h-12 sm:h-16 md:h-20 w-auto"
+          className="h-14 sm:h-18 md:h-24 w-auto"
         />
         <nav className="flex items-center space-x-4 md:space-x-6">
           <Link 
