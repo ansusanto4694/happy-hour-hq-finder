@@ -51,7 +51,7 @@ const Hero = () => {
         </p>
         
         <div className="text-base sm:text-lg md:text-lg text-white/80 mb-6 md:mb-8 max-w-2xl mx-auto leading-relaxed">
-          <p className="mb-2">We are the best source for discovering and browsing deals.</p>
+          <p className="mb-2">We are the best source for discovering and browsing deals in NYC.</p>
           <p>Over 200+ verified happy hours with more being added every week.</p>
         </div>
         
