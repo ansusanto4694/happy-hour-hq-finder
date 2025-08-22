@@ -46,9 +46,14 @@ const Hero = () => {
           Near You
         </h1>
         
-        <p className="text-lg sm:text-xl md:text-xl text-white/90 mb-6 md:mb-8 max-w-2xl mx-auto leading-relaxed">
+        <p className="text-lg sm:text-xl md:text-xl text-white/90 mb-4 md:mb-6 max-w-2xl mx-auto leading-relaxed">
           Discover amazing deals, great drinks, and perfect spots to unwind after work
         </p>
+        
+        <div className="text-base sm:text-lg md:text-lg text-white/80 mb-6 md:mb-8 max-w-2xl mx-auto leading-relaxed">
+          <p className="mb-2">We are the best source for discovering and browsing deals.</p>
+          <p>Over 200+ verified happy hours with more being added every week.</p>
+        </div>
         
         <SearchBar />
         
