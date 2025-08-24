@@ -10,7 +10,7 @@ export const MobileCarousels: React.FC = () => {
     return (
       <div className="mt-6 space-y-4">
         {[1, 2].map((i) => (
-          <div key={i} className="bg-card border rounded-lg mx-4 p-4">
+          <div key={i} className="bg-card border rounded-lg p-4">
             <div className="flex items-center justify-between mb-3">
               <div className="space-y-2">
                 <Skeleton className="h-5 w-32" />
@@ -31,7 +31,7 @@ export const MobileCarousels: React.FC = () => {
 
   if (error) {
     return (
-      <div className="mt-6 mx-4">
+      <div className="mt-6">
         <div className="bg-red-500/20 border border-red-400/30 rounded-lg p-4">
           <p className="text-red-200 text-sm">
             Unable to load featured merchants. Please try again later.

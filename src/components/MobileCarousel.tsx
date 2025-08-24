@@ -26,7 +26,7 @@ export const MobileCarousel: React.FC<MobileCarouselProps> = ({ carousel }) => {
   };
 
   return (
-    <div className="bg-card border rounded-lg mx-4 mb-4">
+    <div className="bg-card border rounded-lg mb-4">
       {/* Header */}
       <div className="flex items-center justify-between p-4 pb-2">
         <div>
