@@ -10,17 +10,17 @@ export const MobileCarousels: React.FC = () => {
     return (
       <div className="mt-6 space-y-4">
         {[1, 2].map((i) => (
-          <div key={i} className="bg-white/10 backdrop-blur-sm rounded-lg mx-4 p-4">
+          <div key={i} className="bg-card border rounded-lg mx-4 p-4">
             <div className="flex items-center justify-between mb-3">
               <div className="space-y-2">
-                <Skeleton className="h-5 w-32 bg-white/20" />
-                <Skeleton className="h-3 w-48 bg-white/20" />
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-3 w-48" />
               </div>
-              <Skeleton className="h-6 w-16 bg-white/20" />
+              <Skeleton className="h-6 w-16" />
             </div>
             <div className="flex space-x-2">
               {[1, 2].map((j) => (
-                <Skeleton key={j} className="h-32 w-64 flex-shrink-0 bg-white/20" />
+                <Skeleton key={j} className="h-32 w-64 flex-shrink-0" />
               ))}
             </div>
           </div>

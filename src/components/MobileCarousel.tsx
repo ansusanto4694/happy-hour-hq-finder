@@ -26,18 +26,18 @@ export const MobileCarousel: React.FC<MobileCarouselProps> = ({ carousel }) => {
   };
 
   return (
-    <div className="bg-white/10 backdrop-blur-sm rounded-lg mx-4 mb-4">
+    <div className="bg-card border rounded-lg mx-4 mb-4">
       {/* Header */}
       <div className="flex items-center justify-between p-4 pb-2">
         <div>
-          <h3 className="text-lg font-semibold text-white">{carousel.name}</h3>
+          <h3 className="text-lg font-semibold text-foreground">{carousel.name}</h3>
         </div>
         <button
           onClick={handleViewAll}
-          className="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
+          className="w-8 h-8 bg-primary/10 hover:bg-primary/20 rounded-full flex items-center justify-center transition-colors"
           aria-label="View all merchants"
         >
-          <ChevronRight className="w-5 h-5 text-white" />
+          <ChevronRight className="w-5 h-5 text-primary" />
         </button>
       </div>
 

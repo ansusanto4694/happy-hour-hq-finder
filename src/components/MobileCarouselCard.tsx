@@ -24,7 +24,7 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
   return (
     <div 
       onClick={onClick}
-      className="flex-shrink-0 w-64 bg-white/20 backdrop-blur-sm rounded-lg p-4 cursor-pointer mr-2"
+      className="flex-shrink-0 w-64 bg-card border rounded-lg p-4 cursor-pointer mr-2 hover:shadow-md transition-shadow"
       style={{ scrollSnapAlign: 'start' }}
     >
       {/* Merchant logo or initial */}
@@ -43,18 +43,18 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
       </div>
 
       {/* Merchant name */}
-      <h4 className="text-white font-medium text-base text-center mb-3 line-clamp-2 px-1">
+      <h4 className="text-foreground font-medium text-base text-center mb-3 line-clamp-2 px-1">
         {merchant.restaurant_name}
       </h4>
 
       {/* Happy hour status */}
       <div className="text-center">
         {todaysHappyHourText !== 'No Happy Hour Today' ? (
-          <span className="text-sm text-yellow-200 bg-white/20 px-3 py-1.5 rounded-full">
+          <span className="text-sm text-primary bg-primary/10 px-3 py-1.5 rounded-full">
             {todaysHappyHourText}
           </span>
         ) : (
-          <span className="text-sm text-white/60">
+          <span className="text-sm text-muted-foreground">
             No happy hour today
           </span>
         )}
