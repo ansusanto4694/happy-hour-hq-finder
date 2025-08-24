@@ -225,7 +225,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
               value={location}
               onChange={(e) => handleLocationChange(e.target.value)}
               onKeyDown={handleLocationKeyDown}
-              className="pl-12 pr-12 py-4 text-lg border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl bg-gray-50"
+              className="pl-12 pr-12 py-4 text-sm border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl bg-gray-50"
               autoComplete="off"
             />
             {/* Locate me button */}
