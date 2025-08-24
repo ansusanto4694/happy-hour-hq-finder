@@ -192,7 +192,7 @@ export const MobileSearchBar = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="pl-10 pr-10 h-12 text-sm border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-gray-50 rounded-lg"
+              className="pl-10 pr-10 h-12 text-xs border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-gray-50 rounded-lg"
             />
             {searchTerm && (
               <button
@@ -230,7 +230,7 @@ export const MobileSearchBar = () => {
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         onKeyPress={handleKeyPress}
-                        className="pl-10 pr-10 h-12 text-sm border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-gray-50 rounded-lg"
+                        className="pl-10 pr-10 h-12 text-xs border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-gray-50 rounded-lg"
                       />
                       {searchTerm && (
                         <button
