@@ -10,6 +10,7 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useCategoriesHierarchy } from '@/hooks/useCategories';
 import { RadiusOption } from './RadiusFilter';
 import { TimeDropdown } from './TimeDropdown';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 interface UnifiedFilterBarProps {
   selectedCategories: string[];
@@ -64,20 +65,33 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
   vertical = false,
 }) => {
   const { getParentCategories, getSubCategories, isLoading } = useCategoriesHierarchy();
+  const { track } = useAnalytics();
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
   const [isDistanceExpanded, setIsDistanceExpanded] = useState(false);
   const [isDaysExpanded, setIsDaysExpanded] = useState(false);
   const [isTimeExpanded, setIsTimeExpanded] = useState(false);
 
-  const toggleCategory = (categoryId: string) => {
-    console.log('Toggling category:', categoryId);
-    console.log('Current selected categories:', selectedCategories);
+  const toggleCategory = async (categoryId: string) => {
+    const isSelected = selectedCategories.includes(categoryId);
     
+    await track({
+      eventType: 'click',
+      eventCategory: 'filter',
+      eventAction: isSelected ? 'category_deselected' : 'category_selected',
+      eventLabel: categoryId,
+      metadata: {
+        totalCategoriesSelected: isSelected 
+          ? selectedCategories.length - 1 
+          : selectedCategories.length + 1
+      },
+      pageUrl: window.location.href,
+      pagePath: window.location.pathname
+    });
+
     const newSelected = selectedCategories.includes(categoryId)
       ? selectedCategories.filter(id => id !== categoryId)
       : [...selectedCategories, categoryId];
     
-    console.log('New selected categories:', newSelected);
     onCategoryChange(newSelected);
   };
 
@@ -89,14 +103,92 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
     );
   };
 
-  const toggleDay = (dayValue: number) => {
+  const toggleDay = async (dayValue: number) => {
+    const isSelected = selectedDays.includes(dayValue);
+    
+    await track({
+      eventType: 'click',
+      eventCategory: 'filter',
+      eventAction: 'day_filter_toggled',
+      eventLabel: DAYS_OF_WEEK[dayValue].label,
+      metadata: {
+        isSelected: !isSelected,
+        totalDaysSelected: isSelected 
+          ? selectedDays.length - 1 
+          : selectedDays.length + 1
+      },
+      pageUrl: window.location.href,
+      pagePath: window.location.pathname
+    });
+
     const newSelected = selectedDays.includes(dayValue) 
       ? selectedDays.filter(day => day !== dayValue)
       : [...selectedDays, dayValue];
     onDaysChange(newSelected);
   };
 
-  const clearAllFilters = () => {
+  const handleRadiusChange = async (radius: RadiusOption) => {
+    await track({
+      eventType: 'click',
+      eventCategory: 'filter',
+      eventAction: 'radius_changed',
+      eventLabel: radius,
+      metadata: {
+        previousRadius: selectedRadius
+      },
+      pageUrl: window.location.href,
+      pagePath: window.location.pathname
+    });
+    onRadiusChange(radius);
+  };
+
+  const handleStartTimeChange = async (time: string) => {
+    await track({
+      eventType: 'change',
+      eventCategory: 'filter',
+      eventAction: 'start_time_changed',
+      eventLabel: time,
+      metadata: {
+        endTime: endTime
+      },
+      pageUrl: window.location.href,
+      pagePath: window.location.pathname
+    });
+    onStartTimeChange(time);
+  };
+
+  const handleEndTimeChange = async (time: string) => {
+    await track({
+      eventType: 'change',
+      eventCategory: 'filter',
+      eventAction: 'end_time_changed',
+      eventLabel: time,
+      metadata: {
+        startTime: startTime
+      },
+      pageUrl: window.location.href,
+      pagePath: window.location.pathname
+    });
+    onEndTimeChange(time);
+  };
+
+  const clearAllFilters = async () => {
+    await track({
+      eventType: 'click',
+      eventCategory: 'filter',
+      eventAction: 'clear_all_filters',
+      metadata: {
+        previousFilters: {
+          categories: selectedCategories.length,
+          days: selectedDays.length,
+          hasTimeFilter: !!startTime || !!endTime,
+          radius: selectedRadius
+        }
+      },
+      pageUrl: window.location.href,
+      pagePath: window.location.pathname
+    });
+
     onCategoryChange([]);
     onRadiusChange('walking');
     onShowOffersChange(false);
@@ -234,7 +326,7 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
                       <TimeDropdown
                         placeholder="Start"
                         value={startTime}
-                        onChange={onStartTimeChange}
+                        onChange={handleStartTimeChange}
                       />
                     </div>
                     <div className="space-y-1">
@@ -242,7 +334,7 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
                       <TimeDropdown
                         placeholder="End"
                         value={endTime}
-                        onChange={onEndTimeChange}
+                        onChange={handleEndTimeChange}
                       />
                     </div>
                   </div>
@@ -320,7 +412,7 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
                           name="radius"
                           value={option.value}
                           checked={selectedRadius === option.value}
-                          onChange={() => onRadiusChange(option.value)}
+                          onChange={() => handleRadiusChange(option.value)}
                           disabled={!isRadiusEnabled}
                           className="rounded-full"
                         />

@@ -4,6 +4,7 @@ import { ChevronRight } from 'lucide-react';
 import { MobileCarouselCard } from './MobileCarouselCard';
 import { HomepageCarousel as CarouselType } from '@/hooks/useHomepageCarousels';
 import { useSearchResultsNavigation } from '@/hooks/useSearchResultsNavigation';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 interface MobileCarouselProps {
   carousel: CarouselType;
@@ -11,6 +12,7 @@ interface MobileCarouselProps {
 
 export const MobileCarousel: React.FC<MobileCarouselProps> = ({ carousel }) => {
   const navigate = useNavigate();
+  const { track } = useAnalytics();
   const { handleRestaurantClick } = useSearchResultsNavigation();
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -18,7 +20,20 @@ export const MobileCarousel: React.FC<MobileCarouselProps> = ({ carousel }) => {
     return null;
   }
 
-  const handleViewAll = () => {
+  const handleViewAll = async () => {
+    await track({
+      eventType: 'click',
+      eventCategory: 'carousel',
+      eventAction: 'view_all_clicked',
+      carouselId: carousel.id,
+      eventLabel: carousel.name,
+      metadata: {
+        isMobile: true
+      },
+      pageUrl: window.location.href,
+      pagePath: window.location.pathname
+    });
+
     const params = new URLSearchParams();
     params.set('carousel', carousel.id.toString());
     params.set('carouselName', carousel.name);

@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getTodaysHappyHour } from '@/utils/timeUtils';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 interface SearchResultCardProps {
   restaurant: any;
@@ -17,6 +18,10 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
   isMobile = false,
   onHover
 }) => {
+  const { track, trackFunnel } = useAnalytics();
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [hasTrackedImpression, setHasTrackedImpression] = useState(false);
+
   // Check if merchant has active offers that haven't expired
   const now = new Date();
   const hasActiveOffers = restaurant.merchant_offers && 
@@ -25,19 +30,84 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
       return offer.is_active && endTime > now;
     });
 
-  return (
-    <Card 
-      className="hover:shadow-md transition-shadow cursor-pointer"
-      onClick={() => onClick(restaurant.id)}
-      onMouseEnter={() => {
-        if (!isMobile && onHover) {
-          console.log('Hovering over restaurant:', restaurant.id, restaurant.restaurant_name);
-          onHover(restaurant.id);
+  // Track card impressions using Intersection Observer
+  useEffect(() => {
+    if (!cardRef.current || hasTrackedImpression) return;
+    
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasTrackedImpression) {
+          track({
+            eventType: 'impression',
+            eventCategory: 'merchant_interaction',
+            eventAction: 'result_card_impression',
+            merchantId: restaurant.id,
+            elementText: restaurant.restaurant_name,
+            metadata: {
+              hasActiveOffers,
+              todaysHappyHour: getTodaysHappyHour(restaurant.merchant_happy_hour || [])
+            },
+            pageUrl: window.location.href,
+            pagePath: window.location.pathname
+          });
+          setHasTrackedImpression(true);
         }
-      }}
+      },
+      { threshold: 0.5 }
+    );
+    
+    observer.observe(cardRef.current);
+    return () => observer.disconnect();
+  }, [hasTrackedImpression, restaurant, hasActiveOffers, track]);
+
+  const handleClick = async () => {
+    await track({
+      eventType: 'click',
+      eventCategory: 'merchant_interaction',
+      eventAction: 'result_card_clicked',
+      merchantId: restaurant.id,
+      elementText: restaurant.restaurant_name,
+      metadata: {
+        isMobile,
+        hasActiveOffers,
+        todaysHappyHour: getTodaysHappyHour(restaurant.merchant_happy_hour || []),
+        categoriesCount: restaurant.merchant_categories?.length || 0
+      },
+      pageUrl: window.location.href,
+      pagePath: window.location.pathname
+    });
+    
+    await trackFunnel({
+      funnelStep: 'merchant_clicked',
+      merchantId: restaurant.id,
+      stepOrder: 4
+    });
+    
+    onClick(restaurant.id);
+  };
+
+  const handleHover = async () => {
+    if (!isMobile && onHover) {
+      await track({
+        eventType: 'hover',
+        eventCategory: 'merchant_interaction',
+        eventAction: 'result_card_hover',
+        merchantId: restaurant.id,
+        pageUrl: window.location.href,
+        pagePath: window.location.pathname
+      });
+      onHover(restaurant.id);
+    }
+  };
+
+  return (
+    <Card
+      ref={cardRef}
+      className="hover:shadow-md transition-shadow cursor-pointer"
+      onClick={handleClick}
+      onMouseEnter={handleHover}
       onMouseLeave={() => {
         if (!isMobile && onHover) {
-          console.log('Leaving restaurant hover:', restaurant.id);
           onHover(null);
         }
       }}

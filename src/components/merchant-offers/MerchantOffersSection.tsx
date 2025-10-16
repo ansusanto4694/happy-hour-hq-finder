@@ -4,6 +4,7 @@ import { OfferDetailsModal } from './OfferDetailsModal';
 import { MerchantOffer } from './types';
 import { useMerchantOffers } from '@/hooks/useMerchantOffers';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 interface MerchantOffersSectionProps {
   restaurantId: number;
@@ -13,10 +14,24 @@ export const MerchantOffersSection: React.FC<MerchantOffersSectionProps> = ({
   restaurantId 
 }) => {
   const { data: offers, isLoading } = useMerchantOffers(restaurantId);
+  const { track } = useAnalytics();
   const [selectedOffer, setSelectedOffer] = useState<MerchantOffer | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleOfferClick = (offer: MerchantOffer) => {
+  const handleOfferClick = async (offer: MerchantOffer) => {
+    await track({
+      eventType: 'click',
+      eventCategory: 'merchant_interaction',
+      eventAction: 'offer_clicked',
+      merchantId: restaurantId,
+      metadata: {
+        offerName: offer.offer_name,
+        isActive: offer.is_active
+      },
+      pageUrl: window.location.href,
+      pagePath: window.location.pathname
+    });
+
     setSelectedOffer(offer);
     setIsModalOpen(true);
   };

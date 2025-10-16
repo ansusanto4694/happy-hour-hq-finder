@@ -1,6 +1,8 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { getTodaysHappyHour } from "@/utils/timeUtils";
+import { useAnalytics } from "@/hooks/useAnalytics";
+import { useNavigate } from 'react-router-dom';
 
 interface CarouselCardProps {
   merchant: {
@@ -17,12 +19,34 @@ interface CarouselCardProps {
 }
 
 export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick }) => {
+  const { track, trackFunnel } = useAnalytics();
+  const navigate = useNavigate();
   const todaysHappyHour = merchant.merchant_happy_hour ? getTodaysHappyHour(merchant.merchant_happy_hour) : 'No Happy Hour Today';
   
+  const handleClick = async () => {
+    await track({
+      eventType: 'click',
+      eventCategory: 'carousel',
+      eventAction: 'carousel_card_clicked',
+      merchantId: merchant.id,
+      elementText: merchant.restaurant_name,
+      pageUrl: window.location.href,
+      pagePath: window.location.pathname
+    });
+    
+    await trackFunnel({
+      funnelStep: 'merchant_clicked',
+      merchantId: merchant.id,
+      stepOrder: 4
+    });
+    
+    navigate(`/restaurant/${merchant.id}`);
+  };
+
   return (
     <Card 
       className="cursor-pointer hover:shadow-md transition-shadow duration-200 bg-card border border-border h-32"
-      onClick={() => onClick(merchant.id.toString())}
+      onClick={handleClick}
     >
       <CardContent className="p-4 h-full flex items-start space-x-4">
         {/* Logo */}

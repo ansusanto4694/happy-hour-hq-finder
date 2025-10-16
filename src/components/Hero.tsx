@@ -4,8 +4,22 @@ import { Link } from 'react-router-dom';
 import { SearchBar } from './SearchBar';
 import { AuthButton } from './AuthButton';
 import { MobileCarousels } from './MobileCarousels';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 const Hero = () => {
+  const { track } = useAnalytics();
+
+  const handleNavClick = async (label: string) => {
+    await track({
+      eventType: 'click',
+      eventCategory: 'navigation',
+      eventAction: 'nav_link_click',
+      eventLabel: label,
+      pageUrl: window.location.href,
+      pagePath: window.location.pathname
+    });
+  };
+
   return (
     <div className="relative min-h-screen overflow-hidden pb-8">
       
@@ -19,12 +33,14 @@ const Hero = () => {
         <nav className="flex items-center space-x-4 md:space-x-6">
           <Link 
             to="/about" 
+            onClick={() => handleNavClick('about')}
             className="text-white/90 hover:text-white transition-colors text-sm md:text-base font-medium"
           >
             About
           </Link>
           <Link 
             to="/contact" 
+            onClick={() => handleNavClick('contact')}
             className="text-white/90 hover:text-white transition-colors text-sm md:text-base font-medium"
           >
             Contact

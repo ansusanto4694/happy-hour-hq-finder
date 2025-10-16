@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 interface Restaurant {
   id: number;
@@ -31,12 +32,25 @@ interface RestaurantDealsSectionProps {
 
 export const RestaurantDealsSection: React.FC<RestaurantDealsSectionProps> = ({ restaurantId, restaurant }) => {
   const { isAdmin } = useAuth();
+  const { track } = useAnalytics();
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(true);
+
+  const handleToggle = async (newIsOpen: boolean) => {
+    await track({
+      eventType: 'click',
+      eventCategory: 'merchant_interaction',
+      eventAction: newIsOpen ? 'deals_expanded' : 'deals_collapsed',
+      merchantId: restaurantId,
+      pageUrl: window.location.href,
+      pagePath: window.location.pathname
+    });
+    setIsOpen(newIsOpen);
+  };
   
   if (isMobile) {
     return (
-      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <Collapsible open={isOpen} onOpenChange={handleToggle}>
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-lg font-semibold text-gray-900">Happy Hour Menu</h3>
           <div className="flex items-center gap-2">

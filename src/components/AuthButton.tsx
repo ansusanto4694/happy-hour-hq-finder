@@ -4,10 +4,35 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { User, LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 export const AuthButton: React.FC = () => {
   const { user, profile, signOut, loading } = useAuth();
+  const { track } = useAnalytics();
   const navigate = useNavigate();
+
+  const handleSignIn = async () => {
+    await track({
+      eventType: 'click',
+      eventCategory: 'authentication',
+      eventAction: 'sign_in_clicked',
+      pageUrl: window.location.href,
+      pagePath: window.location.pathname
+    });
+    navigate('/auth');
+  };
+
+  const handleSignOut = async () => {
+    await track({
+      eventType: 'click',
+      eventCategory: 'authentication',
+      eventAction: 'sign_out_clicked',
+      userId: user?.id,
+      pageUrl: window.location.href,
+      pagePath: window.location.pathname
+    });
+    signOut();
+  };
 
   if (loading) {
     return <div className="w-8 h-8 animate-pulse bg-gray-200 rounded-full" />;
@@ -15,7 +40,7 @@ export const AuthButton: React.FC = () => {
 
   if (!user || !profile) {
     return (
-      <Button onClick={() => navigate('/auth')} variant="outline">
+      <Button onClick={handleSignIn} variant="outline">
         Sign In
       </Button>
     );
@@ -35,7 +60,7 @@ export const AuthButton: React.FC = () => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={signOut} className="text-red-600">
+        <DropdownMenuItem onClick={handleSignOut} className="text-red-600">
           <LogOut className="w-4 h-4 mr-2" />
           Sign Out
         </DropdownMenuItem>

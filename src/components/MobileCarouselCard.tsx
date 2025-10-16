@@ -1,5 +1,6 @@
 import React from 'react';
 import { getTodaysHappyHour } from '@/utils/timeUtils';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 interface MobileCarouselCardProps {
   merchant: {
@@ -19,11 +20,35 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
   merchant, 
   onClick 
 }) => {
+  const { track, trackFunnel } = useAnalytics();
   const todaysHappyHourText = getTodaysHappyHour(merchant.merchant_happy_hour || []);
+
+  const handleClick = async () => {
+    await track({
+      eventType: 'click',
+      eventCategory: 'carousel',
+      eventAction: 'carousel_card_clicked',
+      merchantId: merchant.id,
+      elementText: merchant.restaurant_name,
+      metadata: {
+        isMobile: true
+      },
+      pageUrl: window.location.href,
+      pagePath: window.location.pathname
+    });
+    
+    await trackFunnel({
+      funnelStep: 'merchant_clicked',
+      merchantId: merchant.id,
+      stepOrder: 4
+    });
+    
+    onClick();
+  };
 
   return (
     <div 
-      onClick={onClick}
+      onClick={handleClick}
       className="flex-shrink-0 w-64 bg-card border rounded-lg p-4 cursor-pointer mr-2 hover:shadow-md transition-shadow"
       style={{ scrollSnapAlign: 'start' }}
     >

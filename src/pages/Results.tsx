@@ -1,7 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { SearchBar } from '@/components/SearchBar';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { MobileSearchBar } from '@/components/MobileSearchBar';
 import { MobileListDrawer } from '@/components/MobileListDrawer';
 import { SearchResults } from '@/components/SearchResults';
@@ -17,6 +18,7 @@ const Results = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { track, trackFunnel } = useAnalytics();
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedRadius, setSelectedRadius] = useState<RadiusOption>('walking');
@@ -130,6 +132,33 @@ const Results = () => {
   console.log('Location:', location);
   console.log('========================');
 
+  // Track results page view with full context
+  useEffect(() => {
+    track({
+      eventType: 'page_view',
+      eventCategory: 'page_view',
+      eventAction: 'results_page_viewed',
+      searchTerm: searchParams.get('search') || undefined,
+      locationQuery: searchParams.get('location') || undefined,
+      metadata: {
+        hasFilters: selectedCategories.length > 0 || selectedDays.length > 0,
+        categoryCount: selectedCategories.length,
+        daysSelected: selectedDays.length,
+        hasTimeFilter: !!startTime || !!endTime,
+        radiusFilter: selectedRadius,
+        useGPS: searchParams.get('useGPS') === 'true',
+        resultsCount: merchants?.length || 0
+      },
+      pageUrl: window.location.href,
+      pagePath: window.location.pathname
+    });
+    
+    trackFunnel({
+      funnelStep: 'results_viewed',
+      stepOrder: 3
+    });
+  }, []);
+
   // Force re-render when data changes
   React.useEffect(() => {
     console.log('=== RESULTS EFFECT TRIGGERED ===');
@@ -200,7 +229,19 @@ const Results = () => {
   };
 
   // Handle search this area button click
-  const handleSearchThisArea = () => {
+  const handleSearchThisArea = async () => {
+    await track({
+      eventType: 'click',
+      eventCategory: 'map_interaction',
+      eventAction: 'search_area_clicked',
+      metadata: {
+        mapBounds: mapBounds,
+        previousResultsCount: merchants?.length || 0
+      },
+      pageUrl: window.location.href,
+      pagePath: window.location.pathname
+    });
+
     setSearchedBounds(mapBounds); // Save the current bounds for searching
     setIsUsingMapSearch(true); // Enable map search mode
     setShowSearchThisArea(false); // Hide the mobile button

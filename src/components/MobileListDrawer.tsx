@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SearchResults } from '@/components/SearchResults';
 import { MobileFilterDrawer } from '@/components/MobileFilterDrawer';
 import { RadiusOption } from '@/components/RadiusFilter';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import {
   Drawer,
   DrawerContent,
@@ -54,6 +55,23 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
   onStartTimeChange,
   onEndTimeChange,
 }) => {
+  const { track } = useAnalytics();
+
+  useEffect(() => {
+    if (isOpen) {
+      track({
+        eventType: 'interaction',
+        eventCategory: 'navigation',
+        eventAction: 'mobile_drawer_opened',
+        metadata: {
+          resultsCount: merchants?.length || 0
+        },
+        pageUrl: window.location.href,
+        pagePath: window.location.pathname
+      });
+    }
+  }, [isOpen, merchants, track]);
+
   return (
     <Drawer open={isOpen} onOpenChange={onOpenChange}>
       <DrawerContent className="max-h-[85vh]">

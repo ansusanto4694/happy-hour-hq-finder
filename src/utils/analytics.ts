@@ -1,8 +1,8 @@
 import { supabase } from '@/integrations/supabase/client';
 
 export interface TrackEventParams {
-  eventType: 'click' | 'page_view' | 'form_submit' | 'interaction';
-  eventCategory: 'navigation' | 'search' | 'carousel' | 'filter' | 'merchant_interaction' | 'authentication' | 'map_interaction' | 'page_view';
+  eventType: 'click' | 'page_view' | 'form_submit' | 'interaction' | 'hover' | 'impression' | 'focus' | 'input' | 'change' | 'error';
+  eventCategory: 'navigation' | 'search' | 'carousel' | 'filter' | 'merchant_interaction' | 'authentication' | 'map_interaction' | 'page_view' | 'form';
   eventAction: string;
   eventLabel?: string;
   merchantId?: number;
@@ -12,12 +12,16 @@ export interface TrackEventParams {
   elementId?: string;
   elementText?: string;
   elementClass?: string;
+  pageUrl?: string;
+  pagePath?: string;
+  userId?: string;
   metadata?: Record<string, any>;
 }
 
 export interface FunnelStep {
-  step: 'homepage_view' | 'search_initiated' | 'results_viewed' | 'merchant_clicked' | 'profile_viewed' | 'contact_clicked';
+  funnelStep: 'homepage_view' | 'search_initiated' | 'results_viewed' | 'merchant_clicked' | 'profile_viewed' | 'contact_clicked';
   merchantId?: number;
+  stepOrder?: number;
 }
 
 let eventQueue: any[] = [];
@@ -185,7 +189,7 @@ export const trackFunnelStep = async (params: FunnelStep) => {
   const userId = await getUserId();
   
   // Define step order
-  const stepOrder: Record<FunnelStep['step'], number> = {
+  const stepOrder: Record<FunnelStep['funnelStep'], number> = {
     homepage_view: 1,
     search_initiated: 2,
     results_viewed: 3,
@@ -197,9 +201,9 @@ export const trackFunnelStep = async (params: FunnelStep) => {
   await supabase.from('funnel_events').insert({
     session_id: sessionId,
     user_id: userId,
-    funnel_step: params.step,
+    funnel_step: params.funnelStep,
     merchant_id: params.merchantId || null,
-    step_order: stepOrder[params.step],
+    step_order: params.stepOrder || stepOrder[params.funnelStep],
   });
 };
 

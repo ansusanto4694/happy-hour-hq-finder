@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import {
   Carousel,
   CarouselContent,
@@ -17,6 +18,7 @@ interface HomepageCarouselProps {
 
 export const HomepageCarousel: React.FC<HomepageCarouselProps> = ({ carousel }) => {
   const navigate = useNavigate();
+  const { track, trackFunnel } = useAnalytics();
   const [api, setApi] = useState<CarouselApi>();
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
@@ -41,20 +43,46 @@ export const HomepageCarousel: React.FC<HomepageCarouselProps> = ({ carousel }) 
     };
   }, [api]);
 
-  const handleViewAll = () => {
-    // Navigate to results page with carousel filter
-    const merchantIds = carousel.merchants.map(m => m.merchant.id);
+  const handleViewAll = async () => {
+    await track({
+      eventType: 'click',
+      eventCategory: 'carousel',
+      eventAction: 'view_all_clicked',
+      carouselId: carousel.id,
+      eventLabel: carousel.name,
+      pageUrl: window.location.href,
+      pagePath: window.location.pathname
+    });
+
     const searchParams = new URLSearchParams();
     searchParams.set('carousel', carousel.id);
     searchParams.set('carouselName', carousel.name);
     navigate(`/results?${searchParams.toString()}`);
   };
 
-  const scrollPrev = () => {
+  const scrollPrev = async () => {
+    await track({
+      eventType: 'click',
+      eventCategory: 'carousel',
+      eventAction: 'carousel_navigation',
+      carouselId: carousel.id,
+      eventLabel: 'previous',
+      pageUrl: window.location.href,
+      pagePath: window.location.pathname
+    });
     api?.scrollPrev();
   };
 
-  const scrollNext = () => {
+  const scrollNext = async () => {
+    await track({
+      eventType: 'click',
+      eventCategory: 'carousel',
+      eventAction: 'carousel_navigation',
+      carouselId: carousel.id,
+      eventLabel: 'next',
+      pageUrl: window.location.href,
+      pagePath: window.location.pathname
+    });
     api?.scrollNext();
   };
 

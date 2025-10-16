@@ -8,6 +8,7 @@ import { MerchantMapPreviewCard } from '@/components/MerchantMapPreviewCard';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserLocation } from '@/hooks/useUserLocation';
 import { Map as MapIcon, MapPin } from 'lucide-react';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 interface Restaurant {
@@ -58,9 +59,29 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
   const navigate = useNavigate();
   const isMobile = mobileOverride ?? useIsMobile();
   const { userLocation } = useUserLocation();
+  const { track, trackFunnel } = useAnalytics();
 
   // Handle restaurant marker click
-  const handleRestaurantClick = useCallback((restaurant: Restaurant) => {
+  const handleRestaurantClick = useCallback(async (restaurant: Restaurant) => {
+    await track({
+      eventType: 'click',
+      eventCategory: 'map_interaction',
+      eventAction: 'map_marker_clicked',
+      merchantId: restaurant.id,
+      elementText: restaurant.restaurant_name,
+      metadata: {
+        isMobile
+      },
+      pageUrl: window.location.href,
+      pagePath: window.location.pathname
+    });
+    
+    await trackFunnel({
+      funnelStep: 'merchant_clicked',
+      merchantId: restaurant.id,
+      stepOrder: 4
+    });
+
     if (isMobile) {
       // On mobile, show preview card at bottom instead of navigating
       setSelectedRestaurant(restaurant);
@@ -68,7 +89,7 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
       // On desktop, navigate directly
       navigate(`/restaurant/${restaurant.id}`);
     }
-  }, [navigate, isMobile]);
+  }, [navigate, isMobile, track, trackFunnel]);
 
   // Handle marker hover (desktop only)
   const handleMarkerHover = useCallback((restaurant: Restaurant, event: React.MouseEvent) => {
@@ -134,6 +155,17 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
 
   // Handle map move events to update search results
   const handleMoveEnd = useCallback(() => {
+    track({
+      eventType: 'interaction',
+      eventCategory: 'map_interaction',
+      eventAction: 'map_moved',
+      metadata: {
+        isMobile
+      },
+      pageUrl: window.location.href,
+      pagePath: window.location.pathname
+    });
+
     if (mapRef.current && onMapMove) {
       const map = mapRef.current.getMap();
       const bounds = map.getBounds();
@@ -145,7 +177,7 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
         west: bounds.getWest()
       });
     }
-  }, [onMapMove]);
+  }, [onMapMove, track, isMobile]);
 
   // Mobile full-screen map
   if (isMobile) {

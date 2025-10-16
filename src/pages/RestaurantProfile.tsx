@@ -13,7 +13,7 @@ const RestaurantProfile = () => {
   
   useEffect(() => {
     if (id) {
-      trackFunnelStep({ step: 'profile_viewed', merchantId: parseInt(id, 10) });
+      trackFunnelStep({ funnelStep: 'profile_viewed', merchantId: parseInt(id, 10), stepOrder: 5 });
     }
   }, [id]);
   
