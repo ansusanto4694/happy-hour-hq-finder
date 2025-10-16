@@ -149,8 +149,6 @@ const Results = () => {
         useGPS: searchParams.get('useGPS') === 'true',
         resultsCount: merchants?.length || 0
       },
-      pageUrl: window.location.href,
-      pagePath: window.location.pathname
     });
     
     trackFunnel({
@@ -238,8 +236,6 @@ const Results = () => {
         mapBounds: mapBounds,
         previousResultsCount: merchants?.length || 0
       },
-      pageUrl: window.location.href,
-      pagePath: window.location.pathname
     });
 
     setSearchedBounds(mapBounds); // Save the current bounds for searching

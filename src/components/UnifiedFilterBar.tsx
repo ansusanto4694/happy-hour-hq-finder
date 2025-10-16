@@ -84,8 +84,6 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
           ? selectedCategories.length - 1 
           : selectedCategories.length + 1
       },
-      pageUrl: window.location.href,
-      pagePath: window.location.pathname
     });
 
     const newSelected = selectedCategories.includes(categoryId)
@@ -117,8 +115,6 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
           ? selectedDays.length - 1 
           : selectedDays.length + 1
       },
-      pageUrl: window.location.href,
-      pagePath: window.location.pathname
     });
 
     const newSelected = selectedDays.includes(dayValue) 
@@ -136,8 +132,6 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
       metadata: {
         previousRadius: selectedRadius
       },
-      pageUrl: window.location.href,
-      pagePath: window.location.pathname
     });
     onRadiusChange(radius);
   };
@@ -151,8 +145,6 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
       metadata: {
         endTime: endTime
       },
-      pageUrl: window.location.href,
-      pagePath: window.location.pathname
     });
     onStartTimeChange(time);
   };
@@ -166,8 +158,6 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
       metadata: {
         startTime: startTime
       },
-      pageUrl: window.location.href,
-      pagePath: window.location.pathname
     });
     onEndTimeChange(time);
   };
@@ -185,8 +175,6 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
           radius: selectedRadius
         }
       },
-      pageUrl: window.location.href,
-      pagePath: window.location.pathname
     });
 
     onCategoryChange([]);

@@ -93,8 +93,6 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
           eventCategory: 'search',
           eventAction: 'location_typed',
           locationQuery: value,
-          pageUrl: window.location.href,
-          pagePath: window.location.pathname,
         });
       }
     }, 1000);
@@ -109,8 +107,6 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
       eventAction: 'location_suggestion_selected',
       eventLabel: suggestion.location_type,
       locationQuery: suggestion.place_name,
-      pageUrl: window.location.href,
-      pagePath: window.location.pathname,
     });
     
     setLocation(suggestion.place_name);
@@ -153,8 +149,6 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
             eventAction: 'location_suggestion_keyboard_selected',
             eventLabel: locationSuggestions[selectedSuggestionIndex].location_type,
             locationQuery: locationSuggestions[selectedSuggestionIndex].place_name,
-            pageUrl: window.location.href,
-            pagePath: window.location.pathname,
           });
           selectSuggestion(locationSuggestions[selectedSuggestionIndex]);
         } else {
@@ -215,8 +209,6 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
         useGPS: !!gpsCoordinates,
         variant: variant,
       },
-      pageUrl: window.location.href,
-      pagePath: window.location.pathname,
     });
     
     // Track funnel step
@@ -253,8 +245,6 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
         metadata: {
           inputMethod: 'keyboard',
         },
-        pageUrl: window.location.href,
-        pagePath: window.location.pathname,
       });
       
       handleSearch();
@@ -287,8 +277,6 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                       eventCategory: 'search',
                       eventAction: 'search_term_typed',
                       searchTerm: e.target.value,
-                      pageUrl: window.location.href,
-                      pagePath: window.location.pathname,
                     });
                   }
                 }, 1000);
@@ -298,8 +286,6 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                   eventType: 'focus',
                   eventCategory: 'search',
                   eventAction: 'search_input_focus',
-                  pageUrl: window.location.href,
-                  pagePath: window.location.pathname,
                 });
               }}
               onKeyPress={handleKeyPress}
@@ -312,8 +298,6 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                     eventType: 'click',
                     eventCategory: 'search',
                     eventAction: 'search_term_cleared',
-                    pageUrl: window.location.href,
-                    pagePath: window.location.pathname,
                   });
                   setSearchTerm('');
                 }}
@@ -340,8 +324,6 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                   eventType: 'focus',
                   eventCategory: 'search',
                   eventAction: 'location_input_focus',
-                  pageUrl: window.location.href,
-                  pagePath: window.location.pathname,
                 });
               }}
               onKeyDown={handleLocationKeyDown}
@@ -358,8 +340,6 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                   eventType: 'click',
                   eventCategory: 'search',
                   eventAction: 'locate_me_clicked',
-                  pageUrl: window.location.href,
-                  pagePath: window.location.pathname,
                 });
                 
                 const r = await locate();
@@ -371,8 +351,6 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                     eventCategory: 'search',
                     eventAction: 'gps_success',
                     locationQuery: r.display,
-                    pageUrl: window.location.href,
-                    pagePath: window.location.pathname,
                   });
                   
                   setLocation(r.display);
@@ -387,8 +365,6 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                     eventType: 'error',
                     eventCategory: 'search',
                     eventAction: 'gps_failed',
-                    pageUrl: window.location.href,
-                    pagePath: window.location.pathname,
                   });
                 }
               }}
@@ -409,8 +385,6 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                     eventType: 'click',
                     eventCategory: 'search',
                     eventAction: 'location_cleared',
-                    pageUrl: window.location.href,
-                    pagePath: window.location.pathname,
                   });
                   setLocation('');
                   setShowSuggestions(false);
@@ -496,8 +470,6 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                       eventCategory: 'search',
                       eventAction: 'search_term_typed',
                       searchTerm: e.target.value,
-                      pageUrl: window.location.href,
-                      pagePath: window.location.pathname,
                     });
                   }
                 }, 1000);
@@ -507,8 +479,6 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                   eventType: 'focus',
                   eventCategory: 'search',
                   eventAction: 'search_input_focus',
-                  pageUrl: window.location.href,
-                  pagePath: window.location.pathname,
                 });
               }}
               onKeyPress={handleKeyPress}
@@ -521,8 +491,6 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                     eventType: 'click',
                     eventCategory: 'search',
                     eventAction: 'search_term_cleared',
-                    pageUrl: window.location.href,
-                    pagePath: window.location.pathname,
                   });
                   setSearchTerm('');
                 }}
@@ -551,8 +519,6 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                   eventType: 'focus',
                   eventCategory: 'search',
                   eventAction: 'location_input_focus',
-                  pageUrl: window.location.href,
-                  pagePath: window.location.pathname,
                 });
               }}
               onKeyDown={handleLocationKeyDown}
@@ -569,8 +535,6 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                   eventType: 'click',
                   eventCategory: 'search',
                   eventAction: 'locate_me_clicked',
-                  pageUrl: window.location.href,
-                  pagePath: window.location.pathname,
                 });
                 
                 const r = await locate();
@@ -582,8 +546,6 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                     eventCategory: 'search',
                     eventAction: 'gps_success',
                     locationQuery: r.display,
-                    pageUrl: window.location.href,
-                    pagePath: window.location.pathname,
                   });
                   
                   setLocation(r.display);
@@ -598,8 +560,6 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                     eventType: 'error',
                     eventCategory: 'search',
                     eventAction: 'gps_failed',
-                    pageUrl: window.location.href,
-                    pagePath: window.location.pathname,
                   });
                 }
               }}
@@ -620,8 +580,6 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                     eventType: 'click',
                     eventCategory: 'search',
                     eventAction: 'location_cleared',
-                    pageUrl: window.location.href,
-                    pagePath: window.location.pathname,
                   });
                   setLocation('');
                   setShowSuggestions(false);
