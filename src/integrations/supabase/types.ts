@@ -131,6 +131,61 @@ export type Database = {
           },
         ]
       }
+      funnel_events: {
+        Row: {
+          completed_at: string
+          created_at: string
+          funnel_step: string
+          id: string
+          merchant_id: number | null
+          session_id: string
+          step_order: number
+          user_id: string | null
+        }
+        Insert: {
+          completed_at?: string
+          created_at?: string
+          funnel_step: string
+          id?: string
+          merchant_id?: number | null
+          session_id: string
+          step_order: number
+          user_id?: string | null
+        }
+        Update: {
+          completed_at?: string
+          created_at?: string
+          funnel_step?: string
+          id?: string
+          merchant_id?: number | null
+          session_id?: string
+          step_order?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funnel_events_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "Merchant"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funnel_events_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funnel_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       happy_hour_deals: {
         Row: {
           active: boolean
@@ -633,6 +688,175 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      user_events: {
+        Row: {
+          carousel_id: string | null
+          created_at: string
+          element_class: string | null
+          element_id: string | null
+          element_text: string | null
+          event_action: string
+          event_category: string
+          event_label: string | null
+          event_type: string
+          id: string
+          is_mobile: boolean
+          location_query: string | null
+          merchant_id: number | null
+          metadata: Json | null
+          page_path: string
+          page_url: string
+          referrer_url: string | null
+          search_term: string | null
+          session_id: string
+          user_id: string | null
+          viewport_height: number | null
+          viewport_width: number | null
+        }
+        Insert: {
+          carousel_id?: string | null
+          created_at?: string
+          element_class?: string | null
+          element_id?: string | null
+          element_text?: string | null
+          event_action: string
+          event_category: string
+          event_label?: string | null
+          event_type: string
+          id?: string
+          is_mobile?: boolean
+          location_query?: string | null
+          merchant_id?: number | null
+          metadata?: Json | null
+          page_path: string
+          page_url: string
+          referrer_url?: string | null
+          search_term?: string | null
+          session_id: string
+          user_id?: string | null
+          viewport_height?: number | null
+          viewport_width?: number | null
+        }
+        Update: {
+          carousel_id?: string | null
+          created_at?: string
+          element_class?: string | null
+          element_id?: string | null
+          element_text?: string | null
+          event_action?: string
+          event_category?: string
+          event_label?: string | null
+          event_type?: string
+          id?: string
+          is_mobile?: boolean
+          location_query?: string | null
+          merchant_id?: number | null
+          metadata?: Json | null
+          page_path?: string
+          page_url?: string
+          referrer_url?: string | null
+          search_term?: string | null
+          session_id?: string
+          user_id?: string | null
+          viewport_height?: number | null
+          viewport_width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_events_carousel_id_fkey"
+            columns: ["carousel_id"]
+            isOneToOne: false
+            referencedRelation: "homepage_carousels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_events_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "Merchant"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_events_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_sessions: {
+        Row: {
+          created_at: string
+          device_type: string
+          entry_page: string
+          exit_page: string | null
+          first_seen: string
+          id: string
+          is_bounce: boolean
+          last_seen: string
+          page_views: number
+          referrer_source: string | null
+          session_duration_seconds: number | null
+          session_id: string
+          total_events: number
+          updated_at: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          device_type: string
+          entry_page: string
+          exit_page?: string | null
+          first_seen?: string
+          id?: string
+          is_bounce?: boolean
+          last_seen?: string
+          page_views?: number
+          referrer_source?: string | null
+          session_duration_seconds?: number | null
+          session_id: string
+          total_events?: number
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          device_type?: string
+          entry_page?: string
+          exit_page?: string | null
+          first_seen?: string
+          id?: string
+          is_bounce?: boolean
+          last_seen?: string
+          page_views?: number
+          referrer_source?: string | null
+          session_duration_seconds?: number | null
+          session_id?: string
+          total_events?: number
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

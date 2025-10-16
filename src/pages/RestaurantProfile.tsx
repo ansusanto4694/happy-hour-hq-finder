@@ -1,14 +1,21 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { RestaurantHeader } from '@/components/RestaurantHeader';
 import { RestaurantProfileContent } from '@/components/RestaurantProfileContent';
+import { trackFunnelStep } from '@/utils/analytics';
 
 const RestaurantProfile = () => {
   const { id } = useParams();
+  
+  useEffect(() => {
+    if (id) {
+      trackFunnelStep({ step: 'profile_viewed', merchantId: parseInt(id, 10) });
+    }
+  }, [id]);
   
   const { data: restaurant, isLoading, error } = useQuery({
     queryKey: ['restaurant', id],
