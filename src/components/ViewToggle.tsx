@@ -17,8 +17,6 @@ export const ViewToggle: React.FC<ViewToggleProps> = ({ view, onViewChange }) =>
       eventCategory: 'navigation',
       eventAction: 'view_toggle_clicked',
       eventLabel: newView === 'list' ? 'switch_to_list' : 'switch_to_map',
-      pageUrl: window.location.href,
-      pagePath: window.location.pathname
     });
     onViewChange(newView);
   };

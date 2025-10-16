@@ -66,8 +66,6 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
         metadata: {
           resultsCount: merchants?.length || 0
         },
-        pageUrl: window.location.href,
-        pagePath: window.location.pathname
       });
     }
   }, [isOpen, merchants, track]);

@@ -693,9 +693,6 @@ export type Database = {
         Row: {
           carousel_id: string | null
           created_at: string
-          element_class: string | null
-          element_id: string | null
-          element_text: string | null
           event_action: string
           event_category: string
           event_label: string | null
@@ -706,20 +703,13 @@ export type Database = {
           merchant_id: number | null
           metadata: Json | null
           page_path: string
-          page_url: string
-          referrer_url: string | null
           search_term: string | null
           session_id: string
           user_id: string | null
-          viewport_height: number | null
-          viewport_width: number | null
         }
         Insert: {
           carousel_id?: string | null
           created_at?: string
-          element_class?: string | null
-          element_id?: string | null
-          element_text?: string | null
           event_action: string
           event_category: string
           event_label?: string | null
@@ -730,20 +720,13 @@ export type Database = {
           merchant_id?: number | null
           metadata?: Json | null
           page_path: string
-          page_url: string
-          referrer_url?: string | null
           search_term?: string | null
           session_id: string
           user_id?: string | null
-          viewport_height?: number | null
-          viewport_width?: number | null
         }
         Update: {
           carousel_id?: string | null
           created_at?: string
-          element_class?: string | null
-          element_id?: string | null
-          element_text?: string | null
           event_action?: string
           event_category?: string
           event_label?: string | null
@@ -754,13 +737,9 @@ export type Database = {
           merchant_id?: number | null
           metadata?: Json | null
           page_path?: string
-          page_url?: string
-          referrer_url?: string | null
           search_term?: string | null
           session_id?: string
           user_id?: string | null
-          viewport_height?: number | null
-          viewport_width?: number | null
         }
         Relationships: [
           {
@@ -811,6 +790,8 @@ export type Database = {
           updated_at: string
           user_agent: string | null
           user_id: string | null
+          viewport_height: number | null
+          viewport_width: number | null
         }
         Insert: {
           created_at?: string
@@ -829,6 +810,8 @@ export type Database = {
           updated_at?: string
           user_agent?: string | null
           user_id?: string | null
+          viewport_height?: number | null
+          viewport_width?: number | null
         }
         Update: {
           created_at?: string
@@ -847,6 +830,8 @@ export type Database = {
           updated_at?: string
           user_agent?: string | null
           user_id?: string | null
+          viewport_height?: number | null
+          viewport_width?: number | null
         }
         Relationships: [
           {

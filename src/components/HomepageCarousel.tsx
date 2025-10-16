@@ -50,8 +50,6 @@ export const HomepageCarousel: React.FC<HomepageCarouselProps> = ({ carousel }) 
       eventAction: 'view_all_clicked',
       carouselId: carousel.id,
       eventLabel: carousel.name,
-      pageUrl: window.location.href,
-      pagePath: window.location.pathname
     });
 
     const searchParams = new URLSearchParams();
@@ -67,8 +65,6 @@ export const HomepageCarousel: React.FC<HomepageCarouselProps> = ({ carousel }) 
       eventAction: 'carousel_navigation',
       carouselId: carousel.id,
       eventLabel: 'previous',
-      pageUrl: window.location.href,
-      pagePath: window.location.pathname
     });
     api?.scrollPrev();
   };
@@ -80,8 +76,6 @@ export const HomepageCarousel: React.FC<HomepageCarouselProps> = ({ carousel }) 
       eventAction: 'carousel_navigation',
       carouselId: carousel.id,
       eventLabel: 'next',
-      pageUrl: window.location.href,
-      pagePath: window.location.pathname
     });
     api?.scrollNext();
   };

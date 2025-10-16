@@ -33,8 +33,6 @@ export const RestaurantContactInfo: React.FC<RestaurantContactInfoProps> = ({
       eventAction: 'phone_clicked',
       merchantId,
       eventLabel: phoneNumber || undefined,
-      pageUrl: window.location.href,
-      pagePath: window.location.pathname
     });
 
     await trackFunnel({
@@ -51,8 +49,6 @@ export const RestaurantContactInfo: React.FC<RestaurantContactInfoProps> = ({
       eventAction: 'website_clicked',
       merchantId,
       eventLabel: website || undefined,
-      pageUrl: window.location.href,
-      pagePath: window.location.pathname
     });
 
     await trackFunnel({
@@ -68,8 +64,6 @@ export const RestaurantContactInfo: React.FC<RestaurantContactInfoProps> = ({
       eventCategory: 'merchant_interaction',
       eventAction: 'directions_clicked',
       merchantId,
-      pageUrl: window.location.href,
-      pagePath: window.location.pathname
     });
   };
 

@@ -9,10 +9,6 @@ export interface TrackEventParams {
   carouselId?: string;
   searchTerm?: string;
   locationQuery?: string;
-  elementId?: string;
-  elementText?: string;
-  elementClass?: string;
-  pageUrl?: string;
   pagePath?: string;
   userId?: string;
   metadata?: Record<string, any>;
@@ -73,7 +69,7 @@ export const initializeSession = async () => {
     .maybeSingle();
   
   if (!existingSession) {
-    // Create new session
+    // Create new session with viewport dimensions
     await supabase.from('user_sessions').insert({
       session_id: sessionId,
       user_id: userId,
@@ -81,6 +77,8 @@ export const initializeSession = async () => {
       referrer_source: referrer || null,
       device_type: deviceType,
       user_agent: navigator.userAgent,
+      viewport_width: window.innerWidth,
+      viewport_height: window.innerHeight,
       first_seen: new Date().toISOString(),
       last_seen: new Date().toISOString(),
     });
@@ -126,19 +124,12 @@ export const trackEvent = async (params: TrackEventParams) => {
     event_category: params.eventCategory,
     event_action: params.eventAction,
     event_label: params.eventLabel || null,
-    page_url: window.location.href,
-    page_path: window.location.pathname,
-    referrer_url: document.referrer || null,
-    element_id: params.elementId || null,
-    element_text: params.elementText || null,
-    element_class: params.elementClass || null,
+    page_path: params.pagePath || window.location.pathname,
     merchant_id: params.merchantId || null,
     carousel_id: params.carouselId || null,
     search_term: params.searchTerm || null,
     location_query: params.locationQuery || null,
     metadata: params.metadata || null,
-    viewport_width: window.innerWidth,
-    viewport_height: window.innerHeight,
     is_mobile: isMobileDevice(),
   };
   
@@ -249,9 +240,6 @@ export const trackClick = async (
     eventType: 'click',
     eventCategory: category,
     eventAction: action,
-    elementId: element.id || undefined,
-    elementText: element.textContent?.slice(0, 100) || undefined,
-    elementClass: element.className || undefined,
     ...additionalParams,
   });
 };

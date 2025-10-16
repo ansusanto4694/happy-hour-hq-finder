@@ -68,12 +68,10 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
       eventCategory: 'map_interaction',
       eventAction: 'map_marker_clicked',
       merchantId: restaurant.id,
-      elementText: restaurant.restaurant_name,
       metadata: {
-        isMobile
+        isMobile,
+        merchantName: restaurant.restaurant_name,
       },
-      pageUrl: window.location.href,
-      pagePath: window.location.pathname
     });
     
     await trackFunnel({
@@ -162,8 +160,6 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
       metadata: {
         isMobile
       },
-      pageUrl: window.location.href,
-      pagePath: window.location.pathname
     });
 
     if (mapRef.current && onMapMove) {

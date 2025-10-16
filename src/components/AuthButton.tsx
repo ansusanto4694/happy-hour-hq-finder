@@ -16,8 +16,6 @@ export const AuthButton: React.FC = () => {
       eventType: 'click',
       eventCategory: 'authentication',
       eventAction: 'sign_in_clicked',
-      pageUrl: window.location.href,
-      pagePath: window.location.pathname
     });
     navigate('/auth');
   };
@@ -28,8 +26,6 @@ export const AuthButton: React.FC = () => {
       eventCategory: 'authentication',
       eventAction: 'sign_out_clicked',
       userId: user?.id,
-      pageUrl: window.location.href,
-      pagePath: window.location.pathname
     });
     signOut();
   };

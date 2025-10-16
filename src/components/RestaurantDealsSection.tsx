@@ -42,8 +42,6 @@ export const RestaurantDealsSection: React.FC<RestaurantDealsSectionProps> = ({ 
       eventCategory: 'merchant_interaction',
       eventAction: newIsOpen ? 'deals_expanded' : 'deals_collapsed',
       merchantId: restaurantId,
-      pageUrl: window.location.href,
-      pagePath: window.location.pathname
     });
     setIsOpen(newIsOpen);
   };

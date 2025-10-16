@@ -30,8 +30,6 @@ export const MobileCarousel: React.FC<MobileCarouselProps> = ({ carousel }) => {
       metadata: {
         isMobile: true
       },
-      pageUrl: window.location.href,
-      pagePath: window.location.pathname
     });
 
     const params = new URLSearchParams();

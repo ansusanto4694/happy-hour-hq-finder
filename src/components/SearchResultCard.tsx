@@ -42,13 +42,11 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
             eventCategory: 'merchant_interaction',
             eventAction: 'result_card_impression',
             merchantId: restaurant.id,
-            elementText: restaurant.restaurant_name,
             metadata: {
               hasActiveOffers,
+              merchantName: restaurant.restaurant_name,
               todaysHappyHour: getTodaysHappyHour(restaurant.merchant_happy_hour || [])
             },
-            pageUrl: window.location.href,
-            pagePath: window.location.pathname
           });
           setHasTrackedImpression(true);
         }
@@ -66,15 +64,13 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
       eventCategory: 'merchant_interaction',
       eventAction: 'result_card_clicked',
       merchantId: restaurant.id,
-      elementText: restaurant.restaurant_name,
       metadata: {
         isMobile,
         hasActiveOffers,
+        merchantName: restaurant.restaurant_name,
         todaysHappyHour: getTodaysHappyHour(restaurant.merchant_happy_hour || []),
         categoriesCount: restaurant.merchant_categories?.length || 0
       },
-      pageUrl: window.location.href,
-      pagePath: window.location.pathname
     });
     
     await trackFunnel({
@@ -93,8 +89,6 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
         eventCategory: 'merchant_interaction',
         eventAction: 'result_card_hover',
         merchantId: restaurant.id,
-        pageUrl: window.location.href,
-        pagePath: window.location.pathname
       });
       onHover(restaurant.id);
     }

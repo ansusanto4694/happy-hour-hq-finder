@@ -28,8 +28,6 @@ export const MerchantOffersSection: React.FC<MerchantOffersSectionProps> = ({
         offerName: offer.offer_name,
         isActive: offer.is_active
       },
-      pageUrl: window.location.href,
-      pagePath: window.location.pathname
     });
 
     setSelectedOffer(offer);

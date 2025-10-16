@@ -29,12 +29,10 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
       eventCategory: 'carousel',
       eventAction: 'carousel_card_clicked',
       merchantId: merchant.id,
-      elementText: merchant.restaurant_name,
       metadata: {
-        isMobile: true
+        isMobile: true,
+        merchantName: merchant.restaurant_name,
       },
-      pageUrl: window.location.href,
-      pagePath: window.location.pathname
     });
     
     await trackFunnel({

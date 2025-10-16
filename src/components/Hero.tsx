@@ -15,8 +15,6 @@ const Hero = () => {
       eventCategory: 'navigation',
       eventAction: 'nav_link_click',
       eventLabel: label,
-      pageUrl: window.location.href,
-      pagePath: window.location.pathname
     });
   };
 

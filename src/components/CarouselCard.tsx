@@ -29,9 +29,7 @@ export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick })
       eventCategory: 'carousel',
       eventAction: 'carousel_card_clicked',
       merchantId: merchant.id,
-      elementText: merchant.restaurant_name,
-      pageUrl: window.location.href,
-      pagePath: window.location.pathname
+      metadata: { merchantName: merchant.restaurant_name },
     });
     
     await trackFunnel({
