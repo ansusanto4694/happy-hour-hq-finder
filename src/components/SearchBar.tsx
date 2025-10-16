@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useLocateMe } from '@/hooks/useLocateMe';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 interface LocationSuggestion {
   id: string;
@@ -23,6 +24,7 @@ interface SearchBarProps {
 export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { track, trackFunnel } = useAnalytics();
   
   // Initialize state from URL parameters when available
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
@@ -39,6 +41,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
   const locationInputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<NodeJS.Timeout>();
+  const searchDebounceRef = useRef<NodeJS.Timeout>();
 
   // Fetch location suggestions
   const fetchLocationSuggestions = async (query: string) => {
@@ -79,14 +82,37 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
       clearTimeout(debounceRef.current);
     }
     
-    // Debounce the API call
+    // Debounce the API call and tracking
     debounceRef.current = setTimeout(() => {
       fetchLocationSuggestions(value);
-    }, 300);
+      
+      // Track location typing (only if user typed more than 2 chars)
+      if (value.length >= 3) {
+        track({
+          eventType: 'input',
+          eventCategory: 'search',
+          eventAction: 'location_typed',
+          locationQuery: value,
+          pageUrl: window.location.href,
+          pagePath: window.location.pathname,
+        });
+      }
+    }, 1000);
   };
 
   // Handle suggestion selection
-  const selectSuggestion = (suggestion: LocationSuggestion) => {
+  const selectSuggestion = async (suggestion: LocationSuggestion) => {
+    // Track suggestion selection
+    await track({
+      eventType: 'click',
+      eventCategory: 'search',
+      eventAction: 'location_suggestion_selected',
+      eventLabel: suggestion.location_type,
+      locationQuery: suggestion.place_name,
+      pageUrl: window.location.href,
+      pagePath: window.location.pathname,
+    });
+    
     setLocation(suggestion.place_name);
     setShowSuggestions(false);
     setSelectedSuggestionIndex(-1);
@@ -96,7 +122,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
   };
 
   // Handle keyboard navigation
-  const handleLocationKeyDown = (e: React.KeyboardEvent) => {
+  const handleLocationKeyDown = async (e: React.KeyboardEvent) => {
     if (!showSuggestions || locationSuggestions.length === 0) {
       if (e.key === 'Enter') {
         handleSearch();
@@ -120,6 +146,16 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
       case 'Enter':
         e.preventDefault();
         if (selectedSuggestionIndex >= 0) {
+          // Track keyboard navigation selection
+          await track({
+            eventType: 'click',
+            eventCategory: 'search',
+            eventAction: 'location_suggestion_keyboard_selected',
+            eventLabel: locationSuggestions[selectedSuggestionIndex].location_type,
+            locationQuery: locationSuggestions[selectedSuggestionIndex].place_name,
+            pageUrl: window.location.href,
+            pagePath: window.location.pathname,
+          });
           selectSuggestion(locationSuggestions[selectedSuggestionIndex]);
         } else {
           handleSearch();
@@ -158,13 +194,36 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
   // Track GPS coordinates when using locate me
   const [gpsCoordinates, setGpsCoordinates] = useState<{lat: number; lng: number} | null>(null);
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     console.log('=== SEARCH BAR DEBUG ===');
     console.log('Searching for:', searchTerm, 'in location:', location);
     console.log('GPS coordinates:', gpsCoordinates);
     console.log('Search term length:', searchTerm.length);
     console.log('Search term trim:', searchTerm.trim());
     console.log('========================');
+    
+    // Track search submission
+    await track({
+      eventType: 'click',
+      eventCategory: 'search',
+      eventAction: 'search_submitted',
+      searchTerm: searchTerm || undefined,
+      locationQuery: location || undefined,
+      metadata: {
+        hasSearchTerm: !!searchTerm,
+        hasLocation: !!location,
+        useGPS: !!gpsCoordinates,
+        variant: variant,
+      },
+      pageUrl: window.location.href,
+      pagePath: window.location.pathname,
+    });
+    
+    // Track funnel step
+    await trackFunnel({
+      funnelStep: 'search_initiated',
+      stepOrder: 2,
+    });
     
     // Create URL search parameters
     const params = new URLSearchParams();
@@ -182,8 +241,22 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
     navigate(`/results?${params.toString()}`);
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyPress = async (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
+      // Track Enter key submission
+      await track({
+        eventType: 'click',
+        eventCategory: 'search',
+        eventAction: 'search_submitted_keyboard',
+        searchTerm: searchTerm || undefined,
+        locationQuery: location || undefined,
+        metadata: {
+          inputMethod: 'keyboard',
+        },
+        pageUrl: window.location.href,
+        pagePath: window.location.pathname,
+      });
+      
       handleSearch();
     }
   };
@@ -199,13 +272,51 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
               type="text"
               placeholder="Search for bars, restaurants, or cuisines..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                
+                // Track search term typing (debounced)
+                if (searchDebounceRef.current) {
+                  clearTimeout(searchDebounceRef.current);
+                }
+                
+                searchDebounceRef.current = setTimeout(() => {
+                  if (e.target.value.length >= 3) {
+                    track({
+                      eventType: 'input',
+                      eventCategory: 'search',
+                      eventAction: 'search_term_typed',
+                      searchTerm: e.target.value,
+                      pageUrl: window.location.href,
+                      pagePath: window.location.pathname,
+                    });
+                  }
+                }, 1000);
+              }}
+              onFocus={() => {
+                track({
+                  eventType: 'focus',
+                  eventCategory: 'search',
+                  eventAction: 'search_input_focus',
+                  pageUrl: window.location.href,
+                  pagePath: window.location.pathname,
+                });
+              }}
               onKeyPress={handleKeyPress}
               className="pl-12 pr-12 py-4 text-sm border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl bg-gray-50"
             />
             {searchTerm && (
               <button
-                onClick={() => setSearchTerm('')}
+                onClick={async () => {
+                  await track({
+                    eventType: 'click',
+                    eventCategory: 'search',
+                    eventAction: 'search_term_cleared',
+                    pageUrl: window.location.href,
+                    pagePath: window.location.pathname,
+                  });
+                  setSearchTerm('');
+                }}
                 className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                 type="button"
               >
@@ -224,6 +335,15 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
               placeholder="City, State or ZIP"
               value={location}
               onChange={(e) => handleLocationChange(e.target.value)}
+              onFocus={() => {
+                track({
+                  eventType: 'focus',
+                  eventCategory: 'search',
+                  eventAction: 'location_input_focus',
+                  pageUrl: window.location.href,
+                  pagePath: window.location.pathname,
+                });
+              }}
               onKeyDown={handleLocationKeyDown}
               className="pl-12 pr-12 py-4 text-sm border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl bg-gray-50"
               autoComplete="off"
@@ -233,14 +353,43 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
               type="button"
               aria-label="Use my location"
               onClick={async () => {
+                // Track locate me click
+                await track({
+                  eventType: 'click',
+                  eventCategory: 'search',
+                  eventAction: 'locate_me_clicked',
+                  pageUrl: window.location.href,
+                  pagePath: window.location.pathname,
+                });
+                
                 const r = await locate();
+                
                 if (r?.display) {
+                  // Track GPS success
+                  await track({
+                    eventType: 'interaction',
+                    eventCategory: 'search',
+                    eventAction: 'gps_success',
+                    locationQuery: r.display,
+                    pageUrl: window.location.href,
+                    pagePath: window.location.pathname,
+                  });
+                  
                   setLocation(r.display);
                   setShowSuggestions(false);
                   // Store GPS coordinates for search
                   if (r.latitude && r.longitude) {
                     setGpsCoordinates({ lat: r.latitude, lng: r.longitude });
                   }
+                } else {
+                  // Track GPS failure
+                  await track({
+                    eventType: 'error',
+                    eventCategory: 'search',
+                    eventAction: 'gps_failed',
+                    pageUrl: window.location.href,
+                    pagePath: window.location.pathname,
+                  });
                 }
               }}
               className="absolute right-12 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors z-20 w-11 h-11 flex items-center justify-center"
@@ -255,10 +404,18 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
             {/* Clear button */}
             {location && (
               <button
-                onClick={() => {
+                onClick={async () => {
+                  await track({
+                    eventType: 'click',
+                    eventCategory: 'search',
+                    eventAction: 'location_cleared',
+                    pageUrl: window.location.href,
+                    pagePath: window.location.pathname,
+                  });
                   setLocation('');
                   setShowSuggestions(false);
                   setLocationSuggestions([]);
+                  setGpsCoordinates(null);
                 }}
                 className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors z-20"
                 type="button"
@@ -324,13 +481,51 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
               type="text"
               placeholder="Search for bars, restaurants, or cuisines..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                
+                // Track search term typing (debounced)
+                if (searchDebounceRef.current) {
+                  clearTimeout(searchDebounceRef.current);
+                }
+                
+                searchDebounceRef.current = setTimeout(() => {
+                  if (e.target.value.length >= 3) {
+                    track({
+                      eventType: 'input',
+                      eventCategory: 'search',
+                      eventAction: 'search_term_typed',
+                      searchTerm: e.target.value,
+                      pageUrl: window.location.href,
+                      pagePath: window.location.pathname,
+                    });
+                  }
+                }, 1000);
+              }}
+              onFocus={() => {
+                track({
+                  eventType: 'focus',
+                  eventCategory: 'search',
+                  eventAction: 'search_input_focus',
+                  pageUrl: window.location.href,
+                  pagePath: window.location.pathname,
+                });
+              }}
               onKeyPress={handleKeyPress}
               className="pl-12 pr-12 py-4 text-lg border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl"
             />
             {searchTerm && (
               <button
-                onClick={() => setSearchTerm('')}
+                onClick={async () => {
+                  await track({
+                    eventType: 'click',
+                    eventCategory: 'search',
+                    eventAction: 'search_term_cleared',
+                    pageUrl: window.location.href,
+                    pagePath: window.location.pathname,
+                  });
+                  setSearchTerm('');
+                }}
                 className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                 type="button"
               >
@@ -351,6 +546,15 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
               placeholder="City, State or ZIP"
               value={location}
               onChange={(e) => handleLocationChange(e.target.value)}
+              onFocus={() => {
+                track({
+                  eventType: 'focus',
+                  eventCategory: 'search',
+                  eventAction: 'location_input_focus',
+                  pageUrl: window.location.href,
+                  pagePath: window.location.pathname,
+                });
+              }}
               onKeyDown={handleLocationKeyDown}
               className="pl-12 pr-12 py-4 text-lg border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl"
               autoComplete="off"
@@ -360,14 +564,43 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
               type="button"
               aria-label="Use my location"
               onClick={async () => {
+                // Track locate me click
+                await track({
+                  eventType: 'click',
+                  eventCategory: 'search',
+                  eventAction: 'locate_me_clicked',
+                  pageUrl: window.location.href,
+                  pagePath: window.location.pathname,
+                });
+                
                 const r = await locate();
+                
                 if (r?.display) {
+                  // Track GPS success
+                  await track({
+                    eventType: 'interaction',
+                    eventCategory: 'search',
+                    eventAction: 'gps_success',
+                    locationQuery: r.display,
+                    pageUrl: window.location.href,
+                    pagePath: window.location.pathname,
+                  });
+                  
                   setLocation(r.display);
                   setShowSuggestions(false);
                   // Store GPS coordinates for search
                   if (r.latitude && r.longitude) {
                     setGpsCoordinates({ lat: r.latitude, lng: r.longitude });
                   }
+                } else {
+                  // Track GPS failure
+                  await track({
+                    eventType: 'error',
+                    eventCategory: 'search',
+                    eventAction: 'gps_failed',
+                    pageUrl: window.location.href,
+                    pagePath: window.location.pathname,
+                  });
                 }
               }}
               className="absolute right-12 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors z-20 w-11 h-11 flex items-center justify-center"
@@ -382,10 +615,18 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
             {/* Clear button */}
             {location && (
               <button
-                onClick={() => {
+                onClick={async () => {
+                  await track({
+                    eventType: 'click',
+                    eventCategory: 'search',
+                    eventAction: 'location_cleared',
+                    pageUrl: window.location.href,
+                    pagePath: window.location.pathname,
+                  });
                   setLocation('');
                   setShowSuggestions(false);
                   setLocationSuggestions([]);
+                  setGpsCoordinates(null);
                 }}
                 className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors z-20"
                 type="button"
