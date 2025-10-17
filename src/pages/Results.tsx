@@ -18,7 +18,7 @@ const Results = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { track, trackFunnel } = useAnalytics();
+  const { track, trackFunnel, trackPage } = useAnalytics();
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedRadius, setSelectedRadius] = useState<RadiusOption>('walking');
@@ -62,6 +62,18 @@ const Results = () => {
     const daysParam = searchParams.get('days');
     return daysParam ? daysParam.split(',').map(Number) : [];
   })();
+
+  // Track page view on mount
+  useEffect(() => {
+    trackPage({
+      searchTerm: searchTerm || undefined,
+      locationQuery: location || undefined,
+      metadata: {
+        hasFilters: selectedCategories.length > 0 || showOffersOnly,
+        fromCarousel: !!carouselId
+      }
+    });
+  }, [trackPage, searchTerm, location, selectedCategories.length, showOffersOnly, carouselId]);
 
   // Handle day change with URL update
   const handleDaysChange = (days: number[]) => {
