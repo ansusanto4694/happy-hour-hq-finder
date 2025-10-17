@@ -62,6 +62,15 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
       setLocationSuggestions(data.suggestions || []);
       setShowSuggestions(true);
       setSelectedSuggestionIndex(-1);
+      
+      // Track suggestions displayed
+      track({
+        eventType: 'interaction',
+        eventCategory: 'search',
+        eventAction: 'location_suggestions_displayed',
+        eventLabel: query,
+        metadata: { suggestionCount: data.suggestions?.length || 0 }
+      });
     } catch (error) {
       console.error('Error fetching location suggestions:', error);
       setLocationSuggestions([]);
@@ -132,12 +141,26 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
         setSelectedSuggestionIndex(prev => 
           prev < locationSuggestions.length - 1 ? prev + 1 : 0
         );
+        // Track keyboard navigation
+        track({
+          eventType: 'interaction',
+          eventCategory: 'search',
+          eventAction: 'keyboard_navigation',
+          eventLabel: 'arrow_down'
+        });
         break;
       case 'ArrowUp':
         e.preventDefault();
         setSelectedSuggestionIndex(prev => 
           prev > 0 ? prev - 1 : locationSuggestions.length - 1
         );
+        // Track keyboard navigation
+        track({
+          eventType: 'interaction',
+          eventCategory: 'search',
+          eventAction: 'keyboard_navigation',
+          eventLabel: 'arrow_up'
+        });
         break;
       case 'Enter':
         e.preventDefault();
