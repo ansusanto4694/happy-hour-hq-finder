@@ -1,8 +1,15 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthButton } from '@/components/AuthButton';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 const Contact = () => {
+  const { trackPage } = useAnalytics();
+
+  useEffect(() => {
+    trackPage();
+  }, [trackPage]);
+
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500 flex items-center justify-center overflow-hidden">
       {/* Background overlay */}

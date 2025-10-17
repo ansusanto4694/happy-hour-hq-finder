@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { SearchBar } from '@/components/SearchBar';
 import { AuthButton } from '@/components/AuthButton';
@@ -7,9 +6,15 @@ import Hero from '@/components/Hero';
 import { HomepageCarousels } from '@/components/HomepageCarousels';
 import { SEOHead } from '@/components/SEOHead';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 const Index = () => {
   const isMobile = useIsMobile();
+  const { trackPage } = useAnalytics();
+
+  useEffect(() => {
+    trackPage();
+  }, [trackPage]);
 
   // Mobile version - keep existing Hero component
   if (isMobile) {

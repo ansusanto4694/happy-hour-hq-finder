@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -19,7 +20,13 @@ const Auth = () => {
   });
   
   const { signIn, signUp, user } = useAuth();
+  const { trackPage } = useAnalytics();
   const navigate = useNavigate();
+
+  // Track page view on mount
+  useEffect(() => {
+    trackPage();
+  }, [trackPage]);
 
   // Redirect if already authenticated
   useEffect(() => {
