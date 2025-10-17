@@ -46,7 +46,7 @@ export const MobileCarousels: React.FC = () => {
   }
 
   return (
-    <div className="mt-6">
+    <div className="mt-4">
       {carousels.map((carousel) => (
         <MobileCarousel key={carousel.id} carousel={carousel} />
       ))}
