@@ -7,6 +7,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
 import { useLocateMe } from '@/hooks/useLocateMe';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 interface LocationSuggestion {
   id: string;
@@ -20,6 +21,7 @@ interface LocationSuggestion {
 export const MobileSearchBar = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { track } = useAnalytics();
   const [isExpanded, setIsExpanded] = useState(false);
   
   // Get current values from URL
@@ -60,6 +62,15 @@ export const MobileSearchBar = () => {
       setLocationSuggestions(data.suggestions || []);
       setShowSuggestions(true);
       setSelectedSuggestionIndex(-1);
+      
+      // Track suggestions displayed
+      track({
+        eventType: 'interaction',
+        eventCategory: 'search',
+        eventAction: 'location_suggestions_displayed',
+        eventLabel: query,
+        metadata: { suggestionCount: data.suggestions?.length || 0 }
+      });
     } catch (error) {
       console.error('Error fetching location suggestions:', error);
       setLocationSuggestions([]);
@@ -94,6 +105,15 @@ export const MobileSearchBar = () => {
     // Clear GPS coordinates when selecting a suggestion (this is not GPS location)
     setGpsCoordinates(null);
     locationInputRef.current?.focus();
+    
+    // Track suggestion selection
+    track({
+      eventType: 'click',
+      eventCategory: 'search',
+      eventAction: 'location_suggestion_selected',
+      eventLabel: suggestion.place_name,
+      metadata: { locationType: suggestion.location_type }
+    });
   };
 
   // Handle keyboard navigation
@@ -111,12 +131,26 @@ export const MobileSearchBar = () => {
         setSelectedSuggestionIndex(prev => 
           prev < locationSuggestions.length - 1 ? prev + 1 : 0
         );
+        // Track keyboard navigation
+        track({
+          eventType: 'interaction',
+          eventCategory: 'search',
+          eventAction: 'keyboard_navigation',
+          eventLabel: 'arrow_down'
+        });
         break;
       case 'ArrowUp':
         e.preventDefault();
         setSelectedSuggestionIndex(prev => 
           prev > 0 ? prev - 1 : locationSuggestions.length - 1
         );
+        // Track keyboard navigation
+        track({
+          eventType: 'interaction',
+          eventCategory: 'search',
+          eventAction: 'keyboard_navigation',
+          eventLabel: 'arrow_up'
+        });
         break;
       case 'Enter':
         e.preventDefault();
@@ -167,6 +201,19 @@ export const MobileSearchBar = () => {
       params.set('useGPS', 'true');
     }
     
+    // Track search submission
+    track({
+      eventType: 'form_submit',
+      eventCategory: 'search',
+      eventAction: 'mobile_search_submitted',
+      searchTerm: searchTerm || undefined,
+      locationQuery: location || undefined,
+      metadata: {
+        hasGPS: !!gpsCoordinates,
+        isExpanded: isExpanded
+      }
+    });
+    
     navigate(`/results?${params.toString()}`);
     setIsExpanded(false);
   };
@@ -205,7 +252,15 @@ export const MobileSearchBar = () => {
             )}
           </div>
           
-          <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
+          <Collapsible open={isExpanded} onOpenChange={(open) => {
+            setIsExpanded(open);
+            // Track drawer state changes
+            track({
+              eventType: 'interaction',
+              eventCategory: 'search',
+              eventAction: open ? 'mobile_search_drawer_opened' : 'mobile_search_drawer_closed'
+            });
+          }}>
             <CollapsibleTrigger asChild>
               <Button 
                 variant="ghost" 
@@ -276,6 +331,14 @@ export const MobileSearchBar = () => {
                         type="button"
                         aria-label="Use my location"
                         onClick={async () => {
+                          // Track locate me click
+                          track({
+                            eventType: 'click',
+                            eventCategory: 'search',
+                            eventAction: 'locate_me_clicked',
+                            eventLabel: 'mobile_search_drawer'
+                          });
+                          
                           const r = await locate();
                           if (r?.display) {
                             setLocation(r.display);
@@ -284,6 +347,14 @@ export const MobileSearchBar = () => {
                             if (r.latitude && r.longitude) {
                               setGpsCoordinates({ lat: r.latitude, lng: r.longitude });
                             }
+                            
+                            // Track successful GPS location
+                            track({
+                              eventType: 'interaction',
+                              eventCategory: 'search',
+                              eventAction: 'gps_location_obtained',
+                              metadata: { source: 'locate_me_button' }
+                            });
                           }
                         }}
                         className="absolute right-10 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors z-20 w-11 h-11 flex items-center justify-center"
