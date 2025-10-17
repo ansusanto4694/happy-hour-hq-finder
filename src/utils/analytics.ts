@@ -136,12 +136,12 @@ export const trackEvent = async (params: TrackEventParams) => {
   // Add to queue
   eventQueue.push(event);
   
-  // Process queue if it has 5+ events or after 10 seconds
-  if (eventQueue.length >= 5) {
+  // Process queue if it has 30+ events or after 30 seconds (optimized batching)
+  if (eventQueue.length >= 30) {
     await flushEventQueue();
-  } else {
-    // Set timeout to flush queue
-    setTimeout(flushEventQueue, 10000);
+  } else if (eventQueue.length === 1) {
+    // Only set timeout when first event is added to avoid multiple timers
+    setTimeout(flushEventQueue, 30000);
   }
   
   // Update session activity
