@@ -32,6 +32,7 @@ interface ResultsMapProps {
   onViewStateChange?: (viewState: { longitude: number; latitude: number; zoom: number }) => void;
   isMobile?: boolean;
   hoveredRestaurantId?: number | null;
+  searchLocation?: string;
 }
 
 export const ResultsMap: React.FC<ResultsMapProps> = ({ 
@@ -43,7 +44,8 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
   viewState: externalViewState,
   onViewStateChange,
   isMobile: mobileOverride,
-  hoveredRestaurantId
+  hoveredRestaurantId,
+  searchLocation
 }) => {
   const [viewState, setViewState] = useState(externalViewState || {
     longitude: -73.9712,
@@ -122,6 +124,10 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
     // Skip automatic centering/zooming if user is using manual map search
     if (isUsingMapSearch) return;
     
+    // Only auto-center if there's a location-based search
+    // Don't auto-center when showing all restaurants with no location filter
+    if (!searchLocation || searchLocation.trim() === '') return;
+    
     const restaurantsWithCoords = restaurants.filter(
       restaurant => restaurant.latitude && restaurant.longitude
     );
@@ -142,7 +148,7 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
       // Notify parent of view state change
       onViewStateChange?.(newViewState);
     }
-  }, [restaurants, isUsingMapSearch]);
+  }, [restaurants, isUsingMapSearch, searchLocation]);
 
   // Sync with external viewState when it changes
   useEffect(() => {

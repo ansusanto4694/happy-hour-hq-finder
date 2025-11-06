@@ -358,6 +358,7 @@ const Results = () => {
               onViewStateChange={handleViewStateChange}
               isMobile={true}
               hoveredRestaurantId={hoveredRestaurantId}
+              searchLocation={location}
             />
           </div>
           
@@ -470,6 +471,7 @@ const Results = () => {
                     viewState={mapViewState}
                     onViewStateChange={handleViewStateChange}
                     hoveredRestaurantId={hoveredRestaurantId}
+                    searchLocation={location}
                   />
                 </div>
               </div>
@@ -526,6 +528,7 @@ const Results = () => {
                   viewState={mapViewState}
                   onViewStateChange={handleViewStateChange}
                   hoveredRestaurantId={hoveredRestaurantId}
+                  searchLocation={location}
                 />
             </div>
           </div>
