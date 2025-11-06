@@ -36,8 +36,8 @@ const Results = () => {
   const [endTimeState, setEndTimeState] = useState(searchParams.get('endTime') || '');
   // Persist map view state across view toggles
   const [mapViewState, setMapViewState] = useState({
-    longitude: -122.4194,
-    latitude: 37.7749,
+    longitude: -73.9712,
+    latitude: 40.7831,
     zoom: 12
   });
   // Track hovered restaurant for map icon highlighting (desktop only)

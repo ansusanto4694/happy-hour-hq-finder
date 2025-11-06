@@ -46,8 +46,8 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
   hoveredRestaurantId
 }) => {
   const [viewState, setViewState] = useState(externalViewState || {
-    longitude: -122.4194,
-    latitude: 37.7749,
+    longitude: -73.9712,
+    latitude: 40.7831,
     zoom: 12
   });
 
