@@ -101,7 +101,7 @@ const Index = () => {
           
           <div className="text-lg text-white/80 mb-12 max-w-2xl mx-auto leading-relaxed">
             <p className="mb-2">We are the best source for discovering and browsing deals in NYC.</p>
-            <p>Over 200+ verified happy hours with more being added every week.</p>
+            <p>Over 300+ verified happy hours with more being added every week.</p>
           </div>
         </div>
         
