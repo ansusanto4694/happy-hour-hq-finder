@@ -307,6 +307,7 @@ export const SearchResultCard = React.memo(SearchResultCardComponent, (prevProps
     prevProps.onClick === nextProps.onClick &&
     prevProps.onHover === nextProps.onHover &&
     JSON.stringify(prevProps.restaurant.merchant_offers) === JSON.stringify(nextProps.restaurant.merchant_offers) &&
-    JSON.stringify(prevProps.restaurant.merchant_categories) === JSON.stringify(nextProps.restaurant.merchant_categories)
+    JSON.stringify(prevProps.restaurant.merchant_categories) === JSON.stringify(nextProps.restaurant.merchant_categories) &&
+    JSON.stringify(prevProps.restaurant.merchant_happy_hour) === JSON.stringify(nextProps.restaurant.merchant_happy_hour)
   );
 });
