@@ -902,7 +902,7 @@ export type Database = {
     }
     Functions: {
       get_current_user_role: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: Database["public"]["Enums"]["app_role"]
       }
       get_restaurant_details: {
@@ -925,10 +925,7 @@ export type Database = {
           zip_code: string
         }[]
       }
-      is_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      is_admin: { Args: never; Returns: boolean }
       update_merchant_coordinates: {
         Args: { latitude: number; longitude: number; merchant_id: number }
         Returns: undefined
