@@ -232,8 +232,8 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
         }
       }
 
-      // Apply time-based filtering if start and end times are provided
-      if (startTime && endTime && filteredData) {
+      // Apply time and day filtering together to ensure both match the SAME happy hour entry
+      if (filteredData) {
         const timeToMinutes = (timeStr: string): number => {
           const parts = timeStr.trim().split(':');
           let hours = parseInt(parts[0]);
@@ -243,25 +243,33 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
           return hours * 60 + minutes;
         };
 
-        const startTimeMinutes = timeToMinutes(startTime);
-        const endTimeMinutes = timeToMinutes(endTime);
+        const hasTimeFilter = startTime && endTime;
+        const hasDayFilter = selectedDays && selectedDays.length > 0;
         
-        filteredData = filteredData.filter(merchant => {
-          if (!merchant.merchant_happy_hour || merchant.merchant_happy_hour.length === 0) return false;
-          return merchant.merchant_happy_hour.some((hh: any) => {
-            const hhStartMinutes = parseInt(hh.happy_hour_start.split(':')[0]) * 60 + parseInt(hh.happy_hour_start.split(':')[1]);
-            const hhEndMinutes = parseInt(hh.happy_hour_end.split(':')[0]) * 60 + parseInt(hh.happy_hour_end.split(':')[1]);
-            return hhStartMinutes < endTimeMinutes && hhEndMinutes > startTimeMinutes;
+        if (hasTimeFilter || hasDayFilter) {
+          const startTimeMinutes = hasTimeFilter ? timeToMinutes(startTime) : null;
+          const endTimeMinutes = hasTimeFilter ? timeToMinutes(endTime) : null;
+          
+          filteredData = filteredData.filter(merchant => {
+            if (!merchant.merchant_happy_hour || merchant.merchant_happy_hour.length === 0) return false;
+            
+            return merchant.merchant_happy_hour.some((hh: any) => {
+              // Check day filter if specified
+              const dayMatches = !hasDayFilter || selectedDays.includes(hh.day_of_week);
+              
+              // Check time filter if specified
+              let timeMatches = true;
+              if (hasTimeFilter) {
+                const hhStartMinutes = parseInt(hh.happy_hour_start.split(':')[0]) * 60 + parseInt(hh.happy_hour_start.split(':')[1]);
+                const hhEndMinutes = parseInt(hh.happy_hour_end.split(':')[0]) * 60 + parseInt(hh.happy_hour_end.split(':')[1]);
+                timeMatches = hhStartMinutes < endTimeMinutes && hhEndMinutes > startTimeMinutes;
+              }
+              
+              // Both conditions must be true for the SAME happy hour entry
+              return dayMatches && timeMatches;
+            });
           });
-        });
-      }
-
-      // Apply day-of-week filtering if specified
-      if (selectedDays && selectedDays.length > 0 && filteredData) {
-        filteredData = filteredData.filter(merchant => {
-          if (!merchant.merchant_happy_hour || merchant.merchant_happy_hour.length === 0) return false;
-          return merchant.merchant_happy_hour.some((hh: any) => selectedDays.includes(hh.day_of_week));
-        });
+        }
       }
 
       // Apply offers filtering if specified
