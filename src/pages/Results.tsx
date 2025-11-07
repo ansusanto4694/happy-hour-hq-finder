@@ -43,11 +43,6 @@ const Results = () => {
   // Track hovered restaurant for map icon highlighting (desktop only)
   const [hoveredRestaurantId, setHoveredRestaurantId] = useState<number | null>(null);
 
-  // Debug hover state changes
-  React.useEffect(() => {
-    console.log('Hovered restaurant ID changed to:', hoveredRestaurantId);
-  }, [hoveredRestaurantId]);
-
   // Extract search parameters
   const searchTerm = searchParams.get('search') || '';
   const location = searchParams.get('location') || searchParams.get('zip') || '';
@@ -133,17 +128,6 @@ const Results = () => {
     carouselId // Carousel filtering
   );
 
-  // Debug the merchants data being passed to SearchResults - ALWAYS LOG
-  console.log('=== RESULTS PAGE DEBUG ===');
-  console.log('Search term from URL:', searchTerm);
-  console.log('Merchants data from hook:', merchants);
-  console.log('Merchants count from hook:', merchants?.length || 0);
-  console.log('Is loading:', isLoading);
-  console.log('Error:', error);
-  console.log('Selected categories:', selectedCategories);
-  console.log('Location:', location);
-  console.log('========================');
-
   // Track results page view with full context
   useEffect(() => {
     track({
@@ -168,13 +152,6 @@ const Results = () => {
       stepOrder: 3
     });
   }, []);
-
-  // Force re-render when data changes
-  React.useEffect(() => {
-    console.log('=== RESULTS EFFECT TRIGGERED ===');
-    console.log('Merchants updated:', merchants?.length || 0);
-    console.log('================================');
-  }, [merchants]);
 
   // Prevent body scroll on mobile
   React.useEffect(() => {

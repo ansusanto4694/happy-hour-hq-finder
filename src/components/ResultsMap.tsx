@@ -35,7 +35,7 @@ interface ResultsMapProps {
   searchLocation?: string;
 }
 
-export const ResultsMap: React.FC<ResultsMapProps> = ({ 
+const ResultsMapComponent: React.FC<ResultsMapProps> = ({ 
   restaurants = [], 
   onMapMove,
   showSearchThisArea = false,
@@ -95,8 +95,6 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
   const handleMarkerHover = useCallback((restaurant: Restaurant, event: React.MouseEvent) => {
     if (isMobile) return; // Skip hover on mobile
     
-    console.log('Marker hover triggered for:', restaurant.restaurant_name);
-    
     // Get the map container's bounding rect for relative positioning
     const mapContainer = event.currentTarget.closest('.map-container');
     if (mapContainer) {
@@ -105,7 +103,6 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
         x: event.clientX - rect.left, 
         y: event.clientY - rect.top 
       };
-      console.log('Mouse position:', position);
       setMousePosition(position);
     }
     setHoveredRestaurant(restaurant);
@@ -114,8 +111,6 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
   // Handle marker leave (desktop only)
   const handleMarkerLeave = useCallback(() => {
     if (isMobile) return; // Skip hover on mobile
-    
-    console.log('Marker leave triggered');
     setHoveredRestaurant(null);
   }, [isMobile]);
 
@@ -342,10 +337,7 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
                     }`}
                     title={restaurant.restaurant_name}
                     onClick={() => handleRestaurantClick(restaurant)}
-                    onMouseEnter={(event) => {
-                      console.log('Map marker hover for restaurant:', restaurant.id, 'Current hovered ID:', hoveredRestaurantId);
-                      handleMarkerHover(restaurant, event);
-                    }}
+                    onMouseEnter={(event) => handleMarkerHover(restaurant, event)}
                     onMouseLeave={handleMarkerLeave}
                   >
                     <div className="w-2 h-2 bg-white rounded-full"></div>
@@ -379,3 +371,19 @@ export const ResultsMap: React.FC<ResultsMapProps> = ({
     </Card>
   );
 };
+
+// Memoize to prevent unnecessary re-renders
+export const ResultsMap = React.memo(ResultsMapComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.restaurants === nextProps.restaurants &&
+    prevProps.showSearchThisArea === nextProps.showSearchThisArea &&
+    prevProps.isUsingMapSearch === nextProps.isUsingMapSearch &&
+    prevProps.viewState === nextProps.viewState &&
+    prevProps.isMobile === nextProps.isMobile &&
+    prevProps.hoveredRestaurantId === nextProps.hoveredRestaurantId &&
+    prevProps.searchLocation === nextProps.searchLocation &&
+    prevProps.onMapMove === nextProps.onMapMove &&
+    prevProps.onSearchThisArea === nextProps.onSearchThisArea &&
+    prevProps.onViewStateChange === nextProps.onViewStateChange
+  );
+});

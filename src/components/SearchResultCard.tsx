@@ -12,7 +12,7 @@ interface SearchResultCardProps {
   onHover?: (restaurantId: number | null) => void;
 }
 
-export const SearchResultCard: React.FC<SearchResultCardProps> = ({ 
+const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({ 
   restaurant, 
   onClick,
   isMobile = false,
@@ -268,3 +268,18 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
     </Card>
   );
 };
+
+// Memoize to prevent unnecessary re-renders when restaurant data hasn't changed
+export const SearchResultCard = React.memo(SearchResultCardComponent, (prevProps, nextProps) => {
+  // Deep comparison for restaurant object since it contains nested data
+  return (
+    prevProps.restaurant.id === nextProps.restaurant.id &&
+    prevProps.restaurant.restaurant_name === nextProps.restaurant.restaurant_name &&
+    prevProps.restaurant.logo_url === nextProps.restaurant.logo_url &&
+    prevProps.isMobile === nextProps.isMobile &&
+    prevProps.onClick === nextProps.onClick &&
+    prevProps.onHover === nextProps.onHover &&
+    JSON.stringify(prevProps.restaurant.merchant_offers) === JSON.stringify(nextProps.restaurant.merchant_offers) &&
+    JSON.stringify(prevProps.restaurant.merchant_categories) === JSON.stringify(nextProps.restaurant.merchant_categories)
+  );
+});

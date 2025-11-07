@@ -32,7 +32,7 @@ interface SearchResultsProps {
 
 const RESULTS_PER_PAGE = 30;
 
-export const SearchResults: React.FC<SearchResultsProps> = ({ 
+const SearchResultsComponent: React.FC<SearchResultsProps> = ({
   merchants, 
   isLoading, 
   error,
@@ -51,22 +51,6 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   
   // Extract search term from URL parameters
   const searchTerm = searchParams.get('search') || '';
-  
-  // Add comprehensive error handling and logging
-  try {
-    console.log('=== SEARCH RESULTS COMPONENT RENDER ===');
-    console.log('Props received:');
-    console.log('- isLoading:', isLoading);
-    console.log('- error:', error);
-    console.log('- merchants:', merchants);
-    console.log('- merchants length:', merchants?.length || 0);
-    console.log('- merchants type:', typeof merchants);
-    console.log('- merchants is array:', Array.isArray(merchants));
-    console.log('- search term from URL:', searchTerm);
-    console.log('==========================================');
-  } catch (e) {
-    console.error('Error in SearchResults logging:', e);
-  }
   
   // Intersection observer for infinite scroll
   const { ref, inView } = useInView({
@@ -106,17 +90,6 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
     }, 500);
   };
 
-  console.log('=== SEARCH RESULTS DEBUG ===');
-  console.log('Props received:');
-  console.log('- isLoading:', isLoading);
-  console.log('- error:', error);
-  console.log('- merchants:', merchants);
-  console.log('- merchants length:', merchants?.length || 0);
-  console.log('- merchants type:', typeof merchants);
-  console.log('- merchants is array:', Array.isArray(merchants));
-  console.log('- search term from URL:', searchTerm);
-  console.log('============================');
-
   if (isLoading) {
     return <SearchResultsLoading />;
   }
@@ -126,7 +99,6 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   }
 
   if (!merchants || merchants.length === 0) {
-    console.log('Showing empty results because merchants is:', merchants);
     return (
       <SearchResultsEmpty 
         startTime={startTime} 
@@ -270,3 +242,17 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
     </div>
   );
 };
+
+// Memoize to prevent unnecessary re-renders
+export const SearchResults = React.memo(SearchResultsComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.isLoading === nextProps.isLoading &&
+    prevProps.error === nextProps.error &&
+    prevProps.merchants === nextProps.merchants &&
+    prevProps.startTime === nextProps.startTime &&
+    prevProps.endTime === nextProps.endTime &&
+    prevProps.location === nextProps.location &&
+    prevProps.isMobile === nextProps.isMobile &&
+    prevProps.onRestaurantHover === nextProps.onRestaurantHover
+  );
+});
