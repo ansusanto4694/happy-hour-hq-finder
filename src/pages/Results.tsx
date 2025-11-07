@@ -7,7 +7,7 @@ import { MobileSearchBar } from '@/components/MobileSearchBar';
 import { MobileListDrawer } from '@/components/MobileListDrawer';
 import { SearchResults } from '@/components/SearchResults';
 import { UnifiedFilterBar } from '@/components/UnifiedFilterBar';
-import { ResultsMap } from '@/components/ResultsMap';
+import { LazyResultsMap } from '@/components/LazyResultsMap';
 import { useMerchants } from '@/hooks/useMerchants';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { RadiusOption, getRadiusMiles } from '@/components/RadiusFilter';
@@ -325,7 +325,7 @@ const Results = () => {
         <div className="fixed inset-0 pt-16 overflow-hidden">
           {/* Full Screen Map */}
           <div className="h-full w-full overflow-hidden">
-            <ResultsMap 
+            <LazyResultsMap 
               restaurants={merchants || []}
               onMapMove={handleMapMove}
               showSearchThisArea={false} // Mobile uses fixed button
@@ -439,7 +439,7 @@ const Results = () => {
               </div>
               <div className="lg:col-span-1">
                 <div className="sticky top-48 z-30">
-                  <ResultsMap 
+                  <LazyResultsMap 
                     restaurants={merchants || []}
                     onMapMove={handleMapMove}
                     showSearchThisArea={showSearchThisAreaDesktop}
@@ -496,7 +496,7 @@ const Results = () => {
           {/* Fixed Right Side - Map */}
           <div className="w-[28rem] flex-shrink-0">
             <div className="sticky top-32 z-30">
-                <ResultsMap 
+                <LazyResultsMap 
                   restaurants={merchants || []}
                   onMapMove={handleMapMove}
                   showSearchThisArea={showSearchThisAreaDesktop}
