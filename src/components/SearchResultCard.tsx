@@ -2,7 +2,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { getTodaysHappyHour } from '@/utils/timeUtils';
+import { getTodaysHappyHour, getAllTodaysHappyHours } from '@/utils/timeUtils';
 import { useAnalytics } from '@/hooks/useAnalytics';
 
 interface SearchResultCardProps {
@@ -29,6 +29,9 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
       const endTime = new Date(offer.end_time || '');
       return offer.is_active && endTime > now;
     });
+
+  // Get all happy hours for today
+  const todaysHappyHours = getAllTodaysHappyHours(restaurant.merchant_happy_hour || []);
 
   // Track card impressions using Intersection Observer
   useEffect(() => {
@@ -143,21 +146,33 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
               </div>
               
               {/* Badges row */}
-              <div className="flex flex-wrap gap-1 mb-2">
+              <div className="flex flex-col gap-1 mb-2">
                 {hasActiveOffers && (
                   <Badge 
                     variant="default" 
-                    className="text-[10px] px-1.5 py-0.5 font-medium bg-green-600 hover:bg-green-700"
+                    className="text-[10px] px-1.5 py-0.5 font-medium bg-green-600 hover:bg-green-700 w-fit"
                   >
                     Offer Available
                   </Badge>
                 )}
-                <Badge 
-                  variant="secondary" 
-                  className="text-[10px] px-1.5 py-0.5 font-medium"
-                >
-                  {getTodaysHappyHour(restaurant.merchant_happy_hour || [])}
-                </Badge>
+                {todaysHappyHours.length > 0 ? (
+                  todaysHappyHours.map((hh, index) => (
+                    <Badge 
+                      key={index}
+                      variant="secondary" 
+                      className="text-[10px] px-1.5 py-0.5 font-medium w-fit"
+                    >
+                      {hh.start} - {hh.end}
+                    </Badge>
+                  ))
+                ) : (
+                  <Badge 
+                    variant="secondary" 
+                    className="text-[10px] px-1.5 py-0.5 font-medium w-fit"
+                  >
+                    No Happy Hour Today
+                  </Badge>
+                )}
               </div>
               
               {/* Phone and Categories in same row */}
@@ -256,9 +271,21 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
                       Offer Available
                     </Badge>
                   )}
-                  <Badge variant="secondary" className="flex-shrink-0 text-sm px-3 py-1">
-                    {getTodaysHappyHour(restaurant.merchant_happy_hour || [])}
-                  </Badge>
+                  {todaysHappyHours.length > 0 ? (
+                    todaysHappyHours.map((hh, index) => (
+                      <Badge 
+                        key={index}
+                        variant="secondary" 
+                        className="flex-shrink-0 text-sm px-3 py-1"
+                      >
+                        {hh.start} - {hh.end}
+                      </Badge>
+                    ))
+                  ) : (
+                    <Badge variant="secondary" className="flex-shrink-0 text-sm px-3 py-1">
+                      No Happy Hour Today
+                    </Badge>
+                  )}
                 </div>
               </div>
             </div>

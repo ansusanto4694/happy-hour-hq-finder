@@ -15,7 +15,7 @@ export const formatTime = (timeString: string): string => {
   });
 };
 
-// Helper function to get today's happy hour
+// Helper function to get today's happy hour (first one only for badge)
 export const getTodaysHappyHour = (happyHours: any[]): string => {
   const today = new Date().getDay();
   // Convert Sunday (0) to our format (6), and adjust other days
@@ -26,4 +26,17 @@ export const getTodaysHappyHour = (happyHours: any[]): string => {
     return `${formatTime(todaysHour.happy_hour_start)} - ${formatTime(todaysHour.happy_hour_end)}`;
   }
   return 'No Happy Hour Today';
+};
+
+// Helper function to get ALL happy hours for today
+export const getAllTodaysHappyHours = (happyHours: any[]): Array<{ start: string; end: string }> => {
+  const today = new Date().getDay();
+  // Convert Sunday (0) to our format (6), and adjust other days
+  const adjustedToday = today === 0 ? 6 : today - 1;
+  
+  const todaysHours = happyHours.filter(hh => hh.day_of_week === adjustedToday);
+  return todaysHours.map(hh => ({
+    start: formatTime(hh.happy_hour_start),
+    end: formatTime(hh.happy_hour_end)
+  }));
 };
