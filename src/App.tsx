@@ -9,6 +9,8 @@ import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persist
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { trackPageView } from "@/utils/analytics";
+import { initPerformanceMonitoring } from "@/utils/performanceMonitoring";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import Results from "./pages/Results";
 import RestaurantProfile from "./pages/RestaurantProfile";
@@ -42,31 +44,38 @@ const RouteTracker = () => {
   return null;
 };
 
+// Initialize performance monitoring once
+if (typeof window !== 'undefined') {
+  initPerformanceMonitoring();
+}
+
 const App = () => (
-  <PersistQueryClientProvider
-    client={queryClient}
-    persistOptions={{ persister }}
-  >
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <RouteTracker />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/results" element={<Results />} />
-            <Route path="/restaurant/:id" element={<RestaurantProfile />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-  </PersistQueryClientProvider>
+  <ErrorBoundary>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{ persister }}
+    >
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <RouteTracker />
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/results" element={<Results />} />
+              <Route path="/restaurant/:id" element={<RestaurantProfile />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </PersistQueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;

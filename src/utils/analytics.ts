@@ -1,16 +1,19 @@
 import { supabase } from '@/integrations/supabase/client';
 
 export interface TrackEventParams {
-  eventType: 'click' | 'page_view' | 'form_submit' | 'interaction' | 'hover' | 'impression' | 'focus' | 'input' | 'change' | 'error';
-  eventCategory: 'navigation' | 'search' | 'carousel' | 'filter' | 'merchant_interaction' | 'authentication' | 'map_interaction' | 'page_view' | 'form';
+  eventType: 'click' | 'page_view' | 'form_submit' | 'interaction' | 'hover' | 'impression' | 'focus' | 'input' | 'change' | 'error' | 'performance';
+  eventCategory: 'navigation' | 'search' | 'carousel' | 'filter' | 'merchant_interaction' | 'authentication' | 'map_interaction' | 'page_view' | 'form' | 'web_vitals' | 'component_render' | 'resources' | 'error_recovery' | 'app_error';
   eventAction: string;
   eventLabel?: string;
+  eventValue?: number;
   merchantId?: number;
   carouselId?: string;
   searchTerm?: string;
   locationQuery?: string;
   pagePath?: string;
   userId?: string;
+  errorMessage?: string;
+  errorStack?: string;
   metadata?: Record<string, any>;
 }
 
