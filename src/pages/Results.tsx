@@ -252,7 +252,7 @@ const Results = () => {
       : `Discover amazing happy hour deals near you. Compare prices and find the best bars and restaurants for your night out.`;
 
   return (
-    <div className={`${isMobile ? 'h-screen overflow-hidden' : 'min-h-screen'} bg-gray-50`}>
+    <div className={`${isMobile ? 'h-screen overflow-hidden' : 'min-h-screen bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500'}`}>
       <SEOHead 
         title={seoTitle}
         description={seoDescription}
@@ -283,30 +283,53 @@ const Results = () => {
         }}
       />
       {/* Fixed Header */}
-      <div className={`bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-50 ${isMobile ? 'h-16' : ''}`}>
-        <div className={`px-4 ${isMobile ? 'py-2' : 'py-4 md:py-6'}`}>
-          <div className="flex items-center justify-between">
-            {/* Logo - Left aligned */}
-            {!isMobile && (
-              <div className="flex-shrink-0">
-                <h1 
-                  className="text-xl md:text-2xl font-bold text-gray-900 cursor-pointer hover:text-orange-500 transition-colors"
-                  onClick={handleGoHome}
-                >
-                  SipMunchYap
-                </h1>
-              </div>
-            )}
-            
-            {/* Search Bar - Center aligned */}
-            <div className="flex-1 flex justify-center">
-              <div className="w-full max-w-7xl">
-                {isMobile ? <MobileSearchBar /> : <SearchBar variant="results" />}
+      {isMobile ? (
+        <div className="bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-50 h-16">
+          <div className="px-4 py-2">
+            <div className="flex items-center justify-between">
+              <div className="flex-1 flex justify-center">
+                <div className="w-full max-w-7xl">
+                  <MobileSearchBar />
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="bg-white/10 backdrop-blur-sm border-b border-white/20 fixed top-0 left-0 right-0 z-50">
+          <div className="w-full px-8 py-1">
+            <div className="flex items-center justify-between">
+              <img 
+                src="/lovable-uploads/f30134b8-b54d-491a-b6bc-fc7a20199dd2.png" 
+                alt="SipMunchYap Logo" 
+                className="h-24 md:h-32 w-auto cursor-pointer"
+                onClick={handleGoHome}
+              />
+              
+              {/* Search bar in header */}
+              <div className="flex-1 mx-8">
+                <SearchBar variant="results" />
+              </div>
+              
+              <nav className="flex items-center space-x-4">
+                <button 
+                  onClick={() => navigate('/about')}
+                  className="text-white/90 hover:text-white transition-colors text-sm font-medium"
+                >
+                  About
+                </button>
+                <button 
+                  onClick={() => navigate('/contact')}
+                  className="text-white/90 hover:text-white transition-colors text-sm font-medium"
+                >
+                  Contact
+                </button>
+                <AuthButton />
+              </nav>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Search This Area Button - Mobile Only */}
       {isMobile && showSearchThisArea && (
