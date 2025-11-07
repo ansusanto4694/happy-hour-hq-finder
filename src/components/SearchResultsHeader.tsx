@@ -29,6 +29,11 @@ export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
 
   const formatTime = (time?: string) => {
     if (!time) return '';
+    // If time already includes AM/PM, return as is
+    if (time.toUpperCase().includes('AM') || time.toUpperCase().includes('PM')) {
+      return time;
+    }
+    // Otherwise format from 24-hour format
     const [hours, minutes] = time.split(':');
     const hour = parseInt(hours);
     const ampm = hour >= 12 ? 'PM' : 'AM';
