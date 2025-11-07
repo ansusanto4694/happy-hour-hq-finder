@@ -144,8 +144,8 @@ export const trackEvent = async (params: TrackEventParams) => {
     setTimeout(flushEventQueue, 30000);
   }
   
-  // Update session activity
-  updateSessionActivity();
+  // Session activity is already updated by the 30-second interval at the bottom of this file
+  // No need to update on every event to avoid excessive database requests
 };
 
 // Track page views
