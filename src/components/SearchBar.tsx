@@ -108,9 +108,9 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
   };
 
   // Handle suggestion selection
-  const selectSuggestion = async (suggestion: LocationSuggestion) => {
-    // Track suggestion selection
-    await track({
+  const selectSuggestion = (suggestion: LocationSuggestion) => {
+    // Track suggestion selection (non-blocking)
+    track({
       eventType: 'click',
       eventCategory: 'search',
       eventAction: 'location_suggestion_selected',
@@ -127,7 +127,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
   };
 
   // Handle keyboard navigation
-  const handleLocationKeyDown = async (e: React.KeyboardEvent) => {
+  const handleLocationKeyDown = (e: React.KeyboardEvent) => {
     if (!showSuggestions || locationSuggestions.length === 0) {
       if (e.key === 'Enter') {
         handleSearch();
@@ -165,8 +165,8 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
       case 'Enter':
         e.preventDefault();
         if (selectedSuggestionIndex >= 0) {
-          // Track keyboard navigation selection
-          await track({
+          // Track keyboard navigation selection (non-blocking)
+          track({
             eventType: 'click',
             eventCategory: 'search',
             eventAction: 'location_suggestion_keyboard_selected',
@@ -211,16 +211,9 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
   // Track GPS coordinates when using locate me
   const [gpsCoordinates, setGpsCoordinates] = useState<{lat: number; lng: number} | null>(null);
 
-  const handleSearch = async () => {
-    console.log('=== SEARCH BAR DEBUG ===');
-    console.log('Searching for:', searchTerm, 'in location:', location);
-    console.log('GPS coordinates:', gpsCoordinates);
-    console.log('Search term length:', searchTerm.length);
-    console.log('Search term trim:', searchTerm.trim());
-    console.log('========================');
-    
-    // Track search submission
-    await track({
+  const handleSearch = () => {
+    // Track search submission (non-blocking)
+    track({
       eventType: 'click',
       eventCategory: 'search',
       eventAction: 'search_submitted',
@@ -234,8 +227,8 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
       },
     });
     
-    // Track funnel step
-    await trackFunnel({
+    // Track funnel step (non-blocking)
+    trackFunnel({
       funnelStep: 'search_initiated',
       stepOrder: 2,
     });
@@ -252,14 +245,14 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
       params.set('useGPS', 'true');
     }
     
-    // Navigate to results page with parameters
+    // Navigate immediately without waiting for analytics
     navigate(`/results?${params.toString()}`);
   };
 
-  const handleKeyPress = async (e: React.KeyboardEvent) => {
+  const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      // Track Enter key submission
-      await track({
+      // Track Enter key submission (non-blocking)
+      track({
         eventType: 'click',
         eventCategory: 'search',
         eventAction: 'search_submitted_keyboard',
@@ -316,8 +309,8 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
             />
             {searchTerm && (
               <button
-                onClick={async () => {
-                  await track({
+                onClick={() => {
+                  track({
                     eventType: 'click',
                     eventCategory: 'search',
                     eventAction: 'search_term_cleared',
@@ -357,39 +350,39 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
             <button
               type="button"
               aria-label="Use my location"
-              onClick={async () => {
-                // Track locate me click
-                await track({
+              onClick={() => {
+                // Track locate me click (non-blocking)
+                track({
                   eventType: 'click',
                   eventCategory: 'search',
                   eventAction: 'locate_me_clicked',
                 });
                 
-                const r = await locate();
-                
-                if (r?.display) {
-                  // Track GPS success
-                  await track({
-                    eventType: 'interaction',
-                    eventCategory: 'search',
-                    eventAction: 'gps_success',
-                    locationQuery: r.display,
-                  });
-                  
-                  setLocation(r.display);
-                  setShowSuggestions(false);
-                  // Store GPS coordinates for search
-                  if (r.latitude && r.longitude) {
-                    setGpsCoordinates({ lat: r.latitude, lng: r.longitude });
+                locate().then((r) => {
+                  if (r?.display) {
+                    // Track GPS success (non-blocking)
+                    track({
+                      eventType: 'interaction',
+                      eventCategory: 'search',
+                      eventAction: 'gps_success',
+                      locationQuery: r.display,
+                    });
+                    
+                    setLocation(r.display);
+                    setShowSuggestions(false);
+                    // Store GPS coordinates for search
+                    if (r.latitude && r.longitude) {
+                      setGpsCoordinates({ lat: r.latitude, lng: r.longitude });
+                    }
+                  } else {
+                    // Track GPS failure (non-blocking)
+                    track({
+                      eventType: 'error',
+                      eventCategory: 'search',
+                      eventAction: 'gps_failed',
+                    });
                   }
-                } else {
-                  // Track GPS failure
-                  await track({
-                    eventType: 'error',
-                    eventCategory: 'search',
-                    eventAction: 'gps_failed',
-                  });
-                }
+                });
               }}
               className="absolute right-12 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors z-20 w-11 h-11 flex items-center justify-center"
             >
@@ -403,8 +396,8 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
             {/* Clear button */}
             {location && (
               <button
-                onClick={async () => {
-                  await track({
+                onClick={() => {
+                  track({
                     eventType: 'click',
                     eventCategory: 'search',
                     eventAction: 'location_cleared',
@@ -509,8 +502,8 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
             />
             {searchTerm && (
               <button
-                onClick={async () => {
-                  await track({
+                onClick={() => {
+                  track({
                     eventType: 'click',
                     eventCategory: 'search',
                     eventAction: 'search_term_cleared',
@@ -552,39 +545,39 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
             <button
               type="button"
               aria-label="Use my location"
-              onClick={async () => {
-                // Track locate me click
-                await track({
+              onClick={() => {
+                // Track locate me click (non-blocking)
+                track({
                   eventType: 'click',
                   eventCategory: 'search',
                   eventAction: 'locate_me_clicked',
                 });
                 
-                const r = await locate();
-                
-                if (r?.display) {
-                  // Track GPS success
-                  await track({
-                    eventType: 'interaction',
-                    eventCategory: 'search',
-                    eventAction: 'gps_success',
-                    locationQuery: r.display,
-                  });
-                  
-                  setLocation(r.display);
-                  setShowSuggestions(false);
-                  // Store GPS coordinates for search
-                  if (r.latitude && r.longitude) {
-                    setGpsCoordinates({ lat: r.latitude, lng: r.longitude });
+                locate().then((r) => {
+                  if (r?.display) {
+                    // Track GPS success (non-blocking)
+                    track({
+                      eventType: 'interaction',
+                      eventCategory: 'search',
+                      eventAction: 'gps_success',
+                      locationQuery: r.display,
+                    });
+                    
+                    setLocation(r.display);
+                    setShowSuggestions(false);
+                    // Store GPS coordinates for search
+                    if (r.latitude && r.longitude) {
+                      setGpsCoordinates({ lat: r.latitude, lng: r.longitude });
+                    }
+                  } else {
+                    // Track GPS failure (non-blocking)
+                    track({
+                      eventType: 'error',
+                      eventCategory: 'search',
+                      eventAction: 'gps_failed',
+                    });
                   }
-                } else {
-                  // Track GPS failure
-                  await track({
-                    eventType: 'error',
-                    eventCategory: 'search',
-                    eventAction: 'gps_failed',
-                  });
-                }
+                });
               }}
               className="absolute right-12 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors z-20 w-11 h-11 flex items-center justify-center"
             >
@@ -598,8 +591,8 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
             {/* Clear button */}
             {location && (
               <button
-                onClick={async () => {
-                  await track({
+                onClick={() => {
+                  track({
                     eventType: 'click',
                     eventCategory: 'search',
                     eventAction: 'location_cleared',
