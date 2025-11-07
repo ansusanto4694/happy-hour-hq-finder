@@ -70,35 +70,31 @@ export const initializeSession = async () => {
   const deviceType = getDeviceType();
   const currentPath = window.location.pathname;
   const referrer = document.referrer;
+  const now = new Date().toISOString();
   
-  // Check if session already exists
-  const { data: existingSession } = await supabase
-    .from('user_sessions')
-    .select('id')
-    .eq('session_id', sessionId)
-    .maybeSingle();
+  // Use upsert with ON CONFLICT DO UPDATE to handle race conditions
+  // This prevents duplicate key errors when multiple tabs/requests initialize simultaneously
+  const { error } = await supabase.from('user_sessions').upsert({
+    session_id: sessionId,
+    user_id: userId,
+    entry_page: currentPath,
+    referrer_source: referrer || null,
+    device_type: deviceType,
+    user_agent: navigator.userAgent,
+    viewport_width: window.innerWidth,
+    viewport_height: window.innerHeight,
+    first_seen: now,
+    last_seen: now,
+  }, {
+    onConflict: 'session_id',
+    ignoreDuplicates: false // Update last_seen on conflict
+  });
   
-  if (!existingSession) {
-    // Create new session with viewport dimensions
-    await supabase.from('user_sessions').insert({
-      session_id: sessionId,
-      user_id: userId,
-      entry_page: currentPath,
-      referrer_source: referrer || null,
-      device_type: deviceType,
-      user_agent: navigator.userAgent,
-      viewport_width: window.innerWidth,
-      viewport_height: window.innerHeight,
-      first_seen: new Date().toISOString(),
-      last_seen: new Date().toISOString(),
-    });
-    
-    sessionStartTime = Date.now();
-  } else {
-    // Just set the start time from the existing session, don't update it
-    sessionStartTime = Date.now();
+  if (error) {
+    console.error('Error initializing session:', error);
   }
   
+  sessionStartTime = Date.now();
   lastActivityTime = Date.now();
 };
 
