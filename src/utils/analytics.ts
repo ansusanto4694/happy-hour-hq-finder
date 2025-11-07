@@ -23,6 +23,7 @@ export interface FunnelStep {
 let eventQueue: any[] = [];
 let sessionStartTime: number | null = null;
 let lastActivityTime: number | null = null;
+let sessionInitialized = false;
 
 // Session management
 export const getSessionId = (): string => {
@@ -53,8 +54,17 @@ export const isMobileDevice = (): boolean => {
   return getDeviceType() === 'mobile';
 };
 
-// Initialize or update session
+// Initialize or update session - throttled to run only once per page load
 export const initializeSession = async () => {
+  // Check if already initialized in this page session
+  const sessionInitKey = 'analytics_session_initialized';
+  if (sessionInitialized || sessionStorage.getItem(sessionInitKey) === 'true') {
+    return;
+  }
+  
+  sessionInitialized = true;
+  sessionStorage.setItem(sessionInitKey, 'true');
+  
   const sessionId = getSessionId();
   const userId = await getUserId();
   const deviceType = getDeviceType();
@@ -85,8 +95,8 @@ export const initializeSession = async () => {
     
     sessionStartTime = Date.now();
   } else {
-    // Update existing session
-    updateSessionActivity();
+    // Just set the start time from the existing session, don't update it
+    sessionStartTime = Date.now();
   }
   
   lastActivityTime = Date.now();
@@ -136,21 +146,21 @@ export const trackEvent = async (params: TrackEventParams) => {
   // Add to queue
   eventQueue.push(event);
   
-  // Process queue if it has 30+ events or after 30 seconds (optimized batching)
-  if (eventQueue.length >= 30) {
+  // Process queue if it has 50+ events or after 45 seconds (optimized batching)
+  if (eventQueue.length >= 50) {
     await flushEventQueue();
   } else if (eventQueue.length === 1) {
     // Only set timeout when first event is added to avoid multiple timers
-    setTimeout(flushEventQueue, 30000);
+    setTimeout(flushEventQueue, 45000);
   }
   
-  // Session activity is already updated by the 30-second interval at the bottom of this file
+  // Session activity is updated by the 60-second interval at the bottom of this file
   // No need to update on every event to avoid excessive database requests
 };
 
-// Track page views - optimized to not block navigation
+// Track page views - fully non-blocking, batched with event queue
 export const trackPageView = async (additionalParams?: Partial<TrackEventParams>) => {
-  // Track the event (queued, non-blocking)
+  // Track the event (queued, non-blocking) - page views will be counted from events
   trackEvent({
     eventType: 'page_view',
     eventCategory: 'page_view',
@@ -159,21 +169,8 @@ export const trackPageView = async (additionalParams?: Partial<TrackEventParams>
     ...additionalParams,
   });
   
-  // Increment page view count asynchronously without blocking
-  const sessionId = getSessionId();
-  supabase
-    .from('user_sessions')
-    .select('page_views')
-    .eq('session_id', sessionId)
-    .single()
-    .then(({ data: session }) => {
-      if (session) {
-        supabase
-          .from('user_sessions')
-          .update({ page_views: (session.page_views || 0) + 1 })
-          .eq('session_id', sessionId);
-      }
-    });
+  // Page view count will be updated during periodic session updates
+  // No immediate database calls to avoid blocking navigation
 };
 
 // Track funnel steps
@@ -200,7 +197,7 @@ export const trackFunnelStep = async (params: FunnelStep) => {
   });
 };
 
-// Flush event queue
+// Flush event queue - optimized with combined session update
 export const flushEventQueue = async () => {
   if (eventQueue.length === 0) return;
   
@@ -208,20 +205,34 @@ export const flushEventQueue = async () => {
   eventQueue = [];
   
   try {
-    await supabase.from('user_events').insert(eventsToSend);
-    
-    // Update total events count in session
     const sessionId = getSessionId();
-    const { data: session } = await supabase
-      .from('user_sessions')
-      .select('total_events')
-      .eq('session_id', sessionId)
-      .single();
     
-    if (session) {
+    // Count page views in this batch
+    const pageViewCount = eventsToSend.filter(e => e.event_type === 'page_view').length;
+    
+    // Insert events and update session in parallel
+    const [_, sessionData] = await Promise.all([
+      supabase.from('user_events').insert(eventsToSend),
+      supabase
+        .from('user_sessions')
+        .select('total_events, page_views')
+        .eq('session_id', sessionId)
+        .single()
+    ]);
+    
+    // Update session counts if we got the data
+    if (sessionData.data) {
+      const updates: any = {
+        total_events: (sessionData.data.total_events || 0) + eventsToSend.length
+      };
+      
+      if (pageViewCount > 0) {
+        updates.page_views = (sessionData.data.page_views || 0) + pageViewCount;
+      }
+      
       await supabase
         .from('user_sessions')
-        .update({ total_events: (session.total_events || 0) + eventsToSend.length })
+        .update(updates)
         .eq('session_id', sessionId);
     }
   } catch (error) {
@@ -246,13 +257,30 @@ export const trackClick = async (
   });
 };
 
-// Cleanup on page unload
+// Cleanup on page unload - flush events and update session together
 window.addEventListener('beforeunload', () => {
-  flushEventQueue();
-  updateSessionActivity();
+  const sessionId = getSessionId();
+  const currentPath = window.location.pathname;
+  const now = Date.now();
+  const sessionDuration = sessionStartTime ? Math.floor((now - sessionStartTime) / 1000) : 0;
+  
+  // Flush events first
+  if (eventQueue.length > 0) {
+    flushEventQueue();
+  }
+  
+  // Then update session
+  supabase
+    .from('user_sessions')
+    .update({
+      last_seen: new Date().toISOString(),
+      exit_page: currentPath,
+      session_duration_seconds: sessionDuration,
+    })
+    .eq('session_id', sessionId);
 });
 
-// Periodically update session (every 60 seconds instead of 30 to reduce load)
+// Periodically update session (every 60 seconds)
 setInterval(() => {
   if (lastActivityTime && Date.now() - lastActivityTime < 120000) {
     updateSessionActivity();
