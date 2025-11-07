@@ -517,7 +517,7 @@ const Results = () => {
           </div>
 
           {/* Fixed Right Side - Map */}
-          <div className="w-[28rem] flex-shrink-0">
+          <div className="w-[36rem] flex-shrink-0">
             <div className="sticky top-32 z-30">
                 <LazyResultsMap 
                   restaurants={merchants || []}
