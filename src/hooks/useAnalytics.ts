@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import {
   initializeSession,
   trackEvent,
@@ -9,32 +9,42 @@ import {
   type FunnelStep,
 } from '@/utils/analytics';
 
+// Global flag to ensure session initialization happens only once per app load
+let globalSessionInitialized = false;
+
 export const useAnalytics = () => {
-  // Initialize session on mount
+  const sessionInitializedRef = useRef(false);
+
+  // Initialize session only once per app load
   useEffect(() => {
-    initializeSession();
+    if (!globalSessionInitialized && !sessionInitializedRef.current) {
+      sessionInitializedRef.current = true;
+      globalSessionInitialized = true;
+      initializeSession();
+    }
   }, []);
 
-  const track = useCallback(async (params: TrackEventParams) => {
-    await trackEvent(params);
+  // Memoize all analytics functions with empty dependency arrays for maximum performance
+  const track = useCallback((params: TrackEventParams) => {
+    trackEvent(params);
   }, []);
 
-  const trackPage = useCallback(async (additionalParams?: Partial<TrackEventParams>) => {
-    await trackPageView(additionalParams);
+  const trackPage = useCallback((additionalParams?: Partial<TrackEventParams>) => {
+    trackPageView(additionalParams);
   }, []);
 
-  const trackFunnel = useCallback(async (params: FunnelStep) => {
-    await trackFunnelStep(params);
+  const trackFunnel = useCallback((params: FunnelStep) => {
+    trackFunnelStep(params);
   }, []);
 
   const trackElementClick = useCallback(
-    async (
+    (
       element: HTMLElement,
       category: TrackEventParams['eventCategory'],
       action: string,
       additionalParams?: Partial<TrackEventParams>
     ) => {
-      await trackClick(element, category, action, additionalParams);
+      trackClick(element, category, action, additionalParams);
     },
     []
   );
