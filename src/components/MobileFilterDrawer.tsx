@@ -39,6 +39,15 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
 }) => {
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = React.useState(false);
   const hasFilters = selectedCategories.length > 0 || selectedRadius !== 'walking' || showOffersOnly || selectedDays.length > 0 || startTime || endTime;
+  
+  // Calculate total filter count
+  const filterCount = 
+    selectedCategories.length + 
+    selectedDays.length + 
+    (startTime ? 1 : 0) + 
+    (endTime ? 1 : 0) + 
+    (selectedRadius !== 'walking' ? 1 : 0) + 
+    (showOffersOnly ? 1 : 0);
 
   const handleFilterClick = () => {
     if (onFilterClick) {
@@ -60,7 +69,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
         Filters
         {hasFilters && (
           <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-            {selectedCategories.length}
+            {filterCount}
           </span>
         )}
       </Button>
