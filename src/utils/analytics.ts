@@ -148,9 +148,10 @@ export const trackEvent = async (params: TrackEventParams) => {
   // No need to update on every event to avoid excessive database requests
 };
 
-// Track page views
+// Track page views - optimized to not block navigation
 export const trackPageView = async (additionalParams?: Partial<TrackEventParams>) => {
-  await trackEvent({
+  // Track the event (queued, non-blocking)
+  trackEvent({
     eventType: 'page_view',
     eventCategory: 'page_view',
     eventAction: 'page_load',
@@ -158,20 +159,21 @@ export const trackPageView = async (additionalParams?: Partial<TrackEventParams>
     ...additionalParams,
   });
   
-  // Increment page view count in session
+  // Increment page view count asynchronously without blocking
   const sessionId = getSessionId();
-  const { data: session } = await supabase
+  supabase
     .from('user_sessions')
     .select('page_views')
     .eq('session_id', sessionId)
-    .single();
-  
-  if (session) {
-    await supabase
-      .from('user_sessions')
-      .update({ page_views: (session.page_views || 0) + 1 })
-      .eq('session_id', sessionId);
-  }
+    .single()
+    .then(({ data: session }) => {
+      if (session) {
+        supabase
+          .from('user_sessions')
+          .update({ page_views: (session.page_views || 0) + 1 })
+          .eq('session_id', sessionId);
+      }
+    });
 };
 
 // Track funnel steps
@@ -250,9 +252,9 @@ window.addEventListener('beforeunload', () => {
   updateSessionActivity();
 });
 
-// Periodically update session (every 30 seconds)
+// Periodically update session (every 60 seconds instead of 30 to reduce load)
 setInterval(() => {
-  if (lastActivityTime && Date.now() - lastActivityTime < 60000) {
+  if (lastActivityTime && Date.now() - lastActivityTime < 120000) {
     updateSessionActivity();
   }
-}, 30000);
+}, 60000);

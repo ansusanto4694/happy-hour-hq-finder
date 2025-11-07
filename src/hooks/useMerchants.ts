@@ -28,8 +28,7 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
     staleTime: searchTerm?.toLowerCase().includes('restaurant') ? 0 : 5 * 60 * 1000, // Force fresh data for restaurant searches
     gcTime: searchTerm?.toLowerCase().includes('restaurant') ? 0 : 10 * 60 * 1000, // React Query v5 uses gcTime instead of cacheTime
     queryFn: async () => {
-      console.log('=== STARTING MERCHANT SEARCH ===');
-      console.log('Search parameters:', { categoryIds, searchTerm, startTime, endTime, location, bounds, radiusMiles, showOffersOnly, selectedDays, gpsCoordinates, carouselId });
+      // Removed excessive console logging for better performance
       
       try {
       let query = supabase
@@ -63,8 +62,6 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
 
       // Handle carousel filtering if carouselId is provided
       if (carouselId) {
-        console.log('Filtering by carousel ID:', carouselId);
-        
         const { data: carouselMerchants, error: carouselError } = await supabase
           .from('carousel_merchants')
           .select('merchant_id')
@@ -77,10 +74,8 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
         }
 
         merchantIds = carouselMerchants?.map(cm => cm.merchant_id) || [];
-        console.log('Merchant IDs from carousel:', merchantIds);
 
         if (merchantIds.length === 0) {
-          console.log('No merchants found in carousel');
           return [];
         }
 
