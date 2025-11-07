@@ -82,7 +82,7 @@ const RestaurantProfile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500">
       <RestaurantHeader 
         merchantId={restaurant.id} 
         merchantName={restaurant.restaurant_name} 
