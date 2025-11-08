@@ -504,7 +504,7 @@ const Results = () => {
           </div>
 
           {/* Scrollable Main Content Area - Results */}
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-[28rem]">
             <SearchResults 
               merchants={merchants}
               isLoading={isLoading}
@@ -516,8 +516,8 @@ const Results = () => {
             />
           </div>
 
-          {/* Fixed Right Side - Map */}
-          <div className="w-[36rem] flex-shrink-0">
+          {/* Flexible Right Side - Map */}
+          <div className="flex-1 min-w-[36rem] max-w-[50rem]">
             <div className="sticky top-32 z-30">
                 <LazyResultsMap 
                   restaurants={merchants || []}
