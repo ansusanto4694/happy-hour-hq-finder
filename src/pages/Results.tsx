@@ -517,7 +517,7 @@ const Results = () => {
           </div>
 
           {/* Flexible Right Side - Map */}
-          <div className="flex-1 min-w-[36rem] max-w-[50rem]">
+          <div className="flex-1 min-w-[32rem] 2xl:min-w-[36rem] max-w-[50rem]">
             <div className="sticky top-32 z-30">
                 <LazyResultsMap 
                   restaurants={merchants || []}
