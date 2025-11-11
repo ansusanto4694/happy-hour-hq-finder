@@ -46,6 +46,8 @@ export const BackfillNeighborhoods: React.FC = () => {
 
         try {
           // Call reverse-geocode with lat/long coordinates
+          console.log(`Calling reverse-geocode for merchant ${merchant.id} with lat: ${merchant.latitude}, lng: ${merchant.longitude}`);
+          
           const { data, error: geocodeError } = await supabase.functions.invoke('reverse-geocode', {
             body: { 
               latitude: merchant.latitude,
@@ -53,8 +55,16 @@ export const BackfillNeighborhoods: React.FC = () => {
             }
           });
 
-          if (geocodeError || !data.neighborhood) {
-            console.error(`Failed to reverse geocode merchant ${merchant.id}:`, geocodeError);
+          console.log(`Response for merchant ${merchant.id}:`, { data, geocodeError });
+
+          if (geocodeError) {
+            console.error(`Geocode error for merchant ${merchant.id}:`, geocodeError);
+            failedCount++;
+          } else if (!data) {
+            console.error(`No data returned for merchant ${merchant.id}`);
+            failedCount++;
+          } else if (!data.neighborhood) {
+            console.log(`No neighborhood found for merchant ${merchant.id}, response:`, data);
             failedCount++;
           } else {
             // Update merchant with neighborhood
@@ -68,7 +78,7 @@ export const BackfillNeighborhoods: React.FC = () => {
               failedCount++;
             } else {
               successCount++;
-              console.log(`Backfilled neighborhood for merchant ${merchant.id}: ${data.neighborhood}`);
+              console.log(`✅ Backfilled neighborhood for merchant ${merchant.id}: ${data.neighborhood}`);
             }
           }
         } catch (err) {
