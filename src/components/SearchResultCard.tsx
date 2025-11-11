@@ -115,7 +115,7 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
           <div className="flex items-start space-x-3">
             {/* Small logo for mobile */}
             <div className="flex-shrink-0">
-              <div className="w-14 h-14 bg-white border border-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
+              <div className={`w-20 h-20 ${restaurant.logo_url ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100'} border border-gray-200 rounded-lg shadow-sm flex items-center justify-center overflow-hidden`}>
                 {restaurant.logo_url ? (
                   <img 
                     src={restaurant.logo_url} 

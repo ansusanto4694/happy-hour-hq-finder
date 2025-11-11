@@ -51,7 +51,7 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
       style={{ scrollSnapAlign: 'start' }}
     >
       {/* Merchant logo or initial */}
-      <div className="w-20 h-20 mx-auto mb-3 bg-white border border-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
+      <div className={`w-20 h-20 mx-auto mb-3 ${merchant.logo_url ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100'} border border-gray-200 rounded-lg shadow-sm flex items-center justify-center overflow-hidden`}>
         {merchant.logo_url ? (
           <img 
             src={merchant.logo_url} 
