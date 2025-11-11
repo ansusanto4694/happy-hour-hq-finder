@@ -54,15 +54,11 @@ export const MobileCarousel: React.FC<MobileCarouselProps> = ({ carousel }) => {
         </button>
       </div>
 
-      {/* Scrollable carousel - Enhanced with better snap scrolling */}
+      {/* Scrollable carousel */}
       <div 
         ref={scrollRef}
-        className="flex overflow-x-auto scrollbar-hide px-4 pb-4"
-        style={{ 
-          scrollSnapType: 'x mandatory',
-          scrollBehavior: 'smooth',
-          WebkitOverflowScrolling: 'touch'
-        }}
+        className="flex overflow-x-auto scrollbar-hide gap-3 px-4 pb-4"
+        style={{ scrollSnapType: 'x mandatory' }}
       >
       {carousel.merchants.map((item) => (
         <MobileCarouselCard

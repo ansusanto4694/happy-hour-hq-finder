@@ -326,7 +326,7 @@ export const MobileSearchBar = () => {
                         className="pl-10 pr-10 h-12 text-base bg-gray-50 border-gray-200 rounded-lg"
                         autoComplete="off"
                       />
-                      {/* Locate me button - Enhanced for mobile */}
+                      {/* Locate me button */}
                       <button
                         type="button"
                         aria-label="Use my location"
@@ -357,12 +357,12 @@ export const MobileSearchBar = () => {
                             });
                           }
                         }}
-                        className="absolute right-10 top-1/2 -translate-y-1/2 bg-orange-50 text-orange-600 hover:bg-orange-100 hover:text-orange-700 transition-all z-20 w-11 h-11 flex items-center justify-center rounded-lg active:scale-95"
+                        className="absolute right-10 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors z-20 w-11 h-11 flex items-center justify-center"
                       >
                         {isLocating ? (
-                          <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-orange-300 border-t-orange-600" />
+                          <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
                         ) : (
-                          <LocateFixed className="w-5 h-5" />
+                          <LocateFixed className="w-4 h-4" />
                         )}
                       </button>
                       
@@ -425,11 +425,11 @@ export const MobileSearchBar = () => {
 
                 {/* Fixed bottom button */}
                 <div className="flex-shrink-0 p-4 border-t border-gray-200">
-                <Button
+                  <Button
                     onClick={handleSearch}
-                    className="w-full h-14 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-lg rounded-lg shadow-lg active:scale-95 transition-transform"
+                    className="w-full h-12 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold text-base rounded-lg shadow-md"
                   >
-                    🎉 Find Happy Hours Now
+                    Find Happy Hours
                   </Button>
                 </div>
               </div>

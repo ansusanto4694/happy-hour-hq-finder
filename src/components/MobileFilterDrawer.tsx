@@ -63,12 +63,12 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
         variant="outline" 
         size="sm"
         onClick={handleFilterClick}
-        className={`relative h-11 px-4 ${hasFilters ? 'border-2 border-orange-500 bg-orange-50 text-orange-700 font-semibold' : ''} active:scale-95 transition-transform`}
+        className={`relative ${hasFilters ? 'border-orange-500 text-orange-600' : ''}`}
       >
         <Filter className="w-4 h-4 mr-2" />
         Filters
         {hasFilters && (
-          <span className="absolute -top-2 -right-2 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-md animate-pulse">
+          <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
             {filterCount}
           </span>
         )}
