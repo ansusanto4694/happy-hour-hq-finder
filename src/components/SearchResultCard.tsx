@@ -100,7 +100,11 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
   return (
     <Card
       ref={cardRef}
-      className="hover:shadow-md transition-shadow cursor-pointer"
+      className={`${
+        isMobile 
+          ? 'min-h-[120px] active:scale-[0.98] active:shadow-sm transition-all cursor-pointer' 
+          : 'hover:shadow-md transition-shadow cursor-pointer'
+      }`}
       onClick={handleClick}
       onMouseEnter={handleHover}
       onMouseLeave={() => {

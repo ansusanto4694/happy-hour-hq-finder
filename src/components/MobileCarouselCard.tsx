@@ -47,7 +47,7 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
   return (
     <div 
       onClick={handleClick}
-      className="flex-shrink-0 w-64 bg-card border rounded-lg p-4 cursor-pointer mr-2 hover:shadow-md transition-shadow"
+      className="flex-shrink-0 w-64 min-h-[200px] bg-card border rounded-lg p-5 cursor-pointer mr-2 active:scale-[0.98] active:shadow-sm transition-all"
       style={{ scrollSnapAlign: 'start' }}
     >
       {/* Merchant logo or initial */}
