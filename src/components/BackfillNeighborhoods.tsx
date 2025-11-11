@@ -22,6 +22,9 @@ export const BackfillNeighborhoods: React.FC = () => {
         .not('longitude', 'is', null)
         .is('neighborhood', null);  // Only fetch merchants WITHOUT neighborhoods
 
+      console.log('Query returned merchants:', merchants?.length || 0);
+      console.log('First 5 merchants:', merchants?.slice(0, 5).map(m => ({ id: m.id, city: m.city, neighborhood: m.neighborhood })));
+
       if (error) throw error;
 
       if (!merchants || merchants.length === 0) {
