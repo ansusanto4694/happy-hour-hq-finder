@@ -1,5 +1,6 @@
 
-import React from 'react';
+import React, { useCallback } from 'react';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

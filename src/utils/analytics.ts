@@ -28,6 +28,90 @@ let sessionStartTime: number | null = null;
 let lastActivityTime: number | null = null;
 let sessionInitialized = false;
 
+// Throttle/Debounce cache
+const throttleTimers = new Map<string, number>();
+const debounceTimers = new Map<string, NodeJS.Timeout>();
+
+// Metadata size limit (1KB)
+const METADATA_SIZE_LIMIT = 1024;
+
+// Utility: Throttle function calls
+export const throttle = <T extends (...args: any[]) => any>(
+  fn: T,
+  key: string,
+  delay: number
+): ((...args: Parameters<T>) => void) => {
+  return (...args: Parameters<T>) => {
+    const lastRun = throttleTimers.get(key);
+    const now = Date.now();
+    
+    if (!lastRun || now - lastRun >= delay) {
+      throttleTimers.set(key, now);
+      fn(...args);
+    }
+  };
+};
+
+// Utility: Debounce function calls
+export const debounce = <T extends (...args: any[]) => any>(
+  fn: T,
+  key: string,
+  delay: number
+): ((...args: Parameters<T>) => void) => {
+  return (...args: Parameters<T>) => {
+    const existingTimer = debounceTimers.get(key);
+    if (existingTimer) {
+      clearTimeout(existingTimer);
+    }
+    
+    const timer = setTimeout(() => {
+      debounceTimers.delete(key);
+      fn(...args);
+    }, delay);
+    
+    debounceTimers.set(key, timer);
+  };
+};
+
+// Utility: Sample events (return true if should track)
+export const shouldSampleEvent = (sampleRate: number): boolean => {
+  return Math.random() < sampleRate;
+};
+
+// Utility: Limit metadata size to prevent large payloads
+export const limitMetadataSize = (metadata: Record<string, any> | null | undefined): Record<string, any> | null => {
+  if (!metadata) return null;
+  
+  const jsonString = JSON.stringify(metadata);
+  if (jsonString.length <= METADATA_SIZE_LIMIT) {
+    return metadata;
+  }
+  
+  // If too large, strip non-essential fields and truncate
+  const essential = {
+    ...metadata,
+    _truncated: true,
+    _originalSize: jsonString.length,
+  };
+  
+  // Remove large arrays/objects
+  Object.keys(essential).forEach(key => {
+    const value = essential[key];
+    if (Array.isArray(value) && value.length > 10) {
+      essential[key] = `[Array(${value.length})]`;
+    } else if (typeof value === 'object' && value !== null) {
+      const stringified = JSON.stringify(value);
+      if (stringified.length > 200) {
+        essential[key] = '[Large Object]';
+      }
+    } else if (typeof value === 'string' && value.length > 200) {
+      essential[key] = value.substring(0, 200) + '...';
+    }
+  });
+  
+  return essential;
+};
+
 // Session management
 export const getSessionId = (): string => {
   let sessionId = sessionStorage.getItem('analytics_session_id');
@@ -241,7 +325,7 @@ export const trackEvent = async (params: TrackEventParams) => {
     carousel_id: params.carouselId || null,
     search_term: params.searchTerm || null,
     location_query: params.locationQuery || null,
-    metadata: params.metadata || null,
+    metadata: limitMetadataSize(params.metadata),
     is_mobile: isMobileDevice(),
   };
   

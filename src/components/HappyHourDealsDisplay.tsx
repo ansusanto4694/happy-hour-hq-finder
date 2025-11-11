@@ -5,6 +5,8 @@ import { supabase } from '@/integrations/supabase/client';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import { format } from 'date-fns';
+import { useAnalytics } from '@/hooks/useAnalytics';
+import { useParams } from 'react-router-dom';
 
 interface HappyHourDealsDisplayProps {
   restaurantId: number;
@@ -22,6 +24,10 @@ interface HappyHourDeal {
 }
 
 export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ restaurantId }) => {
+  const { track } = useAnalytics();
+  const { id } = useParams();
+  const merchantId = id ? parseInt(id, 10) : restaurantId;
+
   const { data: deals, isLoading } = useQuery({
     queryKey: ['happy-hour-deals', restaurantId],
     queryFn: async () => {
@@ -36,6 +42,20 @@ export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ re
       if (error) {
         console.error('Error fetching happy hour deals:', error);
         throw error;
+      }
+
+      // Track happy hour deal views
+      if (data && data.length > 0) {
+        track({
+          eventType: 'impression',
+          eventCategory: 'merchant_interaction',
+          eventAction: 'happy_hour_deals_viewed',
+          merchantId,
+          metadata: {
+            dealCount: data.length,
+            verifiedCount: data.filter(d => d.is_verified).length,
+          },
+        });
       }
 
       return data as HappyHourDeal[];
@@ -75,7 +95,24 @@ export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ re
   return (
     <div className="space-y-3">
       {deals.map((deal) => (
-        <div key={deal.id} className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+        <div 
+          key={deal.id} 
+          className="bg-orange-50 p-4 rounded-lg border border-orange-200"
+          onClick={() => {
+            // Track individual deal clicks
+            track({
+              eventType: 'click',
+              eventCategory: 'merchant_interaction',
+              eventAction: 'happy_hour_deal_clicked',
+              merchantId,
+              eventLabel: deal.deal_title,
+              metadata: {
+                dealId: deal.id,
+                isVerified: deal.is_verified,
+              },
+            });
+          }}
+        >
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0 overflow-hidden">
               <div className="flex flex-wrap items-center gap-2 mb-1">
@@ -88,6 +125,20 @@ export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ re
                     href={deal.source_url}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      track({
+                        eventType: 'click',
+                        eventCategory: 'merchant_interaction',
+                        eventAction: 'deal_source_clicked',
+                        merchantId,
+                        eventLabel: deal.source_url,
+                        metadata: {
+                          dealId: deal.id,
+                          sourceLabel: deal.source_label,
+                        },
+                      });
+                    }}
                     className="text-xs text-blue-700 underline break-all max-w-full"
                     title={deal.source_url}
                   >

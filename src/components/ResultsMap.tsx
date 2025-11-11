@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { MerchantMapPreviewCard } from '@/components/MerchantMapPreviewCard';
+import { MapInteractionTracker } from '@/components/MapInteractionTracker';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserLocation } from '@/hooks/useUserLocation';
 import { Map as MapIcon, MapPin } from 'lucide-react';
@@ -194,6 +195,9 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
           mapStyle="mapbox://styles/mapbox/streets-v12"
           mapboxAccessToken="pk.eyJ1IjoiYW5zdXNhbnRvNDY5NCIsImEiOiJjbWNudDdob28weTZlMmtxMTBmbDc5YTM4In0.qwR9SIqDBrETlROMvhnKvw"
         >
+          {/* Map Interaction Tracker */}
+          <MapInteractionTracker mapRef={mapRef} />
+          
           {/* No Navigation Controls on Mobile */}
           
           {/* User Location Marker */}
@@ -297,6 +301,9 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
           >
             {/* Navigation Controls */}
             <NavigationControl position="top-right" />
+            
+            {/* Map Interaction Tracker */}
+            <MapInteractionTracker mapRef={mapRef} />
             
             {/* User Location Marker */}
             {userLocation && (

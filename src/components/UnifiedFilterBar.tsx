@@ -71,10 +71,11 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
   const [isDaysExpanded, setIsDaysExpanded] = useState(false);
   const [isTimeExpanded, setIsTimeExpanded] = useState(false);
 
-  const toggleCategory = async (categoryId: string) => {
+  const toggleCategory = (categoryId: string) => {
     const isSelected = selectedCategories.includes(categoryId);
     
-    await track({
+    // Track immediately (not debounced for better UX feedback)
+    track({
       eventType: 'click',
       eventCategory: 'filter',
       eventAction: isSelected ? 'category_deselected' : 'category_selected',
@@ -101,10 +102,11 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
     );
   };
 
-  const toggleDay = async (dayValue: number) => {
+  const toggleDay = (dayValue: number) => {
     const isSelected = selectedDays.includes(dayValue);
     
-    await track({
+    // Track immediately (not debounced for better UX feedback)
+    track({
       eventType: 'click',
       eventCategory: 'filter',
       eventAction: 'day_filter_toggled',
@@ -123,8 +125,8 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
     onDaysChange(newSelected);
   };
 
-  const handleRadiusChange = async (radius: RadiusOption) => {
-    await track({
+  const handleRadiusChange = (radius: RadiusOption) => {
+    track({
       eventType: 'click',
       eventCategory: 'filter',
       eventAction: 'radius_changed',
@@ -136,8 +138,8 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
     onRadiusChange(radius);
   };
 
-  const handleStartTimeChange = async (time: string) => {
-    await track({
+  const handleStartTimeChange = (time: string) => {
+    track({
       eventType: 'change',
       eventCategory: 'filter',
       eventAction: 'start_time_changed',
@@ -149,8 +151,8 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
     onStartTimeChange(time);
   };
 
-  const handleEndTimeChange = async (time: string) => {
-    await track({
+  const handleEndTimeChange = (time: string) => {
+    track({
       eventType: 'change',
       eventCategory: 'filter',
       eventAction: 'end_time_changed',
@@ -162,8 +164,8 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
     onEndTimeChange(time);
   };
 
-  const clearAllFilters = async () => {
-    await track({
+  const clearAllFilters = () => {
+    track({
       eventType: 'click',
       eventCategory: 'filter',
       eventAction: 'clear_all_filters',

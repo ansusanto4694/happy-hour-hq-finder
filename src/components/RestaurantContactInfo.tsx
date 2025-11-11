@@ -26,8 +26,8 @@ export const RestaurantContactInfo: React.FC<RestaurantContactInfoProps> = ({
   const { id } = useParams();
   const merchantId = id ? parseInt(id, 10) : undefined;
 
-  const handlePhoneClick = async () => {
-    await track({
+  const handlePhoneClick = () => {
+    track({
       eventType: 'click',
       eventCategory: 'merchant_interaction',
       eventAction: 'phone_clicked',
@@ -35,15 +35,15 @@ export const RestaurantContactInfo: React.FC<RestaurantContactInfoProps> = ({
       eventLabel: phoneNumber || undefined,
     });
 
-    await trackFunnel({
+    trackFunnel({
       funnelStep: 'contact_clicked',
       merchantId,
       stepOrder: 6
     });
   };
 
-  const handleWebsiteClick = async () => {
-    await track({
+  const handleWebsiteClick = () => {
+    track({
       eventType: 'click',
       eventCategory: 'merchant_interaction',
       eventAction: 'website_clicked',
@@ -51,19 +51,22 @@ export const RestaurantContactInfo: React.FC<RestaurantContactInfoProps> = ({
       eventLabel: website || undefined,
     });
 
-    await trackFunnel({
+    trackFunnel({
       funnelStep: 'contact_clicked',
       merchantId,
       stepOrder: 6
     });
   };
 
-  const handleDirectionsClick = async () => {
-    await track({
+  const handleDirectionsClick = () => {
+    track({
       eventType: 'click',
       eventCategory: 'merchant_interaction',
       eventAction: 'directions_clicked',
       merchantId,
+      metadata: {
+        address: `${streetAddress}, ${city}, ${state} ${zipCode}`,
+      },
     });
   };
 
