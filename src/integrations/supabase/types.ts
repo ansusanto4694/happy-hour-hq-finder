@@ -922,6 +922,10 @@ export type Database = {
       }
     }
     Functions: {
+      create_user_events_partition: {
+        Args: { partition_date: string }
+        Returns: undefined
+      }
       get_current_user_role: {
         Args: never
         Returns: Database["public"]["Enums"]["app_role"]
@@ -947,6 +951,7 @@ export type Database = {
         }[]
       }
       is_admin: { Args: never; Returns: boolean }
+      maintain_user_events_partitions: { Args: never; Returns: undefined }
       update_merchant_coordinates: {
         Args: { latitude: number; longitude: number; merchant_id: number }
         Returns: undefined
