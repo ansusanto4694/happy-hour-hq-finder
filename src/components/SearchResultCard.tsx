@@ -134,13 +134,13 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
             
             <div className="flex-1 min-w-0 space-y-2">
               {/* Restaurant name */}
-              <h3 className="text-lg font-bold text-gray-900 break-words leading-tight">
+              <h3 className="text-xl font-bold text-gray-900 break-words leading-snug">
                 {restaurant.restaurant_name}
               </h3>
               
               {/* Neighborhood or City */}
-              <div className="text-sm text-gray-600 leading-relaxed">
-                <p className="break-words">
+              <div className="text-base text-gray-600 leading-relaxed">
+                <p className="break-words font-medium">
                   {restaurant.neighborhood || restaurant.city}
                 </p>
               </div>
@@ -150,7 +150,7 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
                 {hasActiveOffers && (
                   <Badge 
                     variant="default" 
-                    className="text-xs px-2 py-1 font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm w-fit"
+                    className="text-sm px-2.5 py-1.5 font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm w-fit leading-tight"
                   >
                     🎉 Offer Available
                   </Badge>
@@ -160,7 +160,7 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
                     <Badge 
                       key={index}
                       variant="secondary" 
-                      className="text-xs px-2 py-1 font-semibold bg-amber-500/90 hover:bg-amber-600 text-white shadow-sm w-fit"
+                      className="text-sm px-2.5 py-1.5 font-semibold bg-amber-500/90 hover:bg-amber-600 text-white shadow-sm w-fit leading-tight"
                     >
                       🍻 {hh.start} - {hh.end}
                     </Badge>
@@ -168,7 +168,7 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
                 ) : (
                   <Badge 
                     variant="outline" 
-                    className="text-xs px-2 py-1 font-medium text-muted-foreground border-muted-foreground/30 w-fit"
+                    className="text-sm px-2.5 py-1.5 font-medium text-muted-foreground border-muted-foreground/30 w-fit leading-tight"
                   >
                     No Happy Hour Today
                   </Badge>
@@ -182,7 +182,7 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
                     <Badge 
                       key={merchantCategory.id} 
                       variant="outline" 
-                      className="text-xs px-2.5 py-1 font-medium border-primary/20 text-foreground/80 bg-background/50"
+                      className="text-sm px-3 py-1 font-medium border-primary/20 text-foreground/80 bg-background/50 leading-tight"
                     >
                       {merchantCategory.categories.name}
                     </Badge>
@@ -190,7 +190,7 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
                   {restaurant.merchant_categories.length > 3 && (
                     <Badge 
                       variant="outline" 
-                      className="text-xs px-2.5 py-1 font-medium text-muted-foreground border-muted-foreground/20 bg-background/50"
+                      className="text-sm px-3 py-1 font-medium text-muted-foreground border-muted-foreground/20 bg-background/50 leading-tight"
                     >
                       +{restaurant.merchant_categories.length - 3}
                     </Badge>

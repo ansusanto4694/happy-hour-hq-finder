@@ -66,18 +66,18 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
       </div>
 
       {/* Merchant name */}
-      <h4 className="text-foreground font-bold text-base text-center mb-3 line-clamp-2 px-1">
+      <h4 className="text-foreground font-bold text-lg text-center mb-3 line-clamp-2 px-1 leading-snug">
         {merchant.restaurant_name}
       </h4>
 
       {/* Happy hour status */}
       <div className="text-center">
         {todaysHappyHourText !== 'No Happy Hour Today' ? (
-          <span className="text-sm font-semibold text-white bg-amber-500/90 px-3 py-1.5 rounded-full shadow-sm inline-flex items-center gap-1">
+          <span className="text-base font-semibold text-white bg-amber-500/90 px-3 py-2 rounded-full shadow-sm inline-flex items-center gap-1 leading-tight">
             🍻 {todaysHappyHourText}
           </span>
         ) : (
-          <span className="text-sm text-muted-foreground font-medium">
+          <span className="text-base text-muted-foreground font-medium leading-relaxed">
             No happy hour today
           </span>
         )}
