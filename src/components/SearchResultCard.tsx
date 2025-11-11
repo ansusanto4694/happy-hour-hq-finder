@@ -134,14 +134,10 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
                 {restaurant.restaurant_name}
               </h3>
               
-              {/* Address directly under name */}
+              {/* Neighborhood or City */}
               <div className="text-sm text-gray-600 leading-relaxed mb-2">
                 <p className="break-words">
-                  {restaurant.street_address}
-                  {restaurant.street_address_line_2 && `, ${restaurant.street_address_line_2}`}
-                </p>
-                <p>
-                  {restaurant.city}, {restaurant.state} {restaurant.zip_code}
+                  {restaurant.neighborhood || restaurant.city}
                 </p>
               </div>
               
