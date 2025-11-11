@@ -7,10 +7,13 @@ import { HomepageCarousels } from '@/components/HomepageCarousels';
 import { SEOHead } from '@/components/SEOHead';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useAuth } from '@/hooks/useAuth';
+import { BackfillNeighborhoods } from '@/components/BackfillNeighborhoods';
 
 const Index = () => {
   const isMobile = useIsMobile();
   const { trackPage } = useAnalytics();
+  const { profile } = useAuth();
 
   useEffect(() => {
     trackPage();
@@ -32,6 +35,13 @@ const Index = () => {
           />
           <Hero />
           <HomepageCarousels />
+          
+          {/* Admin Tools - Temporary */}
+          {profile?.role === 'admin' && (
+            <div className="px-4 pb-8 max-w-4xl mx-auto">
+              <BackfillNeighborhoods />
+            </div>
+          )}
         </div>
       </div>
     );
@@ -107,6 +117,13 @@ const Index = () => {
         
         {/* Carousels */}
         <HomepageCarousels />
+        
+        {/* Admin Tools - Temporary */}
+        {profile?.role === 'admin' && (
+          <div className="px-6 pb-8 max-w-4xl mx-auto">
+            <BackfillNeighborhoods />
+          </div>
+        )}
       </div>
     </div>
   );
