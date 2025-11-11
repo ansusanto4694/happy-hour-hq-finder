@@ -145,12 +145,16 @@ export const trackEvent = async (params: TrackEventParams) => {
   // Add to queue
   eventQueue.push(event);
   
-  // Process queue if it has 50+ events or after 45 seconds (optimized batching)
-  if (eventQueue.length >= 50) {
+  // Mobile: flush more aggressively (20 events or 15s) to ensure data capture
+  // Desktop: flush at 50 events or 45s for performance
+  const batchSize = isMobileDevice() ? 20 : 50;
+  const batchTimeout = isMobileDevice() ? 15000 : 45000;
+  
+  if (eventQueue.length >= batchSize) {
     await flushEventQueue();
   } else if (eventQueue.length === 1) {
     // Only set timeout when first event is added to avoid multiple timers
-    setTimeout(flushEventQueue, 45000);
+    setTimeout(flushEventQueue, batchTimeout);
   }
   
   // Session activity is updated by the 60-second interval at the bottom of this file
@@ -256,8 +260,8 @@ export const trackClick = async (
   });
 };
 
-// Cleanup on page unload - flush events and update session together
-window.addEventListener('beforeunload', () => {
+// Helper to flush and update session (used by multiple event listeners)
+const flushAndUpdateSession = async () => {
   const sessionId = getSessionId();
   const currentPath = window.location.pathname;
   const now = Date.now();
@@ -265,11 +269,11 @@ window.addEventListener('beforeunload', () => {
   
   // Flush events first
   if (eventQueue.length > 0) {
-    flushEventQueue();
+    await flushEventQueue();
   }
   
-  // Then update session
-  supabase
+  // Update session with current state
+  await supabase
     .from('user_sessions')
     .update({
       last_seen: new Date().toISOString(),
@@ -277,11 +281,48 @@ window.addEventListener('beforeunload', () => {
       session_duration_seconds: sessionDuration,
     })
     .eq('session_id', sessionId);
+};
+
+// Mobile-friendly cleanup: Use Page Visibility API + pagehide (more reliable than beforeunload on mobile)
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    // User switched tabs or minimized browser - flush immediately
+    flushAndUpdateSession();
+  } else {
+    // User returned - update last activity
+    lastActivityTime = Date.now();
+  }
 });
 
-// Periodically update session (every 60 seconds)
+// pagehide is more reliable on mobile browsers (especially iOS Safari)
+window.addEventListener('pagehide', () => {
+  flushAndUpdateSession();
+});
+
+// Keep beforeunload for desktop browsers
+window.addEventListener('beforeunload', () => {
+  flushAndUpdateSession();
+});
+
+// Periodically update session - more frequent on mobile (30s mobile, 60s desktop)
+const updateInterval = isMobileDevice() ? 30000 : 60000;
 setInterval(() => {
-  if (lastActivityTime && Date.now() - lastActivityTime < 120000) {
+  const inactivityThreshold = isMobileDevice() ? 60000 : 120000; // 1 min mobile, 2 min desktop
+  if (lastActivityTime && Date.now() - lastActivityTime < inactivityThreshold) {
     updateSessionActivity();
   }
-}, 60000);
+}, updateInterval);
+
+// Track user interactions to update lastActivityTime (for mobile engagement tracking)
+const trackActivity = () => {
+  lastActivityTime = Date.now();
+};
+
+// Mobile-specific: Track touches and scrolls to detect engagement
+if (isMobileDevice()) {
+  window.addEventListener('touchstart', trackActivity, { passive: true });
+  window.addEventListener('scroll', trackActivity, { passive: true });
+} else {
+  window.addEventListener('mousemove', trackActivity, { passive: true });
+  window.addEventListener('click', trackActivity, { passive: true });
+}
