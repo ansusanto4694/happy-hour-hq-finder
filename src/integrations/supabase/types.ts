@@ -790,6 +790,11 @@ export type Database = {
           updated_at: string
           user_agent: string | null
           user_id: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
           viewport_height: number | null
           viewport_width: number | null
         }
@@ -810,6 +815,11 @@ export type Database = {
           updated_at?: string
           user_agent?: string | null
           user_id?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
           viewport_height?: number | null
           viewport_width?: number | null
         }
@@ -830,6 +840,11 @@ export type Database = {
           updated_at?: string
           user_agent?: string | null
           user_id?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
           viewport_height?: number | null
           viewport_width?: number | null
         }

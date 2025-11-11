@@ -57,6 +57,24 @@ export const isMobileDevice = (): boolean => {
   return getDeviceType() === 'mobile';
 };
 
+// Parse UTM parameters from URL
+export const getUtmParameters = (): {
+  utm_source: string | null;
+  utm_medium: string | null;
+  utm_campaign: string | null;
+  utm_content: string | null;
+  utm_term: string | null;
+} => {
+  const params = new URLSearchParams(window.location.search);
+  return {
+    utm_source: params.get('utm_source'),
+    utm_medium: params.get('utm_medium'),
+    utm_campaign: params.get('utm_campaign'),
+    utm_content: params.get('utm_content'),
+    utm_term: params.get('utm_term'),
+  };
+};
+
 // Initialize or update session - throttled to run only once per page load
 export const initializeSession = async () => {
   // Check if already initialized in this page session
@@ -74,6 +92,7 @@ export const initializeSession = async () => {
   const currentPath = window.location.pathname;
   const referrer = document.referrer;
   const now = new Date().toISOString();
+  const utmParams = getUtmParameters();
   
   // Use upsert with ON CONFLICT DO UPDATE to handle race conditions
   // This prevents duplicate key errors when multiple tabs/requests initialize simultaneously
@@ -88,6 +107,11 @@ export const initializeSession = async () => {
     viewport_height: window.innerHeight,
     first_seen: now,
     last_seen: now,
+    utm_source: utmParams.utm_source,
+    utm_medium: utmParams.utm_medium,
+    utm_campaign: utmParams.utm_campaign,
+    utm_content: utmParams.utm_content,
+    utm_term: utmParams.utm_term,
   }, {
     onConflict: 'session_id',
     ignoreDuplicates: false // Update last_seen on conflict
