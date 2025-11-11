@@ -64,10 +64,11 @@ serve(async (req) => {
       );
     }
 
-    // Determine city, region, and postal code from context
+    // Determine city, region, postal code, and neighborhood from context
     let city = '';
     let region = '';
     let postalCode = '';
+    let neighborhood = '';
     let locationType = 'place';
 
     if (Array.isArray(feature.place_type) && feature.place_type.includes('neighborhood')) {
@@ -83,6 +84,7 @@ serve(async (req) => {
     let cityPlace = '';
 
     for (const ctx of feature.context || []) {
+      if (ctx.id?.startsWith('neighborhood.')) neighborhood = ctx.text;
       if (ctx.id?.startsWith('locality.')) cityLocality = ctx.text;
       if (ctx.id?.startsWith('place.')) cityPlace = ctx.text;
       if (ctx.id?.startsWith('region.')) {
@@ -92,6 +94,11 @@ serve(async (req) => {
       if (ctx.id?.startsWith('postcode.')) {
         postalCode = ctx.text;
       }
+    }
+
+    // If the main feature is a neighborhood, use it
+    if (Array.isArray(feature.place_type) && feature.place_type.includes('neighborhood') && feature.text && !neighborhood) {
+      neighborhood = feature.text;
     }
 
     if (Array.isArray(feature.place_type) && feature.place_type.includes('locality') && feature.text) {
@@ -144,6 +151,7 @@ serve(async (req) => {
         longitude,
         postal_code: postalCode,
         location_type: locationType,
+        neighborhood: neighborhood || null,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

@@ -44,23 +44,32 @@ export const BackfillNeighborhoods: React.FC = () => {
           continue;
         }
 
-        const fullAddress = `${merchant.street_address}, ${merchant.city}, ${merchant.state} ${merchant.zip_code}`;
-
         try {
-          // Call geocode-address with merchantId to auto-update
-          const { data, error: geocodeError } = await supabase.functions.invoke('geocode-address', {
+          // Call reverse-geocode with lat/long coordinates
+          const { data, error: geocodeError } = await supabase.functions.invoke('reverse-geocode', {
             body: { 
-              address: fullAddress,
-              merchantId: merchant.id 
+              latitude: merchant.latitude,
+              longitude: merchant.longitude
             }
           });
 
-          if (geocodeError || !data.success) {
-            console.error(`Failed to geocode merchant ${merchant.id}:`, geocodeError);
+          if (geocodeError || !data.neighborhood) {
+            console.error(`Failed to reverse geocode merchant ${merchant.id}:`, geocodeError);
             failedCount++;
           } else {
-            successCount++;
-            console.log(`Backfilled neighborhood for merchant ${merchant.id}: ${data.neighborhood || 'N/A'}`);
+            // Update merchant with neighborhood
+            const { error: updateError } = await supabase
+              .from('Merchant')
+              .update({ neighborhood: data.neighborhood })
+              .eq('id', merchant.id);
+
+            if (updateError) {
+              console.error(`Failed to update merchant ${merchant.id}:`, updateError);
+              failedCount++;
+            } else {
+              successCount++;
+              console.log(`Backfilled neighborhood for merchant ${merchant.id}: ${data.neighborhood}`);
+            }
           }
         } catch (err) {
           console.error(`Error processing merchant ${merchant.id}:`, err);
