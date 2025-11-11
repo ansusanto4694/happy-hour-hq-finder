@@ -783,6 +783,8 @@ export type Database = {
           is_bounce: boolean
           last_seen: string
           page_views: number
+          referrer_category: string | null
+          referrer_platform: string | null
           referrer_source: string | null
           session_duration_seconds: number | null
           session_id: string
@@ -808,6 +810,8 @@ export type Database = {
           is_bounce?: boolean
           last_seen?: string
           page_views?: number
+          referrer_category?: string | null
+          referrer_platform?: string | null
           referrer_source?: string | null
           session_duration_seconds?: number | null
           session_id: string
@@ -833,6 +837,8 @@ export type Database = {
           is_bounce?: boolean
           last_seen?: string
           page_views?: number
+          referrer_category?: string | null
+          referrer_platform?: string | null
           referrer_source?: string | null
           session_duration_seconds?: number | null
           session_id?: string

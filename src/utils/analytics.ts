@@ -75,6 +75,82 @@ export const getUtmParameters = (): {
   };
 };
 
+// Categorize and parse referrer information
+export const categorizeReferrer = (referrer: string): {
+  category: string | null;
+  platform: string | null;
+} => {
+  if (!referrer || referrer.trim() === '') {
+    return { category: 'direct', platform: null };
+  }
+
+  try {
+    const referrerUrl = new URL(referrer);
+    const hostname = referrerUrl.hostname.toLowerCase();
+    const currentHostname = window.location.hostname.toLowerCase();
+
+    // Internal referral
+    if (hostname === currentHostname || hostname.endsWith(`.${currentHostname}`)) {
+      return { category: 'internal', platform: currentHostname };
+    }
+
+    // Search engines
+    const searchEngines = {
+      'google.com': 'google',
+      'google.co.uk': 'google',
+      'google.ca': 'google',
+      'bing.com': 'bing',
+      'yahoo.com': 'yahoo',
+      'duckduckgo.com': 'duckduckgo',
+      'baidu.com': 'baidu',
+      'yandex.com': 'yandex',
+      'ask.com': 'ask',
+      'aol.com': 'aol',
+      'ecosia.org': 'ecosia',
+      'startpage.com': 'startpage',
+    };
+
+    for (const [domain, engine] of Object.entries(searchEngines)) {
+      if (hostname.includes(domain)) {
+        return { category: 'search_engine', platform: engine };
+      }
+    }
+
+    // Social media platforms
+    const socialPlatforms = {
+      'facebook.com': 'facebook',
+      'fb.com': 'facebook',
+      'twitter.com': 'twitter',
+      'x.com': 'twitter',
+      't.co': 'twitter',
+      'instagram.com': 'instagram',
+      'linkedin.com': 'linkedin',
+      'reddit.com': 'reddit',
+      'pinterest.com': 'pinterest',
+      'tiktok.com': 'tiktok',
+      'youtube.com': 'youtube',
+      'snapchat.com': 'snapchat',
+      'tumblr.com': 'tumblr',
+      'whatsapp.com': 'whatsapp',
+      'telegram.org': 'telegram',
+      'discord.com': 'discord',
+      'threads.net': 'threads',
+    };
+
+    for (const [domain, platform] of Object.entries(socialPlatforms)) {
+      if (hostname.includes(domain)) {
+        return { category: 'social_media', platform };
+      }
+    }
+
+    // External referral
+    return { category: 'referral', platform: hostname };
+  } catch (error) {
+    console.error('Error parsing referrer:', error);
+    return { category: 'direct', platform: null };
+  }
+};
+
 // Initialize or update session - throttled to run only once per page load
 export const initializeSession = async () => {
   // Check if already initialized in this page session
@@ -93,6 +169,7 @@ export const initializeSession = async () => {
   const referrer = document.referrer;
   const now = new Date().toISOString();
   const utmParams = getUtmParameters();
+  const { category: referrerCategory, platform: referrerPlatform } = categorizeReferrer(referrer);
   
   // Use upsert with ON CONFLICT DO UPDATE to handle race conditions
   // This prevents duplicate key errors when multiple tabs/requests initialize simultaneously
@@ -101,6 +178,8 @@ export const initializeSession = async () => {
     user_id: userId,
     entry_page: currentPath,
     referrer_source: referrer || null,
+    referrer_category: referrerCategory,
+    referrer_platform: referrerPlatform,
     device_type: deviceType,
     user_agent: navigator.userAgent,
     viewport_width: window.innerWidth,
