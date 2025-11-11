@@ -130,12 +130,12 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
             
             <div className="flex-1 min-w-0">
               {/* Restaurant name */}
-              <h3 className="text-base font-semibold text-gray-900 break-words leading-tight mb-1">
+              <h3 className="text-lg font-bold text-gray-900 break-words leading-tight mb-1">
                 {restaurant.restaurant_name}
               </h3>
               
               {/* Address directly under name */}
-              <div className="text-xs text-gray-600 leading-snug mb-2">
+              <div className="text-sm text-gray-600 leading-relaxed mb-2">
                 <p className="break-words">
                   {restaurant.street_address}
                   {restaurant.street_address_line_2 && `, ${restaurant.street_address_line_2}`}
@@ -178,7 +178,7 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
               {/* Phone and Categories in same row */}
               <div className="flex items-center justify-between gap-2">
                 {restaurant.phone_number && (
-                  <p className="text-xs text-gray-500 font-medium">
+                  <p className="text-sm font-semibold text-gray-700">
                     {restaurant.phone_number}
                   </p>
                 )}
