@@ -19,7 +19,8 @@ export const BackfillNeighborhoods: React.FC = () => {
         .from('Merchant')
         .select('id, latitude, longitude, street_address, city, state, zip_code, neighborhood')
         .not('latitude', 'is', null)
-        .not('longitude', 'is', null);
+        .not('longitude', 'is', null)
+        .is('neighborhood', null);  // Only fetch merchants WITHOUT neighborhoods
 
       if (error) throw error;
 
@@ -38,8 +39,10 @@ export const BackfillNeighborhoods: React.FC = () => {
         const merchant = merchants[i];
         setProgress({ current: i + 1, total: merchants.length });
 
-        // Skip if already has neighborhood
+        // Skip is no longer needed since query filters for null neighborhoods
+        // But keep as safety check
         if (merchant.neighborhood) {
+          console.log(`Merchant ${merchant.id} already has neighborhood: ${merchant.neighborhood}`);
           skippedCount++;
           continue;
         }
@@ -122,7 +125,7 @@ export const BackfillNeighborhoods: React.FC = () => {
         </div>
       )}
 
-      {results.success > 0 && (
+      {(results.success > 0 || results.failed > 0 || results.skipped > 0) && (
         <div className="mb-4 p-4 bg-accent/10 rounded">
           <p className="text-sm">
             ✅ Success: {results.success} | ⚠️ Failed: {results.failed} | ⏭️ Skipped: {results.skipped}
