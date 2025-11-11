@@ -53,6 +53,19 @@
     --sidebar-ring: 217.2 91.2% 59.8%;
 
     --bright-blue: 208 100% 50%;
+    
+    /* Mobile-specific colors for conversion optimization */
+    --mobile-primary-gradient-from: 24 100% 56%; /* orange-500 */
+    --mobile-primary-gradient-to: 45 93% 58%; /* amber-500 */
+    --success-green: 142 71% 45%;
+    --urgency-red: 0 84% 60%;
+    --trust-blue: 217 91% 60%;
+    --warning-orange: 24 100% 56%;
+    
+    /* Mobile shadows */
+    --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.12);
+    --shadow-floating: 0 8px 24px rgba(255, 112, 0, 0.3);
   }
 
   .dark {
