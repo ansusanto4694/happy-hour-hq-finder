@@ -171,37 +171,28 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
                 )}
               </div>
               
-              {/* Phone and Categories in same row */}
-              <div className="flex items-center justify-between gap-2">
-                {restaurant.phone_number && (
-                  <p className="text-sm font-semibold text-gray-700">
-                    {restaurant.phone_number}
-                  </p>
-                )}
-                
-                {/* Category tags - limit to 2 on mobile */}
-                {restaurant.merchant_categories && restaurant.merchant_categories.length > 0 && (
-                  <div className="flex flex-wrap gap-1 justify-end">
-                    {restaurant.merchant_categories.slice(0, 2).map((merchantCategory: any) => (
-                      <Badge 
-                        key={merchantCategory.id} 
-                        variant="outline" 
-                        className="text-xs px-2 py-1 font-normal"
-                      >
-                        {merchantCategory.categories.name}
-                      </Badge>
-                    ))}
-                    {restaurant.merchant_categories.length > 2 && (
-                      <Badge 
-                        variant="outline" 
-                        className="text-xs px-2 py-1 font-normal text-gray-500"
-                      >
-                        +{restaurant.merchant_categories.length - 2}
-                      </Badge>
-                    )}
-                  </div>
-                )}
-              </div>
+              {/* Category tags - show more on mobile without phone number */}
+              {restaurant.merchant_categories && restaurant.merchant_categories.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {restaurant.merchant_categories.slice(0, 3).map((merchantCategory: any) => (
+                    <Badge 
+                      key={merchantCategory.id} 
+                      variant="outline" 
+                      className="text-xs px-2 py-1 font-normal"
+                    >
+                      {merchantCategory.categories.name}
+                    </Badge>
+                  ))}
+                  {restaurant.merchant_categories.length > 3 && (
+                    <Badge 
+                      variant="outline" 
+                      className="text-xs px-2 py-1 font-normal text-gray-500"
+                    >
+                      +{restaurant.merchant_categories.length - 3}
+                    </Badge>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         ) : (
