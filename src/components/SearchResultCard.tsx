@@ -109,10 +109,10 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
         }
       }}
     >
-      <CardContent className="p-3 sm:p-6">
+      <CardContent className="p-4 sm:p-6">
         {isMobile ? (
-          // Mobile Layout - Compact with small logo
-          <div className="flex items-start space-x-3">
+          // Mobile Layout - Enhanced spacing and breathing room
+          <div className="flex items-start space-x-4">
             {/* Small logo for mobile */}
             <div className="flex-shrink-0">
               <div className={`w-20 h-20 ${restaurant.logo_url ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100'} border border-gray-200 rounded-lg shadow-sm flex items-center justify-center overflow-hidden`}>
@@ -128,21 +128,21 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
               </div>
             </div>
             
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 space-y-2">
               {/* Restaurant name */}
-              <h3 className="text-lg font-bold text-gray-900 break-words leading-tight mb-1">
+              <h3 className="text-lg font-bold text-gray-900 break-words leading-tight">
                 {restaurant.restaurant_name}
               </h3>
               
               {/* Neighborhood or City */}
-              <div className="text-sm text-gray-600 leading-relaxed mb-2">
+              <div className="text-sm text-gray-600 leading-relaxed">
                 <p className="break-words">
                   {restaurant.neighborhood || restaurant.city}
                 </p>
               </div>
               
               {/* Badges row */}
-              <div className="flex flex-col gap-1 mb-2">
+              <div className="flex flex-col gap-1.5">
                 {hasActiveOffers && (
                   <Badge 
                     variant="default" 
@@ -173,7 +173,7 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
               
               {/* Category tags - show more on mobile without phone number */}
               {restaurant.merchant_categories && restaurant.merchant_categories.length > 0 && (
-                <div className="flex flex-wrap gap-1">
+                <div className="flex flex-wrap gap-1.5">
                   {restaurant.merchant_categories.slice(0, 3).map((merchantCategory: any) => (
                     <Badge 
                       key={merchantCategory.id} 
