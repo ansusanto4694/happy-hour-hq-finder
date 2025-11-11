@@ -15,6 +15,7 @@ interface GeocodeResponse {
   success: boolean;
   latitude?: number;
   longitude?: number;
+  neighborhood?: string;
   error?: string;
 }
 
@@ -84,6 +85,23 @@ serve(async (req) => {
     if (data.features && data.features.length > 0) {
       const [longitude, latitude] = data.features[0].center;
       
+      // Extract neighborhood from Mapbox context array
+      let neighborhood: string | null = null;
+      if (data.features[0].context) {
+        // Mapbox context array contains hierarchical location data
+        // Format: [{ id: "neighborhood.123", text: "Greenwich Village" }, ...]
+        const neighborhoodContext = data.features[0].context.find(
+          (ctx: any) => ctx.id.startsWith('neighborhood.')
+        );
+        
+        if (neighborhoodContext) {
+          neighborhood = neighborhoodContext.text;
+          console.log(`Extracted neighborhood: ${neighborhood}`);
+        } else {
+          console.log('No neighborhood found in Mapbox response');
+        }
+      }
+      
       console.log(`Successfully geocoded "${address}" to coordinates: ${latitude}, ${longitude}`);
       
       // If merchantId is provided, update the database automatically
@@ -94,6 +112,7 @@ serve(async (req) => {
             .update({
               latitude: latitude,
               longitude: longitude,
+              neighborhood: neighborhood,
               geocoded_at: new Date().toISOString()
             })
             .eq('id', merchantId);
@@ -132,6 +151,7 @@ serve(async (req) => {
         success: true,
         latitude,
         longitude,
+        neighborhood: neighborhood || undefined,
       };
       
       return new Response(JSON.stringify(result), {

@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 interface GeocodeResult {
   latitude: number;
   longitude: number;
+  neighborhood?: string;
 }
 
 // Edge function geocoding using Supabase
@@ -21,7 +22,8 @@ export const geocodeAddress = async (address: string): Promise<GeocodeResult | n
     if (data && data.success) {
       return {
         latitude: data.latitude,
-        longitude: data.longitude
+        longitude: data.longitude,
+        neighborhood: data.neighborhood
       };
     }
 
@@ -45,6 +47,7 @@ export const geocodeMerchant = async (merchantId: number, address: string) => {
       .update({
         latitude: coordinates.latitude,
         longitude: coordinates.longitude,
+        neighborhood: coordinates.neighborhood || null,
         geocoded_at: new Date().toISOString()
       })
       .eq('id', merchantId);

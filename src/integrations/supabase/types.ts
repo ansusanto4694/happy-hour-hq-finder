@@ -345,6 +345,7 @@ export type Database = {
           latitude: number | null
           logo_url: string | null
           longitude: number | null
+          neighborhood: string | null
           phone_number: string | null
           restaurant_name: string
           state: string
@@ -369,6 +370,7 @@ export type Database = {
           latitude?: number | null
           logo_url?: string | null
           longitude?: number | null
+          neighborhood?: string | null
           phone_number?: string | null
           restaurant_name: string
           state: string
@@ -393,6 +395,7 @@ export type Database = {
           latitude?: number | null
           logo_url?: string | null
           longitude?: number | null
+          neighborhood?: string | null
           phone_number?: string | null
           restaurant_name?: string
           state?: string
