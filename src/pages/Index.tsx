@@ -7,12 +7,9 @@ import { HomepageCarousels } from '@/components/HomepageCarousels';
 import { SEOHead } from '@/components/SEOHead';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAnalytics } from '@/hooks/useAnalytics';
-import { BackfillNeighborhoods } from '@/components/BackfillNeighborhoods';
-import { useAuth } from '@/hooks/useAuth';
 
 const Index = () => {
   const isMobile = useIsMobile();
-  const { profile } = useAuth();
   const { trackPage } = useAnalytics();
 
   useEffect(() => {
@@ -110,13 +107,6 @@ const Index = () => {
         
         {/* Carousels */}
         <HomepageCarousels />
-        
-        {/* Admin Tools */}
-        {profile?.role === 'admin' && (
-          <div className="container mx-auto px-4 py-8">
-            <BackfillNeighborhoods />
-          </div>
-        )}
       </div>
     </div>
   );
