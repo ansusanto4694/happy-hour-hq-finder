@@ -249,7 +249,7 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
         
         {/* Merchant Preview Card for mobile */}
         <MerchantMapPreviewCard
-          restaurant={selectedRestaurant!}
+          restaurant={selectedRestaurant}
           position={mousePosition}
           isVisible={!!selectedRestaurant}
           isMobile={isMobile}
@@ -356,7 +356,7 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
         
         {/* Merchant Preview Card - positioned outside map container to avoid clipping */}
         <MerchantMapPreviewCard
-          restaurant={hoveredRestaurant!}
+          restaurant={hoveredRestaurant}
           position={mousePosition}
           isVisible={!!hoveredRestaurant}
           isMobile={isMobile}

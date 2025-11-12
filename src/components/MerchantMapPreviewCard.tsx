@@ -14,7 +14,7 @@ interface Restaurant {
 }
 
 interface MerchantMapPreviewCardProps {
-  restaurant: Restaurant;
+  restaurant: Restaurant | null;
   position: { x: number; y: number };
   isVisible: boolean;
   isMobile?: boolean;
@@ -30,9 +30,7 @@ export const MerchantMapPreviewCard: React.FC<MerchantMapPreviewCardProps> = ({
   onNavigate,
   onClose,
 }) => {
-  console.log('MerchantMapPreviewCard props:', { restaurant: restaurant?.restaurant_name, position, isVisible });
-  
-  if (!isVisible) return null;
+  if (!isVisible || !restaurant) return null;
 
   if (isMobile) {
     // Mobile: Fixed position at bottom with click handlers
