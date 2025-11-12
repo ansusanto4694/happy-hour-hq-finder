@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { getTodaysHappyHour, getAllTodaysHappyHours } from '@/utils/timeUtils';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { OptimizedImage } from '@/components/ui/optimized-image';
+import { LazyImage } from '@/components/ui/lazy-image';
 
 interface SearchResultCardProps {
   restaurant: any;
@@ -122,12 +123,14 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
             <div className="flex-shrink-0">
               <div className={`w-20 h-20 ${restaurant.logo_url ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100'} border border-gray-200 rounded-lg shadow-sm flex items-center justify-center overflow-hidden`}>
                 {restaurant.logo_url ? (
-                  <OptimizedImage
+                  <LazyImage
                     src={restaurant.logo_url}
                     alt={`${restaurant.restaurant_name} logo`}
                     objectFit="contain"
                     className="w-full h-full"
                     fallbackSrc="/placeholder.svg"
+                    rootMargin="100px"
+                    threshold={0.01}
                   />
                 ) : (
                   <span className="text-gray-500 text-xs">Logo</span>

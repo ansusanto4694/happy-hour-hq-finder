@@ -1,7 +1,7 @@
 import React from 'react';
 import { getTodaysHappyHour } from '@/utils/timeUtils';
 import { useAnalytics } from '@/hooks/useAnalytics';
-import { OptimizedImage } from '@/components/ui/optimized-image';
+import { LazyImage } from '@/components/ui/lazy-image';
 
 interface MobileCarouselCardProps {
   merchant: {
@@ -54,12 +54,14 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
       {/* Merchant logo or initial */}
       <div className={`w-20 h-20 mx-auto mb-3 ${merchant.logo_url ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100'} border border-gray-200 rounded-lg shadow-sm flex items-center justify-center overflow-hidden`}>
         {merchant.logo_url ? (
-          <OptimizedImage
+          <LazyImage
             src={merchant.logo_url}
             alt={`${merchant.restaurant_name} logo`}
             objectFit="contain"
             className="w-full h-full"
             fallbackSrc="/placeholder.svg"
+            rootMargin="50px"
+            threshold={0.01}
           />
         ) : (
           <span className="text-gray-500 font-bold text-xl">
