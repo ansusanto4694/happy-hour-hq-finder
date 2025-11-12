@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { detectBot } from './botDetection';
 
 export interface TrackEventParams {
   eventType: 'click' | 'page_view' | 'form_submit' | 'interaction' | 'hover' | 'impression' | 'focus' | 'input' | 'change' | 'error' | 'performance';
@@ -255,6 +256,9 @@ export const initializeSession = async () => {
   const utmParams = getUtmParameters();
   const { category: referrerCategory, platform: referrerPlatform } = categorizeReferrer(referrer);
   
+  // Detect if this is a bot
+  const botDetection = detectBot();
+  
   // Use upsert with ON CONFLICT DO UPDATE to handle race conditions
   // This prevents duplicate key errors when multiple tabs/requests initialize simultaneously
   const { error } = await supabase.from('user_sessions').upsert({
@@ -275,6 +279,8 @@ export const initializeSession = async () => {
     utm_campaign: utmParams.utm_campaign,
     utm_content: utmParams.utm_content,
     utm_term: utmParams.utm_term,
+    is_bot: botDetection.isBot,
+    bot_type: botDetection.botType,
   }, {
     onConflict: 'session_id',
     ignoreDuplicates: false // Update last_seen on conflict

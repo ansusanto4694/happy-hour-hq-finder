@@ -777,12 +777,14 @@ export type Database = {
       }
       user_sessions: {
         Row: {
+          bot_type: string | null
           created_at: string
           device_type: string
           entry_page: string
           exit_page: string | null
           first_seen: string
           id: string
+          is_bot: boolean
           is_bounce: boolean
           last_seen: string
           page_views: number
@@ -804,12 +806,14 @@ export type Database = {
           viewport_width: number | null
         }
         Insert: {
+          bot_type?: string | null
           created_at?: string
           device_type: string
           entry_page: string
           exit_page?: string | null
           first_seen?: string
           id?: string
+          is_bot?: boolean
           is_bounce?: boolean
           last_seen?: string
           page_views?: number
@@ -831,12 +835,14 @@ export type Database = {
           viewport_width?: number | null
         }
         Update: {
+          bot_type?: string | null
           created_at?: string
           device_type?: string
           entry_page?: string
           exit_page?: string | null
           first_seen?: string
           id?: string
+          is_bot?: boolean
           is_bounce?: boolean
           last_seen?: string
           page_views?: number
