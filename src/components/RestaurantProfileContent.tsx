@@ -1,5 +1,5 @@
 
-import React, { Suspense, lazy } from 'react';
+import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -7,45 +7,16 @@ import { Share } from 'lucide-react';
 import { OptimizedImage } from '@/components/ui/optimized-image';
 import { RestaurantContactInfo } from '@/components/RestaurantContactInfo';
 import { RestaurantHappyHours } from '@/components/RestaurantHappyHours';
-import { OffersSkeleton } from '@/components/merchant-offers/OffersSkeleton';
-import { DealsSkeleton } from '@/components/happy-hour-deals/DealsSkeleton';
-import { RestaurantEventsSkeleton } from '@/components/RestaurantEventsSkeleton';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
 import { MerchantOffer } from '@/components/merchant-offers/types';
 import { HappyHourDeal } from '@/components/happy-hour-deals/types';
-
-// Lazy load heavy components
-const RestaurantProfileEditor = lazy(() => 
-  import('@/components/RestaurantProfileEditor').then(module => ({
-    default: module.RestaurantProfileEditor
-  }))
-);
-
-const ReportIssueModal = lazy(() => 
-  import('@/components/ReportIssueModal').then(module => ({
-    default: module.ReportIssueModal
-  }))
-);
-
-const MerchantOffersSection = lazy(() => 
-  import('@/components/merchant-offers/MerchantOffersSection').then(module => ({
-    default: module.MerchantOffersSection
-  }))
-);
-
-const RestaurantDealsSection = lazy(() => 
-  import('@/components/RestaurantDealsSection').then(module => ({
-    default: module.RestaurantDealsSection
-  }))
-);
-
-const RestaurantEventsFeed = lazy(() => 
-  import('@/components/RestaurantEventsFeed').then(module => ({
-    default: module.RestaurantEventsFeed
-  }))
-);
+import { RestaurantProfileEditor } from '@/components/RestaurantProfileEditor';
+import { ReportIssueModal } from '@/components/ReportIssueModal';
+import { MerchantOffersSection } from '@/components/merchant-offers/MerchantOffersSection';
+import { RestaurantDealsSection } from '@/components/RestaurantDealsSection';
+import { RestaurantEventsFeed } from '@/components/RestaurantEventsFeed';
 
 interface Restaurant {
   id: number;
@@ -154,17 +125,13 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
                   <Share className="h-4 w-4" />
                 </Button>
                 {isAdmin ? (
-                  <Suspense fallback={<div className="w-10 h-10" />}>
-                    <RestaurantProfileEditor restaurant={restaurantWithIds} />
-                  </Suspense>
+                  <RestaurantProfileEditor restaurant={restaurantWithIds} />
                 ) : (
                   <div className="hidden sm:block">
-                    <Suspense fallback={<div className="w-10 h-10" />}>
-                      <ReportIssueModal
-                        merchantId={restaurant.id}
-                        merchantName={restaurant.restaurant_name}
-                      />
-                    </Suspense>
+                    <ReportIssueModal
+                      merchantId={restaurant.id}
+                      merchantName={restaurant.restaurant_name}
+                    />
                   </div>
                 )}
               </div>
@@ -192,47 +159,27 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
           {/* Main Content - Left Column (3/4 width) */}
           <div className="lg:col-span-3 space-y-8">
             {/* Current Offers Section - Only show if offers exist */}
-            {isLoading ? (
+            {offers && offers.length > 0 && (
               <Card className="bg-white shadow-lg">
                 <CardContent className="p-6">
-                  <OffersSkeleton />
+                  <MerchantOffersSection restaurantId={restaurant.id} offers={offers} />
                 </CardContent>
               </Card>
-            ) : offers && offers.length > 0 ? (
-              <Card className="bg-white shadow-lg">
-                <CardContent className="p-6">
-                  <Suspense fallback={<OffersSkeleton />}>
-                    <MerchantOffersSection restaurantId={restaurant.id} offers={offers} />
-                  </Suspense>
-                </CardContent>
-              </Card>
-            ) : null}
+            )}
 
             {/* Happy Hour Deals Section */}
             <Card className="bg-white shadow-lg">
               <CardContent className="p-6">
-                {isLoading ? (
-                  <DealsSkeleton />
-                ) : (
-                  <Suspense fallback={<DealsSkeleton />}>
-                    <RestaurantDealsSection 
-                      restaurantId={restaurant.id} 
-                      restaurant={restaurantWithIds}
-                      deals={deals}
-                    />
-                  </Suspense>
-                )}
+                <RestaurantDealsSection 
+                  restaurantId={restaurant.id} 
+                  restaurant={restaurantWithIds}
+                  deals={deals}
+                />
               </CardContent>
             </Card>
 
             {/* Restaurant Events Feed */}
-            {isLoading ? (
-              <RestaurantEventsSkeleton />
-            ) : (
-              <Suspense fallback={<RestaurantEventsSkeleton />}>
-                <RestaurantEventsFeed restaurantId={restaurant.id} events={events} />
-              </Suspense>
-            )}
+            <RestaurantEventsFeed restaurantId={restaurant.id} events={events} />
           </div>
 
           {/* Sidebar - Right Column (1/4 width, sticky) */}
