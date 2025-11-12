@@ -57,6 +57,7 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
   const [hoveredRestaurant, setHoveredRestaurant] = useState<Restaurant | null>(null);
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
 
   const mapRef = useRef<any>(null);
   const navigate = useNavigate();
@@ -181,27 +182,30 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
   if (isMobile) {
     return (
       <div className="map-container h-full w-full relative">
-        <Map
-          ref={mapRef}
-          {...viewState}
-          onMove={evt => {
-            const newViewState = evt.viewState;
-            setViewState(newViewState);
-            // Notify parent of view state change
-            onViewStateChange?.(newViewState);
-          }}
-          onMoveEnd={handleMoveEnd}
-          style={{ width: '100%', height: '100%' }}
-          mapStyle="mapbox://styles/mapbox/streets-v12"
-          mapboxAccessToken="pk.eyJ1IjoiYW5zdXNhbnRvNDY5NCIsImEiOiJjbWNudDdob28weTZlMmtxMTBmbDc5YTM4In0.qwR9SIqDBrETlROMvhnKvw"
-        >
+          <Map
+            ref={mapRef}
+            {...viewState}
+            onMove={evt => {
+              const newViewState = evt.viewState;
+              setViewState(newViewState);
+              // Notify parent of view state change
+              onViewStateChange?.(newViewState);
+            }}
+            onMoveEnd={handleMoveEnd}
+            onLoad={() => setIsMapLoaded(true)}
+            style={{ width: '100%', height: '100%' }}
+            mapStyle="mapbox://styles/mapbox/light-v11"
+            mapboxAccessToken="pk.eyJ1IjoiYW5zdXNhbnRvNDY5NCIsImEiOiJjbWNudDdob28weTZlMmtxMTBmbDc5YTM4In0.qwR9SIqDBrETlROMvhnKvw"
+            attributionControl={false}
+            reuseMaps
+          >
           {/* Map Interaction Tracker */}
           <MapInteractionTracker mapRef={mapRef} />
           
           {/* No Navigation Controls on Mobile */}
           
           {/* User Location Marker */}
-          {userLocation && (
+          {isMapLoaded && userLocation && (
             <Marker
               longitude={userLocation.longitude}
               latitude={userLocation.latitude}
@@ -218,8 +222,8 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
             </Marker>
           )}
           
-          {/* Restaurant Markers - Only show if coordinates exist */}
-          {restaurants
+          {/* Restaurant Markers - Only show if coordinates exist and map is loaded */}
+          {isMapLoaded && restaurants
             .filter(restaurant => restaurant.latitude && restaurant.longitude)
             .map((restaurant) => (
               <Marker
@@ -295,9 +299,12 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
               onViewStateChange?.(newViewState);
             }}
             onMoveEnd={handleMoveEnd}
+            onLoad={() => setIsMapLoaded(true)}
             style={{ width: '100%', height: '100%' }}
-            mapStyle="mapbox://styles/mapbox/streets-v12"
+            mapStyle="mapbox://styles/mapbox/light-v11"
             mapboxAccessToken="pk.eyJ1IjoiYW5zdXNhbnRvNDY5NCIsImEiOiJjbWNudDdob28weTZlMmtxMTBmbDc5YTM4In0.qwR9SIqDBrETlROMvhnKvw"
+            attributionControl={false}
+            reuseMaps
           >
             {/* Navigation Controls */}
             <NavigationControl position="top-right" />
@@ -306,7 +313,7 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
             <MapInteractionTracker mapRef={mapRef} />
             
             {/* User Location Marker */}
-            {userLocation && (
+            {isMapLoaded && userLocation && (
               <Marker
                 longitude={userLocation.longitude}
                 latitude={userLocation.latitude}
@@ -323,8 +330,8 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
               </Marker>
             )}
             
-            {/* Restaurant Markers - Only show if coordinates exist */}
-            {restaurants
+            {/* Restaurant Markers - Only show if coordinates exist and map is loaded */}
+            {isMapLoaded && restaurants
               .filter(restaurant => restaurant.latitude && restaurant.longitude)
               .map((restaurant) => (
                 <Marker
