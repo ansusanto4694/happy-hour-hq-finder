@@ -8,7 +8,6 @@ import { SearchResultsEmpty } from './SearchResultsEmpty';
 import { SearchResultsHeader } from './SearchResultsHeader';
 import { SearchResultCard } from './SearchResultCard';
 import { useSearchResultsNavigation } from '@/hooks/useSearchResultsNavigation';
-import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
 import { Loader2 } from 'lucide-react';
 import { 
   Pagination,
@@ -43,8 +42,6 @@ const SearchResultsComponent: React.FC<SearchResultsProps> = ({
   isMobile = false,
   onRestaurantHover
 }) => {
-  usePerformanceMonitor('SearchResults');
-  
   const { handleRestaurantClick } = useSearchResultsNavigation();
   const [displayedResults, setDisplayedResults] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);

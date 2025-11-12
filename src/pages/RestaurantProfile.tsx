@@ -1,26 +1,62 @@
 
 import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
 import { RestaurantHeader } from '@/components/RestaurantHeader';
-import { trackFunnelStep } from '@/utils/analytics';
-import { useRestaurantProfileData } from '@/hooks/useRestaurantProfileData';
 import { RestaurantProfileContent } from '@/components/RestaurantProfileContent';
-import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
+import { trackFunnelStep } from '@/utils/analytics';
 
 const RestaurantProfile = () => {
-  usePerformanceMonitor('RestaurantProfile');
-  
   const { id } = useParams();
-  const restaurantId = id ? parseInt(id, 10) : undefined;
   
   useEffect(() => {
-    if (restaurantId) {
-      trackFunnelStep({ funnelStep: 'profile_viewed', merchantId: restaurantId, stepOrder: 5 });
+    if (id) {
+      trackFunnelStep({ funnelStep: 'profile_viewed', merchantId: parseInt(id, 10), stepOrder: 5 });
     }
-  }, [restaurantId]);
+  }, [id]);
   
-  const { restaurant, offers, deals, events, isLoading, error } = useRestaurantProfileData(restaurantId);
+  const { data: restaurant, isLoading, error } = useQuery({
+    queryKey: ['restaurant', id],
+    queryFn: async () => {
+      if (!id) throw new Error('Restaurant ID is required');
+      
+      const restaurantId = parseInt(id, 10);
+      if (isNaN(restaurantId)) throw new Error('Invalid restaurant ID');
+      
+      const { data, error } = await supabase
+        .from('Merchant')
+        .select(`
+          *,
+          merchant_happy_hour (
+            id,
+            day_of_week,
+            happy_hour_start,
+            happy_hour_end
+          ),
+          merchant_categories (
+            id,
+            categories (
+              id,
+              name,
+              slug,
+              parent_id
+            )
+          )
+        `)
+        .eq('id', restaurantId)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching restaurant:', error);
+        throw error;
+      }
+
+      return data;
+    },
+    enabled: !!id,
+  });
 
   if (isLoading) {
     return (
@@ -51,13 +87,7 @@ const RestaurantProfile = () => {
         merchantId={restaurant.id} 
         merchantName={restaurant.restaurant_name} 
       />
-      <RestaurantProfileContent 
-        restaurant={restaurant} 
-        offers={offers}
-        deals={deals}
-        events={events}
-        isLoading={isLoading}
-      />
+      <RestaurantProfileContent restaurant={restaurant} />
     </div>
   );
 };

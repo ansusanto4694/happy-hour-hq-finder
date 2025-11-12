@@ -1,5 +1,5 @@
 
-import { useEffect, lazy, Suspense } from "react";
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,15 +11,13 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { trackPageView } from "@/utils/analytics";
 import { initPerformanceMonitoring } from "@/utils/performanceMonitoring";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-
-// Lazy load all pages for code splitting
-const Index = lazy(() => import("./pages/Index"));
-const Results = lazy(() => import("./pages/Results"));
-const RestaurantProfile = lazy(() => import("./pages/RestaurantProfile"));
-const Auth = lazy(() => import("./pages/Auth"));
-const About = lazy(() => import("./pages/About"));
-const Contact = lazy(() => import("./pages/Contact"));
-const NotFound = lazy(() => import("./pages/NotFound"));
+import Index from "./pages/Index";
+import Results from "./pages/Results";
+import RestaurantProfile from "./pages/RestaurantProfile";
+import Auth from "./pages/Auth";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import NotFound from "./pages/NotFound";
 
 // Create query client with optimized settings
 const queryClient = new QueryClient({
@@ -51,16 +49,6 @@ if (typeof window !== 'undefined') {
   initPerformanceMonitoring();
 }
 
-// Loading fallback component
-const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-screen bg-background">
-    <div className="flex flex-col items-center gap-4">
-      <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      <p className="text-sm text-muted-foreground">Loading...</p>
-    </div>
-  </div>
-);
-
 const App = () => (
   <ErrorBoundary>
     <PersistQueryClientProvider
@@ -73,18 +61,16 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <RouteTracker />
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/results" element={<Results />} />
-                <Route path="/restaurant/:id" element={<RestaurantProfile />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/contact" element={<Contact />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/results" element={<Results />} />
+              <Route path="/restaurant/:id" element={<RestaurantProfile />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>

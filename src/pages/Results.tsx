@@ -13,11 +13,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { RadiusOption, getRadiusMiles } from '@/components/RadiusFilter';
 import { AuthButton } from '@/components/AuthButton';
 import { SEOHead } from '@/components/SEOHead';
-import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
 
 const Results = () => {
-  usePerformanceMonitor('Results');
-  
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const isMobile = useIsMobile();

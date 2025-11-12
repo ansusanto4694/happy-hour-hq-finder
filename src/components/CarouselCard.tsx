@@ -1,9 +1,6 @@
 import React from 'react';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { getTodaysHappyHour } from '@/utils/timeUtils';
-import { OptimizedImage } from '@/components/ui/optimized-image';
-import { CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { getTodaysHappyHour } from "@/utils/timeUtils";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { useNavigate } from 'react-router-dom';
 
@@ -53,12 +50,10 @@ export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick })
         {/* Logo */}
         <div className="flex-shrink-0 w-24 h-24 bg-white border border-border rounded-lg flex items-center justify-center overflow-hidden">
           {merchant.logo_url ? (
-            <OptimizedImage
+            <img
               src={merchant.logo_url}
               alt={`${merchant.restaurant_name} logo`}
-              objectFit="contain"
-              className="w-full h-full"
-              fallbackSrc="/placeholder.svg"
+              className="w-full h-full object-contain"
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
