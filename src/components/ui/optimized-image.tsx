@@ -8,6 +8,7 @@ interface OptimizedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> 
   aspectRatio?: string;
   objectFit?: 'contain' | 'cover' | 'fill' | 'none' | 'scale-down';
   blurDataURL?: string;
+  containerClassName?: string;
 }
 
 export const OptimizedImage: React.FC<OptimizedImageProps> = ({
@@ -18,6 +19,7 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   objectFit = 'cover',
   blurDataURL,
   className,
+  containerClassName,
   ...props
 }) => {
   const [imageSrc, setImageSrc] = useState<string>(src);
@@ -44,15 +46,15 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
 
   return (
     <div 
-      className={cn("relative overflow-hidden bg-muted", className)}
+      className={cn("relative overflow-hidden", containerClassName)}
       style={{ aspectRatio }}
     >
       {/* Blur placeholder */}
-      {isLoading && (
+      {isLoading && blurDataURL && (
         <div 
-          className="absolute inset-0 animate-pulse bg-muted"
+          className="absolute inset-0 animate-pulse"
           style={{
-            backgroundImage: blurDataURL ? `url(${blurDataURL})` : undefined,
+            backgroundImage: `url(${blurDataURL})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             filter: 'blur(10px)',
@@ -72,7 +74,8 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
         className={cn(
           "transition-opacity duration-300",
           isLoading ? "opacity-0" : "opacity-100",
-          hasError && "opacity-50"
+          hasError && "opacity-50",
+          className
         )}
         style={{
           objectFit,
