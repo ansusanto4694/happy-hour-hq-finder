@@ -1,11 +1,9 @@
 
-import React, { useCallback } from 'react';
-import { useAnalytics } from '@/hooks/useAnalytics';
+import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Share } from 'lucide-react';
-import { RestaurantBasicInfo } from '@/components/RestaurantBasicInfo';
 import { RestaurantContactInfo } from '@/components/RestaurantContactInfo';
 import { RestaurantHappyHours } from '@/components/RestaurantHappyHours';
 import { RestaurantDealsSection } from '@/components/RestaurantDealsSection';
@@ -13,9 +11,10 @@ import { RestaurantEventsFeed } from '@/components/RestaurantEventsFeed';
 import { RestaurantProfileEditor } from '@/components/RestaurantProfileEditor';
 import { ReportIssueModal } from '@/components/ReportIssueModal';
 import { MerchantOffersSection } from '@/components/merchant-offers/MerchantOffersSection';
-import { useMerchantOffers } from '@/hooks/useMerchantOffers';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { MerchantOffer } from '@/components/merchant-offers/types';
+import { HappyHourDeal } from '@/components/happy-hour-deals/types';
 
 interface Restaurant {
   id: number;
@@ -46,11 +45,18 @@ interface Restaurant {
 
 interface RestaurantProfileContentProps {
   restaurant: Restaurant;
+  offers: MerchantOffer[];
+  deals: HappyHourDeal[];
+  events: any[];
 }
 
-export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> = ({ restaurant }) => {
+export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> = ({ 
+  restaurant, 
+  offers,
+  deals,
+  events 
+}) => {
   const { isAdmin } = useAuth();
-  const { data: offers } = useMerchantOffers(restaurant.id);
   const { toast } = useToast();
   
   // Transform the merchant_happy_hour data to include IDs for the editor
@@ -148,7 +154,7 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
             {offers && offers.length > 0 && (
               <Card className="bg-white shadow-lg">
                 <CardContent className="p-6">
-                  <MerchantOffersSection restaurantId={restaurant.id} />
+                  <MerchantOffersSection restaurantId={restaurant.id} offers={offers} />
                 </CardContent>
               </Card>
             )}
@@ -156,12 +162,16 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
             {/* Happy Hour Deals Section */}
             <Card className="bg-white shadow-lg">
               <CardContent className="p-6">
-                <RestaurantDealsSection restaurantId={restaurant.id} restaurant={restaurantWithIds} />
+                <RestaurantDealsSection 
+                  restaurantId={restaurant.id} 
+                  restaurant={restaurantWithIds}
+                  deals={deals}
+                />
               </CardContent>
             </Card>
 
             {/* Restaurant Events Feed */}
-            <RestaurantEventsFeed restaurantId={restaurant.id} />
+            <RestaurantEventsFeed restaurantId={restaurant.id} events={events} />
           </div>
 
           {/* Sidebar - Right Column (1/4 width, sticky) */}

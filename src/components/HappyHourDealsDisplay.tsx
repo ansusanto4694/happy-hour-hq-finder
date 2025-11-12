@@ -1,7 +1,7 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { DealsList } from '@/components/happy-hour-deals/DealsList';
+import { HappyHourDeal } from '@/components/happy-hour-deals/types';
 import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/integrations/supabase/client';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import { format } from 'date-fns';
@@ -10,79 +10,13 @@ import { useParams } from 'react-router-dom';
 
 interface HappyHourDealsDisplayProps {
   restaurantId: number;
+  deals: HappyHourDeal[];
 }
 
-interface HappyHourDeal {
-  id: string;
-  deal_title: string;
-  deal_description: string | null;
-  active: boolean;
-  is_verified: boolean;
-  verified_at: string | null;
-  source_url: string | null;
-  source_label: string | null;
-}
-
-export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ restaurantId }) => {
+export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ restaurantId, deals }) => {
   const { track } = useAnalytics();
   const { id } = useParams();
   const merchantId = id ? parseInt(id, 10) : restaurantId;
-
-  const { data: deals, isLoading } = useQuery({
-    queryKey: ['happy-hour-deals', restaurantId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('happy_hour_deals')
-        .select('id, deal_title, deal_description, active, is_verified, verified_at, source_url, source_label')
-        .eq('restaurant_id', restaurantId)
-        .eq('active', true)
-        .order('display_order', { ascending: true })
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching happy hour deals:', error);
-        throw error;
-      }
-
-      // Track happy hour deal views
-      if (data && data.length > 0) {
-        track({
-          eventType: 'impression',
-          eventCategory: 'merchant_interaction',
-          eventAction: 'happy_hour_deals_viewed',
-          merchantId,
-          metadata: {
-            dealCount: data.length,
-            verifiedCount: data.filter(d => d.is_verified).length,
-          },
-        });
-      }
-
-      return data as HappyHourDeal[];
-    },
-  });
-
-  const preprocessMarkdown = (text: string) => {
-    // Split by line breaks to handle each line individually
-    const lines = text.split('\n');
-    
-    return lines.map(line => {
-      // If line is empty or just whitespace, create an empty paragraph
-      if (line.trim() === '') {
-        return '\n&nbsp;\n';
-      }
-      // Otherwise, wrap the line content
-      return line.trim();
-    }).join('\n\n'); // Join with double line breaks for proper markdown paragraphs
-  };
-
-  if (isLoading) {
-    return (
-      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-        <p className="text-gray-500 italic">Loading deals...</p>
-      </div>
-    );
-  }
 
   if (!deals || deals.length === 0) {
     return (
@@ -91,6 +25,17 @@ export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ re
       </div>
     );
   }
+
+  const preprocessMarkdown = (text: string) => {
+    const lines = text.split('\n');
+    
+    return lines.map(line => {
+      if (line.trim() === '') {
+        return '\n&nbsp;\n';
+      }
+      return line.trim();
+    }).join('\n\n');
+  };
 
   return (
     <div className="space-y-3">

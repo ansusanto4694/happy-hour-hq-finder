@@ -1,20 +1,21 @@
 import React, { useState } from 'react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { OfferCard } from './OfferCard';
 import { OfferDetailsModal } from './OfferDetailsModal';
-import { MerchantOffer } from './types';
-import { useMerchantOffers } from '@/hooks/useMerchantOffers';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { MerchantOffer } from './types';
 
 interface MerchantOffersSectionProps {
   restaurantId: number;
+  offers: MerchantOffer[];
 }
 
-export const MerchantOffersSection: React.FC<MerchantOffersSectionProps> = ({ 
-  restaurantId 
-}) => {
-  const { data: offers, isLoading } = useMerchantOffers(restaurantId);
+export const MerchantOffersSection: React.FC<MerchantOffersSectionProps> = ({ restaurantId, offers }) => {
   const { track } = useAnalytics();
+  const isMobile = useIsMobile();
+  const [isOpen, setIsOpen] = useState(true);
   const [selectedOffer, setSelectedOffer] = useState<MerchantOffer | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -39,21 +40,48 @@ export const MerchantOffersSection: React.FC<MerchantOffersSectionProps> = ({
     setSelectedOffer(null);
   };
 
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-gray-900">Current Offers</h3>
-        <div className="grid gap-4">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-24 w-full" />
-          ))}
-        </div>
-      </div>
-    );
-  }
+  const handleToggle = async (newIsOpen: boolean) => {
+    await track({
+      eventType: 'click',
+      eventCategory: 'merchant_interaction',
+      eventAction: newIsOpen ? 'offers_expanded' : 'offers_collapsed',
+      merchantId: restaurantId,
+    });
+    setIsOpen(newIsOpen);
+  };
 
   if (!offers || offers.length === 0) {
     return null;
+  }
+
+  if (isMobile) {
+    return (
+      <div className="space-y-4">
+        <Collapsible open={isOpen} onOpenChange={handleToggle}>
+          <CollapsibleTrigger className="flex items-center justify-between w-full">
+            <h3 className="text-lg font-semibold text-gray-900">Current Offers</h3>
+            {isOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="grid gap-4 mt-4">
+              {offers.map((offer) => (
+                <OfferCard
+                  key={offer.id}
+                  offer={offer}
+                  onClick={() => handleOfferClick(offer)}
+                />
+              ))}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+
+        <OfferDetailsModal
+          offer={selectedOffer}
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+        />
+      </div>
+    );
   }
 
   return (

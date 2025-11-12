@@ -7,6 +7,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { HappyHourDeal } from '@/components/happy-hour-deals/types';
 
 interface Restaurant {
   id: number;
@@ -28,9 +29,10 @@ interface Restaurant {
 interface RestaurantDealsSectionProps {
   restaurantId: number;
   restaurant: Restaurant;
+  deals: HappyHourDeal[];
 }
 
-export const RestaurantDealsSection: React.FC<RestaurantDealsSectionProps> = ({ restaurantId, restaurant }) => {
+export const RestaurantDealsSection: React.FC<RestaurantDealsSectionProps> = ({ restaurantId, restaurant, deals }) => {
   const { isAdmin } = useAuth();
   const { track } = useAnalytics();
   const isMobile = useIsMobile();
@@ -69,7 +71,7 @@ export const RestaurantDealsSection: React.FC<RestaurantDealsSectionProps> = ({ 
         </div>
         
         <CollapsibleContent>
-          <HappyHourDealsDisplay restaurantId={restaurantId} />
+      <HappyHourDealsDisplay restaurantId={restaurantId} deals={deals} />
         </CollapsibleContent>
       </Collapsible>
     );
@@ -84,7 +86,7 @@ export const RestaurantDealsSection: React.FC<RestaurantDealsSectionProps> = ({ 
       </div>
       
       <div>
-        <HappyHourDealsDisplay restaurantId={restaurantId} />
+        <HappyHourDealsDisplay restaurantId={restaurantId} deals={deals} />
       </div>
     </div>
   );
