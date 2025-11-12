@@ -57,6 +57,7 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
           <LazyImage
             src={merchant.logo_url}
             alt={`${merchant.restaurant_name} logo`}
+            aspectRatio="1"
             objectFit="contain"
             fallbackSrc="/placeholder.svg"
             rootMargin="50px"

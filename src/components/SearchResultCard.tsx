@@ -126,6 +126,7 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
                   <LazyImage
                     src={restaurant.logo_url}
                     alt={`${restaurant.restaurant_name} logo`}
+                    aspectRatio="1"
                     objectFit="contain"
                     fallbackSrc="/placeholder.svg"
                     rootMargin="100px"
