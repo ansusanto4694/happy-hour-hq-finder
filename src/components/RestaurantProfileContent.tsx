@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Share } from 'lucide-react';
+import { OptimizedImage } from '@/components/ui/optimized-image';
 import { RestaurantContactInfo } from '@/components/RestaurantContactInfo';
 import { RestaurantHappyHours } from '@/components/RestaurantHappyHours';
 import { OffersSkeleton } from '@/components/merchant-offers/OffersSkeleton';
@@ -125,15 +126,17 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center space-x-4">
                 {/* Restaurant Logo */}
-                <div className="w-20 h-20 bg-white border-2 border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                <div className="w-20 h-20 bg-white border-2 border-border rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
                   {restaurant.logo_url ? (
-                    <img 
-                      src={restaurant.logo_url} 
+                    <OptimizedImage
+                      src={restaurant.logo_url}
                       alt={`${restaurant.restaurant_name} logo`}
-                      className="w-full h-full object-contain p-2"
+                      objectFit="contain"
+                      className="w-full h-full p-2"
+                      fallbackSrc="/placeholder.svg"
                     />
                   ) : (
-                    <span className="text-gray-400 text-xs font-medium">LOGO</span>
+                    <span className="text-muted-foreground text-xs font-medium">LOGO</span>
                   )}
                 </div>
                 <h1 className="text-3xl font-bold text-gray-900">{restaurant.restaurant_name}</h1>

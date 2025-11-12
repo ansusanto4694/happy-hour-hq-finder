@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import { X } from 'lucide-react';
+import { OptimizedImage } from '@/components/ui/optimized-image';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface Restaurant {
@@ -47,10 +49,12 @@ export const MerchantMapPreviewCard: React.FC<MerchantMapPreviewCardProps> = ({
               {/* Merchant logo */}
               <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
                 {restaurant.logo_url ? (
-                  <img 
-                    src={restaurant.logo_url} 
+                  <OptimizedImage
+                    src={restaurant.logo_url}
                     alt={`${restaurant.restaurant_name} logo`}
-                    className="w-full h-full object-cover rounded-full"
+                    objectFit="contain"
+                    className="w-full h-full p-1"
+                    fallbackSrc="/placeholder.svg"
                   />
                 ) : (
                   <span className="text-orange-600 font-semibold text-lg">
@@ -107,10 +111,12 @@ export const MerchantMapPreviewCard: React.FC<MerchantMapPreviewCardProps> = ({
           {/* Merchant logo */}
           <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
             {restaurant.logo_url ? (
-              <img 
-                src={restaurant.logo_url} 
+              <OptimizedImage
+                src={restaurant.logo_url}
                 alt={`${restaurant.restaurant_name} logo`}
-                className="w-full h-full object-cover rounded-full"
+                objectFit="contain"
+                className="w-full h-full p-1"
+                fallbackSrc="/placeholder.svg"
               />
             ) : (
               <span className="text-orange-600 font-semibold text-sm">

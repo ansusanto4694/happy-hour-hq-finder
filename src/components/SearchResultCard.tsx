@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getTodaysHappyHour, getAllTodaysHappyHours } from '@/utils/timeUtils';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { OptimizedImage } from '@/components/ui/optimized-image';
 
 interface SearchResultCardProps {
   restaurant: any;
@@ -121,10 +122,12 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
             <div className="flex-shrink-0">
               <div className={`w-20 h-20 ${restaurant.logo_url ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100'} border border-gray-200 rounded-lg shadow-sm flex items-center justify-center overflow-hidden`}>
                 {restaurant.logo_url ? (
-                  <img 
-                    src={restaurant.logo_url} 
+                  <OptimizedImage
+                    src={restaurant.logo_url}
                     alt={`${restaurant.restaurant_name} logo`}
-                    className="w-full h-full object-contain"
+                    objectFit="contain"
+                    className="w-full h-full"
+                    fallbackSrc="/placeholder.svg"
                   />
                 ) : (
                   <span className="text-gray-500 text-xs">Logo</span>
@@ -206,10 +209,12 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
             <div className="flex-shrink-0">
               <div className="w-24 h-24 bg-white border border-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
                 {restaurant.logo_url ? (
-                  <img 
-                    src={restaurant.logo_url} 
+                  <OptimizedImage
+                    src={restaurant.logo_url}
                     alt={`${restaurant.restaurant_name} logo`}
-                    className="w-full h-full object-contain"
+                    objectFit="contain"
+                    className="w-full h-full"
+                    fallbackSrc="/placeholder.svg"
                   />
                 ) : (
                   <span className="text-gray-500 text-xs">Logo</span>

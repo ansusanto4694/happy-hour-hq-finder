@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Clock, Share } from 'lucide-react';
+import { OptimizedImage } from '@/components/ui/optimized-image';
 
 interface MerchantEvent {
   id: number;
@@ -84,13 +85,14 @@ export const RestaurantEventsFeed: React.FC<RestaurantEventsFeedProps> = ({ rest
               <CardContent className="p-0">
                 {/* Event Image */}
                 {event.image_url && (
-                  <div className="w-full h-64 bg-gray-200">
-                    <img
-                      src={event.image_url}
-                      alt={event.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
+                  <OptimizedImage
+                    src={event.image_url}
+                    alt={event.title}
+                    aspectRatio="16/9"
+                    objectFit="cover"
+                    className="w-full h-64"
+                    fallbackSrc="/placeholder.svg"
+                  />
                 )}
                 
                 {/* Event Content */}
