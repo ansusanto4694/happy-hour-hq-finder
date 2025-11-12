@@ -28,19 +28,29 @@ function getRating(name: string, value: number): 'good' | 'needs-improvement' | 
 function reportMetric(metric: PerformanceMetric) {
   // Log to console in development
   if (import.meta.env.DEV) {
+    // CLS is unitless, others are in milliseconds
+    const formattedValue = metric.name === 'CLS' 
+      ? metric.value.toFixed(3)
+      : `${Math.round(metric.value)}ms`;
+    
     console.log(`[Performance] ${metric.name}:`, {
-      value: `${Math.round(metric.value)}ms`,
+      value: formattedValue,
       rating: metric.rating,
     });
   }
 
   // Track in analytics
+  // For CLS, multiply by 1000 to preserve precision in integer storage
+  const analyticsValue = metric.name === 'CLS'
+    ? Math.round(metric.value * 1000)
+    : Math.round(metric.value);
+    
   trackEvent({
     eventType: 'performance',
     eventCategory: 'web_vitals',
     eventAction: metric.name.toLowerCase(),
     eventLabel: metric.rating,
-    eventValue: Math.round(metric.value),
+    eventValue: analyticsValue,
   });
 }
 
