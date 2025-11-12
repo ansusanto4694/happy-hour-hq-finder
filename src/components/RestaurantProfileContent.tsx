@@ -11,6 +11,9 @@ import { RestaurantEventsFeed } from '@/components/RestaurantEventsFeed';
 import { RestaurantProfileEditor } from '@/components/RestaurantProfileEditor';
 import { ReportIssueModal } from '@/components/ReportIssueModal';
 import { MerchantOffersSection } from '@/components/merchant-offers/MerchantOffersSection';
+import { OffersSkeleton } from '@/components/merchant-offers/OffersSkeleton';
+import { DealsSkeleton } from '@/components/happy-hour-deals/DealsSkeleton';
+import { RestaurantEventsSkeleton } from '@/components/RestaurantEventsSkeleton';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { MerchantOffer } from '@/components/merchant-offers/types';
@@ -48,13 +51,15 @@ interface RestaurantProfileContentProps {
   offers: MerchantOffer[];
   deals: HappyHourDeal[];
   events: any[];
+  isLoading?: boolean;
 }
 
 export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> = ({ 
   restaurant, 
   offers,
   deals,
-  events 
+  events,
+  isLoading = false
 }) => {
   const { isAdmin } = useAuth();
   const { toast } = useToast();
@@ -151,27 +156,41 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
           {/* Main Content - Left Column (3/4 width) */}
           <div className="lg:col-span-3 space-y-8">
             {/* Current Offers Section - Only show if offers exist */}
-            {offers && offers.length > 0 && (
+            {isLoading ? (
+              <Card className="bg-white shadow-lg">
+                <CardContent className="p-6">
+                  <OffersSkeleton />
+                </CardContent>
+              </Card>
+            ) : offers && offers.length > 0 ? (
               <Card className="bg-white shadow-lg">
                 <CardContent className="p-6">
                   <MerchantOffersSection restaurantId={restaurant.id} offers={offers} />
                 </CardContent>
               </Card>
-            )}
+            ) : null}
 
             {/* Happy Hour Deals Section */}
             <Card className="bg-white shadow-lg">
               <CardContent className="p-6">
-                <RestaurantDealsSection 
-                  restaurantId={restaurant.id} 
-                  restaurant={restaurantWithIds}
-                  deals={deals}
-                />
+                {isLoading ? (
+                  <DealsSkeleton />
+                ) : (
+                  <RestaurantDealsSection 
+                    restaurantId={restaurant.id} 
+                    restaurant={restaurantWithIds}
+                    deals={deals}
+                  />
+                )}
               </CardContent>
             </Card>
 
             {/* Restaurant Events Feed */}
-            <RestaurantEventsFeed restaurantId={restaurant.id} events={events} />
+            {isLoading ? (
+              <RestaurantEventsSkeleton />
+            ) : (
+              <RestaurantEventsFeed restaurantId={restaurant.id} events={events} />
+            )}
           </div>
 
           {/* Sidebar - Right Column (1/4 width, sticky) */}

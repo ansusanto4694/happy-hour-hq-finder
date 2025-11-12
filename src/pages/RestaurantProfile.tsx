@@ -53,6 +53,7 @@ const RestaurantProfile = () => {
         offers={offers}
         deals={deals}
         events={events}
+        isLoading={isLoading}
       />
     </div>
   );
