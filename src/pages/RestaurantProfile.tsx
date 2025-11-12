@@ -1,19 +1,12 @@
 
-import React, { Suspense, lazy, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { RestaurantHeader } from '@/components/RestaurantHeader';
 import { trackFunnelStep } from '@/utils/analytics';
 import { useRestaurantProfileData } from '@/hooks/useRestaurantProfileData';
-import { SearchResultsLoading } from '@/components/SearchResultsLoading';
+import { RestaurantProfileContent } from '@/components/RestaurantProfileContent';
 import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
-
-// Lazy load the main content component
-const RestaurantProfileContent = lazy(() => 
-  import('@/components/RestaurantProfileContent').then(module => ({
-    default: module.RestaurantProfileContent
-  }))
-);
 
 const RestaurantProfile = () => {
   usePerformanceMonitor('RestaurantProfile');
@@ -58,15 +51,13 @@ const RestaurantProfile = () => {
         merchantId={restaurant.id} 
         merchantName={restaurant.restaurant_name} 
       />
-      <Suspense fallback={<SearchResultsLoading />}>
-        <RestaurantProfileContent 
-          restaurant={restaurant} 
-          offers={offers}
-          deals={deals}
-          events={events}
-          isLoading={isLoading}
-        />
-      </Suspense>
+      <RestaurantProfileContent 
+        restaurant={restaurant} 
+        offers={offers}
+        deals={deals}
+        events={events}
+        isLoading={isLoading}
+      />
     </div>
   );
 };
