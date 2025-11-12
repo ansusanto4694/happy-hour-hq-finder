@@ -6,6 +6,7 @@ import { RestaurantHeader } from '@/components/RestaurantHeader';
 import { trackFunnelStep } from '@/utils/analytics';
 import { useRestaurantProfileData } from '@/hooks/useRestaurantProfileData';
 import { SearchResultsLoading } from '@/components/SearchResultsLoading';
+import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
 
 // Lazy load the main content component
 const RestaurantProfileContent = lazy(() => 
@@ -15,6 +16,8 @@ const RestaurantProfileContent = lazy(() =>
 );
 
 const RestaurantProfile = () => {
+  usePerformanceMonitor('RestaurantProfile');
+  
   const { id } = useParams();
   const restaurantId = id ? parseInt(id, 10) : undefined;
   

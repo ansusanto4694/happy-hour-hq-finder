@@ -12,6 +12,7 @@ import { DealsSkeleton } from '@/components/happy-hour-deals/DealsSkeleton';
 import { RestaurantEventsSkeleton } from '@/components/RestaurantEventsSkeleton';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
 import { MerchantOffer } from '@/components/merchant-offers/types';
 import { HappyHourDeal } from '@/components/happy-hour-deals/types';
 
@@ -88,6 +89,8 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
   events,
   isLoading = false
 }) => {
+  usePerformanceMonitor('RestaurantProfileContent');
+  
   const { isAdmin } = useAuth();
   const { toast } = useToast();
   
