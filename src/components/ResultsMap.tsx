@@ -194,7 +194,7 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
             onMoveEnd={handleMoveEnd}
             onLoad={() => setIsMapLoaded(true)}
             style={{ width: '100%', height: '100%' }}
-            mapStyle="mapbox://styles/mapbox/light-v11"
+            mapStyle="mapbox://styles/mapbox/streets-v12"
             mapboxAccessToken="pk.eyJ1IjoiYW5zdXNhbnRvNDY5NCIsImEiOiJjbWNudDdob28weTZlMmtxMTBmbDc5YTM4In0.qwR9SIqDBrETlROMvhnKvw"
             attributionControl={false}
             reuseMaps
@@ -301,7 +301,7 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
             onMoveEnd={handleMoveEnd}
             onLoad={() => setIsMapLoaded(true)}
             style={{ width: '100%', height: '100%' }}
-            mapStyle="mapbox://styles/mapbox/light-v11"
+            mapStyle="mapbox://styles/mapbox/streets-v12"
             mapboxAccessToken="pk.eyJ1IjoiYW5zdXNhbnRvNDY5NCIsImEiOiJjbWNudDdob28weTZlMmtxMTBmbDc5YTM4In0.qwR9SIqDBrETlROMvhnKvw"
             attributionControl={false}
             reuseMaps
