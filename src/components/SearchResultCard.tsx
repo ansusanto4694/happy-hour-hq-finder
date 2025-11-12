@@ -127,7 +127,6 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
                     src={restaurant.logo_url}
                     alt={`${restaurant.restaurant_name} logo`}
                     objectFit="contain"
-                    className="w-full h-full"
                     fallbackSrc="/placeholder.svg"
                     rootMargin="100px"
                     threshold={0.01}

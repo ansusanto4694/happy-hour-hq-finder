@@ -58,7 +58,6 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
             src={merchant.logo_url}
             alt={`${merchant.restaurant_name} logo`}
             objectFit="contain"
-            className="w-full h-full"
             fallbackSrc="/placeholder.svg"
             rootMargin="50px"
             threshold={0.01}

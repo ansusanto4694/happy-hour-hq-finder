@@ -10,6 +10,7 @@ interface LazyImageProps {
   objectFit?: 'contain' | 'cover' | 'fill' | 'none' | 'scale-down';
   blurDataURL?: string;
   className?: string;
+  containerClassName?: string;
   rootMargin?: string;
   threshold?: number;
 }
@@ -26,6 +27,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
   objectFit = 'cover',
   blurDataURL,
   className,
+  containerClassName,
   rootMargin = '50px',
   threshold = 0.01,
 }) => {
@@ -58,7 +60,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
   }, [rootMargin, threshold]);
 
   return (
-    <div ref={imgRef} className={cn("relative", className)}>
+    <div ref={imgRef} className={cn("relative w-full h-full", containerClassName)}>
       {isInView ? (
         <OptimizedImage
           src={src}
@@ -67,7 +69,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
           aspectRatio={aspectRatio}
           objectFit={objectFit}
           blurDataURL={blurDataURL}
-          className="w-full h-full"
+          className={className}
         />
       ) : (
         <div 
