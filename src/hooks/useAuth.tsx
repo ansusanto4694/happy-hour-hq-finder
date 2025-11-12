@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -34,10 +34,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  
+  // Track fetching state to prevent duplicate requests
+  const isFetchingProfile = useRef(false);
+  const profileCache = useRef<{ userId: string; profile: Profile; timestamp: number } | null>(null);
+  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
   const isAdmin = profile?.role === 'admin';
 
   const fetchProfile = async (userId: string) => {
+    // Check cache first
+    if (profileCache.current && 
+        profileCache.current.userId === userId && 
+        Date.now() - profileCache.current.timestamp < CACHE_DURATION) {
+      setProfile(profileCache.current.profile);
+      return;
+    }
+
+    // Prevent duplicate fetches
+    if (isFetchingProfile.current) {
+      return;
+    }
+
+    isFetchingProfile.current = true;
+
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -50,14 +70,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
 
-      setProfile(data);
+      if (data) {
+        setProfile(data);
+        // Cache the profile
+        profileCache.current = {
+          userId,
+          profile: data,
+          timestamp: Date.now()
+        };
+      }
     } catch (error) {
       console.error('Error fetching profile:', error);
+    } finally {
+      isFetchingProfile.current = false;
     }
   };
 
   const refreshProfile = async () => {
     if (user) {
+      // Clear cache on explicit refresh
+      profileCache.current = null;
       await fetchProfile(user.id);
     }
   };
