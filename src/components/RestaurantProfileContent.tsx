@@ -86,13 +86,13 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
       <div className={`max-w-7xl mx-auto ${isMobile ? 'pb-24' : ''}`}>
         {/* Mobile Hero Section */}
         {isMobile ? (
-          <div className="bg-gradient-to-br from-bright-blue/15 via-primary/5 to-bright-blue/10 py-8 px-4 relative overflow-hidden">
+          <div className="bg-gradient-to-br from-orange-400/15 via-amber-500/10 to-yellow-500/10 py-8 px-4 relative overflow-hidden">
             {/* Subtle shimmer effect */}
             <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/10 to-transparent" />
             
             <div className="flex flex-col items-center text-center space-y-4 relative">
               {/* Centered Logo - 96px */}
-              <div className="w-24 h-24 bg-white border-2 border-bright-blue/30 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden shadow-lg shadow-bright-blue/10">
+              <div className="w-24 h-24 bg-white border-2 border-amber-500/40 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden shadow-lg shadow-amber-500/15">
                 {restaurant.logo_url ? (
                   <img 
                     src={restaurant.logo_url} 
@@ -114,7 +114,7 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
                     <Badge 
                       key={merchantCategory.id} 
                       variant="outline"
-                      className="rounded-full px-3 py-1.5 text-sm font-medium flex items-center gap-1.5 border-bright-blue/40 text-bright-blue bg-bright-blue/5"
+                      className="rounded-full px-3 py-1.5 text-sm font-medium flex items-center gap-1.5 border-amber-500/50 text-amber-600 bg-amber-500/10"
                     >
                       <Utensils className="w-3.5 h-3.5" />
                       {merchantCategory.categories.name}
@@ -203,7 +203,7 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
           <div className="lg:col-span-3 space-y-8">
             {/* Current Offers Section - Only show if offers exist */}
             {offers && offers.length > 0 && (
-              <Card className={`shadow-lg border-l-4 border-bright-blue ${isMobile ? 'bg-white' : 'bg-white'}`}>
+              <Card className={`shadow-lg border-l-4 border-amber-500 ${isMobile ? 'bg-white' : 'bg-white'}`}>
                 <CardContent className="p-6">
                   <MerchantOffersSection restaurantId={restaurant.id} />
                 </CardContent>
@@ -211,7 +211,7 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
             )}
 
             {/* Happy Hour Deals Section */}
-            <Card className={`shadow-lg border-l-4 border-bright-blue ${isMobile ? 'bg-secondary/30' : 'bg-white'}`}>
+            <Card className={`shadow-lg border-l-4 border-amber-500 ${isMobile ? 'bg-secondary/30' : 'bg-white'}`}>
               <CardContent className="p-6">
                 <RestaurantDealsSection restaurantId={restaurant.id} restaurant={restaurantWithIds} />
               </CardContent>
@@ -225,7 +225,7 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
           <div className="lg:col-span-1">
             <div className="sticky top-8 space-y-6">
               {/* Contact Information Card */}
-              <Card className={`shadow-lg border-l-4 border-bright-blue ${isMobile ? 'bg-white' : 'bg-white'}`}>
+              <Card className={`shadow-lg border-l-4 border-amber-500 ${isMobile ? 'bg-white' : 'bg-white'}`}>
                 <CardContent className="p-6">
                   <RestaurantContactInfo
                     streetAddress={restaurant.street_address}
@@ -240,7 +240,7 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
               </Card>
 
               {/* Happy Hours Card */}
-              <Card className={`shadow-lg border-l-4 border-bright-blue ${isMobile ? 'bg-secondary/30' : 'bg-white'}`}>
+              <Card className={`shadow-lg border-l-4 border-amber-500 ${isMobile ? 'bg-secondary/30' : 'bg-white'}`}>
                 <CardContent className="p-6">
                   <RestaurantHappyHours happyHours={restaurant.merchant_happy_hour || []} />
                 </CardContent>

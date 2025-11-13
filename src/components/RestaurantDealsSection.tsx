@@ -51,20 +51,20 @@ export const RestaurantDealsSection: React.FC<RestaurantDealsSectionProps> = ({ 
       <Collapsible open={isOpen} onOpenChange={handleToggle}>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <Tag className="w-5 h-5 text-bright-blue" />
-            <h3 className="text-lg font-bold text-primary border-b-2 border-bright-blue/20 pb-1">Happy Hour Menu</h3>
+            <Tag className="w-5 h-5 text-amber-600" />
+            <h3 className="text-lg font-bold text-primary border-b-2 border-amber-500/20 pb-1">Happy Hour Menu</h3>
           </div>
           <div className="flex items-center gap-2">
             {isAdmin && <HappyHourDealsManager restaurantId={restaurantId} />}
             <CollapsibleTrigger asChild>
               <button 
-                className="w-11 h-11 flex items-center justify-center hover:bg-bright-blue/10 rounded transition-colors"
+                className="w-11 h-11 flex items-center justify-center hover:bg-amber-500/10 rounded transition-colors"
                 aria-label={isOpen ? "Collapse happy hour menu" : "Expand happy hour menu"}
               >
                 {isOpen ? (
-                  <ChevronUp className="h-5 w-5 text-bright-blue" />
+                  <ChevronUp className="h-5 w-5 text-amber-600" />
                 ) : (
-                  <ChevronDown className="h-5 w-5 text-bright-blue" />
+                  <ChevronDown className="h-5 w-5 text-amber-600" />
                 )}
               </button>
             </CollapsibleTrigger>
@@ -83,8 +83,8 @@ export const RestaurantDealsSection: React.FC<RestaurantDealsSectionProps> = ({ 
     <div>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <Tag className="w-5 h-5 text-bright-blue" />
-          <h3 className="text-lg font-bold text-primary border-b-2 border-bright-blue/20 pb-1">Happy Hour Menu</h3>
+          <Tag className="w-5 h-5 text-amber-600" />
+          <h3 className="text-lg font-bold text-primary border-b-2 border-amber-500/20 pb-1">Happy Hour Menu</h3>
         </div>
         {isAdmin && <HappyHourDealsManager restaurantId={restaurantId} />}
       </div>
