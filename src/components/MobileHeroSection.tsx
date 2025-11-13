@@ -40,7 +40,7 @@ export const MobileHeroSection: React.FC<MobileHeroSectionProps> = ({ restaurant
               <img 
                 src={restaurant.logo_url} 
                 alt={`${restaurant.restaurant_name} logo`}
-                className="w-full h-full object-contain p-2"
+                className="w-full h-full object-contain"
               />
             ) : (
               <div className={`w-full h-full ${gradientClass} flex flex-col items-center justify-center text-white`}>
