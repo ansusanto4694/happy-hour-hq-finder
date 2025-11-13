@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Flag } from 'lucide-react';
+import { Flag, ArrowLeft, Search } from 'lucide-react';
 import { AuthButton } from '@/components/AuthButton';
 import { ReportIssueModal } from '@/components/ReportIssueModal';
 import { SearchBar } from '@/components/SearchBar';
@@ -17,34 +17,77 @@ interface RestaurantHeaderProps {
 export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ merchantId, merchantName }) => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const [isScrolled, setIsScrolled] = useState(false);
+  
+  useEffect(() => {
+    if (!isMobile) return;
+    
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 100);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isMobile]);
   
   const handleGoHome = () => {
+    navigate('/');
+  };
+  
+  const handleBack = () => {
+    navigate(-1);
+  };
+  
+  const handleSearchClick = () => {
     navigate('/');
   };
 
   if (isMobile) {
     return (
-      <div className="bg-white shadow-sm border-b">
-        <div className="w-full px-4 py-2">
-          <div className="flex items-center justify-between">
-            <div className="flex-1 flex justify-center">
-              <div className="w-full max-w-7xl">
-                <MobileSearchBar />
-              </div>
-            </div>
-            {merchantId && merchantName && (
-              <div className="ml-2">
+      <div className={`sticky top-0 z-50 bg-white shadow-sm border-b transition-all duration-300 ${isScrolled ? 'py-2' : 'py-3'}`}>
+        <div className="w-full px-4">
+          <div className="flex items-center justify-between gap-3">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={handleBack}
+              className="p-2"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            
+            {isScrolled && merchantName && (
+              <h1 className="flex-1 text-base font-semibold truncate text-center animate-fade-in">
+                {merchantName}
+              </h1>
+            )}
+            
+            {!isScrolled && (
+              <div className="flex-1" />
+            )}
+            
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={handleSearchClick}
+                className="p-2"
+              >
+                <Search className="w-5 h-5" />
+              </Button>
+              
+              {merchantId && merchantName && (
                 <ReportIssueModal
                   merchantId={merchantId}
                   merchantName={merchantName}
                   trigger={
-                    <Button variant="outline" size="sm">
+                    <Button variant="ghost" size="sm" className="p-2">
                       <Flag className="w-4 h-4" />
                     </Button>
                   }
                 />
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
