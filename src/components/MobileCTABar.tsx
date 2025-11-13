@@ -63,20 +63,20 @@ export const MobileCTABar: React.FC<MobileCTABarProps> = ({
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border shadow-lg z-50 md:hidden">
-      <div className="flex items-center justify-around p-3 gap-3 max-w-screen-lg mx-auto">
+      <div className="flex items-center justify-around p-2 gap-2 max-w-screen-lg mx-auto">
         {/* Call Button - Green */}
         {phoneNumber && (
           <Button
             asChild
             size="mobile"
             className={cn(
-              "flex-1 bg-success hover:bg-success/90 text-success-foreground shadow-md font-semibold"
+              "flex-1 bg-success hover:bg-success/90 text-success-foreground shadow-md font-semibold text-xs h-14"
             )}
             onClick={handlePhoneClick}
           >
-            <a href={`tel:${phoneNumber}`} className="flex items-center justify-center">
-              <Phone className="h-5 w-5 mr-2" />
-              Call
+            <a href={`tel:${phoneNumber}`} className="flex flex-col items-center justify-center gap-1">
+              <Phone className="h-4 w-4" />
+              <span>Call</span>
             </a>
           </Button>
         )}
@@ -86,13 +86,13 @@ export const MobileCTABar: React.FC<MobileCTABarProps> = ({
           asChild
           size="mobile"
           className={cn(
-            "flex-1 bg-amber-500 hover:bg-amber-600 text-white shadow-md font-semibold"
+            "flex-1 bg-amber-500 hover:bg-amber-600 text-white shadow-md font-semibold text-xs h-14"
           )}
           onClick={handleDirectionsClick}
         >
-          <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center">
-            <MapPin className="h-5 w-5 mr-2" />
-            Directions
+          <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center gap-1">
+            <MapPin className="h-4 w-4" />
+            <span>Directions</span>
           </a>
         </Button>
 
@@ -103,13 +103,13 @@ export const MobileCTABar: React.FC<MobileCTABarProps> = ({
             variant="secondary"
             size="mobile"
             className={cn(
-              "flex-1 shadow-md font-semibold"
+              "flex-1 shadow-md font-semibold text-xs h-14"
             )}
             onClick={handleWebsiteClick}
           >
-            <a href={formattedWebsite} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center">
-              <Globe className="h-5 w-5 mr-2" />
-              Website
+            <a href={formattedWebsite} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center gap-1">
+              <Globe className="h-4 w-4" />
+              <span>Website</span>
             </a>
           </Button>
         )}
