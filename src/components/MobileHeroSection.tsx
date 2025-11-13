@@ -1,6 +1,5 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { getCategoryGradientClass } from '@/utils/categoryGradients';
 import { UtensilsCrossed } from 'lucide-react';
 
@@ -36,23 +35,20 @@ export const MobileHeroSection: React.FC<MobileHeroSectionProps> = ({ restaurant
       <div className="relative z-10 flex flex-col items-center justify-center px-6 py-12 text-center">
         {/* Logo - Enlarged and elevated */}
         <div className="mb-5 animate-fade-in">
-          <Avatar className="w-24 h-24 border-4 border-white shadow-2xl ring-4 ring-white/20">
-            <AvatarImage 
-              src={restaurant.logo_url || undefined} 
-              alt={`${restaurant.restaurant_name} logo`}
-              className="object-contain p-2"
-            />
-            <AvatarFallback className={`${gradientClass} text-white text-3xl font-bold flex items-center justify-center`}>
-              {restaurant.logo_url ? (
-                firstLetter
-              ) : (
-                <div className="flex flex-col items-center">
-                  <UtensilsCrossed className="w-8 h-8 mb-1" />
-                  <span className="text-xs">{firstLetter}</span>
-                </div>
-              )}
-            </AvatarFallback>
-          </Avatar>
+          <div className="w-24 h-24 bg-white border-4 border-white rounded-lg shadow-2xl flex items-center justify-center overflow-hidden">
+            {restaurant.logo_url ? (
+              <img 
+                src={restaurant.logo_url} 
+                alt={`${restaurant.restaurant_name} logo`}
+                className="w-full h-full object-contain p-2"
+              />
+            ) : (
+              <div className={`w-full h-full ${gradientClass} flex flex-col items-center justify-center text-white`}>
+                <UtensilsCrossed className="w-8 h-8 mb-1" />
+                <span className="text-xs font-bold">{firstLetter}</span>
+              </div>
+            )}
+          </div>
         </div>
         
         {/* Restaurant Name */}
