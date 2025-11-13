@@ -80,15 +80,15 @@ export const RestaurantContactInfo: React.FC<RestaurantContactInfoProps> = ({
       {/* Address */}
       <div>
         <div className="flex items-center gap-2 mb-3">
-          <MapPin className="w-5 h-5 text-bright-blue" />
-          <h2 className="text-lg font-bold text-primary border-b-2 border-bright-blue/20 pb-1">Address</h2>
+          <MapPin className="w-5 h-5 text-amber-600" />
+          <h2 className="text-lg font-bold text-primary border-b-2 border-amber-500/20 pb-1">Address</h2>
         </div>
         <a
           href={addressUrl}
           target="_blank"
           rel="noopener noreferrer"
           onClick={handleDirectionsClick}
-          className="text-foreground hover:text-bright-blue cursor-pointer transition-colors block"
+          className="text-foreground hover:text-amber-600 cursor-pointer transition-colors block"
         >
           <p>{streetAddress}</p>
           {streetAddressLine2 && (
@@ -102,13 +102,13 @@ export const RestaurantContactInfo: React.FC<RestaurantContactInfoProps> = ({
       {phoneNumber && (
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <Phone className="w-5 h-5 text-bright-blue" />
-            <h2 className="text-lg font-bold text-primary border-b-2 border-bright-blue/20 pb-1">Phone Number</h2>
+            <Phone className="w-5 h-5 text-amber-600" />
+            <h2 className="text-lg font-bold text-primary border-b-2 border-amber-500/20 pb-1">Phone Number</h2>
           </div>
           <a 
             href={`tel:${phoneNumber}`}
             onClick={handlePhoneClick}
-            className="text-foreground hover:text-bright-blue cursor-pointer transition-colors font-medium"
+            className="text-foreground hover:text-amber-600 cursor-pointer transition-colors font-medium"
           >
             {phoneNumber}
           </a>
@@ -119,15 +119,15 @@ export const RestaurantContactInfo: React.FC<RestaurantContactInfoProps> = ({
       {website && (
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <Globe className="w-5 h-5 text-bright-blue" />
-            <h2 className="text-lg font-bold text-primary border-b-2 border-bright-blue/20 pb-1">Website</h2>
+            <Globe className="w-5 h-5 text-amber-600" />
+            <h2 className="text-lg font-bold text-primary border-b-2 border-amber-500/20 pb-1">Website</h2>
           </div>
           <a 
             href={website.startsWith('http') ? website : `https://${website}`}
             target="_blank"
             rel="noopener noreferrer"
             onClick={handleWebsiteClick}
-            className="text-bright-blue hover:text-bright-blue/80 underline break-words break-all font-medium"
+            className="text-amber-600 hover:text-amber-700 underline break-words break-all font-medium"
           >
             {website}
           </a>

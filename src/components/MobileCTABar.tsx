@@ -81,12 +81,12 @@ export const MobileCTABar: React.FC<MobileCTABarProps> = ({
           </Button>
         )}
         
-        {/* Directions Button - Bright Blue */}
+        {/* Directions Button - Amber */}
         <Button
           asChild
           size="mobile"
           className={cn(
-            "flex-1 bg-bright-blue hover:bg-bright-blue/90 text-white shadow-md font-semibold"
+            "flex-1 bg-amber-500 hover:bg-amber-600 text-white shadow-md font-semibold"
           )}
           onClick={handleDirectionsClick}
         >
