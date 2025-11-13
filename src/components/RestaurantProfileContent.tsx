@@ -83,7 +83,7 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
 
   return (
     <div className="w-full">
-      <div className="max-w-7xl mx-auto">
+      <div className={`max-w-7xl mx-auto ${isMobile ? 'pb-24' : ''}`}>
         {/* Mobile Hero Section */}
         {isMobile ? (
           <div className="bg-gradient-to-br from-primary/10 via-background to-secondary/10 py-8 px-4">
