@@ -193,9 +193,9 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
         )}
 
         {/* Two-Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 px-4 sm:px-6 lg:px-8 py-8 bg-white">
-          {/* Main Content - Left Column (3/4 width) */}
-          <div className="lg:col-span-3 space-y-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 px-4 sm:px-6 lg:px-8 py-8 bg-white">
+          {/* Main Content - Left Column (2/3 width) */}
+          <div className="lg:col-span-2 space-y-8">
             {/* Current Offers Section - Only show if offers exist */}
             {offers && offers.length > 0 && (
               <Card className={`shadow-lg border-l-4 border-amber-500 ${isMobile ? 'bg-white' : 'bg-white'}`}>
