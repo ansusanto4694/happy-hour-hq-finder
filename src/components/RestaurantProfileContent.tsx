@@ -4,6 +4,7 @@ import { useAnalytics } from '@/hooks/useAnalytics';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Share } from 'lucide-react';
 import { RestaurantBasicInfo } from '@/components/RestaurantBasicInfo';
 import { RestaurantContactInfo } from '@/components/RestaurantContactInfo';
 import { RestaurantHappyHours } from '@/components/RestaurantHappyHours';
@@ -61,31 +62,27 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
     }))
   };
 
+  const handleShareProfile = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: "Link copied!",
+        description: "Restaurant profile link has been copied to your clipboard.",
+      });
+    } catch (err) {
+      toast({
+        title: "Copy failed",
+        description: "Unable to copy link. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
       <div className="max-w-7xl mx-auto">
-        {/* Mobile Hero Section */}
-        <div className="md:hidden mb-6">
-          <div className="text-center py-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">{restaurant.restaurant_name}</h1>
-            {restaurant.merchant_categories && restaurant.merchant_categories.length > 0 && (
-              <div className="flex flex-wrap justify-center gap-2">
-                {restaurant.merchant_categories.map((merchantCategory) => (
-                  <Badge 
-                    key={merchantCategory.id} 
-                    variant="outline" 
-                    className="text-sm px-3 py-1"
-                  >
-                    {merchantCategory.categories.name}
-                  </Badge>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Restaurant Header Card - Desktop Only */}
-        <Card className="hidden md:block bg-white shadow-lg mb-8">
+        {/* Restaurant Header Card */}
+        <Card className="bg-white shadow-lg mb-8">
           <CardContent className="p-8">
             {/* Header with Restaurant Name, Logo and Edit Button */}
             <div className="flex items-center justify-between mb-6">
@@ -105,6 +102,14 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
                 <h1 className="text-3xl font-bold text-gray-900">{restaurant.restaurant_name}</h1>
               </div>
               <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="mobile-icon"
+                  onClick={handleShareProfile}
+                  aria-label="Share restaurant profile"
+                >
+                  <Share className="h-4 w-4" />
+                </Button>
                 {isAdmin ? (
                   <RestaurantProfileEditor restaurant={restaurantWithIds} />
                 ) : (
