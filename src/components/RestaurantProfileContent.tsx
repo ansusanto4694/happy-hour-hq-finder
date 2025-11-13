@@ -4,7 +4,7 @@ import { useAnalytics } from '@/hooks/useAnalytics';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Share } from 'lucide-react';
+import { Share, Utensils } from 'lucide-react';
 import { RestaurantBasicInfo } from '@/components/RestaurantBasicInfo';
 import { RestaurantContactInfo } from '@/components/RestaurantContactInfo';
 import { RestaurantHappyHours } from '@/components/RestaurantHappyHours';
@@ -16,6 +16,7 @@ import { MerchantOffersSection } from '@/components/merchant-offers/MerchantOffe
 import { useMerchantOffers } from '@/hooks/useMerchantOffers';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Restaurant {
   id: number;
@@ -52,6 +53,7 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
   const { isAdmin } = useAuth();
   const { data: offers } = useMerchantOffers(restaurant.id);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   
   // Transform the merchant_happy_hour data to include IDs for the editor
   const restaurantWithIds = {
@@ -79,69 +81,129 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
   };
 
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
+    <div className="w-full">
       <div className="max-w-7xl mx-auto">
-        {/* Restaurant Header Card */}
-        <Card className="bg-white shadow-lg mb-8">
-          <CardContent className="p-8">
-            {/* Header with Restaurant Name, Logo and Edit Button */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-4">
-                {/* Restaurant Logo */}
-                <div className="w-20 h-20 bg-white border-2 border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
-                  {restaurant.logo_url ? (
-                    <img 
-                      src={restaurant.logo_url} 
-                      alt={`${restaurant.restaurant_name} logo`}
-                      className="w-full h-full object-contain p-2"
-                    />
-                  ) : (
-                    <span className="text-gray-400 text-xs font-medium">LOGO</span>
-                  )}
-                </div>
-                <h1 className="text-3xl font-bold text-gray-900">{restaurant.restaurant_name}</h1>
+        {/* Mobile Hero Section */}
+        {isMobile ? (
+          <div className="bg-gradient-to-br from-primary/10 via-background to-secondary/10 py-8 px-4">
+            <div className="flex flex-col items-center text-center space-y-4">
+              {/* Centered Logo - 96px */}
+              <div className="w-24 h-24 bg-white border-2 border-border rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden shadow-md">
+                {restaurant.logo_url ? (
+                  <img 
+                    src={restaurant.logo_url} 
+                    alt={`${restaurant.restaurant_name} logo`}
+                    className="w-full h-full object-contain p-2"
+                  />
+                ) : (
+                  <span className="text-muted-foreground text-xs font-medium">LOGO</span>
+                )}
               </div>
-              <div className="flex items-center gap-2">
+
+              {/* Centered Restaurant Name - text-2xl */}
+              <h1 className="text-2xl font-bold text-foreground">{restaurant.restaurant_name}</h1>
+
+              {/* Centered Category Badges with Icons */}
+              {restaurant.merchant_categories && restaurant.merchant_categories.length > 0 && (
+                <div className="flex flex-wrap justify-center gap-2">
+                  {restaurant.merchant_categories.map((merchantCategory) => (
+                    <Badge 
+                      key={merchantCategory.id} 
+                      variant="secondary"
+                      className="rounded-full px-3 py-1.5 text-sm font-medium flex items-center gap-1.5"
+                    >
+                      <Utensils className="w-3.5 h-3.5" />
+                      {merchantCategory.categories.name}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2 pt-2">
                 <Button
                   variant="outline"
-                  size="mobile-icon"
+                  size="sm"
                   onClick={handleShareProfile}
                   aria-label="Share restaurant profile"
                 >
-                  <Share className="h-4 w-4" />
+                  <Share className="h-4 w-4 mr-2" />
+                  Share
                 </Button>
                 {isAdmin ? (
                   <RestaurantProfileEditor restaurant={restaurantWithIds} />
                 ) : (
-                  <div className="hidden sm:block">
-                    <ReportIssueModal
-                      merchantId={restaurant.id}
-                      merchantName={restaurant.restaurant_name}
-                    />
-                  </div>
+                  <ReportIssueModal
+                    merchantId={restaurant.id}
+                    merchantName={restaurant.restaurant_name}
+                  />
                 )}
               </div>
             </div>
-
-            {/* Category tags */}
-            {restaurant.merchant_categories && restaurant.merchant_categories.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {restaurant.merchant_categories.map((merchantCategory) => (
-                  <Badge 
-                    key={merchantCategory.id} 
-                    variant="outline" 
-                    className="text-sm px-3 py-1"
+          </div>
+        ) : (
+          /* Desktop Header Card */
+          <Card className="bg-white shadow-lg mb-8 mt-8 mx-4 sm:mx-6 lg:mx-8">
+            <CardContent className="p-8">
+              {/* Header with Restaurant Name, Logo and Edit Button */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-4">
+                  {/* Restaurant Logo */}
+                  <div className="w-20 h-20 bg-white border-2 border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    {restaurant.logo_url ? (
+                      <img 
+                        src={restaurant.logo_url} 
+                        alt={`${restaurant.restaurant_name} logo`}
+                        className="w-full h-full object-contain p-2"
+                      />
+                    ) : (
+                      <span className="text-gray-400 text-xs font-medium">LOGO</span>
+                    )}
+                  </div>
+                  <h1 className="text-3xl font-bold text-gray-900">{restaurant.restaurant_name}</h1>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="mobile-icon"
+                    onClick={handleShareProfile}
+                    aria-label="Share restaurant profile"
                   >
-                    {merchantCategory.categories.name}
-                  </Badge>
-                ))}
+                    <Share className="h-4 w-4" />
+                  </Button>
+                  {isAdmin ? (
+                    <RestaurantProfileEditor restaurant={restaurantWithIds} />
+                  ) : (
+                    <div className="hidden sm:block">
+                      <ReportIssueModal
+                        merchantId={restaurant.id}
+                        merchantName={restaurant.restaurant_name}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
-          </CardContent>
-        </Card>
+
+              {/* Category tags */}
+              {restaurant.merchant_categories && restaurant.merchant_categories.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {restaurant.merchant_categories.map((merchantCategory) => (
+                    <Badge 
+                      key={merchantCategory.id} 
+                      variant="outline" 
+                      className="text-sm px-3 py-1"
+                    >
+                      {merchantCategory.categories.name}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Two-Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 px-4 sm:px-6 lg:px-8 py-8">
           {/* Main Content - Left Column (3/4 width) */}
           <div className="lg:col-span-3 space-y-8">
             {/* Current Offers Section - Only show if offers exist */}
