@@ -211,7 +211,7 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
             )}
 
             {/* Happy Hour Deals Section */}
-            <Card className={`shadow-lg border-l-4 border-amber-500 ${isMobile ? 'bg-secondary/30' : 'bg-white'}`}>
+            <Card className="shadow-lg border-l-4 border-amber-500 bg-white">
               <CardContent className="p-6">
                 <RestaurantDealsSection restaurantId={restaurant.id} restaurant={restaurantWithIds} />
               </CardContent>
@@ -240,7 +240,7 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
               </Card>
 
               {/* Happy Hours Card */}
-              <Card className={`shadow-lg border-l-4 border-amber-500 ${isMobile ? 'bg-secondary/30' : 'bg-white'}`}>
+              <Card className="shadow-lg border-l-4 border-amber-500 bg-white">
                 <CardContent className="p-6">
                   <RestaurantHappyHours happyHours={restaurant.merchant_happy_hour || []} />
                 </CardContent>
