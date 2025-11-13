@@ -2,12 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Flag, ArrowLeft, Search } from 'lucide-react';
+import { Flag, ArrowLeft, Share } from 'lucide-react';
 import { AuthButton } from '@/components/AuthButton';
 import { ReportIssueModal } from '@/components/ReportIssueModal';
 import { SearchBar } from '@/components/SearchBar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileSearchBar } from '@/components/MobileSearchBar';
+import { useToast } from '@/hooks/use-toast';
 
 interface RestaurantHeaderProps {
   merchantId?: number;
@@ -18,6 +19,7 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ merchantId, 
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [isScrolled, setIsScrolled] = useState(false);
+  const { toast } = useToast();
   
   useEffect(() => {
     if (!isMobile) return;
@@ -38,8 +40,20 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ merchantId, 
     navigate(-1);
   };
   
-  const handleSearchClick = () => {
-    navigate('/');
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: "Link copied!",
+        description: "Restaurant profile link has been copied to your clipboard.",
+      });
+    } catch (err) {
+      toast({
+        title: "Copy failed",
+        description: "Unable to copy link. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (isMobile) {
@@ -70,10 +84,11 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ merchantId, 
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={handleSearchClick}
+                onClick={handleShare}
                 className="p-2"
+                aria-label="Share restaurant profile"
               >
-                <Search className="w-5 h-5" />
+                <Share className="w-5 h-5" />
               </Button>
               
               {merchantId && merchantName && (
