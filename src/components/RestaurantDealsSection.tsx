@@ -4,7 +4,7 @@ import { HappyHourDealsManager } from '@/components/HappyHourDealsManager';
 import { HappyHourDealsDisplay } from '@/components/HappyHourDealsDisplay';
 import { useAuth } from '@/hooks/useAuth';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Tag } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAnalytics } from '@/hooks/useAnalytics';
 
@@ -49,19 +49,22 @@ export const RestaurantDealsSection: React.FC<RestaurantDealsSectionProps> = ({ 
   if (isMobile) {
     return (
       <Collapsible open={isOpen} onOpenChange={handleToggle}>
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-lg font-semibold text-gray-900">Happy Hour Menu</h3>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Tag className="w-5 h-5 text-bright-blue" />
+            <h3 className="text-lg font-bold text-primary border-b-2 border-bright-blue/20 pb-1">Happy Hour Menu</h3>
+          </div>
           <div className="flex items-center gap-2">
             {isAdmin && <HappyHourDealsManager restaurantId={restaurantId} />}
             <CollapsibleTrigger asChild>
               <button 
-                className="w-11 h-11 flex items-center justify-center hover:bg-gray-100 rounded transition-colors"
+                className="w-11 h-11 flex items-center justify-center hover:bg-bright-blue/10 rounded transition-colors"
                 aria-label={isOpen ? "Collapse happy hour menu" : "Expand happy hour menu"}
               >
                 {isOpen ? (
-                  <ChevronUp className="h-5 w-5 text-gray-600" />
+                  <ChevronUp className="h-5 w-5 text-bright-blue" />
                 ) : (
-                  <ChevronDown className="h-5 w-5 text-gray-600" />
+                  <ChevronDown className="h-5 w-5 text-bright-blue" />
                 )}
               </button>
             </CollapsibleTrigger>
@@ -78,8 +81,11 @@ export const RestaurantDealsSection: React.FC<RestaurantDealsSectionProps> = ({ 
   // Desktop version - not collapsible
   return (
     <div>
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-lg font-semibold text-gray-900">Happy Hour Menu</h3>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <Tag className="w-5 h-5 text-bright-blue" />
+          <h3 className="text-lg font-bold text-primary border-b-2 border-bright-blue/20 pb-1">Happy Hour Menu</h3>
+        </div>
         {isAdmin && <HappyHourDealsManager restaurantId={restaurantId} />}
       </div>
       
