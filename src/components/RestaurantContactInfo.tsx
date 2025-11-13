@@ -2,6 +2,7 @@
 import React from 'react';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useParams } from 'react-router-dom';
+import { MapPin, Phone, Globe } from 'lucide-react';
 
 interface RestaurantContactInfoProps {
   streetAddress: string;
@@ -78,13 +79,16 @@ export const RestaurantContactInfo: React.FC<RestaurantContactInfoProps> = ({
     <div className="space-y-6">
       {/* Address */}
       <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-2">Address</h2>
+        <div className="flex items-center gap-2 mb-3">
+          <MapPin className="w-5 h-5 text-bright-blue" />
+          <h2 className="text-lg font-bold text-primary border-b-2 border-bright-blue/20 pb-1">Address</h2>
+        </div>
         <a
           href={addressUrl}
           target="_blank"
           rel="noopener noreferrer"
           onClick={handleDirectionsClick}
-          className="text-gray-700 hover:text-blue-600 cursor-pointer transition-colors"
+          className="text-foreground hover:text-bright-blue cursor-pointer transition-colors block"
         >
           <p>{streetAddress}</p>
           {streetAddressLine2 && (
@@ -97,11 +101,14 @@ export const RestaurantContactInfo: React.FC<RestaurantContactInfoProps> = ({
       {/* Phone Number */}
       {phoneNumber && (
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-2">Phone Number</h2>
+          <div className="flex items-center gap-2 mb-3">
+            <Phone className="w-5 h-5 text-bright-blue" />
+            <h2 className="text-lg font-bold text-primary border-b-2 border-bright-blue/20 pb-1">Phone Number</h2>
+          </div>
           <a 
             href={`tel:${phoneNumber}`}
             onClick={handlePhoneClick}
-            className="text-gray-700 hover:text-blue-600 cursor-pointer transition-colors"
+            className="text-foreground hover:text-bright-blue cursor-pointer transition-colors font-medium"
           >
             {phoneNumber}
           </a>
@@ -111,13 +118,16 @@ export const RestaurantContactInfo: React.FC<RestaurantContactInfoProps> = ({
       {/* Website */}
       {website && (
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-2">Website</h2>
+          <div className="flex items-center gap-2 mb-3">
+            <Globe className="w-5 h-5 text-bright-blue" />
+            <h2 className="text-lg font-bold text-primary border-b-2 border-bright-blue/20 pb-1">Website</h2>
+          </div>
           <a 
             href={website.startsWith('http') ? website : `https://${website}`}
             target="_blank"
             rel="noopener noreferrer"
             onClick={handleWebsiteClick}
-            className="text-blue-600 hover:text-blue-800 underline break-words break-all"
+            className="text-bright-blue hover:text-bright-blue/80 underline break-words break-all font-medium"
           >
             {website}
           </a>

@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Clock } from 'lucide-react';
 
 interface HappyHour {
   day_of_week: number;
@@ -33,19 +34,22 @@ export const RestaurantHappyHours: React.FC<RestaurantHappyHoursProps> = ({ happ
 
   return (
     <div>
-      <h2 className="text-lg font-semibold text-gray-900 mb-2">Happy Hours</h2>
-      <div className="space-y-1">
+      <div className="flex items-center gap-2 mb-3">
+        <Clock className="w-5 h-5 text-bright-blue" />
+        <h2 className="text-lg font-bold text-primary border-b-2 border-bright-blue/20 pb-1">Happy Hours</h2>
+      </div>
+      <div className="space-y-2">
         {sortedHappyHours.length > 0 ? (
           sortedHappyHours.map((happyHour) => (
-            <div key={happyHour.day_of_week} className="flex justify-between">
-              <span className="text-gray-600">{getDayName(happyHour.day_of_week)}:</span>
-              <span className="text-gray-700">
+            <div key={happyHour.day_of_week} className="flex justify-between items-center">
+              <span className="text-foreground font-medium">{getDayName(happyHour.day_of_week)}:</span>
+              <span className="text-bright-blue font-semibold">
                 {formatTime(happyHour.happy_hour_start)} - {formatTime(happyHour.happy_hour_end)}
               </span>
             </div>
           ))
         ) : (
-          <p className="text-gray-500 italic">No happy hour information available</p>
+          <p className="text-muted-foreground italic">No happy hour information available</p>
         )}
       </div>
     </div>

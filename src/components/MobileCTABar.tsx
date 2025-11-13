@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Phone, MapPin, Globe } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useParams } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
 interface MobileCTABarProps {
   phoneNumber?: string | null;
@@ -62,45 +63,52 @@ export const MobileCTABar: React.FC<MobileCTABarProps> = ({
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border shadow-lg z-50 md:hidden">
-      <div className="flex items-center justify-around p-3 gap-2 max-w-screen-lg mx-auto">
+      <div className="flex items-center justify-around p-3 gap-3 max-w-screen-lg mx-auto">
+        {/* Call Button - Green */}
         {phoneNumber && (
           <Button
             asChild
-            variant="default"
             size="mobile"
-            className="flex-1"
+            className={cn(
+              "flex-1 bg-success hover:bg-success/90 text-success-foreground shadow-md font-semibold"
+            )}
             onClick={handlePhoneClick}
           >
-            <a href={`tel:${phoneNumber}`}>
-              <Phone className="h-4 w-4 mr-2" />
+            <a href={`tel:${phoneNumber}`} className="flex items-center justify-center">
+              <Phone className="h-5 w-5 mr-2" />
               Call
             </a>
           </Button>
         )}
         
+        {/* Directions Button - Bright Blue */}
         <Button
           asChild
-          variant="default"
           size="mobile"
-          className="flex-1"
+          className={cn(
+            "flex-1 bg-bright-blue hover:bg-bright-blue/90 text-white shadow-md font-semibold"
+          )}
           onClick={handleDirectionsClick}
         >
-          <a href={directionsUrl} target="_blank" rel="noopener noreferrer">
-            <MapPin className="h-4 w-4 mr-2" />
+          <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center">
+            <MapPin className="h-5 w-5 mr-2" />
             Directions
           </a>
         </Button>
 
+        {/* Website Button - Secondary */}
         {website && (
           <Button
             asChild
-            variant="default"
+            variant="secondary"
             size="mobile"
-            className="flex-1"
+            className={cn(
+              "flex-1 shadow-md font-semibold"
+            )}
             onClick={handleWebsiteClick}
           >
-            <a href={formattedWebsite} target="_blank" rel="noopener noreferrer">
-              <Globe className="h-4 w-4 mr-2" />
+            <a href={formattedWebsite} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center">
+              <Globe className="h-5 w-5 mr-2" />
               Website
             </a>
           </Button>
