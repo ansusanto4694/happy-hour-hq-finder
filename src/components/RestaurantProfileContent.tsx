@@ -64,8 +64,28 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
       <div className="max-w-7xl mx-auto">
-        {/* Restaurant Header Card */}
-        <Card className="bg-white shadow-lg mb-8">
+        {/* Mobile Hero Section */}
+        <div className="md:hidden mb-6">
+          <div className="text-center py-6">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">{restaurant.restaurant_name}</h1>
+            {restaurant.merchant_categories && restaurant.merchant_categories.length > 0 && (
+              <div className="flex flex-wrap justify-center gap-2">
+                {restaurant.merchant_categories.map((merchantCategory) => (
+                  <Badge 
+                    key={merchantCategory.id} 
+                    variant="outline" 
+                    className="text-sm px-3 py-1"
+                  >
+                    {merchantCategory.categories.name}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Restaurant Header Card - Desktop Only */}
+        <Card className="hidden md:block bg-white shadow-lg mb-8">
           <CardContent className="p-8">
             {/* Header with Restaurant Name, Logo and Edit Button */}
             <div className="flex items-center justify-between mb-6">
