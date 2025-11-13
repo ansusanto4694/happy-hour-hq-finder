@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Flag, ArrowLeft, Search } from 'lucide-react';
+import { Flag, ArrowLeft, Share } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { AuthButton } from '@/components/AuthButton';
 import { ReportIssueModal } from '@/components/ReportIssueModal';
 import { SearchBar } from '@/components/SearchBar';
@@ -17,6 +18,7 @@ interface RestaurantHeaderProps {
 export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ merchantId, merchantName }) => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { toast } = useToast();
   const [isScrolled, setIsScrolled] = useState(false);
   
   useEffect(() => {
@@ -38,8 +40,20 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ merchantId, 
     navigate(-1);
   };
   
-  const handleSearchClick = () => {
-    navigate('/');
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: "Link copied!",
+        description: "Restaurant profile link has been copied to your clipboard.",
+      });
+    } catch (err) {
+      toast({
+        title: "Copy failed",
+        description: "Unable to copy link. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (isMobile) {
@@ -70,10 +84,10 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ merchantId, 
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={handleSearchClick}
+                onClick={handleShare}
                 className="p-2"
               >
-                <Search className="w-5 h-5" />
+                <Share className="w-5 h-5" />
               </Button>
               
               {merchantId && merchantName && (
