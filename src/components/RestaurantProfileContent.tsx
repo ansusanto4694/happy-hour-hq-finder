@@ -123,17 +123,12 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
                 </div>
               )}
 
-              {/* Action Buttons */}
-              <div className="flex items-center justify-center pt-2">
-                {isAdmin ? (
+              {/* Action Buttons - Admin Only */}
+              {isAdmin && (
+                <div className="flex items-center justify-center pt-2">
                   <RestaurantProfileEditor restaurant={restaurantWithIds} />
-                ) : (
-                  <ReportIssueModal
-                    merchantId={restaurant.id}
-                    merchantName={restaurant.restaurant_name}
-                  />
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         ) : (
