@@ -37,7 +37,7 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ merchantId, 
   };
   
   const handleBack = () => {
-    navigate(-1);
+    navigate('/results');
   };
   
   const handleShare = async () => {
