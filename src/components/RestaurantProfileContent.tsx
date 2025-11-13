@@ -120,16 +120,7 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
               )}
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-2 pt-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleShareProfile}
-                  aria-label="Share restaurant profile"
-                >
-                  <Share className="h-4 w-4 mr-2" />
-                  Share
-                </Button>
+              <div className="flex items-center justify-center pt-2">
                 {isAdmin ? (
                   <RestaurantProfileEditor restaurant={restaurantWithIds} />
                 ) : (
