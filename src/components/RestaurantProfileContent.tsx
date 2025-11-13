@@ -86,7 +86,7 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
       <div className={`max-w-7xl mx-auto ${isMobile ? 'pb-24' : ''}`}>
         {/* Mobile Hero Section */}
         {isMobile ? (
-          <div className="bg-gradient-to-br from-orange-400/15 via-amber-500/10 to-yellow-500/10 py-8 px-4 relative overflow-hidden">
+          <div className="bg-white py-8 px-4 relative overflow-hidden border-b border-border">
             {/* Subtle shimmer effect */}
             <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/10 to-transparent" />
             
