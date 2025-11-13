@@ -13,6 +13,7 @@ import { RestaurantEventsFeed } from '@/components/RestaurantEventsFeed';
 import { RestaurantProfileEditor } from '@/components/RestaurantProfileEditor';
 import { ReportIssueModal } from '@/components/ReportIssueModal';
 import { MerchantOffersSection } from '@/components/merchant-offers/MerchantOffersSection';
+import { MobileCTABar } from '@/components/MobileCTABar';
 import { useMerchantOffers } from '@/hooks/useMerchantOffers';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -244,6 +245,20 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
             </div>
           </div>
         </div>
+
+        {/* Mobile Sticky CTA Bar */}
+        {isMobile && (
+          <MobileCTABar
+            phoneNumber={restaurant.phone_number}
+            address={{
+              street: restaurant.street_address,
+              city: restaurant.city,
+              state: restaurant.state,
+              zipCode: restaurant.zip_code,
+            }}
+            website={restaurant.website}
+          />
+        )}
       </div>
     </div>
   );
