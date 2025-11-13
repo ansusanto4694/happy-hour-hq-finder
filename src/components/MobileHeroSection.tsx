@@ -40,7 +40,7 @@ export const MobileHeroSection: React.FC<MobileHeroSectionProps> = ({ restaurant
             <AvatarImage 
               src={restaurant.logo_url || undefined} 
               alt={`${restaurant.restaurant_name} logo`}
-              className="object-cover"
+              className="object-contain p-2"
             />
             <AvatarFallback className={`${gradientClass} text-white text-3xl font-bold flex items-center justify-center`}>
               {restaurant.logo_url ? (
