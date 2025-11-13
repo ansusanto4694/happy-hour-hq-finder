@@ -12,11 +12,9 @@ import { RestaurantEventsFeed } from '@/components/RestaurantEventsFeed';
 import { RestaurantProfileEditor } from '@/components/RestaurantProfileEditor';
 import { ReportIssueModal } from '@/components/ReportIssueModal';
 import { MerchantOffersSection } from '@/components/merchant-offers/MerchantOffersSection';
-import { MobileHeroSection } from '@/components/MobileHeroSection';
 import { useMerchantOffers } from '@/hooks/useMerchantOffers';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Restaurant {
   id: number;
@@ -53,7 +51,6 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
   const { isAdmin } = useAuth();
   const { data: offers } = useMerchantOffers(restaurant.id);
   const { toast } = useToast();
-  const isMobile = useIsMobile();
   
   // Transform the merchant_happy_hour data to include IDs for the editor
   const restaurantWithIds = {
@@ -65,13 +62,10 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
   };
 
   return (
-    <div className="w-full sm:px-6 lg:px-8 sm:py-8">
+    <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
       <div className="max-w-7xl mx-auto">
-        {/* Mobile Hero Section */}
-        {isMobile && <MobileHeroSection restaurant={restaurant} />}
-        
-        {/* Restaurant Header Card - Hidden on Mobile */}
-        <Card className={`bg-white shadow-lg mb-8 ${isMobile ? 'hidden' : ''}`}>
+        {/* Restaurant Header Card */}
+        <Card className="bg-white shadow-lg mb-8">
           <CardContent className="p-8">
             {/* Header with Restaurant Name, Logo and Edit Button */}
             <div className="flex items-center justify-between mb-6">
