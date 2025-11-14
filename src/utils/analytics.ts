@@ -131,6 +131,18 @@ export const getUserId = async (): Promise<string | null> => {
   return user?.id || null;
 };
 
+// Get or create anonymous user ID for persistent tracking across sessions
+export const getAnonymousUserId = (): string => {
+  let anonUserId = localStorage.getItem('analytics_anonymous_user_id');
+  
+  if (!anonUserId) {
+    anonUserId = `anon_user_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+    localStorage.setItem('analytics_anonymous_user_id', anonUserId);
+  }
+  
+  return anonUserId;
+};
+
 export const getDeviceType = (): 'mobile' | 'tablet' | 'desktop' => {
   const width = window.innerWidth;
   if (width < 768) return 'mobile';
@@ -249,6 +261,7 @@ export const initializeSession = async () => {
   
   const sessionId = getSessionId();
   const userId = await getUserId();
+  const anonymousUserId = getAnonymousUserId();
   const deviceType = getDeviceType();
   const currentPath = window.location.pathname;
   const referrer = document.referrer;
@@ -264,6 +277,7 @@ export const initializeSession = async () => {
   const { error } = await supabase.from('user_sessions').upsert({
     session_id: sessionId,
     user_id: userId,
+    anonymous_user_id: anonymousUserId,
     entry_page: currentPath,
     referrer_source: referrer || null,
     referrer_category: referrerCategory,

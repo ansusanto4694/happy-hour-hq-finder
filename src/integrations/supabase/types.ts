@@ -777,6 +777,7 @@ export type Database = {
       }
       user_sessions: {
         Row: {
+          anonymous_user_id: string | null
           bot_type: string | null
           created_at: string
           device_type: string
@@ -806,6 +807,7 @@ export type Database = {
           viewport_width: number | null
         }
         Insert: {
+          anonymous_user_id?: string | null
           bot_type?: string | null
           created_at?: string
           device_type: string
@@ -835,6 +837,7 @@ export type Database = {
           viewport_width?: number | null
         }
         Update: {
+          anonymous_user_id?: string | null
           bot_type?: string | null
           created_at?: string
           device_type?: string
