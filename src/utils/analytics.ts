@@ -332,10 +332,12 @@ export const updateSessionActivity = async () => {
 export const trackEvent = async (params: TrackEventParams) => {
   const sessionId = getSessionId();
   const userId = await getUserId();
+  const anonymousUserId = getAnonymousUserId();
   
   const event = {
     session_id: sessionId,
     user_id: userId,
+    anonymous_user_id: anonymousUserId,
     event_type: params.eventType,
     event_category: params.eventCategory,
     event_action: params.eventAction,
