@@ -694,6 +694,7 @@ export type Database = {
       }
       user_events: {
         Row: {
+          anonymous_user_id: string | null
           carousel_id: string | null
           created_at: string
           event_action: string
@@ -711,6 +712,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          anonymous_user_id?: string | null
           carousel_id?: string | null
           created_at?: string
           event_action: string
@@ -728,6 +730,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          anonymous_user_id?: string | null
           carousel_id?: string | null
           created_at?: string
           event_action?: string
