@@ -191,14 +191,13 @@ const Auth = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="signup-lastname">Last Name</Label>
+                      <Label htmlFor="signup-lastname">Last Name (Optional)</Label>
                       <Input
                         id="signup-lastname"
                         type="text"
                         placeholder="Last name"
                         value={signUpData.lastName}
                         onChange={(e) => setSignUpData({ ...signUpData, lastName: e.target.value })}
-                        required
                       />
                     </div>
                   </div>
