@@ -32,7 +32,6 @@ interface Restaurant {
   logo_url?: string | null;
   latitude?: number | null;
   longitude?: number | null;
-  neighborhood?: string | null;
   merchant_happy_hour: Array<{
     day_of_week: number;
     happy_hour_start: string;
@@ -236,7 +235,6 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
               latitude={restaurant.latitude}
               longitude={restaurant.longitude}
               restaurantName={restaurant.restaurant_name}
-              neighborhood={restaurant.neighborhood}
             />
                 </CardContent>
               </Card>

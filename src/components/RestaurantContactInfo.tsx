@@ -17,7 +17,6 @@ interface RestaurantContactInfoProps {
   latitude?: number | null;
   longitude?: number | null;
   restaurantName: string;
-  neighborhood?: string | null;
 }
 
 export const RestaurantContactInfo: React.FC<RestaurantContactInfoProps> = ({
@@ -30,8 +29,7 @@ export const RestaurantContactInfo: React.FC<RestaurantContactInfoProps> = ({
   website,
   latitude,
   longitude,
-  restaurantName,
-  neighborhood
+  restaurantName
 }) => {
   const { track, trackFunnel } = useAnalytics();
   const { id } = useParams();
@@ -97,7 +95,6 @@ export const RestaurantContactInfo: React.FC<RestaurantContactInfoProps> = ({
           longitude={longitude}
           restaurantName={restaurantName}
           address={fullAddress}
-          neighborhood={neighborhood}
         />
       )}
       
