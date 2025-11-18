@@ -8,6 +8,7 @@ interface RestaurantMapPreviewProps {
   longitude: number;
   restaurantName: string;
   address: string;
+  neighborhood?: string | null;
 }
 
 export const RestaurantMapPreview: React.FC<RestaurantMapPreviewProps> = ({
@@ -15,6 +16,7 @@ export const RestaurantMapPreview: React.FC<RestaurantMapPreviewProps> = ({
   longitude,
   restaurantName,
   address,
+  neighborhood,
 }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -98,9 +100,9 @@ export const RestaurantMapPreview: React.FC<RestaurantMapPreviewProps> = ({
         </div>
       </div>
       
-      {/* Address text below map */}
+      {/* Neighborhood text below map */}
       <p className="mt-3 text-sm text-muted-foreground text-center">
-        {address}
+        {neighborhood || address}
       </p>
     </div>
   );
