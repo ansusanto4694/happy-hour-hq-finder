@@ -86,7 +86,7 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
 
   return (
     <div className="w-full">
-      <div className={`max-w-7xl mx-auto ${isMobile ? 'pb-24' : ''}`}>
+      <div className={`max-w-[1600px] mx-auto ${isMobile ? 'pb-24' : ''}`}>
         {/* Mobile Hero Section */}
         {isMobile ? (
           <div className="bg-white py-8 px-4 relative overflow-hidden border-b border-border">
@@ -196,7 +196,7 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
         )}
 
         {/* Two-Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 px-4 sm:px-6 lg:px-8 py-8 bg-white">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 px-4 sm:px-6 lg:px-4 py-8 bg-white">
           {/* Main Content - Left Column (2/3 width) */}
           <div className="lg:col-span-2 space-y-8">
             {/* Current Offers Section - Only show if offers exist */}
