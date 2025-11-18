@@ -30,6 +30,8 @@ interface Restaurant {
   phone_number?: string | null;
   website?: string | null;
   logo_url?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   merchant_happy_hour: Array<{
     day_of_week: number;
     happy_hour_start: string;
@@ -222,15 +224,18 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
               {/* Contact Information Card */}
               <Card className={`shadow-lg border-l-4 border-amber-500 ${isMobile ? 'bg-white' : 'bg-white'}`}>
                 <CardContent className="p-6">
-                  <RestaurantContactInfo
-                    streetAddress={restaurant.street_address}
-                    streetAddressLine2={restaurant.street_address_line_2}
-                    city={restaurant.city}
-                    state={restaurant.state}
-                    zipCode={restaurant.zip_code}
-                    phoneNumber={restaurant.phone_number}
-                    website={restaurant.website}
-                  />
+            <RestaurantContactInfo
+              streetAddress={restaurant.street_address}
+              streetAddressLine2={restaurant.street_address_line_2}
+              city={restaurant.city}
+              state={restaurant.state}
+              zipCode={restaurant.zip_code}
+              phoneNumber={restaurant.phone_number}
+              website={restaurant.website}
+              latitude={restaurant.latitude}
+              longitude={restaurant.longitude}
+              restaurantName={restaurant.restaurant_name}
+            />
                 </CardContent>
               </Card>
 

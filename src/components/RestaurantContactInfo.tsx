@@ -3,6 +3,8 @@ import React from 'react';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useParams } from 'react-router-dom';
 import { MapPin, Phone, Globe } from 'lucide-react';
+import { RestaurantMapPreview } from './RestaurantMapPreview';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface RestaurantContactInfoProps {
   streetAddress: string;
@@ -12,6 +14,9 @@ interface RestaurantContactInfoProps {
   zipCode: string;
   phoneNumber?: string | null;
   website?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  restaurantName: string;
 }
 
 export const RestaurantContactInfo: React.FC<RestaurantContactInfoProps> = ({
@@ -21,11 +26,15 @@ export const RestaurantContactInfo: React.FC<RestaurantContactInfoProps> = ({
   state,
   zipCode,
   phoneNumber,
-  website
+  website,
+  latitude,
+  longitude,
+  restaurantName
 }) => {
   const { track, trackFunnel } = useAnalytics();
   const { id } = useParams();
   const merchantId = id ? parseInt(id, 10) : undefined;
+  const isMobile = useIsMobile();
 
   const handlePhoneClick = () => {
     track({
@@ -75,8 +84,20 @@ export const RestaurantContactInfo: React.FC<RestaurantContactInfoProps> = ({
     `${streetAddress}, ${city}, ${state} ${zipCode}`
   )}`;
 
+  const fullAddress = `${streetAddress}, ${city}, ${state} ${zipCode}`;
+
   return (
     <div className="space-y-6">
+      {/* Map Preview - Desktop Only */}
+      {!isMobile && latitude && longitude && (
+        <RestaurantMapPreview
+          latitude={latitude}
+          longitude={longitude}
+          restaurantName={restaurantName}
+          address={fullAddress}
+        />
+      )}
+      
       {/* Address */}
       <div>
         <div className="flex items-center gap-2 mb-3">
