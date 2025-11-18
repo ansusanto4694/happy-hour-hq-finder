@@ -98,6 +98,8 @@ export const RestaurantContactInfo: React.FC<RestaurantContactInfoProps> = ({
           restaurantName={restaurantName}
           address={fullAddress}
           neighborhood={neighborhood}
+          city={city}
+          state={state}
         />
       )}
       
