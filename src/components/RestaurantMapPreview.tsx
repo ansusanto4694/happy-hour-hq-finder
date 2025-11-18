@@ -23,7 +23,8 @@ export const RestaurantMapPreview: React.FC<RestaurantMapPreviewProps> = ({
   const merchantId = id ? parseInt(id, 10) : undefined;
 
   // Mapbox Static Images API URL
-  const mapboxToken = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN;
+  // Using the same token as the rest of the app
+  const mapboxToken = "pk.eyJ1IjoiYW5zdXNhbnRvNDY5NCIsImEiOiJjbWNudDdob28weTZlMmtxMTBmbDc5YTM4In0.qwR9SIqDBrETlROMvhnKvw";
   const zoom = 15;
   const width = 700;
   const height = 500;
@@ -63,10 +64,6 @@ export const RestaurantMapPreview: React.FC<RestaurantMapPreviewProps> = ({
     setImageError(true);
     console.error('Failed to load map preview');
   };
-
-  if (!mapboxToken) {
-    return null;
-  }
 
   if (imageError) {
     return null;
