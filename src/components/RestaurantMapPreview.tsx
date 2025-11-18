@@ -32,8 +32,8 @@ export const RestaurantMapPreview: React.FC<RestaurantMapPreviewProps> = ({
   // Using the same token as the rest of the app
   const mapboxToken = "pk.eyJ1IjoiYW5zdXNhbnRvNDY5NCIsImEiOiJjbWNudDdob28weTZlMmtxMTBmbDc5YTM4In0.qwR9SIqDBrETlROMvhnKvw";
   const zoom = 15;
-  const width = 700;
-  const height = 500;
+  const width = 800;
+  const height = 600;
   
   // Using custom marker with amber color (f59e0b in hex)
   const staticMapUrl = `https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/pin-l+f59e0b(${longitude},${latitude})/${longitude},${latitude},${zoom},0/${width}x${height}@2x?access_token=${mapboxToken}`;
@@ -79,16 +79,16 @@ export const RestaurantMapPreview: React.FC<RestaurantMapPreviewProps> = ({
     <div className="mb-6">
       <div 
         onClick={handleMapClick}
-        className="relative overflow-hidden rounded-lg border border-border shadow-sm hover:shadow-md transition-shadow cursor-pointer group"
+        className="relative overflow-hidden rounded-lg border border-border shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer group"
       >
         {!imageLoaded && (
-          <Skeleton className="w-full h-[250px]" />
+          <Skeleton className="w-full h-[300px]" />
         )}
         
         <img
           src={staticMapUrl}
           alt={`Map showing location of ${restaurantName}`}
-          className={`w-full h-auto object-cover transition-opacity duration-300 ${
+          className={`w-full h-auto object-cover transition-all duration-300 group-hover:scale-105 ${
             imageLoaded ? 'opacity-100' : 'opacity-0'
           }`}
           onLoad={handleImageLoad}
