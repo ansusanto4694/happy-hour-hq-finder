@@ -97,11 +97,6 @@ export const RestaurantMapPreview: React.FC<RestaurantMapPreviewProps> = ({
           </div>
         </div>
       </div>
-      
-      {/* Address text below map */}
-      <p className="mt-3 text-sm text-muted-foreground text-center">
-        {address}
-      </p>
     </div>
   );
 };
