@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, MapPin, Clock, ChevronDown, ChevronUp, X, LocateFixed } from 'lucide-react';
+import { Search, MapPin, ChevronDown, ChevronUp, X, LocateFixed } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TimeDropdown } from './TimeDropdown';
@@ -267,8 +267,7 @@ export const MobileSearchBar = () => {
                 size="sm" 
                 className={`px-3 py-3 h-12 rounded-lg ${hasFilters ? 'bg-orange-50 text-orange-600 border border-orange-200' : 'bg-gray-50 text-gray-500 border border-gray-200'}`}
               >
-                <Clock className="w-4 h-4" />
-                {isExpanded ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
+                {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </Button>
             </CollapsibleTrigger>
             
