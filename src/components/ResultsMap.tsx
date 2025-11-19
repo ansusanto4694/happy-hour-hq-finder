@@ -284,7 +284,7 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
         </div>
       </CardHeader>
       <CardContent className="p-4 pt-0 relative flex-1 flex flex-col">
-        <div className="map-container rounded-lg overflow-hidden h-full relative">
+        <div className="map-container rounded-lg overflow-hidden h-[60vh] max-h-[600px] relative">
           <Map
             ref={mapRef}
             {...viewState}
