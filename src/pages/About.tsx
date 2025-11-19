@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthButton } from '@/components/AuthButton';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { Footer } from '@/components/Footer';
 
 const About = () => {
   const { trackPage } = useAnalytics();
@@ -65,6 +66,7 @@ const About = () => {
           </p>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };

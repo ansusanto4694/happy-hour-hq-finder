@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthButton } from '@/components/AuthButton';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { Footer } from '@/components/Footer';
 
 const Contact = () => {
   const { trackPage } = useAnalytics();
@@ -57,6 +58,7 @@ const Contact = () => {
           </p>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };
