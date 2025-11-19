@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { SEOHead } from '@/components/SEOHead';
 import { useMerchants } from '@/hooks/useMerchants';
 import { SearchResultCard } from '@/components/SearchResultCard';
@@ -63,6 +63,11 @@ const generateLocationStructuredData = (city: string, state: string, neighborhoo
 export const LocationLanding = () => {
   const { citySlug, neighborhoodSlug } = useParams<{ citySlug: string; neighborhoodSlug?: string }>();
   const isMobile = useIsMobile();
+  
+  // Scroll to top when navigating to this page
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [citySlug, neighborhoodSlug]);
   
   // View state for desktop only
   const [view, setView] = useState<'list' | 'map'>('list');
