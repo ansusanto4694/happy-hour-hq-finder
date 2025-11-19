@@ -63,7 +63,9 @@ const Contact = () => {
       </div>
       
       {/* Footer */}
-      <Footer />
+      <div className="relative z-10">
+        <Footer />
+      </div>
     </div>
   );
 };
