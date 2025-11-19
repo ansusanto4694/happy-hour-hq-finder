@@ -19,9 +19,9 @@ const calculateHaversineDistance = (lat1: number, lng1: number, lat2: number, ln
   return distance; // Distance in miles
 };
 
-export const useMerchants = (categoryIds?: string[], searchTerm?: string, startTime?: string, endTime?: string, location?: string, bounds?: { north: number; south: number; east: number; west: number }, radiusMiles?: number, showOffersOnly?: boolean, selectedDays?: number[], gpsCoordinates?: { lat: number; lng: number }, carouselId?: string) => {
+export const useMerchants = (categoryIds?: string[], searchTerm?: string, startTime?: string, endTime?: string, location?: string, bounds?: { north: number; south: number; east: number; west: number }, radiusMiles?: number, showOffersOnly?: boolean, selectedDays?: number[], gpsCoordinates?: { lat: number; lng: number }, carouselId?: string, neighborhood?: string) => {
   // Force fresh queries for restaurant searches to avoid caching issues
-  const queryKey = ['merchants', categoryIds, searchTerm, startTime, endTime, location, bounds, radiusMiles, showOffersOnly, selectedDays, gpsCoordinates, carouselId];
+  const queryKey = ['merchants', categoryIds, searchTerm, startTime, endTime, location, bounds, radiusMiles, showOffersOnly, selectedDays, gpsCoordinates, carouselId, neighborhood];
   
   return useQuery({
     queryKey,
@@ -56,6 +56,11 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
           )
         `)
         .eq('is_active', true);
+
+      // Filter by exact neighborhood if provided
+      if (neighborhood) {
+        query = query.eq('neighborhood', neighborhood);
+      }
 
       let merchantIds: number[] | null = null;
 

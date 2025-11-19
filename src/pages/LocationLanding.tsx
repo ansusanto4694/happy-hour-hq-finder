@@ -84,7 +84,8 @@ export const LocationLanding = () => {
     undefined, // showOffersOnly
     undefined, // selectedDays
     undefined, // gpsCoordinates
-    undefined  // carouselId
+    undefined, // carouselId
+    neighborhood // neighborhood - filter by exact neighborhood if provided
   );
 
   const structuredData = useMemo(() => {
