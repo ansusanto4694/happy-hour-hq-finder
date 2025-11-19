@@ -262,7 +262,7 @@ export const LocationLanding = () => {
 
                 {/* Map View - Mobile (neighborhood only) and Desktop */}
                 {view === 'map' && (isMobile ? neighborhood : true) && (
-                  <div className="h-[calc(100vh-400px)] min-h-[600px]">
+                  <div className="h-[calc(100vh-400px)] min-h-[600px] overflow-hidden">
                     <LazyResultsMap 
                       restaurants={merchants || []}
                       onMapMove={handleMapMove}
