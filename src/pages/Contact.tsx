@@ -1,8 +1,7 @@
 import React, { useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { AuthButton } from '@/components/AuthButton';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { Footer } from '@/components/Footer';
+import { PageHeader } from '@/components/PageHeader';
 
 const Contact = () => {
   const { trackPage } = useAnalytics();
@@ -17,32 +16,7 @@ const Contact = () => {
       <div className="absolute inset-0 bg-black/10"></div>
       
       {/* Header with company name and navigation */}
-      <div className="relative top-4 left-4 right-4 md:top-6 md:left-6 md:right-6 z-20 flex justify-between items-center px-4 md:px-6">
-        <Link to="/" className="text-xl sm:text-2xl md:text-3xl font-bold text-white hover:text-yellow-200 transition-colors">
-          SipMunchYap
-        </Link>
-        <nav className="flex items-center space-x-4 md:space-x-6">
-          <Link 
-            to="/happy-hour/new-york-ny" 
-            className="text-white/90 hover:text-white transition-colors text-sm md:text-base font-medium"
-          >
-            NYC Happy Hours
-          </Link>
-          <Link 
-            to="/about" 
-            className="text-white/90 hover:text-white transition-colors text-sm md:text-base font-medium"
-          >
-            About
-          </Link>
-          <Link 
-            to="/contact" 
-            className="text-white/90 hover:text-white transition-colors text-sm md:text-base font-medium"
-          >
-            Contact
-          </Link>
-          <AuthButton />
-        </nav>
-      </div>
+      <PageHeader transparent={true} />
       
       {/* Decorative elements */}
       <div className="absolute top-20 left-20 w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>

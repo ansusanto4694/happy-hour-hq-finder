@@ -13,6 +13,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { RadiusOption, getRadiusMiles } from '@/components/RadiusFilter';
 import { AuthButton } from '@/components/AuthButton';
 import { SEOHead } from '@/components/SEOHead';
+import { PageHeader } from '@/components/PageHeader';
 
 const Results = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -296,39 +297,11 @@ const Results = () => {
           </div>
         </div>
       ) : (
-        <div className="bg-white/10 backdrop-blur-sm border-b border-white/20 fixed top-0 left-0 right-0 z-50">
-          <div className="w-full px-8 py-1">
-            <div className="flex items-center justify-between">
-              <img 
-                src="/lovable-uploads/f30134b8-b54d-491a-b6bc-fc7a20199dd2.png" 
-                alt="SipMunchYap Logo" 
-                className="h-24 md:h-32 w-auto cursor-pointer"
-                onClick={handleGoHome}
-              />
-              
-              {/* Search bar in header */}
-              <div className="flex-1 mx-8">
-                <SearchBar variant="results" />
-              </div>
-              
-              <nav className="flex items-center space-x-4">
-                <button 
-                  onClick={() => navigate('/about')}
-                  className="text-white/90 hover:text-white transition-colors text-sm font-medium"
-                >
-                  About
-                </button>
-                <button 
-                  onClick={() => navigate('/contact')}
-                  className="text-white/90 hover:text-white transition-colors text-sm font-medium"
-                >
-                  Contact
-                </button>
-                <AuthButton />
-              </nav>
-            </div>
-          </div>
-        </div>
+        <PageHeader 
+          showSearchBar={true} 
+          searchBarVariant="results" 
+          onLogoClick={handleGoHome}
+        />
       )}
 
       {/* Search This Area Button - Mobile Only */}

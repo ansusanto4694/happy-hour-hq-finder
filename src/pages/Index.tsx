@@ -1,13 +1,13 @@
 import React, { useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { SearchBar } from '@/components/SearchBar';
-import { AuthButton } from '@/components/AuthButton';
 import Hero from '@/components/Hero';
 import { HomepageCarousels } from '@/components/HomepageCarousels';
 import { SEOHead } from '@/components/SEOHead';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { Footer } from '@/components/Footer';
+import { PageHeader } from '@/components/PageHeader';
+import { Link } from 'react-router-dom';
 
 const Index = () => {
   const isMobile = useIsMobile();
@@ -113,44 +113,7 @@ const Index = () => {
         />
         
         {/* Header with company name, search bar, and navigation */}
-        <div className="bg-white/10 backdrop-blur-sm border-b border-white/20">
-          <div className="w-full px-8 py-1">
-            <div className="flex items-center justify-between">
-              <img 
-                src="/lovable-uploads/f30134b8-b54d-491a-b6bc-fc7a20199dd2.png" 
-                alt="SipMunchYap Logo" 
-                className="h-24 md:h-32 w-auto"
-              />
-              
-              {/* Search bar in header */}
-              <div className="flex-1 mx-8">
-                <SearchBar variant="results" />
-              </div>
-              
-               <nav className="flex items-center space-x-4">
-                 <Link 
-                   to="/happy-hour/new-york-ny" 
-                   className="text-white/90 hover:text-white transition-colors text-sm font-medium"
-                 >
-                   NYC Happy Hours
-                 </Link>
-                 <Link 
-                   to="/about" 
-                   className="text-white/90 hover:text-white transition-colors text-sm font-medium"
-                 >
-                   About
-                 </Link>
-                 <Link 
-                   to="/contact" 
-                   className="text-white/90 hover:text-white transition-colors text-sm font-medium"
-                 >
-                   Contact
-                 </Link>
-                 <AuthButton />
-               </nav>
-            </div>
-          </div>
-        </div>
+        <PageHeader showSearchBar={true} searchBarVariant="results" />
         
         {/* Main content */}
         <div className="max-w-6xl mx-auto px-6 pt-16 pb-4 text-center">
