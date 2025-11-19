@@ -290,7 +290,7 @@ const Results = () => {
             <div className="flex items-center justify-between">
               <div className="flex-1 flex justify-center">
                 <div className="w-full max-w-7xl">
-                  <MobileSearchBar />
+                  <MobileSearchBar onExpandedChange={setIsFilterDrawerOpen} />
                 </div>
               </div>
             </div>
