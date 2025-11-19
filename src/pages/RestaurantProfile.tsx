@@ -141,8 +141,6 @@ const RestaurantProfile = () => {
         keywords={`${restaurant.restaurant_name}, happy hour, ${restaurant.city} bars, ${restaurant.city} restaurants, drink specials`}
         canonical={`https://sipmunchyap.com/restaurant/${restaurant.id}`}
         ogImage={restaurant.logo_url || "https://lovable.dev/opengraph-image-p98pqg.png"}
-        location={`${restaurant.city}, ${restaurant.state}`}
-        businessType="restaurant"
         structuredData={structuredData}
       />
       <RestaurantHeader 
