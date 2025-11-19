@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { PageHeader } from '@/components/PageHeader';
+import { Footer } from '@/components/Footer';
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -84,8 +86,16 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="relative min-h-screen bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500 flex flex-col">
+      {/* Background overlay */}
+      <div className="absolute inset-0 bg-black/10"></div>
+      
+      {/* Header */}
+      <PageHeader showSearchBar={true} searchBarVariant="results" />
+      
+      {/* Main content - flex-grow to push footer down */}
+      <div className="relative z-10 flex-grow flex items-center justify-center pt-32 pb-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <p className="mt-2 text-gray-600">
             Sign in to your account or create a new one
@@ -257,6 +267,12 @@ const Auth = () => {
             ← Back to Home
           </Button>
         </div>
+      </div>
+      </div>
+      
+      {/* Footer */}
+      <div className="relative z-10">
+        <Footer />
       </div>
     </div>
   );
