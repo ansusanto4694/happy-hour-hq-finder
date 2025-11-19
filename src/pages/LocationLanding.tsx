@@ -222,12 +222,17 @@ export const LocationLanding = () => {
           <section>
             <div className="flex justify-end items-center mb-6">
               <div className="flex items-center gap-4">
+                {/* Mobile View Toggle - only on neighborhood pages */}
+                {isMobile && neighborhood && (
+                  <ViewToggle view={view} onViewChange={setView} />
+                )}
                 {/* Desktop View Toggle */}
                 {!isMobile && (
                   <ViewToggle view={view} onViewChange={setView} />
                 )}
-                {neighborhood && (
-                  <Button variant="outline" asChild>
+                {/* View All button for mobile on neighborhood pages */}
+                {isMobile && neighborhood && (
+                  <Button variant="outline" size="sm" asChild>
                     <Link to={`/happy-hour/${citySlug}`}>
                       View All {city}
                     </Link>
@@ -241,7 +246,7 @@ export const LocationLanding = () => {
             ) : merchants && merchants.length > 0 ? (
               <>
                 {/* List View */}
-                {(isMobile || view === 'list') && (
+                {view === 'list' && (
                   <div className="grid gap-4">
                     {merchants.map((merchant) => (
                       <SearchResultCard
@@ -255,8 +260,8 @@ export const LocationLanding = () => {
                   </div>
                 )}
 
-                {/* Map View - Desktop Only */}
-                {!isMobile && view === 'map' && (
+                {/* Map View - Mobile (neighborhood only) and Desktop */}
+                {view === 'map' && (isMobile ? neighborhood : true) && (
                   <div className="h-[calc(100vh-400px)] min-h-[600px]">
                     <LazyResultsMap 
                       restaurants={merchants || []}
