@@ -124,11 +124,11 @@ export const Footer = () => {
         <div className="border-t border-border pt-6 mb-6">
           <div className="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-muted-foreground">
             <a 
-              href="mailto:contact@sipmunchyap.com" 
+              href="mailto:andrew@sipmunchyap.com" 
               className="flex items-center gap-2 hover:text-primary transition-colors"
             >
               <Mail className="h-4 w-4" />
-              contact@sipmunchyap.com
+              andrew@sipmunchyap.com
             </a>
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4" />
