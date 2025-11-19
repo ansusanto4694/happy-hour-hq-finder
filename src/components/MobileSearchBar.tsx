@@ -18,7 +18,11 @@ interface LocationSuggestion {
   location_type: string;
 }
 
-export const MobileSearchBar = () => {
+interface MobileSearchBarProps {
+  onExpandedChange?: (isExpanded: boolean) => void;
+}
+
+export const MobileSearchBar = ({ onExpandedChange }: MobileSearchBarProps = {}) => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { track } = useAnalytics();
@@ -254,6 +258,7 @@ export const MobileSearchBar = () => {
           
           <Collapsible open={isExpanded} onOpenChange={(open) => {
             setIsExpanded(open);
+            onExpandedChange?.(open);
             // Track drawer state changes
             track({
               eventType: 'interaction',
