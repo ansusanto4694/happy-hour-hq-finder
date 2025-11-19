@@ -7,6 +7,7 @@ import { HomepageCarousels } from '@/components/HomepageCarousels';
 import { SEOHead } from '@/components/SEOHead';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { Footer } from '@/components/Footer';
 
 const Index = () => {
   const isMobile = useIsMobile();
@@ -87,6 +88,7 @@ const Index = () => {
           </div>
           
           <HomepageCarousels />
+          <Footer />
         </div>
       </div>
     );
@@ -258,6 +260,7 @@ const Index = () => {
         
         {/* Carousels */}
         <HomepageCarousels />
+        <Footer />
       </div>
     </div>
   );

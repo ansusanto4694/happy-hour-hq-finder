@@ -8,6 +8,7 @@ import { RestaurantHeader } from '@/components/RestaurantHeader';
 import { RestaurantProfileContent } from '@/components/RestaurantProfileContent';
 import { SEOHead } from '@/components/SEOHead';
 import { trackFunnelStep } from '@/utils/analytics';
+import { Footer } from '@/components/Footer';
 
 const generateRestaurantStructuredData = (restaurant: any) => {
   const dayMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -180,6 +181,7 @@ const RestaurantProfile = () => {
         merchantName={restaurant.restaurant_name} 
       />
       <RestaurantProfileContent restaurant={restaurant} />
+      <Footer />
     </div>
   );
 };

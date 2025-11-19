@@ -7,6 +7,7 @@ import { SearchResultsLoading } from '@/components/SearchResultsLoading';
 import { SearchResultsEmpty } from '@/components/SearchResultsEmpty';
 import { Button } from '@/components/ui/button';
 import { MapPin, Clock, Utensils } from 'lucide-react';
+import { Footer } from '@/components/Footer';
 
 // Helper function to convert slug to display name
 const slugToDisplayName = (slug: string): string => {
@@ -242,6 +243,7 @@ export const LocationLanding = () => {
           </section>
         </div>
       </div>
+      <Footer />
     </>
   );
 };
