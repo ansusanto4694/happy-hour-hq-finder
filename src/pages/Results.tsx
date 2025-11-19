@@ -305,7 +305,7 @@ const Results = () => {
       )}
 
       {/* Search This Area Button - Mobile Only */}
-      {isMobile && showSearchThisArea && (
+      {isMobile && showSearchThisArea && !isFilterDrawerOpen && (
         <div className="fixed top-20 left-4 right-4 z-50">
           <button
             onClick={handleSearchThisArea}
