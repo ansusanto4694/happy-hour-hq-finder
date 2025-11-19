@@ -8,6 +8,7 @@ import { SearchResultsEmpty } from '@/components/SearchResultsEmpty';
 import { Button } from '@/components/ui/button';
 import { MapPin, Clock, Utensils } from 'lucide-react';
 import { Footer } from '@/components/Footer';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Helper function to convert slug to display name
 const slugToDisplayName = (slug: string): string => {
@@ -59,6 +60,7 @@ const generateLocationStructuredData = (city: string, state: string, neighborhoo
 
 export const LocationLanding = () => {
   const { citySlug, neighborhoodSlug } = useParams<{ citySlug: string; neighborhoodSlug?: string }>();
+  const isMobile = useIsMobile();
   
   // Parse city and state from slug (e.g., "new-york-ny" -> "New York", "NY")
   const cityParts = citySlug?.split('-') || [];
@@ -219,6 +221,7 @@ export const LocationLanding = () => {
                     key={merchant.id}
                     restaurant={merchant}
                     onClick={(id) => window.location.href = `/restaurant/${id}`}
+                    isMobile={isMobile}
                   />
                 ))}
               </div>
