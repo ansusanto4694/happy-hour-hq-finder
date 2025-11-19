@@ -95,9 +95,24 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
       )}
       
       {/* General Structured Data */}
-      <script type="application/ld+json">
-        {JSON.stringify(structuredData || defaultStructuredData)}
-      </script>
+      {structuredData && (
+        Array.isArray(structuredData) ? (
+          structuredData.map((schema, index) => (
+            <script key={index} type="application/ld+json">
+              {JSON.stringify(schema)}
+            </script>
+          ))
+        ) : (
+          <script type="application/ld+json">
+            {JSON.stringify(structuredData)}
+          </script>
+        )
+      )}
+      {!structuredData && (
+        <script type="application/ld+json">
+          {JSON.stringify(defaultStructuredData)}
+        </script>
+      )}
     </Helmet>
   );
 };

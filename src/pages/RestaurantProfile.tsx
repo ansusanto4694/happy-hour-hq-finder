@@ -56,6 +56,33 @@ const generateRestaurantStructuredData = (restaurant: any) => {
   };
 };
 
+const generateBreadcrumbStructuredData = (restaurant: any) => {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://sipmunchyap.com"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": `Happy Hours in ${restaurant.city}, ${restaurant.state}`,
+        "item": `https://sipmunchyap.com/results?location=${encodeURIComponent(restaurant.city + ', ' + restaurant.state)}`
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": restaurant.restaurant_name,
+        "item": `https://sipmunchyap.com/restaurant/${restaurant.id}`
+      }
+    ]
+  };
+};
+
 const RestaurantProfile = () => {
   const { id } = useParams();
   
@@ -107,7 +134,12 @@ const RestaurantProfile = () => {
   });
 
   const structuredData = useMemo(() => {
-    return restaurant ? generateRestaurantStructuredData(restaurant) : null;
+    if (!restaurant) return null;
+    
+    const restaurantSchema = generateRestaurantStructuredData(restaurant);
+    const breadcrumbSchema = generateBreadcrumbStructuredData(restaurant);
+    
+    return [restaurantSchema, breadcrumbSchema];
   }, [restaurant]);
 
   if (isLoading) {
