@@ -463,10 +463,10 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
           </Button>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl shadow-lg p-2 flex flex-col lg:flex-row gap-2">
+        <div className="bg-white rounded-2xl shadow-lg p-2 flex flex-col lg:flex-row gap-2 items-stretch">
           {/* Search input */}
-          <div className="flex-1 relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <div className="flex-1 relative flex items-center">
+            <Search className="absolute left-4 text-gray-400 w-5 h-5 pointer-events-none" />
             <Input
               type="text"
               placeholder="Search for bars, restaurants, or cuisines..."
@@ -498,7 +498,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                 });
               }}
               onKeyPress={handleKeyPress}
-              className="pl-12 pr-12 py-4 text-lg border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl"
+              className="pl-12 pr-12 h-14 text-base border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl leading-none"
             />
             {searchTerm && (
               <button
@@ -510,7 +510,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                   });
                   setSearchTerm('');
                 }}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                className="absolute right-4 text-gray-400 hover:text-gray-600 transition-colors"
                 type="button"
               >
                 <X className="w-5 h-5" />
@@ -522,8 +522,8 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
           <div className="hidden lg:block w-px bg-gray-200 my-2"></div>
           
           {/* Location input with autocomplete */}
-          <div className="flex-1 lg:flex-1 relative">
-            <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 z-10" />
+          <div className="flex-1 lg:flex-1 relative flex items-center">
+            <MapPin className="absolute left-4 text-gray-400 w-5 h-5 pointer-events-none z-10" />
             <Input
               ref={locationInputRef}
               type="text"
@@ -538,7 +538,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                 });
               }}
               onKeyDown={handleLocationKeyDown}
-              className="pl-12 pr-12 py-4 text-lg border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl"
+              className="pl-12 pr-24 h-14 text-base border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl leading-none"
               autoComplete="off"
             />
             {/* Locate me button */}
@@ -579,7 +579,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                   }
                 });
               }}
-              className="absolute right-12 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors z-20 w-11 h-11 flex items-center justify-center"
+              className="absolute right-12 text-gray-500 hover:text-gray-700 transition-colors z-20 w-11 h-14 flex items-center justify-center"
             >
               {isLocating ? (
                 <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
@@ -602,7 +602,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                   setLocationSuggestions([]);
                   setGpsCoordinates(null);
                 }}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors z-20"
+                className="absolute right-4 text-gray-400 hover:text-gray-600 transition-colors z-20 flex items-center h-14"
                 type="button"
               >
                 <X className="w-5 h-5" />
@@ -611,7 +611,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
             
             {/* Loading indicator */}
             {isLoadingSuggestions && (
-              <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+              <div className="absolute right-4 flex items-center h-14">
                 <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-gray-600"></div>
               </div>
             )}
@@ -652,7 +652,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
           {/* Search button */}
           <Button
             onClick={handleSearch}
-            className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-8 py-4 text-lg font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
+            className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-8 h-14 text-base font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center"
           >
             Search
           </Button>
