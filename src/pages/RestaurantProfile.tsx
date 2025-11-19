@@ -1,12 +1,60 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { RestaurantHeader } from '@/components/RestaurantHeader';
 import { RestaurantProfileContent } from '@/components/RestaurantProfileContent';
+import { SEOHead } from '@/components/SEOHead';
 import { trackFunnelStep } from '@/utils/analytics';
+
+const generateRestaurantStructuredData = (restaurant: any) => {
+  const dayMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  
+  const openingHours = restaurant.merchant_happy_hour?.map((hh: any) => ({
+    "@type": "OpeningHoursSpecification",
+    "dayOfWeek": dayMap[hh.day_of_week],
+    "opens": hh.happy_hour_start,
+    "closes": hh.happy_hour_end
+  })) || [];
+
+  const cuisineTypes = restaurant.merchant_categories
+    ?.map((mc: any) => mc.categories?.name)
+    .filter(Boolean) || [];
+
+  const address = {
+    "@type": "PostalAddress",
+    "streetAddress": [restaurant.street_address, restaurant.street_address_line_2]
+      .filter(Boolean)
+      .join(', '),
+    "addressLocality": restaurant.city,
+    "addressRegion": restaurant.state,
+    "postalCode": restaurant.zip_code,
+    "addressCountry": "US"
+  };
+
+  const geo = restaurant.latitude && restaurant.longitude ? {
+    "@type": "GeoCoordinates",
+    "latitude": restaurant.latitude,
+    "longitude": restaurant.longitude
+  } : undefined;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": ["Restaurant", "LocalBusiness"],
+    "name": restaurant.restaurant_name,
+    "address": address,
+    "telephone": restaurant.phone_number || undefined,
+    "url": restaurant.website || undefined,
+    "image": restaurant.logo_url || undefined,
+    "geo": geo,
+    "servesCuisine": cuisineTypes.length > 0 ? cuisineTypes : undefined,
+    "openingHoursSpecification": openingHours.length > 0 ? openingHours : undefined,
+    "priceRange": "$$",
+    "acceptsReservations": "True"
+  };
+};
 
 const RestaurantProfile = () => {
   const { id } = useParams();
@@ -58,6 +106,10 @@ const RestaurantProfile = () => {
     enabled: !!id,
   });
 
+  const structuredData = useMemo(() => {
+    return restaurant ? generateRestaurantStructuredData(restaurant) : null;
+  }, [restaurant]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -83,6 +135,16 @@ const RestaurantProfile = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <SEOHead
+        title={`${restaurant.restaurant_name} - Happy Hour in ${restaurant.city}, ${restaurant.state}`}
+        description={`Find happy hour deals and specials at ${restaurant.restaurant_name} in ${restaurant.city}. Check hours, menu, and location details.`}
+        keywords={`${restaurant.restaurant_name}, happy hour, ${restaurant.city} bars, ${restaurant.city} restaurants, drink specials`}
+        canonical={`https://sipmunchyap.com/restaurant/${restaurant.id}`}
+        ogImage={restaurant.logo_url || "https://lovable.dev/opengraph-image-p98pqg.png"}
+        location={`${restaurant.city}, ${restaurant.state}`}
+        businessType="restaurant"
+        structuredData={structuredData}
+      />
       <RestaurantHeader 
         merchantId={restaurant.id} 
         merchantName={restaurant.restaurant_name} 
