@@ -231,20 +231,20 @@ export const MobileSearchBar = () => {
       {/* Always visible search input */}
       <div className="p-4">
         <div className="flex items-center gap-3">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <div className="flex-1 relative flex items-center">
+            <Search className="absolute left-3 text-gray-400 w-4 h-4 pointer-events-none" />
             <Input
               type="text"
               placeholder="Search bars, restaurants..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="pl-10 pr-10 h-12 text-xs border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-gray-50 rounded-lg"
+              className="pl-10 pr-10 h-12 text-xs border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-gray-50 rounded-lg leading-none"
             />
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm('')}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors w-11 h-11 flex items-center justify-center"
+                className="absolute right-3 text-gray-400 hover:text-gray-600 transition-colors w-11 h-12 flex items-center justify-center"
                 type="button"
               >
                 <X className="w-4 h-4" />
@@ -277,20 +277,20 @@ export const MobileSearchBar = () => {
                 {/* Header with search bar */}
                 <div className="flex-shrink-0 p-4 border-b border-gray-200">
                   <div className="flex items-center gap-3">
-                    <div className="flex-1 relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <div className="flex-1 relative flex items-center">
+                      <Search className="absolute left-3 text-gray-400 w-4 h-4 pointer-events-none" />
                       <Input
                         type="text"
                         placeholder="Search bars, restaurants..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         onKeyPress={handleKeyPress}
-                        className="pl-10 pr-10 h-12 text-xs border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-gray-50 rounded-lg"
+                        className="pl-10 pr-10 h-12 text-xs border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-gray-50 rounded-lg leading-none"
                       />
                       {searchTerm && (
                         <button
                           onClick={() => setSearchTerm('')}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors w-11 h-11 flex items-center justify-center"
+                          className="absolute right-3 text-gray-400 hover:text-gray-600 transition-colors w-11 h-12 flex items-center justify-center"
                           type="button"
                         >
                           <X className="w-4 h-4" />
@@ -314,8 +314,8 @@ export const MobileSearchBar = () => {
                   {/* Location */}
                   <div className="space-y-3">
                     <h3 className="text-lg font-semibold text-gray-900">Where are you looking?</h3>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 z-10" />
+                    <div className="relative flex items-center">
+                      <MapPin className="absolute left-3 text-gray-400 w-4 h-4 pointer-events-none z-10" />
                       <Input
                         ref={locationInputRef}
                         type="text"
@@ -323,7 +323,7 @@ export const MobileSearchBar = () => {
                         value={location}
                         onChange={(e) => handleLocationChange(e.target.value)}
                         onKeyDown={handleLocationKeyDown}
-                        className="pl-10 pr-10 h-12 text-base bg-gray-50 border-gray-200 rounded-lg"
+                        className="pl-10 pr-20 h-12 text-base bg-gray-50 border-gray-200 rounded-lg leading-none"
                         autoComplete="off"
                       />
                       {/* Locate me button */}
@@ -357,7 +357,7 @@ export const MobileSearchBar = () => {
                             });
                           }
                         }}
-                        className="absolute right-10 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors z-20 w-11 h-11 flex items-center justify-center"
+                        className="absolute right-10 text-gray-500 hover:text-gray-700 transition-colors z-20 w-11 h-12 flex items-center justify-center"
                       >
                         {isLocating ? (
                           <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
@@ -373,8 +373,9 @@ export const MobileSearchBar = () => {
                             setLocation('');
                             setShowSuggestions(false);
                             setLocationSuggestions([]);
+                            setGpsCoordinates(null);
                           }}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors z-20 w-11 h-11 flex items-center justify-center"
+                          className="absolute right-3 text-gray-400 hover:text-gray-600 transition-colors z-20 w-11 h-12 flex items-center justify-center"
                           type="button"
                         >
                           <X className="w-4 h-4" />
@@ -383,7 +384,7 @@ export const MobileSearchBar = () => {
                       
                       {/* Loading indicator */}
                       {isLoadingSuggestions && (
-                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <div className="absolute right-3 flex items-center h-12">
                           <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-gray-600"></div>
                         </div>
                       )}
