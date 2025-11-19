@@ -667,7 +667,6 @@ export type Database = {
           id: string
           last_name: string | null
           phone_number: string | null
-          role: Database["public"]["Enums"]["app_role"]
           updated_at: string
         }
         Insert: {
@@ -677,7 +676,6 @@ export type Database = {
           id: string
           last_name?: string | null
           phone_number?: string | null
-          role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
         }
         Update: {
@@ -687,7 +685,6 @@ export type Database = {
           id?: string
           last_name?: string | null
           phone_number?: string | null
-          role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
         }
         Relationships: []
@@ -777,6 +774,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_sessions: {
         Row: {
@@ -964,6 +985,13 @@ export type Database = {
           website: string
           zip_code: string
         }[]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
       maintain_user_events_partitions: { Args: never; Returns: undefined }
