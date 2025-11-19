@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { SEOHead } from '@/components/SEOHead';
 import { useMerchants } from '@/hooks/useMerchants';
 import { SearchResultCard } from '@/components/SearchResultCard';
@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 import { MapPin, Clock, Utensils } from 'lucide-react';
 import { Footer } from '@/components/Footer';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { ViewToggle } from '@/components/ViewToggle';
+import { LazyResultsMap } from '@/components/LazyResultsMap';
 
 // Helper function to convert slug to display name
 const slugToDisplayName = (slug: string): string => {
@@ -61,6 +63,15 @@ const generateLocationStructuredData = (city: string, state: string, neighborhoo
 export const LocationLanding = () => {
   const { citySlug, neighborhoodSlug } = useParams<{ citySlug: string; neighborhoodSlug?: string }>();
   const isMobile = useIsMobile();
+  
+  // View state for desktop only
+  const [view, setView] = useState<'list' | 'map'>('list');
+  const [hoveredRestaurantId, setHoveredRestaurantId] = useState<number | null>(null);
+  const [mapViewState, setMapViewState] = useState({
+    longitude: -73.9712,
+    latitude: 40.7831,
+    zoom: 12
+  });
   
   // Parse city and state from slug (e.g., "new-york-ny" -> "New York", "NY")
   const cityParts = citySlug?.split('-') || [];
@@ -117,6 +128,15 @@ export const LocationLanding = () => {
     
     return Array.from(uniqueNeighborhoods).sort();
   }, [merchants, neighborhood]);
+
+  // Map handlers for desktop
+  const handleMapMove = (bounds: { north: number; south: number; east: number; west: number }) => {
+    // We don't filter by bounds on location pages, just track the movement
+  };
+
+  const handleViewStateChange = (viewState: { longitude: number; latitude: number; zoom: number }) => {
+    setMapViewState(viewState);
+  };
 
   return (
     <>
@@ -204,28 +224,57 @@ export const LocationLanding = () => {
               <h2 className="text-2xl font-bold text-foreground">
                 {neighborhood ? 'Happy Hour Spots' : 'All Locations'}
               </h2>
-              {neighborhood && (
-                <Button variant="outline" asChild>
-                  <Link to={`/happy-hour/${citySlug}`}>
-                    View All {city}
-                  </Link>
-                </Button>
-              )}
+              <div className="flex items-center gap-4">
+                {/* Desktop View Toggle */}
+                {!isMobile && (
+                  <ViewToggle view={view} onViewChange={setView} />
+                )}
+                {neighborhood && (
+                  <Button variant="outline" asChild>
+                    <Link to={`/happy-hour/${citySlug}`}>
+                      View All {city}
+                    </Link>
+                  </Button>
+                )}
+              </div>
             </div>
 
             {isLoading ? (
               <SearchResultsLoading />
             ) : merchants && merchants.length > 0 ? (
-              <div className="grid gap-4">
-                {merchants.map((merchant) => (
-                  <SearchResultCard
-                    key={merchant.id}
-                    restaurant={merchant}
-                    onClick={(id) => window.location.href = `/restaurant/${id}`}
-                    isMobile={isMobile}
-                  />
-                ))}
-              </div>
+              <>
+                {/* List View */}
+                {(isMobile || view === 'list') && (
+                  <div className="grid gap-4">
+                    {merchants.map((merchant) => (
+                      <SearchResultCard
+                        key={merchant.id}
+                        restaurant={merchant}
+                        onClick={(id) => window.location.href = `/restaurant/${id}`}
+                        isMobile={isMobile}
+                        onHover={!isMobile ? setHoveredRestaurantId : undefined}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Map View - Desktop Only */}
+                {!isMobile && view === 'map' && (
+                  <div className="h-[calc(100vh-400px)] min-h-[600px]">
+                    <LazyResultsMap 
+                      restaurants={merchants || []}
+                      onMapMove={handleMapMove}
+                      showSearchThisArea={false}
+                      isUsingMapSearch={false}
+                      viewState={mapViewState}
+                      onViewStateChange={handleViewStateChange}
+                      isMobile={false}
+                      hoveredRestaurantId={hoveredRestaurantId}
+                      searchLocation={locationString}
+                    />
+                  </div>
+                )}
+              </>
             ) : (
               <SearchResultsEmpty 
                 location={locationString}
