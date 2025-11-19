@@ -48,11 +48,6 @@ export const AuthButton: React.FC = () => {
         <Button variant="outline" size="sm" className="flex items-center gap-2">
           <User className="w-4 h-4" />
           {profile.first_name} {profile.last_name}
-          {profile.role === 'admin' && (
-            <span className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded">
-              Admin
-            </span>
-          )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

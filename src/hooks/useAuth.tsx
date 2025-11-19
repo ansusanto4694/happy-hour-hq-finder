@@ -9,7 +9,6 @@ interface Profile {
   phone_number?: string;
   first_name: string;
   last_name: string;
-  role: 'admin' | 'restaurant_owner' | 'user';
   created_at: string;
   updated_at: string;
 }
@@ -34,6 +33,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   
@@ -41,8 +41,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const isFetchingProfile = useRef(false);
   const profileCache = useRef<{ userId: string; profile: Profile; timestamp: number } | null>(null);
   const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
-  const isAdmin = profile?.role === 'admin';
 
   const fetchProfile = async (userId: string) => {
     // Check cache first
@@ -81,6 +79,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           timestamp: Date.now()
         };
       }
+
+      // Fetch admin status from user_roles table
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .eq('role', 'admin')
+        .maybeSingle();
+
+      setIsAdmin(!!roleData);
     } catch (error) {
       console.error('Error fetching profile:', error);
     } finally {
@@ -110,6 +118,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           }, 0);
         } else {
           setProfile(null);
+          setIsAdmin(false);
         }
         
         setLoading(false);
@@ -123,6 +132,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       if (session?.user) {
         fetchProfile(session.user.id);
+      } else {
+        setIsAdmin(false);
       }
       setLoading(false);
     });
@@ -189,6 +200,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(null);
     setSession(null);
     setProfile(null);
+    setIsAdmin(false);
     toast({
       title: 'Signed Out',
       description: 'You have been signed out successfully.',
