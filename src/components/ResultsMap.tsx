@@ -266,8 +266,8 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
 
   // Desktop/tablet map with card wrapper
   return (
-    <Card className="h-full">
-      <CardHeader className="pb-3">
+    <Card className="h-full flex flex-col">
+      <CardHeader className="pb-3 flex-shrink-0">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-semibold">Map View</CardTitle>
           {showSearchThisArea && onSearchThisArea && (
@@ -283,7 +283,7 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
           )}
         </div>
       </CardHeader>
-      <CardContent className="p-4 pt-0 relative">
+      <CardContent className="p-4 pt-0 relative flex-1 flex flex-col">
         <div className="map-container rounded-lg overflow-hidden h-full relative">
           <Map
             ref={mapRef}
