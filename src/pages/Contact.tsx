@@ -14,7 +14,7 @@ const Contact = () => {
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500 flex flex-col">
       {/* Background overlay */}
-      <div className="absolute inset-0 bg-black/20"></div>
+      <div className="absolute inset-0 bg-black/10"></div>
       
       {/* Header with company name and navigation */}
       <div className="relative top-4 left-4 right-4 md:top-6 md:left-6 md:right-6 z-20 flex justify-between items-center px-4 md:px-6">
