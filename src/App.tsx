@@ -19,6 +19,7 @@ import ResetPassword from "./pages/ResetPassword";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Sitemap from "./pages/Sitemap";
+import RestaurantsSitemap from "./pages/RestaurantsSitemap";
 import NotFound from "./pages/NotFound";
 
 // Create query client with optimized settings
@@ -71,7 +72,7 @@ const App = () => (
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
-              <Route path="/sitemap.xml" element={<Sitemap />} />
+              <Route path="/sitemap-restaurants.xml" element={<RestaurantsSitemap />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
