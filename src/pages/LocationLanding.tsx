@@ -195,10 +195,10 @@ export const LocationLanding = () => {
           </div>
         </section>
 
-        <div className="container mx-auto max-w-6xl px-4 py-8">
+        <div className="container mx-auto max-w-6xl px-4 py-4">
           {/* Neighborhoods Grid (City page only) */}
           {!neighborhood && neighborhoods.length > 0 && (
-            <section className="mb-12">
+            <section className="mb-6">
               <h2 className="text-2xl font-bold mb-6 text-foreground">Browse by Neighborhood</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {neighborhoods.map((hood) => (
@@ -220,7 +220,7 @@ export const LocationLanding = () => {
 
           {/* Results Section */}
           <section>
-            <div className="flex justify-end items-center mb-6">
+            <div className="flex justify-end items-center mb-4">
               <div className="flex items-center gap-4">
                 {/* Mobile View Toggle - only on neighborhood pages */}
                 {isMobile && neighborhood && (
