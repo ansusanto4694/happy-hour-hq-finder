@@ -116,7 +116,7 @@ const Index = () => {
         <PageHeader showSearchBar={true} searchBarVariant="results" />
         
         {/* Main content */}
-        <div className="max-w-6xl mx-auto px-6 pt-16 pb-4 text-center">
+        <div className="max-w-6xl mx-auto px-6 pt-44 pb-4 text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
             Find the best happy hours near you
           </h1>
