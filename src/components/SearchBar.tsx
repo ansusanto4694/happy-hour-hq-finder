@@ -7,6 +7,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useLocateMe } from '@/hooks/useLocateMe';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useSearchSuggestions } from '@/hooks/useSearchSuggestions';
+import { getSuggestionTypeLabel } from '@/data/searchSuggestions';
 
 interface LocationSuggestion {
   id: string;
@@ -32,14 +34,21 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
   
   // Location autocomplete state
   const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
+  const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
+  const [selectedLocationIndex, setSelectedLocationIndex] = useState(-1);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const { locate, isLocating } = useLocateMe();
   
+  // Search term autocomplete state
+  const { suggestions: searchSuggestions } = useSearchSuggestions({ query: searchTerm, maxResults: 7 });
+  const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
+  const [selectedSearchIndex, setSelectedSearchIndex] = useState(-1);
+  
   // Refs
   const locationInputRef = useRef<HTMLInputElement>(null);
-  const suggestionsRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const locationSuggestionsRef = useRef<HTMLDivElement>(null);
+  const searchSuggestionsRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<NodeJS.Timeout>();
   const searchDebounceRef = useRef<NodeJS.Timeout>();
 
@@ -47,7 +56,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
   const fetchLocationSuggestions = async (query: string) => {
     if (query.length < 2) {
       setLocationSuggestions([]);
-      setShowSuggestions(false);
+      setShowLocationSuggestions(false);
       return;
     }
 
@@ -60,8 +69,8 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
       if (error) throw error;
 
       setLocationSuggestions(data.suggestions || []);
-      setShowSuggestions(true);
-      setSelectedSuggestionIndex(-1);
+      setShowLocationSuggestions(true);
+      setSelectedLocationIndex(-1);
       
       // Track suggestions displayed
       track({
@@ -74,7 +83,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
     } catch (error) {
       console.error('Error fetching location suggestions:', error);
       setLocationSuggestions([]);
-      setShowSuggestions(false);
+      setShowLocationSuggestions(false);
     } finally {
       setIsLoadingSuggestions(false);
     }
@@ -119,16 +128,36 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
     });
     
     setLocation(suggestion.place_name);
-    setShowSuggestions(false);
-    setSelectedSuggestionIndex(-1);
+    setShowLocationSuggestions(false);
+    setSelectedLocationIndex(-1);
     // Clear GPS coordinates when selecting a suggestion (this is not GPS location)
     setGpsCoordinates(null);
     locationInputRef.current?.focus();
   };
 
-  // Handle keyboard navigation
-  const handleLocationKeyDown = (e: React.KeyboardEvent) => {
-    if (!showSuggestions || locationSuggestions.length === 0) {
+  // Handle search term suggestion selection
+  const selectSearchSuggestion = (suggestion: { value: string; displayValue: string; type: string }) => {
+    track({
+      eventType: 'click',
+      eventCategory: 'search',
+      eventAction: 'suggestion_selected',
+      eventLabel: suggestion.value,
+      searchTerm: suggestion.value,
+      metadata: {
+        suggestionType: suggestion.type,
+        originalQuery: searchTerm,
+      },
+    });
+    
+    setSearchTerm(suggestion.displayValue);
+    setShowSearchSuggestions(false);
+    setSelectedSearchIndex(-1);
+    searchInputRef.current?.focus();
+  };
+  
+  // Handle search term keyboard navigation
+  const handleSearchKeyDown = (e: React.KeyboardEvent) => {
+    if (!showSearchSuggestions || searchSuggestions.length === 0) {
       if (e.key === 'Enter') {
         handleSearch();
       }
@@ -138,10 +167,46 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
-        setSelectedSuggestionIndex(prev => 
+        setSelectedSearchIndex(prev => 
+          prev < searchSuggestions.length - 1 ? prev + 1 : 0
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedSearchIndex(prev => 
+          prev > 0 ? prev - 1 : searchSuggestions.length - 1
+        );
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selectedSearchIndex >= 0) {
+          selectSearchSuggestion(searchSuggestions[selectedSearchIndex]);
+        } else {
+          handleSearch();
+        }
+        break;
+      case 'Escape':
+        setShowSearchSuggestions(false);
+        setSelectedSearchIndex(-1);
+        break;
+    }
+  };
+
+  // Handle location keyboard navigation
+  const handleLocationKeyDown = (e: React.KeyboardEvent) => {
+    if (!showLocationSuggestions || locationSuggestions.length === 0) {
+      if (e.key === 'Enter') {
+        handleSearch();
+      }
+      return;
+    }
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedLocationIndex(prev => 
           prev < locationSuggestions.length - 1 ? prev + 1 : 0
         );
-        // Track keyboard navigation
         track({
           eventType: 'interaction',
           eventCategory: 'search',
@@ -151,10 +216,9 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
         break;
       case 'ArrowUp':
         e.preventDefault();
-        setSelectedSuggestionIndex(prev => 
+        setSelectedLocationIndex(prev => 
           prev > 0 ? prev - 1 : locationSuggestions.length - 1
         );
-        // Track keyboard navigation
         track({
           eventType: 'interaction',
           eventCategory: 'search',
@@ -164,23 +228,22 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
         break;
       case 'Enter':
         e.preventDefault();
-        if (selectedSuggestionIndex >= 0) {
-          // Track keyboard navigation selection (non-blocking)
+        if (selectedLocationIndex >= 0) {
           track({
             eventType: 'click',
             eventCategory: 'search',
             eventAction: 'location_suggestion_keyboard_selected',
-            eventLabel: locationSuggestions[selectedSuggestionIndex].location_type,
-            locationQuery: locationSuggestions[selectedSuggestionIndex].place_name,
+            eventLabel: locationSuggestions[selectedLocationIndex].location_type,
+            locationQuery: locationSuggestions[selectedLocationIndex].place_name,
           });
-          selectSuggestion(locationSuggestions[selectedSuggestionIndex]);
+          selectSuggestion(locationSuggestions[selectedLocationIndex]);
         } else {
           handleSearch();
         }
         break;
       case 'Escape':
-        setShowSuggestions(false);
-        setSelectedSuggestionIndex(-1);
+        setShowLocationSuggestions(false);
+        setSelectedLocationIndex(-1);
         break;
     }
   };
@@ -189,13 +252,24 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
   // Close suggestions when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      // Close location suggestions
       if (
-        suggestionsRef.current &&
-        !suggestionsRef.current.contains(event.target as Node) &&
+        locationSuggestionsRef.current &&
+        !locationSuggestionsRef.current.contains(event.target as Node) &&
         !locationInputRef.current?.contains(event.target as Node)
       ) {
-        setShowSuggestions(false);
-        setSelectedSuggestionIndex(-1);
+        setShowLocationSuggestions(false);
+        setSelectedLocationIndex(-1);
+      }
+      
+      // Close search suggestions
+      if (
+        searchSuggestionsRef.current &&
+        !searchSuggestionsRef.current.contains(event.target as Node) &&
+        !searchInputRef.current?.contains(event.target as Node)
+      ) {
+        setShowSearchSuggestions(false);
+        setSelectedSearchIndex(-1);
       }
     };
 
@@ -205,8 +279,29 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
       if (debounceRef.current) {
         clearTimeout(debounceRef.current);
       }
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
+      }
     };
   }, []);
+  
+  // Show search suggestions when there are matches
+  useEffect(() => {
+    if (searchTerm.length >= 2 && searchSuggestions.length > 0) {
+      setShowSearchSuggestions(true);
+      
+      // Track suggestions impression
+      track({
+        eventType: 'impression',
+        eventCategory: 'search',
+        eventAction: 'suggestions_shown',
+        eventLabel: searchTerm,
+        metadata: { suggestionCount: searchSuggestions.length }
+      });
+    } else {
+      setShowSearchSuggestions(false);
+    }
+  }, [searchSuggestions.length, searchTerm]);
 
   // Track GPS coordinates when using locate me
   const [gpsCoordinates, setGpsCoordinates] = useState<{lat: number; lng: number} | null>(null);
@@ -273,8 +368,9 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
         <div className="bg-white rounded-2xl shadow-lg p-6 space-y-4">
           {/* Search input */}
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none z-10" />
             <Input
+              ref={searchInputRef}
               type="text"
               placeholder="Search for bars, restaurants, or cuisines..."
               value={searchTerm}
@@ -303,9 +399,13 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                   eventCategory: 'search',
                   eventAction: 'search_input_focus',
                 });
+                if (searchTerm.length >= 2 && searchSuggestions.length > 0) {
+                  setShowSearchSuggestions(true);
+                }
               }}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleSearchKeyDown}
               className="pl-12 pr-12 py-4 text-sm border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl bg-gray-50"
+              autoComplete="off"
             />
             {searchTerm && (
               <button
@@ -316,12 +416,43 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                     eventAction: 'search_term_cleared',
                   });
                   setSearchTerm('');
+                  setShowSearchSuggestions(false);
                 }}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors z-20"
                 type="button"
               >
                 <X className="w-5 h-5" />
               </button>
+            )}
+            
+            {/* Search suggestions dropdown */}
+            {showSearchSuggestions && searchSuggestions.length > 0 && (
+              <div
+                ref={searchSuggestionsRef}
+                className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto"
+              >
+                {searchSuggestions.map((suggestion, index) => (
+                  <div
+                    key={`${suggestion.type}-${suggestion.value}`}
+                    className={`px-4 py-3 cursor-pointer border-b border-gray-100 last:border-b-0 hover:bg-gray-50 ${
+                      index === selectedSearchIndex ? 'bg-blue-50 border-blue-200' : ''
+                    }`}
+                    onClick={() => selectSearchSuggestion(suggestion)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {suggestion.icon && <span className="text-lg">{suggestion.icon}</span>}
+                        <span className="text-sm font-medium text-gray-900">
+                          {suggestion.displayValue}
+                        </span>
+                      </div>
+                      <span className="text-xs text-gray-400">
+                        {getSuggestionTypeLabel(suggestion.type)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
           
@@ -369,7 +500,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                     });
                     
                     setLocation(r.display);
-                    setShowSuggestions(false);
+                    setShowLocationSuggestions(false);
                     // Store GPS coordinates for search
                     if (r.latitude && r.longitude) {
                       setGpsCoordinates({ lat: r.latitude, lng: r.longitude });
@@ -403,7 +534,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                     eventAction: 'location_cleared',
                   });
                   setLocation('');
-                  setShowSuggestions(false);
+                  setShowLocationSuggestions(false);
                   setLocationSuggestions([]);
                   setGpsCoordinates(null);
                 }}
@@ -422,16 +553,16 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
             )}
             
             {/* Suggestions dropdown */}
-            {showSuggestions && locationSuggestions.length > 0 && (
+            {showLocationSuggestions && locationSuggestions.length > 0 && (
               <div
-                ref={suggestionsRef}
+                ref={locationSuggestionsRef}
                 className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto"
               >
                 {locationSuggestions.map((suggestion, index) => (
                   <div
                     key={suggestion.id}
                     className={`px-4 py-3 cursor-pointer border-b border-gray-100 last:border-b-0 hover:bg-gray-50 ${
-                      index === selectedSuggestionIndex ? 'bg-blue-50 border-blue-200' : ''
+                      index === selectedLocationIndex ? 'bg-blue-50 border-blue-200' : ''
                     }`}
                     onClick={() => selectSuggestion(suggestion)}
                   >
@@ -466,8 +597,9 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
         <div className="bg-white rounded-2xl shadow-lg p-2 flex flex-col lg:flex-row gap-2 items-stretch">
           {/* Search input */}
           <div className="flex-1 relative flex items-center">
-            <Search className="absolute left-4 text-gray-400 w-5 h-5 pointer-events-none" />
+            <Search className="absolute left-4 text-gray-400 w-5 h-5 pointer-events-none z-10" />
             <Input
+              ref={searchInputRef}
               type="text"
               placeholder="Search for bars, restaurants, or cuisines..."
               value={searchTerm}
@@ -496,9 +628,13 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                   eventCategory: 'search',
                   eventAction: 'search_input_focus',
                 });
+                if (searchTerm.length >= 2 && searchSuggestions.length > 0) {
+                  setShowSearchSuggestions(true);
+                }
               }}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleSearchKeyDown}
               className="pl-12 pr-12 h-14 text-base border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl leading-none"
+              autoComplete="off"
             />
             {searchTerm && (
               <button
@@ -509,12 +645,43 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                     eventAction: 'search_term_cleared',
                   });
                   setSearchTerm('');
+                  setShowSearchSuggestions(false);
                 }}
-                className="absolute right-4 text-gray-400 hover:text-gray-600 transition-colors"
+                className="absolute right-4 text-gray-400 hover:text-gray-600 transition-colors z-20"
                 type="button"
               >
                 <X className="w-5 h-5" />
               </button>
+            )}
+            
+            {/* Search suggestions dropdown */}
+            {showSearchSuggestions && searchSuggestions.length > 0 && (
+              <div
+                ref={searchSuggestionsRef}
+                className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto"
+              >
+                {searchSuggestions.map((suggestion, index) => (
+                  <div
+                    key={`${suggestion.type}-${suggestion.value}`}
+                    className={`px-4 py-3 cursor-pointer border-b border-gray-100 last:border-b-0 hover:bg-gray-50 ${
+                      index === selectedSearchIndex ? 'bg-blue-50 border-blue-200' : ''
+                    }`}
+                    onClick={() => selectSearchSuggestion(suggestion)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {suggestion.icon && <span className="text-lg">{suggestion.icon}</span>}
+                        <span className="text-sm font-medium text-gray-900">
+                          {suggestion.displayValue}
+                        </span>
+                      </div>
+                      <span className="text-xs text-gray-400">
+                        {getSuggestionTypeLabel(suggestion.type)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
           
@@ -564,7 +731,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                     });
                     
                     setLocation(r.display);
-                    setShowSuggestions(false);
+                    setShowLocationSuggestions(false);
                     // Store GPS coordinates for search
                     if (r.latitude && r.longitude) {
                       setGpsCoordinates({ lat: r.latitude, lng: r.longitude });
@@ -598,7 +765,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                     eventAction: 'location_cleared',
                   });
                   setLocation('');
-                  setShowSuggestions(false);
+                  setShowLocationSuggestions(false);
                   setLocationSuggestions([]);
                   setGpsCoordinates(null);
                 }}
@@ -617,16 +784,16 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
             )}
             
             {/* Suggestions dropdown */}
-            {showSuggestions && locationSuggestions.length > 0 && (
+            {showLocationSuggestions && locationSuggestions.length > 0 && (
               <div
-                ref={suggestionsRef}
+                ref={locationSuggestionsRef}
                 className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto"
               >
                 {locationSuggestions.map((suggestion, index) => (
                   <div
                     key={suggestion.id}
                     className={`px-4 py-3 cursor-pointer border-b border-gray-100 last:border-b-0 hover:bg-gray-50 ${
-                      index === selectedSuggestionIndex ? 'bg-blue-50 border-blue-200' : ''
+                      index === selectedLocationIndex ? 'bg-blue-50 border-blue-200' : ''
                     }`}
                     onClick={() => selectSuggestion(suggestion)}
                   >
