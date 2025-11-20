@@ -8,7 +8,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useLocateMe } from '@/hooks/useLocateMe';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useSearchSuggestions } from '@/hooks/useSearchSuggestions';
-import { getSuggestionTypeLabel } from '@/data/searchSuggestions';
 
 interface LocationSuggestion {
   id: string;
@@ -439,17 +438,9 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                     }`}
                     onClick={() => selectSearchSuggestion(suggestion)}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {suggestion.icon && <span className="text-lg">{suggestion.icon}</span>}
-                        <span className="text-sm font-medium text-gray-900">
-                          {suggestion.displayValue}
-                        </span>
-                      </div>
-                      <span className="text-xs text-gray-400">
-                        {getSuggestionTypeLabel(suggestion.type)}
-                      </span>
-                    </div>
+                    <span className="text-sm font-medium text-gray-900">
+                      {suggestion.displayValue}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -668,17 +659,9 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                     }`}
                     onClick={() => selectSearchSuggestion(suggestion)}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {suggestion.icon && <span className="text-lg">{suggestion.icon}</span>}
-                        <span className="text-sm font-medium text-gray-900">
-                          {suggestion.displayValue}
-                        </span>
-                      </div>
-                      <span className="text-xs text-gray-400">
-                        {getSuggestionTypeLabel(suggestion.type)}
-                      </span>
-                    </div>
+                    <span className="text-sm font-medium text-gray-900">
+                      {suggestion.displayValue}
+                    </span>
                   </div>
                 ))}
               </div>
