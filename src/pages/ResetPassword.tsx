@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { SEOHead } from '@/components/SEOHead';
 
 const ResetPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -48,6 +49,13 @@ const ResetPassword = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <SEOHead 
+        title="Reset Password - SipMunchYap"
+        description="Reset your SipMunchYap account password."
+        canonical="https://sipmunchyap.com/reset-password"
+        noIndex={true}
+      />
+      
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <h2 className="text-3xl font-bold">Reset Your Password</h2>

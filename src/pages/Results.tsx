@@ -252,6 +252,22 @@ const Results = () => {
       ? `Find the best happy hour deals in ${location}. Compare prices, discover local bars and restaurants, and save money on drinks and food.`
       : `Discover amazing happy hour deals near you. Compare prices and find the best bars and restaurants for your night out.`;
 
+  // Build canonical URL based on meaningful search parameters
+  const buildCanonicalUrl = () => {
+    const baseUrl = 'https://sipmunchyap.com/results';
+    
+    if (carouselId) {
+      return `${baseUrl}?carousel=${carouselId}`;
+    }
+    
+    if (location) {
+      return `${baseUrl}?location=${encodeURIComponent(location)}`;
+    }
+    
+    // For GPS-based searches, use base URL without parameters
+    return baseUrl;
+  };
+
   return (
     <div className={`${isMobile ? 'h-screen overflow-hidden' : 'min-h-screen'} bg-gray-50`}>
       <SEOHead 
@@ -259,7 +275,7 @@ const Results = () => {
         description={seoDescription}
         keywords={carouselName ? `${carouselName}, featured restaurants, curated restaurants, happy hour deals` : `happy hour ${location}, bars ${location}, restaurants ${location}, drink deals, food specials, nightlife ${location}`}
         location={location}
-        canonical={typeof window !== 'undefined' ? window.location.href : ''}
+        canonical={buildCanonicalUrl()}
         structuredData={{
           "@context": "https://schema.org",
           "@type": "SearchResultsPage",

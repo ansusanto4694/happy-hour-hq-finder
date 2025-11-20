@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { Footer } from '@/components/Footer';
 import { PageHeader } from '@/components/PageHeader';
+import { SEOHead } from '@/components/SEOHead';
 
 const Contact = () => {
   const { trackPage } = useAnalytics();
@@ -12,6 +13,13 @@ const Contact = () => {
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500 flex flex-col">
+      <SEOHead 
+        title="Contact SipMunchYap - Get in Touch"
+        description="Have questions or want to list your restaurant? Contact SipMunchYap to learn more about our happy hour platform and business opportunities."
+        keywords="contact sipmunchyap, restaurant listings, bar partnerships"
+        canonical="https://sipmunchyap.com/contact"
+      />
+      
       {/* Background overlay */}
       <div className="absolute inset-0 bg-black/10"></div>
       
