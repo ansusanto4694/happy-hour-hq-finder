@@ -135,7 +135,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
   };
 
   // Handle search term suggestion selection
-  const selectSearchSuggestion = (suggestion: { value: string; displayValue: string; type: string }) => {
+  const selectSearchSuggestion = (suggestion: { value: string; displayValue: string; type: string }, position: number) => {
     track({
       eventType: 'click',
       eventCategory: 'search',
@@ -144,7 +144,10 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
       searchTerm: suggestion.value,
       metadata: {
         suggestionType: suggestion.type,
+        suggestionValue: suggestion.value,
+        position: position,
         originalQuery: searchTerm,
+        totalSuggestions: searchSuggestions.length
       },
     });
     
@@ -158,7 +161,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
   const handleSearchKeyDown = (e: React.KeyboardEvent) => {
     if (!showSearchSuggestions || searchSuggestions.length === 0) {
       if (e.key === 'Enter') {
-        handleSearch();
+        handleSearch(false);
       }
       return;
     }
@@ -179,9 +182,10 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
       case 'Enter':
         e.preventDefault();
         if (selectedSearchIndex >= 0) {
-          selectSearchSuggestion(searchSuggestions[selectedSearchIndex]);
+          selectSearchSuggestion(searchSuggestions[selectedSearchIndex], selectedSearchIndex);
+          handleSearch(true);
         } else {
-          handleSearch();
+          handleSearch(false);
         }
         break;
       case 'Escape':
@@ -305,12 +309,12 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
   // Track GPS coordinates when using locate me
   const [gpsCoordinates, setGpsCoordinates] = useState<{lat: number; lng: number} | null>(null);
 
-  const handleSearch = () => {
-    // Track search submission (non-blocking)
+  const handleSearch = (selectedViaSuggestion = false) => {
+    // Track search submission (non-blocking) with typeahead context
     track({
       eventType: 'click',
       eventCategory: 'search',
-      eventAction: 'search_submitted',
+      eventAction: selectedViaSuggestion ? 'search_with_suggestion' : 'search_manual',
       searchTerm: searchTerm || undefined,
       locationQuery: location || undefined,
       metadata: {
@@ -318,6 +322,9 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
         hasLocation: !!location,
         useGPS: !!gpsCoordinates,
         variant: variant,
+        hadSuggestions: searchSuggestions.length > 0,
+        suggestionCount: searchSuggestions.length,
+        usedSuggestion: selectedViaSuggestion
       },
     });
     
@@ -436,7 +443,10 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                     className={`px-4 py-3 cursor-pointer border-b border-gray-100 last:border-b-0 hover:bg-gray-50 ${
                       index === selectedSearchIndex ? 'bg-blue-50 border-blue-200' : ''
                     }`}
-                    onClick={() => selectSearchSuggestion(suggestion)}
+                    onClick={() => {
+                      selectSearchSuggestion(suggestion, index);
+                      handleSearch(true);
+                    }}
                   >
                     <span className="text-sm font-medium text-gray-900">
                       {suggestion.displayValue}
@@ -578,7 +588,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
           
           {/* Search button */}
           <Button
-            onClick={handleSearch}
+            onClick={() => handleSearch(false)}
             className="w-full py-4 text-lg font-semibold rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white transition-all duration-200 shadow-lg hover:shadow-xl"
           >
             Search
@@ -657,7 +667,10 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                     className={`px-4 py-3 cursor-pointer border-b border-gray-100 last:border-b-0 hover:bg-gray-50 ${
                       index === selectedSearchIndex ? 'bg-blue-50 border-blue-200' : ''
                     }`}
-                    onClick={() => selectSearchSuggestion(suggestion)}
+                    onClick={() => {
+                      selectSearchSuggestion(suggestion, index);
+                      handleSearch(true);
+                    }}
                   >
                     <span className="text-sm font-medium text-gray-900">
                       {suggestion.displayValue}
@@ -801,7 +814,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
           
           {/* Search button */}
           <Button
-            onClick={handleSearch}
+            onClick={() => handleSearch(false)}
             className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-8 h-14 text-base font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center"
           >
             Search
