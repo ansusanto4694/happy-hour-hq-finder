@@ -10,6 +10,7 @@ interface SEOHeadProps {
   location?: string;
   businessType?: 'restaurant' | 'bar' | 'happy_hour';
   structuredData?: any;
+  noIndex?: boolean;
 }
 
 export const SEOHead: React.FC<SEOHeadProps> = ({
@@ -20,7 +21,8 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
   ogImage = "https://lovable.dev/opengraph-image-p98pqg.png",
   location,
   businessType = 'happy_hour',
-  structuredData
+  structuredData,
+  noIndex = false
 }) => {
   const enhancedTitle = location ? `Happy Hour in ${location} - ${title}` : title;
   const enhancedDescription = location 
@@ -53,7 +55,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
       <meta name="description" content={enhancedDescription} />
       <meta name="keywords" content={enhancedKeywords} />
       <meta name="author" content="SipMunchYap" />
-      <meta name="robots" content="index, follow" />
+      <meta name="robots" content={noIndex ? "noindex, nofollow" : "index, follow"} />
       
       {canonical && <link rel="canonical" href={canonical} />}
       

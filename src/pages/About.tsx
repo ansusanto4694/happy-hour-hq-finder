@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { Footer } from '@/components/Footer';
 import { PageHeader } from '@/components/PageHeader';
+import { SEOHead } from '@/components/SEOHead';
 
 const About = () => {
   const { trackPage } = useAnalytics();
@@ -12,6 +13,13 @@ const About = () => {
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500 flex flex-col">
+      <SEOHead 
+        title="About SipMunchYap - Your Happy Hour Discovery Platform"
+        description="Learn about SipMunchYap and our mission to help you discover the best happy hour deals in NYC. Find local restaurants and bars with amazing specials."
+        keywords="about sipmunchyap, happy hour platform, restaurant discovery, bar finder"
+        canonical="https://sipmunchyap.com/about"
+      />
+      
       {/* Background overlay */}
       <div className="absolute inset-0 bg-black/10"></div>
       

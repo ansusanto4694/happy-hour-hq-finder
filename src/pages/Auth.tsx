@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { PageHeader } from '@/components/PageHeader';
 import { Footer } from '@/components/Footer';
+import { SEOHead } from '@/components/SEOHead';
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -88,6 +89,13 @@ const Auth = () => {
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500 flex flex-col">
+      <SEOHead 
+        title="Sign In - SipMunchYap"
+        description="Sign in to your SipMunchYap account to save favorite happy hours and get personalized recommendations."
+        canonical="https://sipmunchyap.com/auth"
+        noIndex={true}
+      />
+      
       {/* Background overlay */}
       <div className="absolute inset-0 bg-black/10"></div>
       

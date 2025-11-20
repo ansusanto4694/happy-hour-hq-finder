@@ -29,7 +29,7 @@ const Index = () => {
             title="SipMunchYap - Find the Best Happy Hours Near You"
             description="Discover amazing happy hour deals, restaurants, and bars in your area. Compare prices, find deals, and plan your perfect night out with SipMunchYap."
             keywords="happy hour, bars, restaurants, drinks, food deals, nightlife, local bars, restaurant finder"
-            canonical={typeof window !== 'undefined' ? window.location.href : ''}
+            canonical="https://sipmunchyap.com/"
           />
           <Hero />
           
@@ -56,7 +56,7 @@ const Index = () => {
           title="SipMunchYap - Find the Best Happy Hours Near You"
           description="Discover amazing happy hour deals, restaurants, and bars in your area. Compare prices, find deals, and plan your perfect night out with SipMunchYap."
           keywords="happy hour, bars, restaurants, drinks, food deals, nightlife, local bars, restaurant finder"
-          canonical={typeof window !== 'undefined' ? window.location.href : ''}
+          canonical="https://sipmunchyap.com/"
         />
         
         {/* Header with company name, search bar, and navigation */}
