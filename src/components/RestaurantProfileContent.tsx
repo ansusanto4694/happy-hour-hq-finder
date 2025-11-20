@@ -100,7 +100,7 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
                   <img 
                     src={restaurant.logo_url} 
                     alt={`${restaurant.restaurant_name} logo`}
-                    className="w-full h-full object-contain p-2"
+                    className="w-full h-full object-contain p-1"
                   />
                 ) : (
                   <span className="text-muted-foreground text-xs font-medium">LOGO</span>
@@ -147,7 +147,7 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
                       <img 
                         src={restaurant.logo_url} 
                         alt={`${restaurant.restaurant_name} logo`}
-                        className="w-full h-full object-contain p-2"
+                        className="w-full h-full object-contain p-1"
                       />
                     ) : (
                       <span className="text-gray-400 text-xs font-medium">LOGO</span>
