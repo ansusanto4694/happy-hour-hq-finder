@@ -57,9 +57,9 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
         `)
         .eq('is_active', true);
 
-      // Filter by exact neighborhood if provided
+      // Filter by exact neighborhood if provided (case-insensitive)
       if (neighborhood) {
-        query = query.eq('neighborhood', neighborhood);
+        query = query.ilike('neighborhood', neighborhood);
       }
 
       let merchantIds: number[] | null = null;
