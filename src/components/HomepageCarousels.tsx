@@ -53,7 +53,7 @@ export const HomepageCarousels: React.FC = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 pb-8">
+    <div className="w-full px-6 lg:px-8 xl:px-12 pb-8">
       <div className="space-y-8">
         {carousels.map((carousel) => (
           <HomepageCarousel key={carousel.id} carousel={carousel} />
