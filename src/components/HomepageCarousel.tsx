@@ -142,7 +142,7 @@ export const HomepageCarousel: React.FC<HomepageCarouselProps> = ({ carousel }) 
       >
         <CarouselContent className="-ml-3 md:-ml-4">
           {carousel.merchants.map((merchantData) => (
-            <CarouselItem key={merchantData.id} className="pl-3 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+            <CarouselItem key={merchantData.id} className="pl-3 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4 2xl:basis-1/5">
               <CarouselCard
                 merchant={merchantData.merchant}
                 onClick={(merchantId) => navigate(`/restaurant/${merchantId}`)}
