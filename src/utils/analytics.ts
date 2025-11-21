@@ -136,6 +136,11 @@ export const getSessionId = (): string => {
     sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
     sessionStorage.setItem('analytics_session_id', sessionId);
     sessionStartTime = Date.now();
+  } else if (sessionStartTime === null) {
+    // FIX: If session exists but sessionStartTime wasn't set (page refresh/revisit),
+    // initialize it from session storage or use current time
+    const storedStartTime = sessionStorage.getItem('analytics_session_start_time');
+    sessionStartTime = storedStartTime ? parseInt(storedStartTime, 10) : Date.now();
   }
   
   return sessionId;
@@ -148,14 +153,23 @@ export const getUserId = async (): Promise<string | null> => {
 
 // Get or create anonymous user ID for persistent tracking across sessions
 export const getAnonymousUserId = (): string => {
-  let anonUserId = localStorage.getItem('analytics_anonymous_user_id');
-  
-  if (!anonUserId) {
-    anonUserId = `anon_user_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
-    localStorage.setItem('analytics_anonymous_user_id', anonUserId);
+  try {
+    let anonUserId = localStorage.getItem('analytics_anonymous_user_id');
+    
+    if (!anonUserId) {
+      anonUserId = `anon_user_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+      localStorage.setItem('analytics_anonymous_user_id', anonUserId);
+      console.log('[Analytics] Created new anonymous user ID:', anonUserId);
+    } else {
+      console.log('[Analytics] Retrieved existing anonymous user ID:', anonUserId);
+    }
+    
+    return anonUserId;
+  } catch (error) {
+    console.error('[Analytics] Error accessing localStorage for anonymous user ID:', error);
+    // Fallback: generate session-only ID if localStorage fails
+    return `anon_user_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
   }
-  
-  return anonUserId;
 };
 
 export const getDeviceType = (): 'mobile' | 'tablet' | 'desktop' => {
@@ -263,6 +277,9 @@ export const categorizeReferrer = (referrer: string): {
   }
 };
 
+// Capture referrer immediately on page load (before React hydration clears it)
+const capturedReferrer = typeof document !== 'undefined' ? document.referrer : '';
+
 // Initialize or update session - throttled to run only once per page load
 export const initializeSession = async () => {
   // Check if already initialized in this page session
@@ -279,13 +296,24 @@ export const initializeSession = async () => {
   const anonymousUserId = getAnonymousUserId();
   const deviceType = getDeviceType();
   const currentPath = window.location.pathname;
-  const referrer = document.referrer;
+  // FIX: Use captured referrer from page load, not current document.referrer
+  const referrer = capturedReferrer;
   const now = new Date().toISOString();
   const utmParams = getUtmParameters();
   const { category: referrerCategory, platform: referrerPlatform } = categorizeReferrer(referrer);
   
   // Detect if this is a bot
   const botDetection = detectBot();
+  
+  console.log('[Analytics] Initializing session:', {
+    sessionId,
+    anonymousUserId,
+    referrer,
+    referrerCategory,
+    referrerPlatform,
+    deviceType,
+    utmParams
+  });
   
   // Use upsert with ON CONFLICT DO UPDATE to handle race conditions
   // This prevents duplicate key errors when multiple tabs/requests initialize simultaneously
@@ -316,10 +344,12 @@ export const initializeSession = async () => {
   });
   
   if (error) {
-    console.error('Error initializing session:', error);
+    console.error('[Analytics] Error initializing session:', error);
   }
   
+  // FIX: Store session start time in sessionStorage for persistence across page refreshes
   sessionStartTime = Date.now();
+  sessionStorage.setItem('analytics_session_start_time', sessionStartTime.toString());
   lastActivityTime = Date.now();
 };
 
@@ -329,7 +359,19 @@ export const updateSessionActivity = async () => {
   const currentPath = window.location.pathname;
   
   const now = Date.now();
-  const sessionDuration = sessionStartTime ? Math.floor((now - sessionStartTime) / 1000) : 0;
+  // FIX: Ensure sessionStartTime is initialized (defensive coding)
+  if (!sessionStartTime) {
+    const storedStartTime = sessionStorage.getItem('analytics_session_start_time');
+    sessionStartTime = storedStartTime ? parseInt(storedStartTime, 10) : now;
+  }
+  
+  const sessionDuration = Math.floor((now - sessionStartTime) / 1000);
+  
+  console.log('[Analytics] Updating session activity:', {
+    sessionId,
+    sessionDuration,
+    currentPath
+  });
   
   await supabase
     .from('user_sessions')
