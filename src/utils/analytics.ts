@@ -270,9 +270,10 @@ export const getUtmParameters = (): {
 export const categorizeReferrer = (referrer: string): {
   category: string | null;
   platform: string | null;
+  traffic_source: string;
 } => {
   if (!referrer || referrer.trim() === '') {
-    return { category: 'direct', platform: null };
+    return { category: 'direct', platform: null, traffic_source: 'direct' };
   }
 
   try {
@@ -282,7 +283,7 @@ export const categorizeReferrer = (referrer: string): {
 
     // Internal referral
     if (hostname === currentHostname || hostname.endsWith(`.${currentHostname}`)) {
-      return { category: 'internal', platform: currentHostname };
+      return { category: 'internal', platform: currentHostname, traffic_source: 'internal' };
     }
 
     // Search engines
@@ -303,7 +304,7 @@ export const categorizeReferrer = (referrer: string): {
 
     for (const [domain, engine] of Object.entries(searchEngines)) {
       if (hostname.includes(domain)) {
-        return { category: 'search_engine', platform: engine };
+        return { category: 'search_engine', platform: engine, traffic_source: 'organic' };
       }
     }
 
@@ -330,16 +331,61 @@ export const categorizeReferrer = (referrer: string): {
 
     for (const [domain, platform] of Object.entries(socialPlatforms)) {
       if (hostname.includes(domain)) {
-        return { category: 'social_media', platform };
+        return { category: 'social_media', platform, traffic_source: 'social' };
       }
     }
 
     // External referral
-    return { category: 'referral', platform: hostname };
+    return { category: 'referral', platform: hostname, traffic_source: 'referral' };
   } catch (error) {
     console.error('Error parsing referrer:', error);
-    return { category: 'direct', platform: null };
+    return { category: 'direct', platform: null, traffic_source: 'direct' };
   }
+};
+
+// Calculate engagement score based on session metrics
+export const calculateEngagementScore = (
+  pageViews: number,
+  sessionDuration: number,
+  totalEvents: number
+): number => {
+  // Engagement score: 0-100
+  // - Page views: 10 points each (up to 50 points)
+  // - Session duration: 1 point per 6 seconds (up to 30 points)
+  // - High event count: bonus 20 points if > 5 events
+  
+  const pageScore = Math.min(50, pageViews * 10);
+  const durationScore = Math.min(30, Math.floor(sessionDuration / 6));
+  const eventBonus = totalEvents > 5 ? 20 : 0;
+  
+  return Math.min(100, Math.max(0, pageScore + durationScore + eventBonus));
+};
+
+// Determine if session is engaged
+export const isEngagedSession = (
+  pageViews: number,
+  sessionDuration: number,
+  isBounce: boolean,
+  isBot: boolean
+): boolean => {
+  // Engaged session criteria:
+  // - More than 1 page view OR session duration > 30 seconds
+  // - Not a bounce
+  // - Not a bot
+  
+  return (pageViews > 1 || sessionDuration > 30) && !isBounce && !isBot;
+};
+
+// Determine if session is a bounce
+export const isBounceSession = (
+  pageViews: number,
+  sessionDuration: number
+): boolean => {
+  // Bounce criteria:
+  // - 1 or fewer page views AND session duration < 10 seconds
+  // OR no activity at all (0 duration and 0 page views)
+  
+  return (pageViews <= 1 && sessionDuration < 10) || (sessionDuration === 0 && pageViews === 0);
 };
 
 // Capture referrer immediately on page load (before React hydration clears it)
@@ -365,10 +411,13 @@ export const initializeSession = async () => {
   const referrer = capturedReferrer;
   const now = new Date().toISOString();
   const utmParams = getUtmParameters();
-  const { category: referrerCategory, platform: referrerPlatform } = categorizeReferrer(referrer);
+  const { category: referrerCategory, platform: referrerPlatform, traffic_source } = categorizeReferrer(referrer);
   
   // Detect if this is a bot
   const botDetection = detectBot();
+  
+  // Determine traffic source (prioritize UTM params over referrer)
+  const finalTrafficSource = utmParams.utm_source ? 'campaign' : traffic_source;
   
   console.log('[Analytics] Initializing session:', {
     sessionId,
@@ -390,6 +439,7 @@ export const initializeSession = async () => {
     referrer_source: referrer || null,
     referrer_category: referrerCategory,
     referrer_platform: referrerPlatform,
+    traffic_source: finalTrafficSource,
     device_type: deviceType,
     user_agent: navigator.userAgent,
     viewport_width: window.innerWidth,
@@ -403,6 +453,9 @@ export const initializeSession = async () => {
     utm_term: utmParams.utm_term,
     is_bot: botDetection.isBot,
     bot_type: botDetection.botType,
+    is_engaged: false,
+    engagement_score: 0,
+    is_bounce: false,
   }, {
     onConflict: 'session_id',
     ignoreDuplicates: false // Update last_seen on conflict
@@ -418,7 +471,7 @@ export const initializeSession = async () => {
   lastActivityTime = Date.now();
 };
 
-// Update session activity
+// Update session activity with engagement metrics
 export const updateSessionActivity = async () => {
   const sessionId = getSessionId();
   const currentPath = window.location.pathname;
@@ -432,20 +485,44 @@ export const updateSessionActivity = async () => {
   
   const sessionDuration = Math.floor((now - sessionStartTime) / 1000);
   
-  console.log('[Analytics] Updating session activity:', {
-    sessionId,
-    sessionDuration,
-    currentPath
-  });
-  
-  await supabase
+  // Get current session stats to calculate engagement
+  const { data: sessionData } = await supabase
     .from('user_sessions')
-    .update({
-      last_seen: new Date().toISOString(),
-      exit_page: currentPath,
-      session_duration_seconds: sessionDuration,
-    })
-    .eq('session_id', sessionId);
+    .select('page_views, total_events, is_bot')
+    .eq('session_id', sessionId)
+    .single();
+  
+  if (sessionData) {
+    const pageViews = sessionData.page_views || 0;
+    const totalEvents = sessionData.total_events || 0;
+    const isBot = sessionData.is_bot || false;
+    
+    const isBounce = isBounceSession(pageViews, sessionDuration);
+    const isEngaged = isEngagedSession(pageViews, sessionDuration, isBounce, isBot);
+    const engagementScore = calculateEngagementScore(pageViews, sessionDuration, totalEvents);
+    
+    console.log('[Analytics] Updating session activity:', {
+      sessionId,
+      sessionDuration,
+      currentPath,
+      pageViews,
+      isEngaged,
+      engagementScore,
+      isBounce
+    });
+    
+    await supabase
+      .from('user_sessions')
+      .update({
+        last_seen: new Date().toISOString(),
+        exit_page: currentPath,
+        session_duration_seconds: sessionDuration,
+        is_bounce: isBounce,
+        is_engaged: isEngaged,
+        engagement_score: engagementScore,
+      })
+      .eq('session_id', sessionId);
+  }
   
   lastActivityTime = now;
 };
@@ -559,7 +636,7 @@ export const trackFunnelStep = async (params: FunnelStep) => {
   });
 };
 
-// Flush event queue - optimized with combined session update
+// Flush event queue - optimized with combined session update and engagement calculation
 export const flushEventQueue = async () => {
   if (eventQueue.length === 0) return;
   
@@ -572,24 +649,36 @@ export const flushEventQueue = async () => {
     // Count page views in this batch
     const pageViewCount = eventsToSend.filter(e => e.event_type === 'page_view').length;
     
-    // Insert events and update session in parallel
+    // Insert events and get current session state in parallel
     const [_, sessionData] = await Promise.all([
       supabase.from('user_events').insert(eventsToSend),
       supabase
         .from('user_sessions')
-        .select('total_events, page_views')
+        .select('total_events, page_views, session_duration_seconds, is_bot')
         .eq('session_id', sessionId)
         .single()
     ]);
     
-    // Update session counts if we got the data
+    // Update session counts and engagement metrics if we got the data
     if (sessionData.data) {
+      const newTotalEvents = (sessionData.data.total_events || 0) + eventsToSend.length;
+      const newPageViews = (sessionData.data.page_views || 0) + pageViewCount;
+      const sessionDuration = sessionData.data.session_duration_seconds || 0;
+      const isBot = sessionData.data.is_bot || false;
+      
+      const isBounce = isBounceSession(newPageViews, sessionDuration);
+      const isEngaged = isEngagedSession(newPageViews, sessionDuration, isBounce, isBot);
+      const engagementScore = calculateEngagementScore(newPageViews, sessionDuration, newTotalEvents);
+      
       const updates: any = {
-        total_events: (sessionData.data.total_events || 0) + eventsToSend.length
+        total_events: newTotalEvents,
+        is_bounce: isBounce,
+        is_engaged: isEngaged,
+        engagement_score: engagementScore,
       };
       
       if (pageViewCount > 0) {
-        updates.page_views = (sessionData.data.page_views || 0) + pageViewCount;
+        updates.page_views = newPageViews;
       }
       
       await supabase
