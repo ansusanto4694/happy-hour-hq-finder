@@ -1,6 +1,21 @@
 import { supabase } from '@/integrations/supabase/client';
 import { detectBot } from './botDetection';
 
+// Declare gtag for TypeScript
+declare global {
+  interface Window {
+    gtag?: (...args: any[]) => void;
+    dataLayer?: any[];
+  }
+}
+
+// Helper to send events to GA4
+const sendToGA4 = (eventName: string, eventParams?: Record<string, any>) => {
+  if (typeof window !== 'undefined' && window.gtag) {
+    window.gtag('event', eventName, eventParams);
+  }
+};
+
 export interface TrackEventParams {
   eventType: 'click' | 'page_view' | 'form_submit' | 'interaction' | 'hover' | 'impression' | 'focus' | 'input' | 'change' | 'error' | 'performance';
   eventCategory: 'navigation' | 'search' | 'carousel' | 'filter' | 'merchant_interaction' | 'authentication' | 'map_interaction' | 'page_view' | 'form' | 'web_vitals' | 'component_render' | 'resources' | 'error_recovery' | 'app_error';
@@ -351,6 +366,17 @@ export const trackEvent = async (params: TrackEventParams) => {
     is_mobile: isMobileDevice(),
   };
   
+  // Send to GA4 in parallel with custom analytics
+  const ga4EventName = `${params.eventCategory}_${params.eventAction}`.replace(/\s+/g, '_');
+  sendToGA4(ga4EventName, {
+    event_category: params.eventCategory,
+    event_label: params.eventLabel,
+    event_value: params.eventValue,
+    merchant_id: params.merchantId,
+    search_term: params.searchTerm,
+    location_query: params.locationQuery,
+  });
+  
   // Add to queue
   eventQueue.push(event);
   
@@ -372,6 +398,13 @@ export const trackEvent = async (params: TrackEventParams) => {
 
 // Track page views - fully non-blocking, batched with event queue
 export const trackPageView = async (additionalParams?: Partial<TrackEventParams>) => {
+  // Send page view to GA4
+  sendToGA4('page_view', {
+    page_title: document.title,
+    page_location: window.location.href,
+    page_path: window.location.pathname,
+  });
+  
   // Track the event (queued, non-blocking) - page views will be counted from events
   trackEvent({
     eventType: 'page_view',
