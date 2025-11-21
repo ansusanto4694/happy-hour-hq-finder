@@ -805,12 +805,14 @@ export type Database = {
           bot_type: string | null
           created_at: string
           device_type: string
+          engagement_score: number | null
           entry_page: string
           exit_page: string | null
           first_seen: string
           id: string
           is_bot: boolean
           is_bounce: boolean
+          is_engaged: boolean | null
           last_seen: string
           page_views: number
           referrer_category: string | null
@@ -819,6 +821,7 @@ export type Database = {
           session_duration_seconds: number | null
           session_id: string
           total_events: number
+          traffic_source: string | null
           updated_at: string
           user_agent: string | null
           user_id: string | null
@@ -835,12 +838,14 @@ export type Database = {
           bot_type?: string | null
           created_at?: string
           device_type: string
+          engagement_score?: number | null
           entry_page: string
           exit_page?: string | null
           first_seen?: string
           id?: string
           is_bot?: boolean
           is_bounce?: boolean
+          is_engaged?: boolean | null
           last_seen?: string
           page_views?: number
           referrer_category?: string | null
@@ -849,6 +854,7 @@ export type Database = {
           session_duration_seconds?: number | null
           session_id: string
           total_events?: number
+          traffic_source?: string | null
           updated_at?: string
           user_agent?: string | null
           user_id?: string | null
@@ -865,12 +871,14 @@ export type Database = {
           bot_type?: string | null
           created_at?: string
           device_type?: string
+          engagement_score?: number | null
           entry_page?: string
           exit_page?: string | null
           first_seen?: string
           id?: string
           is_bot?: boolean
           is_bounce?: boolean
+          is_engaged?: boolean | null
           last_seen?: string
           page_views?: number
           referrer_category?: string | null
@@ -879,6 +887,7 @@ export type Database = {
           session_duration_seconds?: number | null
           session_id?: string
           total_events?: number
+          traffic_source?: string | null
           updated_at?: string
           user_agent?: string | null
           user_id?: string | null
