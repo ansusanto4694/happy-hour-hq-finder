@@ -9,6 +9,9 @@ import { RestaurantProfileContent } from '@/components/RestaurantProfileContent'
 import { SEOHead } from '@/components/SEOHead';
 import { trackFunnelStep } from '@/utils/analytics';
 import { Footer } from '@/components/Footer';
+import { useAnalytics } from '@/hooks/useAnalytics';
+
+// Restaurant profile page with enhanced analytics tracking
 
 const generateRestaurantStructuredData = (restaurant: any) => {
   const dayMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -86,12 +89,54 @@ const generateBreadcrumbStructuredData = (restaurant: any) => {
 
 const RestaurantProfile = () => {
   const { id } = useParams();
+  const { trackPage, track } = useAnalytics();
   
   useEffect(() => {
     if (id) {
-      trackFunnelStep({ funnelStep: 'profile_viewed', merchantId: parseInt(id, 10), stepOrder: 5 });
+      const merchantId = parseInt(id, 10);
+      trackFunnelStep({ funnelStep: 'profile_viewed', merchantId, stepOrder: 5 });
+      
+      // Track explicit page view
+      trackPage({
+        eventCategory: 'restaurant_profile',
+        eventAction: 'page_view',
+        merchantId,
+        metadata: {
+          merchant_id: merchantId
+        }
+      });
     }
-  }, [id]);
+  }, [id, trackPage]);
+
+  // Track scroll depth
+  useEffect(() => {
+    const scrollDepths = [25, 50, 75, 100];
+    const tracked = new Set<number>();
+    
+    const handleScroll = () => {
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight - windowHeight;
+      const scrollTop = window.scrollY;
+      const scrollPercent = (scrollTop / documentHeight) * 100;
+      
+      scrollDepths.forEach(depth => {
+        if (scrollPercent >= depth && !tracked.has(depth)) {
+          tracked.add(depth);
+          track({
+            eventType: 'scroll',
+            eventCategory: 'restaurant_profile',
+            eventAction: 'scroll_depth',
+            eventLabel: `${depth}%`,
+            merchantId: id ? parseInt(id, 10) : undefined,
+            metadata: { scroll_depth: depth }
+          });
+        }
+      });
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [id, track]);
   
   const { data: restaurant, isLoading, error } = useQuery({
     queryKey: ['restaurant', id],
