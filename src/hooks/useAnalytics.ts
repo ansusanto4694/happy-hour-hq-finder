@@ -5,6 +5,8 @@ import {
   trackPageView,
   trackFunnelStep,
   trackClick,
+  verifyGA4Setup,
+  enableGA4Debug,
   type TrackEventParams,
   type FunnelStep,
 } from '@/utils/analytics';
@@ -21,6 +23,14 @@ export const useAnalytics = () => {
       sessionInitializedRef.current = true;
       globalSessionInitialized = true;
       initializeSession();
+      
+      // Verify GA4 setup on initialization
+      verifyGA4Setup();
+      
+      // Enable debug mode in development
+      if (import.meta.env.DEV) {
+        enableGA4Debug();
+      }
     }
   }, []);
 
@@ -54,5 +64,7 @@ export const useAnalytics = () => {
     trackPage,
     trackFunnel,
     trackElementClick,
+    verifyGA4Setup,
+    enableGA4Debug,
   };
 };

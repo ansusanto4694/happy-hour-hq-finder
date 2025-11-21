@@ -9,17 +9,75 @@ declare global {
   }
 }
 
+// Enable GA4 Debug Mode (shows events in GA4 DebugView)
+export const enableGA4Debug = () => {
+  if (typeof window !== 'undefined' && window.gtag) {
+    window.gtag('config', 'G-XXXXXXXXXX', { debug_mode: true });
+    console.log('[Analytics] GA4 Debug Mode enabled - check DebugView in GA4');
+  }
+};
+
+// Verify GA4 is properly initialized
+export const verifyGA4Setup = (): boolean => {
+  const hasGtag = typeof window !== 'undefined' && typeof window.gtag === 'function';
+  const hasDataLayer = typeof window !== 'undefined' && Array.isArray(window.dataLayer);
+  
+  console.log('[Analytics] GA4 Setup Check:', {
+    gtag_available: hasGtag,
+    dataLayer_available: hasDataLayer,
+    dataLayer_length: hasDataLayer ? window.dataLayer?.length : 0,
+  });
+  
+  return hasGtag && hasDataLayer;
+};
+
+// Clean up parameters to avoid sending undefined/null values to GA4
+const cleanGA4Params = (params?: Record<string, any>): Record<string, any> => {
+  if (!params) return {};
+  
+  const cleaned: Record<string, any> = {};
+  Object.entries(params).forEach(([key, value]) => {
+    // Only include defined, non-null values
+    if (value !== undefined && value !== null) {
+      cleaned[key] = value;
+    }
+  });
+  
+  return cleaned;
+};
+
+// List of events that should be marked as conversions in GA4
+const CONVERSION_EVENTS = [
+  'contact_clicked',
+  'search_submitted',
+  'merchant_profile_viewed',
+  'phone_clicked',
+  'website_clicked',
+  'directions_clicked',
+];
+
 // Helper to send events to GA4
 const sendToGA4 = (eventName: string, eventParams?: Record<string, any>) => {
-  if (typeof window !== 'undefined' && window.gtag) {
-    try {
-      window.gtag('event', eventName, eventParams);
-      console.log('[Analytics] GA4 event sent:', eventName, eventParams);
-    } catch (error) {
-      console.error('[Analytics] GA4 error:', error);
-    }
-  } else {
+  if (!verifyGA4Setup()) {
     console.warn('[Analytics] GA4 not available - gtag not found on window');
+    return;
+  }
+  
+  try {
+    // Clean up parameters
+    const cleanedParams = cleanGA4Params(eventParams);
+    
+    // Mark as conversion if applicable
+    if (CONVERSION_EVENTS.includes(eventName)) {
+      cleanedParams.conversion = true;
+    }
+    
+    // Send event to GA4
+    window.gtag!('event', eventName, cleanedParams);
+    
+    console.log('[Analytics] GA4 event sent:', eventName, cleanedParams);
+  } catch (error) {
+    console.error('[Analytics] GA4 error:', error);
   }
 };
 
@@ -421,9 +479,14 @@ export const trackEvent = async (params: TrackEventParams) => {
     event_category: params.eventCategory,
     event_label: params.eventLabel,
     event_value: params.eventValue,
+    // Custom dimensions (configure these in GA4 Admin)
     merchant_id: params.merchantId,
     search_term: params.searchTerm,
     location_query: params.locationQuery,
+    page_path: params.pagePath || window.location.pathname,
+    user_id: params.userId || await getUserId(),
+    device_type: getDeviceType(),
+    is_mobile: isMobileDevice(),
   });
   
   // Add to queue
@@ -447,11 +510,16 @@ export const trackEvent = async (params: TrackEventParams) => {
 
 // Track page views - fully non-blocking, batched with event queue
 export const trackPageView = async (additionalParams?: Partial<TrackEventParams>) => {
-  // Send page view to GA4
+  // Send page view to GA4 with custom dimensions
   sendToGA4('page_view', {
     page_title: document.title,
     page_location: window.location.href,
     page_path: window.location.pathname,
+    // Custom dimensions
+    merchant_id: additionalParams?.merchantId,
+    search_term: additionalParams?.searchTerm,
+    location_query: additionalParams?.locationQuery,
+    device_type: getDeviceType(),
   });
   
   // Track the event (queued, non-blocking) - page views will be counted from events
@@ -543,11 +611,19 @@ export const trackClick = async (
   action: string,
   additionalParams?: Partial<TrackEventParams>
 ) => {
+  // Check if this is a conversion event
+  const eventName = `${category}_${action}`.replace(/\s+/g, '_');
+  const isConversion = CONVERSION_EVENTS.includes(eventName);
+  
   await trackEvent({
     eventType: 'click',
     eventCategory: category,
     eventAction: action,
     ...additionalParams,
+    metadata: {
+      ...additionalParams?.metadata,
+      is_conversion: isConversion,
+    },
   });
 };
 
