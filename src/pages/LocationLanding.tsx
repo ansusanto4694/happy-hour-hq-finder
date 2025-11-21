@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { useMemo, useState, useLayoutEffect } from 'react';
+import { useMemo, useState, useLayoutEffect, useEffect } from 'react';
 import { SEOHead } from '@/components/SEOHead';
 import { useMerchants } from '@/hooks/useMerchants';
 import { SearchResultCard } from '@/components/SearchResultCard';
@@ -11,6 +11,9 @@ import { Footer } from '@/components/Footer';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ViewToggle } from '@/components/ViewToggle';
 import { LazyResultsMap } from '@/components/LazyResultsMap';
+import { useAnalytics } from '@/hooks/useAnalytics';
+
+// Location landing page with analytics tracking
 
 // Helper function to convert slug to display name
 const slugToDisplayName = (slug: string): string => {
@@ -63,6 +66,7 @@ const generateLocationStructuredData = (city: string, state: string, neighborhoo
 export const LocationLanding = () => {
   const { citySlug, neighborhoodSlug } = useParams<{ citySlug: string; neighborhoodSlug?: string }>();
   const isMobile = useIsMobile();
+  const { trackPage, track } = useAnalytics();
   
   // Scroll to top when navigating to this page
   useLayoutEffect(() => {
@@ -107,6 +111,21 @@ export const LocationLanding = () => {
   const structuredData = useMemo(() => {
     return generateLocationStructuredData(city, state, neighborhood);
   }, [city, state, neighborhood]);
+
+  // Track page view on mount and when location changes
+  useEffect(() => {
+    trackPage({
+      eventCategory: 'location_landing',
+      eventAction: 'page_view',
+      locationQuery: locationString,
+      metadata: {
+        city,
+        state,
+        neighborhood: neighborhood || null,
+        merchant_count: merchants?.length || 0
+      }
+    });
+  }, [locationString, city, state, neighborhood, merchants?.length, trackPage]);
 
   const pageTitle = neighborhood 
     ? `Happy Hour in ${neighborhood}, ${city} | SipMunchYap`
@@ -211,6 +230,19 @@ export const LocationLanding = () => {
                     key={hood}
                     to={`/happy-hour/${citySlug}/${displayNameToSlug(hood)}`}
                     className="p-4 rounded-lg border border-border bg-card hover:border-primary hover:shadow-md transition-all"
+                    onClick={() => {
+                      track({
+                        eventType: 'click',
+                        eventCategory: 'location_landing',
+                        eventAction: 'neighborhood_click',
+                        eventLabel: hood,
+                        locationQuery: locationString,
+                        metadata: {
+                          neighborhood: hood,
+                          merchant_count: merchants.filter(m => m.neighborhood === hood).length
+                        }
+                      });
+                    }}
                   >
                     <MapPin className="h-5 w-5 text-primary mb-2" />
                     <h3 className="font-semibold text-foreground">{hood}</h3>
@@ -229,11 +261,37 @@ export const LocationLanding = () => {
               <div className="flex items-center gap-4">
                 {/* Mobile View Toggle - only on neighborhood pages */}
                 {isMobile && neighborhood && (
-                  <ViewToggle view={view} onViewChange={setView} />
+                  <ViewToggle 
+                    view={view} 
+                    onViewChange={(newView) => {
+                      setView(newView);
+                      track({
+                        eventType: 'click',
+                        eventCategory: 'location_landing',
+                        eventAction: 'view_toggle',
+                        eventLabel: newView,
+                        locationQuery: locationString,
+                        metadata: { view: newView, device: 'mobile' }
+                      });
+                    }} 
+                  />
                 )}
                 {/* Desktop View Toggle */}
                 {!isMobile && (
-                  <ViewToggle view={view} onViewChange={setView} />
+                  <ViewToggle 
+                    view={view} 
+                    onViewChange={(newView) => {
+                      setView(newView);
+                      track({
+                        eventType: 'click',
+                        eventCategory: 'location_landing',
+                        eventAction: 'view_toggle',
+                        eventLabel: newView,
+                        locationQuery: locationString,
+                        metadata: { view: newView, device: 'desktop' }
+                      });
+                    }} 
+                  />
                 )}
                 {/* View All button for mobile on neighborhood pages */}
                 {isMobile && neighborhood && (

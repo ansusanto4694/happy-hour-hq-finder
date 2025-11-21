@@ -12,13 +12,20 @@ declare global {
 // Helper to send events to GA4
 const sendToGA4 = (eventName: string, eventParams?: Record<string, any>) => {
   if (typeof window !== 'undefined' && window.gtag) {
-    window.gtag('event', eventName, eventParams);
+    try {
+      window.gtag('event', eventName, eventParams);
+      console.log('[Analytics] GA4 event sent:', eventName, eventParams);
+    } catch (error) {
+      console.error('[Analytics] GA4 error:', error);
+    }
+  } else {
+    console.warn('[Analytics] GA4 not available - gtag not found on window');
   }
 };
 
 export interface TrackEventParams {
-  eventType: 'click' | 'page_view' | 'form_submit' | 'interaction' | 'hover' | 'impression' | 'focus' | 'input' | 'change' | 'error' | 'performance';
-  eventCategory: 'navigation' | 'search' | 'carousel' | 'filter' | 'merchant_interaction' | 'authentication' | 'map_interaction' | 'page_view' | 'form' | 'web_vitals' | 'component_render' | 'resources' | 'error_recovery' | 'app_error';
+  eventType: 'click' | 'page_view' | 'form_submit' | 'interaction' | 'hover' | 'impression' | 'focus' | 'input' | 'change' | 'error' | 'performance' | 'scroll';
+  eventCategory: 'navigation' | 'search' | 'carousel' | 'filter' | 'merchant_interaction' | 'authentication' | 'map_interaction' | 'page_view' | 'form' | 'web_vitals' | 'component_render' | 'resources' | 'error_recovery' | 'app_error' | 'location_landing' | 'mobile_filter_drawer' | 'restaurant_profile';
   eventAction: string;
   eventLabel?: string;
   eventValue?: number;
