@@ -71,7 +71,7 @@ export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick })
           <h3 className="font-semibold text-foreground text-lg leading-tight">
             {merchant.restaurant_name}
           </h3>
-          <div className="mt-1">
+          <div className="mt-2">
             {todaysHappyHour !== 'No Happy Hour Today' ? (
               <span className="text-sm font-semibold text-white bg-amber-500/90 px-3 py-1.5 rounded-full shadow-sm inline-flex items-center gap-1 leading-tight">
                 🍻 {todaysHappyHour}
@@ -83,7 +83,7 @@ export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick })
             )}
           </div>
           {merchant.neighborhood && (
-            <p className="text-sm text-muted-foreground mt-0.5">
+            <p className="text-sm text-muted-foreground mt-2">
               {merchant.neighborhood}
             </p>
           )}
