@@ -83,7 +83,7 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
           </span>
         )}
         {merchant.neighborhood && (
-          <p className="text-xs text-muted-foreground/80 mt-2">
+          <p className="text-[11px] text-muted-foreground/70 mt-2">
             {merchant.neighborhood}
           </p>
         )}
