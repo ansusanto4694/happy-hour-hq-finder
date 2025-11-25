@@ -75,7 +75,7 @@ export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick })
             {todaysHappyHour}
           </p>
           {merchant.neighborhood && (
-            <p className="text-xs text-muted-foreground/80 mt-0.5">
+            <p className="text-sm text-muted-foreground mt-0.5">
               {merchant.neighborhood}
             </p>
           )}
