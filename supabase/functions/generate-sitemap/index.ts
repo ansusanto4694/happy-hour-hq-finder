@@ -11,6 +11,14 @@ interface Merchant {
   updated_at: string;
   city: string;
   state: string;
+  neighborhood: string | null;
+}
+
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 }
 
 Deno.serve(async (req) => {
@@ -26,10 +34,10 @@ Deno.serve(async (req) => {
 
     console.log('Generating dynamic sitemap...');
 
-    // Fetch all active merchants
+    // Fetch all active merchants with neighborhoods
     const { data: merchants, error } = await supabase
       .from('Merchant')
-      .select('id, restaurant_name, updated_at, city, state')
+      .select('id, restaurant_name, updated_at, city, state, neighborhood')
       .eq('is_active', true)
       .order('updated_at', { ascending: false });
 
@@ -40,6 +48,25 @@ Deno.serve(async (req) => {
 
     console.log(`Found ${merchants?.length || 0} active merchants`);
 
+    // Extract unique city/neighborhood combinations
+    const locationSet = new Set<string>();
+    if (merchants && merchants.length > 0) {
+      for (const merchant of merchants) {
+        const citySlug = slugify(`${merchant.city}-${merchant.state}`);
+        
+        // Add city page
+        locationSet.add(`city:${citySlug}`);
+        
+        // Add neighborhood page if available
+        if (merchant.neighborhood) {
+          const neighborhoodSlug = slugify(merchant.neighborhood);
+          locationSet.add(`neighborhood:${citySlug}:${neighborhoodSlug}`);
+        }
+      }
+    }
+
+    console.log(`Found ${locationSet.size} unique location pages`);
+
     // Get current date for lastmod
     const currentDate = new Date().toISOString().split('T')[0];
 
@@ -47,7 +74,30 @@ Deno.serve(async (req) => {
     let sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n';
     sitemap += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
 
-    // Add restaurant pages only (static pages are in sitemap-pages.xml)
+    // Add location landing pages (city and neighborhood)
+    for (const location of locationSet) {
+      if (location.startsWith('city:')) {
+        const citySlug = location.replace('city:', '');
+        sitemap += '  <url>\n';
+        sitemap += `    <loc>https://sipmunchyap.com/happy-hour/${citySlug}</loc>\n`;
+        sitemap += `    <lastmod>${currentDate}</lastmod>\n`;
+        sitemap += `    <changefreq>daily</changefreq>\n`;
+        sitemap += `    <priority>0.9</priority>\n`;
+        sitemap += '  </url>\n';
+      } else if (location.startsWith('neighborhood:')) {
+        const parts = location.replace('neighborhood:', '').split(':');
+        const citySlug = parts[0];
+        const neighborhoodSlug = parts[1];
+        sitemap += '  <url>\n';
+        sitemap += `    <loc>https://sipmunchyap.com/happy-hour/${citySlug}/${neighborhoodSlug}</loc>\n`;
+        sitemap += `    <lastmod>${currentDate}</lastmod>\n`;
+        sitemap += `    <changefreq>daily</changefreq>\n`;
+        sitemap += `    <priority>0.85</priority>\n`;
+        sitemap += '  </url>\n';
+      }
+    }
+
+    // Add restaurant pages
     if (merchants && merchants.length > 0) {
       for (const merchant of merchants) {
         const lastmod = merchant.updated_at 
