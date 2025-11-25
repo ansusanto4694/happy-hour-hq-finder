@@ -35,7 +35,7 @@ export const Footer = () => {
             <h3 className="text-lg font-semibold text-foreground mb-4">SipMunchYap</h3>
             <p className="text-sm text-muted-foreground mb-4">
               Your go-to source for discovering the best happy hour deals in New York City. 
-              Over 300+ verified happy hours and growing.
+              Over 500+ verified happy hours and growing.
             </p>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Clock className="h-4 w-4" />
