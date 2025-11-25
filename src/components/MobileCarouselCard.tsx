@@ -1,5 +1,6 @@
 import React from 'react';
-import { getTodaysHappyHour } from '@/utils/timeUtils';
+import { Badge } from '@/components/ui/badge';
+import { getTodaysHappyHour, getMenuTypeBadge } from '@/utils/timeUtils';
 import { useAnalytics } from '@/hooks/useAnalytics';
 
 interface MobileCarouselCardProps {
@@ -13,6 +14,10 @@ interface MobileCarouselCardProps {
       happy_hour_start: string;
       happy_hour_end: string;
     }>;
+    happy_hour_deals?: Array<{
+      active: boolean;
+      menu_type: 'food_and_drinks' | 'drinks_only' | null;
+    }>;
   };
   onClick: () => void;
 }
@@ -23,6 +28,7 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
 }) => {
   const { track, trackFunnel } = useAnalytics();
   const todaysHappyHourText = getTodaysHappyHour(merchant.merchant_happy_hour || []);
+  const menuTypeBadge = getMenuTypeBadge(merchant.happy_hour_deals || []);
 
   const handleClick = async () => {
     await track({
@@ -72,7 +78,7 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
       </h4>
 
       {/* Happy hour status */}
-      <div className="text-center">
+      <div className="text-center flex flex-col items-center gap-1.5">
         {todaysHappyHourText !== 'No Happy Hour Today' ? (
           <span className="text-base font-semibold text-white bg-amber-500/90 px-3 py-2 rounded-full shadow-sm inline-flex items-center gap-1 leading-tight">
             🍻 {todaysHappyHourText}
@@ -82,8 +88,20 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
             No happy hour today
           </span>
         )}
+        {menuTypeBadge && (
+          <Badge 
+            variant="secondary" 
+            className={`text-xs px-2 py-1 font-semibold shadow-sm ${
+              menuTypeBadge.type === 'food_and_drinks' 
+                ? 'bg-teal-500/90 hover:bg-teal-600 text-white' 
+                : 'bg-purple-500/90 hover:bg-purple-600 text-white'
+            }`}
+          >
+            {menuTypeBadge.emoji} {menuTypeBadge.label}
+          </Badge>
+        )}
         {merchant.neighborhood && (
-          <p className="text-sm text-muted-foreground mt-3">
+          <p className="text-sm text-muted-foreground mt-2">
             {merchant.neighborhood}
           </p>
         )}

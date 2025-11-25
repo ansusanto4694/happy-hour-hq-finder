@@ -195,6 +195,7 @@ export type Database = {
           display_order: number | null
           id: string
           is_verified: boolean
+          menu_type: string | null
           restaurant_id: number
           source_label: string | null
           source_url: string | null
@@ -210,6 +211,7 @@ export type Database = {
           display_order?: number | null
           id?: string
           is_verified?: boolean
+          menu_type?: string | null
           restaurant_id: number
           source_label?: string | null
           source_url?: string | null
@@ -225,6 +227,7 @@ export type Database = {
           display_order?: number | null
           id?: string
           is_verified?: boolean
+          menu_type?: string | null
           restaurant_id?: number
           source_label?: string | null
           source_url?: string | null

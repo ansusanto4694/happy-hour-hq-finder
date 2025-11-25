@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { getTodaysHappyHour } from "@/utils/timeUtils";
+import { Badge } from "@/components/ui/badge";
+import { getTodaysHappyHour, getMenuTypeBadge } from "@/utils/timeUtils";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { useNavigate } from 'react-router-dom';
 
@@ -15,6 +16,10 @@ interface CarouselCardProps {
       happy_hour_start: string;
       happy_hour_end: string;
     }>;
+    happy_hour_deals?: Array<{
+      active: boolean;
+      menu_type: 'food_and_drinks' | 'drinks_only' | null;
+    }>;
   };
   onClick: (merchantId: string) => void;
 }
@@ -23,6 +28,7 @@ export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick })
   const { track, trackFunnel } = useAnalytics();
   const navigate = useNavigate();
   const todaysHappyHour = merchant.merchant_happy_hour ? getTodaysHappyHour(merchant.merchant_happy_hour) : 'No Happy Hour Today';
+  const menuTypeBadge = getMenuTypeBadge(merchant.happy_hour_deals || []);
   console.log('CarouselCard merchant neighborhood:', merchant.restaurant_name, merchant.neighborhood);
   
   const handleClick = async () => {
@@ -71,15 +77,27 @@ export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick })
           <h3 className="font-semibold text-foreground text-lg leading-tight truncate">
             {merchant.restaurant_name}
           </h3>
-          <div className="mt-2">
+          <div className="mt-2 flex flex-col gap-1.5">
             {todaysHappyHour !== 'No Happy Hour Today' ? (
-              <span className="text-sm font-semibold text-white bg-amber-500/90 px-3 py-1.5 rounded-full shadow-sm inline-flex items-center gap-1 leading-tight">
+              <span className="text-sm font-semibold text-white bg-amber-500/90 px-3 py-1.5 rounded-full shadow-sm inline-flex items-center gap-1 leading-tight w-fit">
                 🍻 {todaysHappyHour}
               </span>
             ) : (
               <span className="text-sm text-muted-foreground font-medium">
                 No happy hour today
               </span>
+            )}
+            {menuTypeBadge && (
+              <Badge 
+                variant="secondary" 
+                className={`text-xs px-2 py-1 font-semibold shadow-sm w-fit ${
+                  menuTypeBadge.type === 'food_and_drinks' 
+                    ? 'bg-teal-500/90 hover:bg-teal-600 text-white' 
+                    : 'bg-purple-500/90 hover:bg-purple-600 text-white'
+                }`}
+              >
+                {menuTypeBadge.emoji} {menuTypeBadge.label}
+              </Badge>
             )}
           </div>
           {merchant.neighborhood && (

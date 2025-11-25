@@ -40,6 +40,11 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
             happy_hour_start,
             happy_hour_end
           ),
+          happy_hour_deals (
+            id,
+            active,
+            menu_type
+          ),
           merchant_categories (
             id,
             categories (

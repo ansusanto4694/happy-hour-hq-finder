@@ -29,6 +29,11 @@ export type HomepageCarousel = {
         happy_hour_start: string;
         happy_hour_end: string;
       }>;
+      happy_hour_deals?: Array<{
+        id: string;
+        active: boolean;
+        menu_type: 'food_and_drinks' | 'drinks_only' | null;
+      }>;
     };
   }>;
 };
@@ -68,6 +73,11 @@ export const useHomepageCarousels = () => {
                 day_of_week,
                 happy_hour_start,
                 happy_hour_end
+              ),
+              happy_hour_deals (
+                id,
+                active,
+                menu_type
               )
             )
           )
