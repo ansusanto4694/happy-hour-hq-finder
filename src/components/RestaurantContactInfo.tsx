@@ -5,6 +5,7 @@ import { useParams } from 'react-router-dom';
 import { MapPin, Phone, Globe } from 'lucide-react';
 import { RestaurantMapPreview } from './RestaurantMapPreview';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { getDeviceType } from '@/utils/analytics';
 
 interface RestaurantContactInfoProps {
   streetAddress: string;
@@ -45,6 +46,11 @@ export const RestaurantContactInfo: React.FC<RestaurantContactInfoProps> = ({
       eventAction: 'phone_clicked',
       merchantId,
       eventLabel: phoneNumber || undefined,
+      metadata: {
+        deviceType: getDeviceType(),
+        component: 'contact_info',
+        phoneNumber: phoneNumber || undefined
+      }
     });
 
     trackFunnel({
@@ -61,6 +67,11 @@ export const RestaurantContactInfo: React.FC<RestaurantContactInfoProps> = ({
       eventAction: 'website_clicked',
       merchantId,
       eventLabel: website || undefined,
+      metadata: {
+        deviceType: getDeviceType(),
+        component: 'contact_info',
+        website: website || undefined
+      }
     });
 
     trackFunnel({
@@ -77,6 +88,8 @@ export const RestaurantContactInfo: React.FC<RestaurantContactInfoProps> = ({
       eventAction: 'directions_clicked',
       merchantId,
       metadata: {
+        deviceType: getDeviceType(),
+        component: 'contact_info',
         address: `${streetAddress}, ${city}, ${state} ${zipCode}`,
       },
     });

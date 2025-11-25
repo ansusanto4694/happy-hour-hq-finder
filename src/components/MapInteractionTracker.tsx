@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useAnalytics } from '@/hooks/useAnalytics';
-import { throttle, shouldSampleEvent } from '@/utils/analytics';
+import { throttle, shouldSampleEvent, getDeviceType } from '@/utils/analytics';
 
 interface MapInteractionTrackerProps {
   mapRef: React.RefObject<any>;
@@ -79,6 +79,7 @@ export const MapInteractionTracker: React.FC<MapInteractionTrackerProps> = ({
           merchantId: feature.properties?.id,
           eventLabel: feature.properties?.name,
           metadata: {
+            deviceType: getDeviceType(),
             position: {
               lat: feature.geometry.coordinates[1],
               lng: feature.geometry.coordinates[0],

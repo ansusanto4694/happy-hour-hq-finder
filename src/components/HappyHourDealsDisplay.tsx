@@ -7,6 +7,7 @@ import rehypeRaw from 'rehype-raw';
 import { format } from 'date-fns';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useParams } from 'react-router-dom';
+import { getDeviceType } from '@/utils/analytics';
 
 interface HappyHourDealsDisplayProps {
   restaurantId: number;
@@ -54,6 +55,7 @@ export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ re
           metadata: {
             dealCount: data.length,
             verifiedCount: data.filter(d => d.is_verified).length,
+            deviceType: getDeviceType()
           },
         });
       }
@@ -109,6 +111,7 @@ export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ re
               metadata: {
                 dealId: deal.id,
                 isVerified: deal.is_verified,
+                deviceType: getDeviceType()
               },
             });
           }}
@@ -136,6 +139,7 @@ export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ re
                         metadata: {
                           dealId: deal.id,
                           sourceLabel: deal.source_label,
+                          deviceType: getDeviceType()
                         },
                       });
                     }}
