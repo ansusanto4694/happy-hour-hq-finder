@@ -225,11 +225,7 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
                     {restaurant.restaurant_name}
                   </h3>
                   <p className="text-gray-600 text-base mt-2 break-words leading-relaxed font-medium">
-                    {restaurant.street_address}
-                    {restaurant.street_address_line_2 && `, ${restaurant.street_address_line_2}`}
-                  </p>
-                  <p className="text-gray-600 text-base leading-relaxed font-medium">
-                    {restaurant.city}, {restaurant.state} {restaurant.zip_code}
+                    {restaurant.neighborhood || restaurant.city}
                   </p>
                   {restaurant.phone_number && (
                     <p className="text-gray-600 text-base mt-1 leading-relaxed font-medium">
