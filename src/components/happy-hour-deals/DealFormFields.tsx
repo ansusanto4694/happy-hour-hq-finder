@@ -57,13 +57,13 @@ export const DealFormFields: React.FC<DealFormFieldsProps> = ({
         <label className="block text-sm font-medium mb-1">Menu Type</label>
         <Select
           value={formData.menu_type}
-          onValueChange={(value) => setFormData({ ...formData, menu_type: value as 'food_and_drinks' | 'drinks_only' | '' })}
+          onValueChange={(value) => setFormData({ ...formData, menu_type: value as 'food_and_drinks' | 'drinks_only' | 'not_specified' })}
         >
           <SelectTrigger>
             <SelectValue placeholder="Select menu type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Not Specified</SelectItem>
+            <SelectItem value="not_specified">Not Specified</SelectItem>
             <SelectItem value="food_and_drinks">🍽️ Food & Drinks</SelectItem>
             <SelectItem value="drinks_only">🥃 Drinks Only</SelectItem>
           </SelectContent>
