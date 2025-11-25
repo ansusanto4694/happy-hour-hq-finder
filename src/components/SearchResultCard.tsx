@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { getTodaysHappyHour, getAllTodaysHappyHours, getMenuTypeBadge } from '@/utils/timeUtils';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { getDeviceType } from '@/utils/analytics';
+import { FavoriteButton } from '@/components/FavoriteButton';
 
 interface SearchResultCardProps {
   restaurant: any;
@@ -138,10 +139,13 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
             </div>
             
             <div className="flex-1 min-w-0 space-y-2">
-              {/* Restaurant name */}
-              <h3 className="text-xl font-bold text-gray-900 break-words leading-snug">
-                {restaurant.restaurant_name}
-              </h3>
+              {/* Restaurant name with favorite button */}
+              <div className="flex items-start justify-between gap-2">
+                <h3 className="text-xl font-bold text-gray-900 break-words leading-snug flex-1">
+                  {restaurant.restaurant_name}
+                </h3>
+                <FavoriteButton merchantId={restaurant.id} size="sm" className="flex-shrink-0 -mt-1" />
+              </div>
               
               {/* Neighborhood or City */}
               <div className="text-base text-gray-600 leading-relaxed">
@@ -238,9 +242,12 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
             <div className="flex-1 min-w-0 space-y-2">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-xl font-bold text-gray-900 break-words leading-snug">
-                    {restaurant.restaurant_name}
-                  </h3>
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="text-xl font-bold text-gray-900 break-words leading-snug flex-1">
+                      {restaurant.restaurant_name}
+                    </h3>
+                    <FavoriteButton merchantId={restaurant.id} className="flex-shrink-0" />
+                  </div>
                   <p className="text-gray-600 text-base mt-2 break-words leading-relaxed font-medium">
                     {restaurant.neighborhood || restaurant.city}
                   </p>
