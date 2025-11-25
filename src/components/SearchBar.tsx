@@ -310,7 +310,13 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
   const [gpsCoordinates, setGpsCoordinates] = useState<{lat: number; lng: number} | null>(null);
 
   const handleSearch = (selectedViaSuggestion = false) => {
-    // Track search submission (non-blocking) with typeahead context
+    // Build the full query string for analytics
+    const fullQuery = [searchTerm, location].filter(Boolean).join(' in ');
+    const queryType = searchTerm && location ? 'full_query' : 
+                      searchTerm ? 'search_term_only' : 
+                      location ? 'location_only' : 'empty_search';
+    
+    // Track search submission (non-blocking) with enhanced query tracking
     track({
       eventType: 'click',
       eventCategory: 'search',
@@ -318,13 +324,18 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
       searchTerm: searchTerm || undefined,
       locationQuery: location || undefined,
       metadata: {
+        fullQuery: fullQuery || 'empty_search',
+        queryType: queryType,
+        searchTermLength: searchTerm.length,
+        locationLength: location.length,
         hasSearchTerm: !!searchTerm,
         hasLocation: !!location,
         useGPS: !!gpsCoordinates,
         variant: variant,
         hadSuggestions: searchSuggestions.length > 0,
         suggestionCount: searchSuggestions.length,
-        usedSuggestion: selectedViaSuggestion
+        usedSuggestion: selectedViaSuggestion,
+        timestamp: new Date().toISOString()
       },
     });
     
