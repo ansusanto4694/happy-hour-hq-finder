@@ -48,3 +48,27 @@ export const getAllTodaysHappyHours = (happyHours: any[]): Array<{ start: string
     end: formatTime(hh.happy_hour_end)
   }));
 };
+
+// Helper function to get menu type badge from happy hour deals
+export const getMenuTypeBadge = (deals: any[]) => {
+  const activeDealMenuTypes = deals
+    ?.filter(deal => deal.active)
+    .map(deal => deal.menu_type)
+    .filter(Boolean);
+  
+  if (!activeDealMenuTypes || activeDealMenuTypes.length === 0) {
+    return null;
+  }
+  
+  // If any deal has food and drinks, prioritize that
+  if (activeDealMenuTypes.includes('food_and_drinks')) {
+    return { type: 'food_and_drinks', emoji: '🍽️', label: 'Food & Drinks' };
+  }
+  
+  // Otherwise, if all are drinks only
+  if (activeDealMenuTypes.includes('drinks_only')) {
+    return { type: 'drinks_only', emoji: '🥃', label: 'Drinks Only' };
+  }
+  
+  return null;
+};

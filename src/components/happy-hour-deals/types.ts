@@ -14,6 +14,8 @@ export interface HappyHourDeal {
   is_verified: boolean;
   verified_at: string | null;
   verified_by: string | null;
+  // Menu type field
+  menu_type: 'food_and_drinks' | 'drinks_only' | null;
 }
 
 export interface DealFormData {
@@ -24,4 +26,6 @@ export interface DealFormData {
   source_url: string;
   source_label: string;
   is_verified: boolean;
+  // Menu type field
+  menu_type: 'food_and_drinks' | 'drinks_only' | '';
 }

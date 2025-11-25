@@ -2,7 +2,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { getTodaysHappyHour, getAllTodaysHappyHours } from '@/utils/timeUtils';
+import { getTodaysHappyHour, getAllTodaysHappyHours, getMenuTypeBadge } from '@/utils/timeUtils';
 import { useAnalytics } from '@/hooks/useAnalytics';
 
 interface SearchResultCardProps {
@@ -32,6 +32,9 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
 
   // Get all happy hours for today
   const todaysHappyHours = getAllTodaysHappyHours(restaurant.merchant_happy_hour || []);
+  
+  // Get menu type badge from happy hour deals
+  const menuTypeBadge = getMenuTypeBadge(restaurant.happy_hour_deals || []);
 
   // Track card impressions using Intersection Observer
   useEffect(() => {
@@ -173,6 +176,18 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
                     No Happy Hour Today
                   </Badge>
                 )}
+                {menuTypeBadge && (
+                  <Badge 
+                    variant="secondary" 
+                    className={`text-sm px-2.5 py-1.5 font-semibold shadow-sm w-fit leading-tight ${
+                      menuTypeBadge.type === 'food_and_drinks' 
+                        ? 'bg-teal-500/90 hover:bg-teal-600 text-white' 
+                        : 'bg-purple-500/90 hover:bg-purple-600 text-white'
+                    }`}
+                  >
+                    {menuTypeBadge.emoji} {menuTypeBadge.label}
+                  </Badge>
+                )}
               </div>
               
               {/* Category tags - show more on mobile without phone number */}
@@ -274,6 +289,18 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
                       className="flex-shrink-0 text-sm px-2.5 py-1.5 font-medium text-muted-foreground border-muted-foreground/30 leading-tight"
                     >
                       No Happy Hour Today
+                    </Badge>
+                  )}
+                  {menuTypeBadge && (
+                    <Badge 
+                      variant="secondary" 
+                      className={`flex-shrink-0 text-sm px-2.5 py-1.5 font-semibold shadow-sm leading-tight ${
+                        menuTypeBadge.type === 'food_and_drinks' 
+                          ? 'bg-teal-500/90 hover:bg-teal-600 text-white' 
+                          : 'bg-purple-500/90 hover:bg-purple-600 text-white'
+                      }`}
+                    >
+                      {menuTypeBadge.emoji} {menuTypeBadge.label}
                     </Badge>
                   )}
                 </div>

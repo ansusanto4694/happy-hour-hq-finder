@@ -3,6 +3,7 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FormattingToolbar } from './FormattingToolbar';
 import { DealFormData } from './types';
 
@@ -50,6 +51,26 @@ export const DealFormFields: React.FC<DealFormFieldsProps> = ({
         <div className="text-xs text-gray-500 mt-1">
           Tip: Select text and use the formatting buttons above. Use **bold**, *italic*, &lt;u&gt;underline&lt;/u&gt;, ~~strikethrough~~, # Large Text, ## Medium Text, or &lt;small&gt;small text&lt;/small&gt;
         </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-1">Menu Type</label>
+        <Select
+          value={formData.menu_type}
+          onValueChange={(value) => setFormData({ ...formData, menu_type: value as 'food_and_drinks' | 'drinks_only' | '' })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select menu type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">Not Specified</SelectItem>
+            <SelectItem value="food_and_drinks">🍽️ Food & Drinks</SelectItem>
+            <SelectItem value="drinks_only">🥃 Drinks Only</SelectItem>
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-gray-500 mt-1">
+          Specify if this happy hour includes food or is drinks-only
+        </p>
       </div>
       
       <div className="flex items-center space-x-2">
