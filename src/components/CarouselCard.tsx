@@ -45,10 +45,10 @@ export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick })
 
   return (
     <Card 
-      className="cursor-pointer hover:shadow-md transition-shadow duration-200 bg-card border border-border h-32"
+      className="cursor-pointer hover:shadow-md transition-shadow duration-200 bg-card border border-border h-40"
       onClick={handleClick}
     >
-      <CardContent className="p-4 h-full flex items-start space-x-4">
+      <CardContent className="p-4 h-full flex items-center space-x-4">
         {/* Logo */}
         <div className="flex-shrink-0 w-24 h-24 bg-white border border-border rounded-lg flex items-center justify-center overflow-hidden">
           {merchant.logo_url ? (
@@ -67,8 +67,8 @@ export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick })
         </div>
         
         {/* Merchant Name and Happy Hour */}
-        <div className="flex-1 min-w-0 pt-2">
-          <h3 className="font-semibold text-foreground text-lg leading-tight">
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold text-foreground text-lg leading-tight truncate">
             {merchant.restaurant_name}
           </h3>
           <div className="mt-2">
