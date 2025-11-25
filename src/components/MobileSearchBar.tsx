@@ -8,6 +8,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { supabase } from '@/integrations/supabase/client';
 import { useLocateMe } from '@/hooks/useLocateMe';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { locationCache } from '@/utils/locationCache';
 
 interface LocationSuggestion {
   id: string;
@@ -46,6 +47,7 @@ export const MobileSearchBar = ({ onExpandedChange }: MobileSearchBarProps = {})
   const locationInputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<NodeJS.Timeout>();
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Fetch location suggestions
   const fetchLocationSuggestions = async (query: string) => {
@@ -55,15 +57,44 @@ export const MobileSearchBar = ({ onExpandedChange }: MobileSearchBarProps = {})
       return;
     }
 
+    // Check cache first
+    const cachedSuggestions = locationCache.get(query);
+    if (cachedSuggestions) {
+      setLocationSuggestions(cachedSuggestions);
+      setShowSuggestions(true);
+      setSelectedSuggestionIndex(-1);
+      setIsLoadingSuggestions(false);
+      return;
+    }
+
+    // Cancel previous request if still pending
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Create new AbortController for this request
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     setIsLoadingSuggestions(true);
     try {
       const { data, error } = await supabase.functions.invoke('location-suggestions', {
         body: { query }
       });
 
+      // Check if this request was aborted
+      if (controller.signal.aborted) {
+        return;
+      }
+
       if (error) throw error;
 
-      setLocationSuggestions(data.suggestions || []);
+      const suggestions = data.suggestions || [];
+      
+      // Cache the results
+      locationCache.set(query, suggestions);
+      
+      setLocationSuggestions(suggestions);
       setShowSuggestions(true);
       setSelectedSuggestionIndex(-1);
       
@@ -73,14 +104,23 @@ export const MobileSearchBar = ({ onExpandedChange }: MobileSearchBarProps = {})
         eventCategory: 'search',
         eventAction: 'location_suggestions_displayed',
         eventLabel: query,
-        metadata: { suggestionCount: data.suggestions?.length || 0 }
+        metadata: { suggestionCount: suggestions.length }
       });
-    } catch (error) {
+    } catch (error: any) {
+      // Check if aborted before handling error
+      if (controller.signal.aborted) {
+        return;
+      }
       console.error('Error fetching location suggestions:', error);
       setLocationSuggestions([]);
       setShowSuggestions(false);
     } finally {
-      setIsLoadingSuggestions(false);
+      if (!controller.signal.aborted) {
+        setIsLoadingSuggestions(false);
+      }
+      if (abortControllerRef.current === controller) {
+        abortControllerRef.current = null;
+      }
     }
   };
 
