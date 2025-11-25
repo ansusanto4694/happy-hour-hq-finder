@@ -32,6 +32,8 @@ interface MobileListDrawerProps {
   onDaysChange: (days: number[]) => void;
   onStartTimeChange: (time: string) => void;
   onEndTimeChange: (time: string) => void;
+  selectedMenuType: 'all' | 'food_and_drinks' | 'drinks_only';
+  onMenuTypeChange: (menuType: 'all' | 'food_and_drinks' | 'drinks_only') => void;
 }
 
 export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
@@ -54,6 +56,8 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
   onDaysChange,
   onStartTimeChange,
   onEndTimeChange,
+  selectedMenuType,
+  onMenuTypeChange,
 }) => {
   const { track } = useAnalytics();
 
@@ -93,6 +97,8 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
               endTime={endTime}
               onStartTimeChange={onStartTimeChange}
               onEndTimeChange={onEndTimeChange}
+              selectedMenuType={selectedMenuType}
+              onMenuTypeChange={onMenuTypeChange}
             />
           </div>
         </DrawerHeader>

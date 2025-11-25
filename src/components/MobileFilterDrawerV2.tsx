@@ -30,6 +30,8 @@ interface MobileFilterDrawerV2Props {
   endTime: string;
   onStartTimeChange: (time: string) => void;
   onEndTimeChange: (time: string) => void;
+  selectedMenuType: 'all' | 'food_and_drinks' | 'drinks_only';
+  onMenuTypeChange: (menuType: 'all' | 'food_and_drinks' | 'drinks_only') => void;
 }
 
 export const MobileFilterDrawerV2: React.FC<MobileFilterDrawerV2Props> = ({
@@ -48,6 +50,8 @@ export const MobileFilterDrawerV2: React.FC<MobileFilterDrawerV2Props> = ({
   endTime,
   onStartTimeChange,
   onEndTimeChange,
+  selectedMenuType,
+  onMenuTypeChange,
 }) => {
   const { track } = useAnalytics();
 
@@ -163,6 +167,8 @@ export const MobileFilterDrawerV2: React.FC<MobileFilterDrawerV2Props> = ({
             endTime={endTime}
             onStartTimeChange={onStartTimeChange}
             onEndTimeChange={onEndTimeChange}
+            selectedMenuType={selectedMenuType}
+            onMenuTypeChange={onMenuTypeChange}
           />
         </div>
       </DrawerContent>

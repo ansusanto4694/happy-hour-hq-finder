@@ -24,6 +24,7 @@ const Results = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedRadius, setSelectedRadius] = useState<RadiusOption>('walking');
   const [showOffersOnly, setShowOffersOnly] = useState(false);
+  const [selectedMenuType, setSelectedMenuType] = useState<'all' | 'food_and_drinks' | 'drinks_only'>('all');
   const [isListDrawerOpen, setIsListDrawerOpen] = useState(false);
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [showSearchThisAreaDesktop, setShowSearchThisAreaDesktop] = useState(false);
@@ -126,7 +127,9 @@ const Results = () => {
     showOffersOnly,
     selectedDays,
     useGPS && gpsLat && gpsLng ? { lat: gpsLat, lng: gpsLng } : undefined, // GPS coordinates
-    carouselId // Carousel filtering
+    carouselId, // Carousel filtering
+    undefined, // neighborhood
+    selectedMenuType // Menu type filter
   );
 
   // Track results page view with full context
@@ -405,6 +408,8 @@ const Results = () => {
             onDaysChange={handleDaysChange}
             onStartTimeChange={handleStartTimeChange}
             onEndTimeChange={handleEndTimeChange}
+            selectedMenuType={selectedMenuType}
+            onMenuTypeChange={setSelectedMenuType}
           />
         </div>
       )}
@@ -432,6 +437,8 @@ const Results = () => {
                 endTime={currentEndTime}
                 onStartTimeChange={handleStartTimeChange}
                 onEndTimeChange={handleEndTimeChange}
+                selectedMenuType={selectedMenuType}
+                onMenuTypeChange={setSelectedMenuType}
               />
               </div>
             </div>
@@ -488,6 +495,8 @@ const Results = () => {
                   endTime={currentEndTime}
                   onStartTimeChange={handleStartTimeChange}
                   onEndTimeChange={handleEndTimeChange}
+                  selectedMenuType={selectedMenuType}
+                  onMenuTypeChange={setSelectedMenuType}
                 />
             </div>
           </div>
