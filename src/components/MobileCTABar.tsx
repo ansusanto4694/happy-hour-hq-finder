@@ -22,48 +22,72 @@ export const MobileCTABar: React.FC<MobileCTABarProps> = ({
   address,
   website,
 }) => {
-  const { track } = useAnalytics();
+  const { track, trackFunnel } = useAnalytics();
   const { id } = useParams();
 
   const handlePhoneClick = () => {
+    const merchantId = id ? parseInt(id) : undefined;
+    
     track({
       eventType: 'click',
       eventCategory: 'merchant_interaction',
       eventAction: 'phone_clicked',
-      merchantId: id ? parseInt(id) : undefined,
+      merchantId,
       metadata: {
         deviceType: getDeviceType(),
         component: 'mobile_cta_bar',
         phoneNumber: phoneNumber || undefined
       }
     });
+    
+    trackFunnel({
+      funnelStep: 'contact_clicked',
+      merchantId,
+      stepOrder: 6
+    });
   };
 
   const handleDirectionsClick = () => {
+    const merchantId = id ? parseInt(id) : undefined;
+    
     track({
       eventType: 'click',
       eventCategory: 'merchant_interaction',
       eventAction: 'directions_clicked',
-      merchantId: id ? parseInt(id) : undefined,
+      merchantId,
       metadata: {
         deviceType: getDeviceType(),
         component: 'mobile_cta_bar',
         address: `${address.street}, ${address.city}, ${address.state} ${address.zipCode}`
       }
     });
+    
+    trackFunnel({
+      funnelStep: 'contact_clicked',
+      merchantId,
+      stepOrder: 6
+    });
   };
 
   const handleWebsiteClick = () => {
+    const merchantId = id ? parseInt(id) : undefined;
+    
     track({
       eventType: 'click',
       eventCategory: 'merchant_interaction',
       eventAction: 'website_clicked',
-      merchantId: id ? parseInt(id) : undefined,
+      merchantId,
       metadata: {
         deviceType: getDeviceType(),
         component: 'mobile_cta_bar',
         website: website || undefined
       }
+    });
+    
+    trackFunnel({
+      funnelStep: 'contact_clicked',
+      merchantId,
+      stepOrder: 6
     });
   };
 
