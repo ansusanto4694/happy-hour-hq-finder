@@ -23,6 +23,7 @@ export type HomepageCarousel = {
       latitude?: number;
       longitude?: number;
       logo_url?: string;
+      neighborhood?: string;
       merchant_happy_hour?: Array<{
         day_of_week: number;
         happy_hour_start: string;
@@ -60,6 +61,7 @@ export const useHomepageCarousels = () => {
               latitude,
               longitude,
               logo_url,
+              neighborhood,
               is_active,
               merchant_happy_hour (
                 day_of_week,
