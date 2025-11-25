@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Share, Utensils } from 'lucide-react';
+import { FavoriteButton } from '@/components/FavoriteButton';
 import { RestaurantBasicInfo } from '@/components/RestaurantBasicInfo';
 import { RestaurantContactInfo } from '@/components/RestaurantContactInfo';
 import { RestaurantHappyHours } from '@/components/RestaurantHappyHours';
@@ -156,6 +157,10 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
                   <h1 className="text-3xl font-bold text-gray-900">{restaurant.restaurant_name}</h1>
                 </div>
                 <div className="flex items-center gap-2">
+                  <FavoriteButton 
+                    merchantId={restaurant.id} 
+                    size="icon"
+                  />
                   <Button
                     variant="outline"
                     size="mobile-icon"
