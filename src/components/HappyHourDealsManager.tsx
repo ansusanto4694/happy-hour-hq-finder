@@ -23,7 +23,7 @@ export const HappyHourDealsManager: React.FC<HappyHourDealsManagerProps> = ({ re
     source_url: '',
     source_label: '',
     is_verified: false,
-    menu_type: ''
+    menu_type: 'not_specified'
   });
   
   const {
@@ -44,7 +44,7 @@ export const HappyHourDealsManager: React.FC<HappyHourDealsManagerProps> = ({ re
       source_url: '',
       source_label: '',
       is_verified: false,
-      menu_type: ''
+      menu_type: 'not_specified'
     });
     setEditingDeal(null);
   };
@@ -58,15 +58,15 @@ export const HappyHourDealsManager: React.FC<HappyHourDealsManagerProps> = ({ re
       source_url: deal.source_url || '',
       source_label: deal.source_label || '',
       is_verified: deal.is_verified ?? false,
-      menu_type: deal.menu_type || ''
+      menu_type: deal.menu_type || 'not_specified'
     });
   };
 
   const handleSubmit = (data: DealFormData) => {
-    // Convert empty string menu_type to null for database
+    // Convert 'not_specified' to null for database
     const dealData = {
       ...data,
-      menu_type: data.menu_type || null
+      menu_type: data.menu_type === 'not_specified' ? null : data.menu_type
     };
     
     if (editingDeal) {

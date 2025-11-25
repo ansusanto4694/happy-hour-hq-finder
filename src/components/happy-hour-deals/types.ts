@@ -27,5 +27,5 @@ export interface DealFormData {
   source_label: string;
   is_verified: boolean;
   // Menu type field
-  menu_type: 'food_and_drinks' | 'drinks_only' | '';
+  menu_type: 'food_and_drinks' | 'drinks_only' | 'not_specified';
 }
