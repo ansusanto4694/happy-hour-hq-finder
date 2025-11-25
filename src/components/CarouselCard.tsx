@@ -23,6 +23,7 @@ export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick })
   const { track, trackFunnel } = useAnalytics();
   const navigate = useNavigate();
   const todaysHappyHour = merchant.merchant_happy_hour ? getTodaysHappyHour(merchant.merchant_happy_hour) : 'No Happy Hour Today';
+  console.log('CarouselCard merchant neighborhood:', merchant.restaurant_name, merchant.neighborhood);
   
   const handleClick = async () => {
     await track({
