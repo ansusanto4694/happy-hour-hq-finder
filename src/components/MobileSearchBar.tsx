@@ -205,7 +205,13 @@ export const MobileSearchBar = ({ onExpandedChange }: MobileSearchBarProps = {})
       params.set('useGPS', 'true');
     }
     
-    // Track search submission
+    // Build the full query string for analytics
+    const fullQuery = [searchTerm, location].filter(Boolean).join(' in ');
+    const queryType = searchTerm && location ? 'full_query' : 
+                      searchTerm ? 'search_term_only' : 
+                      location ? 'location_only' : 'empty_search';
+    
+    // Track search submission with enhanced query tracking
     track({
       eventType: 'form_submit',
       eventCategory: 'search',
@@ -213,8 +219,15 @@ export const MobileSearchBar = ({ onExpandedChange }: MobileSearchBarProps = {})
       searchTerm: searchTerm || undefined,
       locationQuery: location || undefined,
       metadata: {
+        fullQuery: fullQuery || 'empty_search',
+        queryType: queryType,
+        searchTermLength: searchTerm.length,
+        locationLength: location.length,
+        hasSearchTerm: !!searchTerm,
+        hasLocation: !!location,
         hasGPS: !!gpsCoordinates,
-        isExpanded: isExpanded
+        isExpanded: isExpanded,
+        timestamp: new Date().toISOString()
       }
     });
     
