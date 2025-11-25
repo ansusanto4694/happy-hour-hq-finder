@@ -45,7 +45,7 @@ export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick })
 
   return (
     <Card 
-      className="cursor-pointer hover:shadow-md transition-shadow duration-200 bg-card border border-border h-40"
+      className="cursor-pointer hover:shadow-md transition-shadow duration-200 bg-card border border-border h-32"
       onClick={handleClick}
     >
       <CardContent className="p-4 h-full flex items-start space-x-4">
