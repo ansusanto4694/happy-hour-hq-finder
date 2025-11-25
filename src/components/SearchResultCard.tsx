@@ -103,7 +103,7 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
       className={`${
         isMobile 
           ? 'min-h-[120px] active:scale-[0.98] active:shadow-sm transition-all cursor-pointer' 
-          : 'hover:shadow-md transition-shadow cursor-pointer'
+          : 'hover:shadow-lg hover:scale-[1.02] hover:border-primary/50 transition-all duration-300 cursor-pointer'
       }`}
       onClick={handleClick}
       onMouseEnter={handleHover}
@@ -200,11 +200,11 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
             </div>
           </div>
         ) : (
-          // Desktop Layout - Original design with logo
+          // Desktop Layout - Matches mobile styling
           <div className="flex items-start space-x-4">
-            {/* Logo placeholder */}
+            {/* Logo */}
             <div className="flex-shrink-0">
-              <div className="w-24 h-24 bg-white border border-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
+              <div className="w-24 h-24 bg-white border border-gray-200 rounded-lg shadow-sm flex items-center justify-center overflow-hidden">
                 {restaurant.logo_url ? (
                   <img 
                     src={restaurant.logo_url} 
@@ -221,30 +221,30 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
             <div className="flex-1 min-w-0 space-y-2">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-xl font-semibold text-gray-900 break-words">
+                  <h3 className="text-xl font-bold text-gray-900 break-words leading-snug">
                     {restaurant.restaurant_name}
                   </h3>
-                  <p className="text-gray-600 text-base mt-2 break-words">
+                  <p className="text-gray-600 text-base mt-2 break-words leading-relaxed font-medium">
                     {restaurant.street_address}
                     {restaurant.street_address_line_2 && `, ${restaurant.street_address_line_2}`}
                   </p>
-                  <p className="text-gray-600 text-base">
+                  <p className="text-gray-600 text-base leading-relaxed font-medium">
                     {restaurant.city}, {restaurant.state} {restaurant.zip_code}
                   </p>
                   {restaurant.phone_number && (
-                    <p className="text-gray-600 text-base mt-1">
+                    <p className="text-gray-600 text-base mt-1 leading-relaxed font-medium">
                       {restaurant.phone_number}
                     </p>
                   )}
                   
                   {/* Category tags */}
                   {restaurant.merchant_categories && restaurant.merchant_categories.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-2">
+                    <div className="flex flex-wrap gap-1.5 mt-2">
                       {restaurant.merchant_categories.map((merchantCategory: any) => (
                         <Badge 
                           key={merchantCategory.id} 
                           variant="outline" 
-                          className="text-xs px-2 py-1"
+                          className="text-sm px-3 py-1 font-medium border-primary/20 text-foreground/80 bg-background/50 leading-tight"
                         >
                           {merchantCategory.categories.name}
                         </Badge>
@@ -253,13 +253,13 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
                   )}
                 </div>
                 
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-1.5">
                   {hasActiveOffers && (
                     <Badge 
                       variant="default" 
-                      className="flex-shrink-0 text-sm px-3 py-1 bg-green-600 hover:bg-green-700"
+                      className="flex-shrink-0 text-sm px-2.5 py-1.5 font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm leading-tight"
                     >
-                      Offer Available
+                      🎉 Offer Available
                     </Badge>
                   )}
                   {todaysHappyHours.length > 0 ? (
@@ -267,13 +267,16 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
                       <Badge 
                         key={index}
                         variant="secondary" 
-                        className="flex-shrink-0 text-sm px-3 py-1"
+                        className="flex-shrink-0 text-sm px-2.5 py-1.5 font-semibold bg-amber-500/90 hover:bg-amber-600 text-white shadow-sm leading-tight"
                       >
-                        {hh.start} - {hh.end}
+                        🍻 {hh.start} - {hh.end}
                       </Badge>
                     ))
                   ) : (
-                    <Badge variant="secondary" className="flex-shrink-0 text-sm px-3 py-1">
+                    <Badge 
+                      variant="outline" 
+                      className="flex-shrink-0 text-sm px-2.5 py-1.5 font-medium text-muted-foreground border-muted-foreground/30 leading-tight"
+                    >
                       No Happy Hour Today
                     </Badge>
                   )}
