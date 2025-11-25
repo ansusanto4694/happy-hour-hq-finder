@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getTodaysHappyHour, getAllTodaysHappyHours, getMenuTypeBadge } from '@/utils/timeUtils';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { getDeviceType } from '@/utils/analytics';
 
 interface SearchResultCardProps {
   restaurant: any;
@@ -49,6 +50,7 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
             eventAction: 'result_card_impression',
             merchantId: restaurant.id,
             metadata: {
+              deviceType: getDeviceType(),
               hasActiveOffers,
               merchantName: restaurant.restaurant_name,
               todaysHappyHour: getTodaysHappyHour(restaurant.merchant_happy_hour || [])
@@ -71,7 +73,7 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
       eventAction: 'result_card_clicked',
       merchantId: restaurant.id,
       metadata: {
-        isMobile,
+        deviceType: getDeviceType(),
         hasActiveOffers,
         merchantName: restaurant.restaurant_name,
         todaysHappyHour: getTodaysHappyHour(restaurant.merchant_happy_hour || []),

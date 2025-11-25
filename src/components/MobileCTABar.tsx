@@ -4,6 +4,7 @@ import { Phone, MapPin, Globe } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { getDeviceType } from '@/utils/analytics';
 
 interface MobileCTABarProps {
   phoneNumber?: string | null;
@@ -30,6 +31,11 @@ export const MobileCTABar: React.FC<MobileCTABarProps> = ({
       eventCategory: 'merchant_interaction',
       eventAction: 'phone_clicked',
       merchantId: id ? parseInt(id) : undefined,
+      metadata: {
+        deviceType: getDeviceType(),
+        component: 'mobile_cta_bar',
+        phoneNumber: phoneNumber || undefined
+      }
     });
   };
 
@@ -39,6 +45,11 @@ export const MobileCTABar: React.FC<MobileCTABarProps> = ({
       eventCategory: 'merchant_interaction',
       eventAction: 'directions_clicked',
       merchantId: id ? parseInt(id) : undefined,
+      metadata: {
+        deviceType: getDeviceType(),
+        component: 'mobile_cta_bar',
+        address: `${address.street}, ${address.city}, ${address.state} ${address.zipCode}`
+      }
     });
   };
 
@@ -48,6 +59,11 @@ export const MobileCTABar: React.FC<MobileCTABarProps> = ({
       eventCategory: 'merchant_interaction',
       eventAction: 'website_clicked',
       merchantId: id ? parseInt(id) : undefined,
+      metadata: {
+        deviceType: getDeviceType(),
+        component: 'mobile_cta_bar',
+        website: website || undefined
+      }
     });
   };
 

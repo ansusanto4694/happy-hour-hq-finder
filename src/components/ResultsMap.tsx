@@ -10,6 +10,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserLocation } from '@/hooks/useUserLocation';
 import { Map as MapIcon, MapPin } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { getDeviceType } from '@/utils/analytics';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 interface Restaurant {
@@ -72,7 +73,7 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
       eventAction: 'map_marker_clicked',
       merchantId: restaurant.id,
       metadata: {
-        isMobile,
+        deviceType: getDeviceType(),
         merchantName: restaurant.restaurant_name,
       },
     });
