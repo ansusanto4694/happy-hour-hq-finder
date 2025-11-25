@@ -19,9 +19,9 @@ const calculateHaversineDistance = (lat1: number, lng1: number, lat2: number, ln
   return distance; // Distance in miles
 };
 
-export const useMerchants = (categoryIds?: string[], searchTerm?: string, startTime?: string, endTime?: string, location?: string, bounds?: { north: number; south: number; east: number; west: number }, radiusMiles?: number, showOffersOnly?: boolean, selectedDays?: number[], gpsCoordinates?: { lat: number; lng: number }, carouselId?: string, neighborhood?: string) => {
+export const useMerchants = (categoryIds?: string[], searchTerm?: string, startTime?: string, endTime?: string, location?: string, bounds?: { north: number; south: number; east: number; west: number }, radiusMiles?: number, showOffersOnly?: boolean, selectedDays?: number[], gpsCoordinates?: { lat: number; lng: number }, carouselId?: string, neighborhood?: string, menuType?: 'all' | 'food_and_drinks' | 'drinks_only') => {
   // Force fresh queries for restaurant searches to avoid caching issues
-  const queryKey = ['merchants', categoryIds, searchTerm, startTime, endTime, location, bounds, radiusMiles, showOffersOnly, selectedDays, gpsCoordinates, carouselId, neighborhood];
+  const queryKey = ['merchants', categoryIds, searchTerm, startTime, endTime, location, bounds, radiusMiles, showOffersOnly, selectedDays, gpsCoordinates, carouselId, neighborhood, menuType];
   
   return useQuery({
     queryKey,
@@ -289,6 +289,16 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
           if (!merchant.merchant_offers || merchant.merchant_offers.length === 0) return false;
           return merchant.merchant_offers.some((offer: any) => 
             offer.is_active && new Date(offer.end_time) > now
+          );
+        });
+      }
+
+      // Apply menu type filtering if specified
+      if (menuType && menuType !== 'all' && filteredData) {
+        filteredData = filteredData.filter(merchant => {
+          if (!merchant.happy_hour_deals || merchant.happy_hour_deals.length === 0) return false;
+          return merchant.happy_hour_deals.some((deal: any) => 
+            deal.active && deal.menu_type === menuType
           );
         });
       }

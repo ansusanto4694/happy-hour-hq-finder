@@ -27,6 +27,8 @@ interface UnifiedFilterBarProps {
   endTime: string;
   onStartTimeChange: (time: string) => void;
   onEndTimeChange: (time: string) => void;
+  selectedMenuType: 'all' | 'food_and_drinks' | 'drinks_only';
+  onMenuTypeChange: (menuType: 'all' | 'food_and_drinks' | 'drinks_only') => void;
   vertical?: boolean;
 }
 
@@ -62,6 +64,8 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
   endTime,
   onStartTimeChange,
   onEndTimeChange,
+  selectedMenuType,
+  onMenuTypeChange,
   vertical = false,
 }) => {
   const { getParentCategories, getSubCategories, isLoading } = useCategoriesHierarchy();
@@ -70,6 +74,7 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
   const [isDistanceExpanded, setIsDistanceExpanded] = useState(false);
   const [isDaysExpanded, setIsDaysExpanded] = useState(false);
   const [isTimeExpanded, setIsTimeExpanded] = useState(false);
+  const [isMenuTypeExpanded, setIsMenuTypeExpanded] = useState(false);
 
   const toggleCategory = (categoryId: string) => {
     const isSelected = selectedCategories.includes(categoryId);
@@ -174,7 +179,8 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
           categories: selectedCategories.length,
           days: selectedDays.length,
           hasTimeFilter: !!startTime || !!endTime,
-          radius: selectedRadius
+          radius: selectedRadius,
+          menuType: selectedMenuType
         }
       },
     });
@@ -185,6 +191,7 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
     onDaysChange([]);
     onStartTimeChange('');
     onEndTimeChange('');
+    onMenuTypeChange('all');
   };
 
   if (isLoading) {
@@ -192,7 +199,7 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
   }
 
   const parentCategories = getParentCategories();
-  const hasAnyFilters = selectedCategories.length > 0 || selectedRadius !== 'walking' || showOffersOnly || selectedDays.length > 0 || startTime || endTime;
+  const hasAnyFilters = selectedCategories.length > 0 || selectedRadius !== 'walking' || showOffersOnly || selectedDays.length > 0 || startTime || endTime || selectedMenuType !== 'all';
 
   return (
     <Card className="h-fit">
@@ -365,6 +372,63 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
                         {day.label}
                       </button>
                     ))}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            </div>
+            </div>
+
+          {/* Menu Type filter */}
+          <div className="space-y-3">
+            <div className="border rounded-lg p-2 bg-white">
+              <div className="flex items-center justify-between mb-1">
+                <h4 className="font-medium text-sm">Menu Type</h4>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsMenuTypeExpanded(!isMenuTypeExpanded)}
+                  className="h-5 w-5 p-0"
+                >
+                  {isMenuTypeExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                </Button>
+              </div>
+
+              <Collapsible open={isMenuTypeExpanded}>
+                <CollapsibleContent className="space-y-2">
+                  <div className="space-y-2">
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="menuType"
+                        value="all"
+                        checked={selectedMenuType === 'all'}
+                        onChange={() => onMenuTypeChange('all')}
+                        className="rounded-full"
+                      />
+                      <span className="text-xs">All Menus</span>
+                    </label>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="menuType"
+                        value="food_and_drinks"
+                        checked={selectedMenuType === 'food_and_drinks'}
+                        onChange={() => onMenuTypeChange('food_and_drinks')}
+                        className="rounded-full"
+                      />
+                      <span className="text-xs">🍽️ Food & Drinks</span>
+                    </label>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="menuType"
+                        value="drinks_only"
+                        checked={selectedMenuType === 'drinks_only'}
+                        onChange={() => onMenuTypeChange('drinks_only')}
+                        className="rounded-full"
+                      />
+                      <span className="text-xs">🥃 Drinks Only</span>
+                    </label>
                   </div>
                 </CollapsibleContent>
               </Collapsible>
