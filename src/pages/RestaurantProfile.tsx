@@ -16,11 +16,14 @@ import { useAnalytics } from '@/hooks/useAnalytics';
 const generateRestaurantStructuredData = (restaurant: any) => {
   const dayMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   
-  const openingHours = restaurant.merchant_happy_hour?.map((hh: any) => ({
+  // Happy Hour opening hours as special hours
+  const happyHourSpecifications = restaurant.merchant_happy_hour?.map((hh: any) => ({
     "@type": "OpeningHoursSpecification",
     "dayOfWeek": dayMap[hh.day_of_week],
     "opens": hh.happy_hour_start,
-    "closes": hh.happy_hour_end
+    "closes": hh.happy_hour_end,
+    "validFrom": new Date().toISOString().split('T')[0],
+    "name": "Happy Hour"
   })) || [];
 
   const cuisineTypes = restaurant.merchant_categories
@@ -40,24 +43,87 @@ const generateRestaurantStructuredData = (restaurant: any) => {
 
   const geo = restaurant.latitude && restaurant.longitude ? {
     "@type": "GeoCoordinates",
-    "latitude": restaurant.latitude,
-    "longitude": restaurant.longitude
+    "latitude": restaurant.latitude.toString(),
+    "longitude": restaurant.longitude.toString()
   } : undefined;
 
-  return {
+  // Create offers for happy hour time slots
+  const happyHourOffers = restaurant.merchant_happy_hour?.map((hh: any) => ({
+    "@type": "Offer",
+    "name": "Happy Hour Special",
+    "description": `Happy hour from ${hh.happy_hour_start} to ${hh.happy_hour_end} on ${dayMap[hh.day_of_week]}`,
+    "availabilityStarts": hh.happy_hour_start,
+    "availabilityEnds": hh.happy_hour_end,
+    "dayOfWeek": dayMap[hh.day_of_week],
+    "priceSpecification": {
+      "@type": "PriceSpecification",
+      "priceCurrency": "USD"
+    }
+  })) || [];
+
+  // Add specific happy hour deal offers
+  const dealOffers = restaurant.happy_hour_deals?.filter((deal: any) => deal.active).map((deal: any) => ({
+    "@type": "Offer",
+    "name": deal.deal_title,
+    "description": deal.deal_description || deal.deal_title,
+    "category": "Happy Hour Deal",
+    "priceCurrency": "USD"
+  })) || [];
+
+  // Combine all offers
+  const allOffers = [...happyHourOffers, ...dealOffers];
+
+  // Base Restaurant & LocalBusiness schema
+  const baseSchema: any = {
     "@context": "https://schema.org",
-    "@type": ["Restaurant", "LocalBusiness"],
+    "@type": ["Restaurant", "LocalBusiness", "BarOrPub"],
+    "@id": `https://sipmunchyap.com/restaurant/${restaurant.id}`,
     "name": restaurant.restaurant_name,
+    "description": `${restaurant.restaurant_name} in ${restaurant.city}, ${restaurant.state}. Find happy hour specials, deals, and drink offers.`,
     "address": address,
-    "telephone": restaurant.phone_number || undefined,
-    "url": restaurant.website || undefined,
-    "image": restaurant.logo_url || undefined,
     "geo": geo,
-    "servesCuisine": cuisineTypes.length > 0 ? cuisineTypes : undefined,
-    "openingHoursSpecification": openingHours.length > 0 ? openingHours : undefined,
+    "url": `https://sipmunchyap.com/restaurant/${restaurant.id}`,
+    "image": restaurant.logo_url || "https://lovable.dev/opengraph-image-p98pqg.png",
     "priceRange": "$$",
-    "acceptsReservations": "True"
+    "servesCuisine": cuisineTypes.length > 0 ? cuisineTypes : ["American"],
+    "acceptsReservations": true
   };
+
+  // Add telephone if available
+  if (restaurant.phone_number) {
+    baseSchema.telephone = restaurant.phone_number;
+  }
+
+  // Add website if available
+  if (restaurant.website) {
+    baseSchema.sameAs = [restaurant.website];
+  }
+
+  // Add happy hour specifications as special hours
+  if (happyHourSpecifications.length > 0) {
+    baseSchema.specialOpeningHoursSpecification = happyHourSpecifications;
+  }
+
+  // Add offers if available
+  if (allOffers.length > 0) {
+    baseSchema.makesOffer = allOffers;
+  }
+
+  // Add neighborhood to additional properties
+  if (restaurant.neighborhood) {
+    baseSchema.containedInPlace = {
+      "@type": "Place",
+      "name": restaurant.neighborhood,
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": restaurant.city,
+        "addressRegion": restaurant.state,
+        "addressCountry": "US"
+      }
+    };
+  }
+
+  return baseSchema;
 };
 
 const generateBreadcrumbStructuredData = (restaurant: any) => {
@@ -164,6 +230,12 @@ const RestaurantProfile = () => {
               slug,
               parent_id
             )
+          ),
+          happy_hour_deals!happy_hour_deals_restaurant_id_fkey (
+            id,
+            deal_title,
+            deal_description,
+            active
           )
         `)
         .eq('id', restaurantId)
