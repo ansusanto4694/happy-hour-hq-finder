@@ -9,6 +9,7 @@ interface CarouselCardProps {
     id: number;
     restaurant_name: string;
     logo_url?: string | null;
+    neighborhood?: string | null;
     merchant_happy_hour?: Array<{
       day_of_week: number;
       happy_hour_start: string;
@@ -72,6 +73,11 @@ export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick })
           <p className="text-sm text-muted-foreground mt-1">
             {todaysHappyHour}
           </p>
+          {merchant.neighborhood && (
+            <p className="text-xs text-muted-foreground/80 mt-0.5">
+              {merchant.neighborhood}
+            </p>
+          )}
         </div>
       </CardContent>
     </Card>
