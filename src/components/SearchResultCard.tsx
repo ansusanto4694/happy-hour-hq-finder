@@ -122,9 +122,9 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
     >
       <CardContent className="p-4 sm:p-6">
         {isMobile ? (
-          // Mobile Layout - Enhanced spacing and breathing room
-          <div className="flex items-start space-x-4">
-            {/* Small logo for mobile */}
+          // Mobile Layout - Polished with improved spacing and organization
+          <div className="flex items-start space-x-3">
+            {/* Logo with improved placeholder */}
             <div className="flex-shrink-0">
               <div className={`w-20 h-20 ${restaurant.logo_url ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100'} border border-gray-200 rounded-lg shadow-sm flex items-center justify-center overflow-hidden`}>
                 {restaurant.logo_url ? (
@@ -134,28 +134,31 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
                     className="w-full h-full object-contain"
                   />
                 ) : (
-                  <span className="text-gray-500 text-xs">Logo</span>
+                  <Store className="w-8 h-8 text-orange-400" strokeWidth={1.5} />
                 )}
               </div>
             </div>
             
-            <div className="flex-1 min-w-0 space-y-2">
-              {/* Restaurant name with favorite button */}
+            <div className="flex-1 min-w-0 space-y-2.5">
+              {/* Info block with tighter spacing */}
               <div className="flex items-start justify-between gap-2">
-                <h3 className="text-xl font-bold text-gray-900 break-words leading-snug flex-1">
-                  {restaurant.restaurant_name}
-                </h3>
-                <FavoriteButton merchantId={restaurant.id} size="sm" className="flex-shrink-0 -mt-1" />
+                <div className="flex-1 min-w-0 space-y-0.5">
+                  <h3 className="text-xl font-bold text-gray-900 break-words leading-snug">
+                    {restaurant.restaurant_name}
+                  </h3>
+                  <p className="text-sm text-gray-600 break-words leading-tight font-medium">
+                    {restaurant.neighborhood || restaurant.city}
+                  </p>
+                  {restaurant.phone_number && (
+                    <p className="text-sm text-gray-500 leading-tight">
+                      {restaurant.phone_number}
+                    </p>
+                  )}
+                </div>
+                <FavoriteButton merchantId={restaurant.id} size="sm" className="flex-shrink-0" />
               </div>
               
-              {/* Neighborhood or City */}
-              <div className="text-base text-gray-600 leading-relaxed">
-                <p className="break-words font-medium">
-                  {restaurant.neighborhood || restaurant.city}
-                </p>
-              </div>
-              
-              {/* Badges row */}
+              {/* Badges in column layout (mobile-optimized) */}
               <div className="flex flex-col gap-1.5">
                 {hasActiveOffers && (
                   <Badge 
@@ -197,7 +200,7 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
                 )}
               </div>
               
-              {/* Category tags - show more on mobile without phone number */}
+              {/* Category tags */}
               {restaurant.merchant_categories && restaurant.merchant_categories.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
                   {restaurant.merchant_categories.slice(0, 3).map((merchantCategory: any) => (
