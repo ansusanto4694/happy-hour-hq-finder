@@ -6,10 +6,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { SEOHead } from '@/components/SEOHead';
+import { MobilePageHeader } from '@/components/MobilePageHeader';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function Favorites() {
   const { user } = useAuth();
   const { favorites, isLoading } = useFavorites(user?.id);
+  const isMobile = useIsMobile();
 
   // Redirect to auth if not logged in
   if (!user) {
@@ -23,8 +26,10 @@ export default function Favorites() {
         description="View your saved favorite restaurants and happy hour spots"
       />
       
+      {isMobile && <MobilePageHeader title="Favorites" showBackButton={false} />}
+      
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className={`container mx-auto px-4 py-8 max-w-6xl ${isMobile ? 'mt-14 mb-20' : ''}`}>
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-foreground mb-2 flex items-center gap-3">
               <Heart className="h-8 w-8 text-red-500 fill-current" />

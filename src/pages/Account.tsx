@@ -7,13 +7,16 @@ import { SEOHead } from '@/components/SEOHead';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ProfileForm } from '@/components/account/ProfileForm';
-import { User, Heart, FolderHeart } from 'lucide-react';
+import { User, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { MobilePageHeader } from '@/components/MobilePageHeader';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Account = () => {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -46,9 +49,13 @@ const Account = () => {
         noIndex
       />
       
-      <PageHeader showSearchBar={false} />
+      {isMobile ? (
+        <MobilePageHeader title="Account" showBackButton={false} />
+      ) : (
+        <PageHeader showSearchBar={false} />
+      )}
       
-      <div className="max-w-5xl mx-auto px-4 py-8 mt-20">
+      <div className={`max-w-5xl mx-auto px-4 py-8 ${isMobile ? 'mt-14 mb-20' : 'mt-20'}`}>
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">

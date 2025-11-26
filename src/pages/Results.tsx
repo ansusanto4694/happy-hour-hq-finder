@@ -14,6 +14,8 @@ import { RadiusOption, getRadiusMiles } from '@/components/RadiusFilter';
 import { AuthButton } from '@/components/AuthButton';
 import { SEOHead } from '@/components/SEOHead';
 import { PageHeader } from '@/components/PageHeader';
+import { Home, TrendingUp } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 const Results = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -306,7 +308,14 @@ const Results = () => {
       {isMobile ? (
         <div className="bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-50 h-16">
           <div className="px-4 py-2">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3">
+              <button 
+                onClick={handleGoHome}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
+                aria-label="Go to homepage"
+              >
+                <Home className="w-5 h-5 text-gray-700" />
+              </button>
               <div className="flex-1 flex justify-center">
                 <div className="w-full max-w-7xl">
                   <MobileSearchBar onExpandedChange={setIsFilterDrawerOpen} />
@@ -354,9 +363,9 @@ const Results = () => {
             />
           </div>
           
-          {/* Swipeable Peek Handle */}
+          {/* Enhanced Swipeable Peek Handle */}
           <div 
-            className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl z-50"
+            className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl z-50 cursor-pointer active:scale-[0.99] transition-transform"
             style={{ height: 'calc(100vh / 8)' }}
             onTouchStart={(e) => {
               const startY = e.touches[0].clientY;
@@ -378,11 +387,17 @@ const Results = () => {
             onClick={() => setIsListDrawerOpen(true)}
           >
             <div className="flex items-center justify-center pt-3">
-              <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
+              <div className="w-12 h-1.5 bg-gray-300 rounded-full animate-pulse" />
             </div>
-            <div className="px-4 pt-2">
-              <p className="text-sm text-gray-600 text-center font-medium">
-                {merchants?.length || 0} results • Swipe up for list
+            <div className="px-4 pt-2 pb-3 space-y-2">
+              <div className="flex items-center justify-center gap-2">
+                <Badge variant="secondary" className="text-base font-semibold px-3 py-1">
+                  {merchants?.length || 0} Results
+                </Badge>
+                <TrendingUp className="w-4 h-4 text-primary animate-pulse" />
+              </div>
+              <p className="text-xs text-gray-500 text-center font-medium">
+                Swipe up to view list
               </p>
             </div>
           </div>
