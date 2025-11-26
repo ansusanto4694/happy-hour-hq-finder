@@ -148,6 +148,23 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ merchantId, 
             >
               Contact
             </button>
+            {merchantId && (
+              <FavoriteButton 
+                merchantId={merchantId}
+                variant="ghost"
+                size="sm"
+                className="bg-white/10 border border-white/20 text-white hover:bg-white/20"
+              />
+            )}
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleShare}
+              className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+              aria-label="Share restaurant profile"
+            >
+              <Share className="w-4 h-4" />
+            </Button>
             {merchantId && merchantName && (
               <ReportIssueModal
                 merchantId={merchantId}
