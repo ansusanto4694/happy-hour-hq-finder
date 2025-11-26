@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 
 interface FavoriteButtonProps {
   merchantId: number;
-  variant?: 'default' | 'ghost';
+  variant?: 'default' | 'ghost' | 'outline';
   size?: 'default' | 'sm' | 'lg' | 'icon';
   className?: string;
 }

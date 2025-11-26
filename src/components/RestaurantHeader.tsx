@@ -151,9 +151,9 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ merchantId, 
             {merchantId && (
               <FavoriteButton 
                 merchantId={merchantId}
-                variant="ghost"
+                variant="outline"
                 size="sm"
-                className="bg-white/10 border border-white/20 text-white hover:bg-white/20"
+                className="bg-white/10 border-white/20 text-white hover:bg-white/20"
               />
             )}
             <Button 
