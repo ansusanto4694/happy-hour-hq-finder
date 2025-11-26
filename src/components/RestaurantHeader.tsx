@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Flag, ArrowLeft, Share, Home } from 'lucide-react';
+import { Flag, ArrowLeft, Share } from 'lucide-react';
 import { AuthButton } from '@/components/AuthButton';
 import { ReportIssueModal } from '@/components/ReportIssueModal';
 import { SearchBar } from '@/components/SearchBar';
@@ -38,12 +38,7 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ merchantId, 
   };
   
   const handleBack = () => {
-    // Navigate back in browser history if available, otherwise go to homepage
-    if (window.history.length > 1) {
-      navigate(-1);
-    } else {
-      navigate('/');
-    }
+    navigate('/results');
   };
   
   const handleShare = async () => {
@@ -67,24 +62,14 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ merchantId, 
       <div className={`sticky top-0 z-50 bg-white shadow-sm border-b transition-all duration-300 ${isScrolled ? 'py-2' : 'py-3'}`}>
         <div className="w-full px-4">
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={handleBack}
-                className="p-2"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={handleGoHome}
-                className="p-2"
-              >
-                <Home className="w-5 h-5" />
-              </Button>
-            </div>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={handleBack}
+              className="p-2"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
             
             {isScrolled && merchantName && (
               <h1 className="flex-1 text-base font-semibold truncate text-center animate-fade-in">
