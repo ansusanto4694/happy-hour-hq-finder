@@ -248,11 +248,11 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
                     </h3>
                     <FavoriteButton merchantId={restaurant.id} className="flex-shrink-0" />
                   </div>
-                  <p className="text-gray-600 text-base mt-0.5 break-words leading-relaxed font-medium">
+                  <p className="text-gray-600 text-base break-words leading-tight font-medium">
                     {restaurant.neighborhood || restaurant.city}
                   </p>
                   {restaurant.phone_number && (
-                    <p className="text-gray-600 text-base mt-1 leading-relaxed font-medium">
+                    <p className="text-gray-600 text-base leading-tight font-medium">
                       {restaurant.phone_number}
                     </p>
                   )}
