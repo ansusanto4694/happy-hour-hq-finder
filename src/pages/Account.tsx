@@ -59,10 +59,10 @@ const Account = () => {
         <div className="max-w-5xl mx-auto px-4 py-8 mt-32 md:mt-40">
         {/* Welcome Section */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">
+          <h1 className="text-3xl font-bold mb-2 text-white">
             Welcome back, {profile.first_name}!
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-white/80">
             Member since {memberSince}
           </p>
         </div>
@@ -82,10 +82,10 @@ const Account = () => {
 
           {/* Profile Tab */}
           <TabsContent value="profile">
-            <Card>
+            <Card className="bg-white/10 backdrop-blur-md border-white/20">
               <CardHeader>
-                <CardTitle>Profile Information</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-white">Profile Information</CardTitle>
+                <CardDescription className="text-white/80">
                   Update your personal information and account settings
                 </CardDescription>
               </CardHeader>
@@ -97,16 +97,16 @@ const Account = () => {
 
           {/* Favorites Tab */}
           <TabsContent value="favorites">
-            <Card>
+            <Card className="bg-white/10 backdrop-blur-md border-white/20">
               <CardHeader>
-                <CardTitle>Your Favorites</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-white">Your Favorites</CardTitle>
+                <CardDescription className="text-white/80">
                   View and manage your saved restaurants and bars
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <Heart className="w-16 h-16 text-muted-foreground mb-4" />
-                <p className="text-center text-muted-foreground mb-4">
+                <Heart className="w-16 h-16 text-white/60 mb-4" />
+                <p className="text-center text-white/80 mb-4">
                   Access your favorites page to see all your saved places
                 </p>
                 <Button asChild>
