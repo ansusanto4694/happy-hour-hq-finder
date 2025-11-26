@@ -9,7 +9,23 @@
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
 
-      gtag('config', 'G-2CLJ0848WF');
+      gtag('config', 'G-2CLJ0848WF', {
+        'send_page_view': false, // Handled by our analytics
+        'allow_google_signals': true, // Enable cross-device tracking
+        'allow_ad_personalization_signals': true,
+        'cookie_flags': 'SameSite=None;Secure',
+        'link_attribution': true, // Enhanced link attribution
+        'content_group': 'happy_hour_platform',
+        'campaign_source': 'direct', // Default, will be overridden by UTM
+        'campaign_medium': 'none', // Default, will be overridden by UTM
+        'debug_mode': false // Set to true for debugging
+      });
+
+      // Enhanced measurement for better attribution
+      gtag('set', 'user_properties', {
+        'platform': 'web',
+        'app_version': '1.0'
+      });
     </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
