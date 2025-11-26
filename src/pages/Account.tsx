@@ -1,8 +1,7 @@
 import React, { useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
-import { PageHeader } from '@/components/PageHeader';
-import { Footer } from '@/components/Footer';
+import { PageLayout } from '@/components/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -39,81 +38,28 @@ const Account = () => {
   });
 
   return (
-    <div className="min-h-screen bg-background">
+    <PageLayout showSearchBar={false} containerClassName="max-w-5xl mx-auto px-4 py-8">
       <SEOHead
         title="My Account - SipMunchYap"
         description="Manage your SipMunchYap account, profile, favorites, and collections."
         noIndex
       />
       
-      <PageHeader showSearchBar={false} />
-      
-      <div className="max-w-5xl mx-auto px-4 py-8 mt-32 md:mt-40">
-        {/* Welcome Section */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">
-            Welcome back, {profile.first_name}!
-          </h1>
-          <p className="text-muted-foreground">
-            Member since {memberSince}
-          </p>
-        </div>
-
-        {/* Tabs */}
-        <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-8">
-            <TabsTrigger value="profile" className="flex items-center gap-2">
-              <User className="w-4 h-4" />
-              Profile
-            </TabsTrigger>
-            <TabsTrigger value="favorites" className="flex items-center gap-2">
-              <Heart className="w-4 h-4" />
-              Favorites
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Profile Tab */}
-          <TabsContent value="profile">
-            <Card>
-              <CardHeader>
-                <CardTitle>Profile Information</CardTitle>
-                <CardDescription>
-                  Update your personal information and account settings
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ProfileForm />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Favorites Tab */}
-          <TabsContent value="favorites">
-            <Card>
-              <CardHeader>
-                <CardTitle>Your Favorites</CardTitle>
-                <CardDescription>
-                  View and manage your saved restaurants and bars
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <Heart className="w-16 h-16 text-muted-foreground mb-4" />
-                <p className="text-center text-muted-foreground mb-4">
-                  Access your favorites page to see all your saved places
-                </p>
-                <Button asChild>
-                  <Link to="/favorites">
-                    Go to Favorites
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+      {/* Welcome Section */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">
+          Welcome back, {profile.first_name}!
+        </h1>
+        <p className="text-muted-foreground">
+          Member since {memberSince}
+        </p>
       </div>
 
-      <Footer />
-    </div>
+      {/* Tabs */}
+      <Tabs defaultValue="profile" className="w-full">
+...
+      </Tabs>
+    </PageLayout>
   );
 };
 
