@@ -45,9 +45,8 @@ export const AuthButton: React.FC = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="flex items-center gap-2">
+        <Button variant="outline" size="icon">
           <User className="w-4 h-4" />
-          {profile.first_name} {profile.last_name}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
