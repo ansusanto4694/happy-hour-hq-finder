@@ -11,6 +11,8 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { trackPageView } from "@/utils/analytics";
 import { initPerformanceMonitoring } from "@/utils/performanceMonitoring";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
+import { useIsMobile } from "@/hooks/use-mobile";
 import Index from "./pages/Index";
 import Results from "./pages/Results";
 import RestaurantProfile from "./pages/RestaurantProfile";
@@ -49,6 +51,14 @@ const RouteTracker = () => {
   return null;
 };
 
+const MobileNavWrapper = () => {
+  const isMobile = useIsMobile();
+  
+  if (!isMobile) return null;
+  
+  return <MobileBottomNav />;
+};
+
 // Initialize performance monitoring once
 if (typeof window !== 'undefined') {
   initPerformanceMonitoring();
@@ -66,6 +76,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <RouteTracker />
+            <MobileNavWrapper />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/results" element={<Results />} />
