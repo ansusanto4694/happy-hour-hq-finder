@@ -46,7 +46,7 @@ const Account = () => {
         noIndex
       />
       
-      <PageHeader showSearchBar={false} />
+      <PageHeader showSearchBar={true} searchBarVariant="results" />
       
       <div className="max-w-5xl mx-auto px-4 py-8 mt-32 md:mt-40">
         {/* Welcome Section */}
