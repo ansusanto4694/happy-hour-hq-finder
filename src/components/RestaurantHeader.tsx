@@ -135,32 +135,57 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ merchantId, 
             <SearchBar variant="results" />
           </div>
           
-          <nav className="flex items-center space-x-4">
-            <button 
-              onClick={() => navigate('/about')}
-              className="text-white/90 hover:text-white transition-colors text-sm font-medium"
-            >
-              About
-            </button>
-            <button 
-              onClick={() => navigate('/contact')}
-              className="text-white/90 hover:text-white transition-colors text-sm font-medium"
-            >
-              Contact
-            </button>
-            {merchantId && merchantName && (
-              <ReportIssueModal
-                merchantId={merchantId}
-                merchantName={merchantName}
-                trigger={
-                  <Button variant="outline" size="sm" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
-                    <Flag className="w-4 h-4" />
-                  </Button>
-                }
-              />
-            )}
-            <AuthButton />
-          </nav>
+          <div className="flex items-start gap-6">
+            <nav className="flex items-center space-x-4">
+              <button 
+                onClick={() => navigate('/about')}
+                className="text-white/90 hover:text-white transition-colors text-sm font-medium"
+              >
+                About
+              </button>
+              <button 
+                onClick={() => navigate('/contact')}
+                className="text-white/90 hover:text-white transition-colors text-sm font-medium"
+              >
+                Contact
+              </button>
+              <AuthButton />
+            </nav>
+            
+            {/* Action buttons stacked vertically */}
+            <div className="flex flex-col items-end gap-2">
+              {merchantId && (
+                <FavoriteButton 
+                  merchantId={merchantId}
+                  variant="ghost"
+                  size="sm"
+                  className="bg-white/10 border border-white/20 text-white hover:bg-white/20"
+                />
+              )}
+              
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleShare}
+                className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                aria-label="Share restaurant profile"
+              >
+                <Share className="w-4 h-4" />
+              </Button>
+              
+              {merchantId && merchantName && (
+                <ReportIssueModal
+                  merchantId={merchantId}
+                  merchantName={merchantName}
+                  trigger={
+                    <Button variant="outline" size="sm" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+                      <Flag className="w-4 h-4" />
+                    </Button>
+                  }
+                />
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
