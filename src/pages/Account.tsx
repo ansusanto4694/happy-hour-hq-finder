@@ -39,16 +39,24 @@ const Account = () => {
   });
 
   return (
-    <div className="min-h-screen bg-background">
-      <SEOHead
-        title="My Account - SipMunchYap"
-        description="Manage your SipMunchYap account, profile, favorites, and collections."
-        noIndex
-      />
+    <div className="relative min-h-screen bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500">
+      {/* Background overlay */}
+      <div className="absolute inset-0 bg-black/10"></div>
       
-      <PageHeader showSearchBar={false} />
+      {/* Decorative elements */}
+      <div className="absolute top-20 left-20 w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-32 right-20 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
       
-      <div className="max-w-5xl mx-auto px-4 py-8 mt-32 md:mt-40">
+      <div className="relative z-10">
+        <SEOHead
+          title="My Account - SipMunchYap"
+          description="Manage your SipMunchYap account, profile, favorites, and collections."
+          noIndex
+        />
+        
+        <PageHeader showSearchBar={false} />
+        
+        <div className="max-w-5xl mx-auto px-4 py-8 mt-32 md:mt-40">
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">
@@ -110,9 +118,10 @@ const Account = () => {
             </Card>
           </TabsContent>
         </Tabs>
-      </div>
+        </div>
 
-      <Footer />
+        <Footer />
+      </div>
     </div>
   );
 };
