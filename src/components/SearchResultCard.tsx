@@ -2,6 +2,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Store } from 'lucide-react';
 import { getTodaysHappyHour, getAllTodaysHappyHours, getMenuTypeBadge } from '@/utils/timeUtils';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { getDeviceType } from '@/utils/analytics';
@@ -109,7 +110,7 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
       className={`${
         isMobile 
           ? 'min-h-[120px] active:scale-[0.98] active:shadow-sm transition-all cursor-pointer' 
-          : 'hover:shadow-lg hover:scale-[1.02] hover:border-primary/50 transition-all duration-300 cursor-pointer'
+          : 'hover:shadow-lg hover:scale-[1.02] hover:border-l-4 hover:border-l-primary/60 transition-all duration-300 cursor-pointer group'
       }`}
       onClick={handleClick}
       onMouseEnter={handleHover}
@@ -221,11 +222,11 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
             </div>
           </div>
         ) : (
-          // Desktop Layout - Matches mobile styling
+          // Desktop Layout - Polished version with improved spacing and organization
           <div className="flex items-start space-x-4">
-            {/* Logo */}
+            {/* Logo with improved placeholder */}
             <div className="flex-shrink-0">
-              <div className="w-24 h-24 bg-white border border-gray-200 rounded-lg shadow-sm flex items-center justify-center overflow-hidden">
+              <div className={`w-24 h-24 ${restaurant.logo_url ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100'} border border-gray-200 rounded-lg shadow-sm flex items-center justify-center overflow-hidden`}>
                 {restaurant.logo_url ? (
                   <img 
                     src={restaurant.logo_url} 
@@ -233,87 +234,87 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
                     className="w-full h-full object-contain"
                   />
                 ) : (
-                  <span className="text-gray-500 text-xs">Logo</span>
+                  <Store className="w-10 h-10 text-orange-400" strokeWidth={1.5} />
                 )}
               </div>
             </div>
             
-            {/* Restaurant details */}
-            <div className="flex-1 min-w-0 space-y-2">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="text-xl font-bold text-gray-900 break-words leading-snug flex-1">
-                      {restaurant.restaurant_name}
-                    </h3>
-                    <FavoriteButton merchantId={restaurant.id} className="flex-shrink-0" />
-                  </div>
-                  <p className="text-gray-600 text-base break-words leading-tight font-medium">
+            {/* Restaurant details - reorganized with tighter spacing */}
+            <div className="flex-1 min-w-0 space-y-3">
+              {/* Info block with favorite button */}
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0 space-y-0.5">
+                  <h3 className="text-xl font-bold text-gray-900 break-words leading-snug">
+                    {restaurant.restaurant_name}
+                  </h3>
+                  <p className="text-gray-600 text-sm break-words leading-tight font-medium">
                     {restaurant.neighborhood || restaurant.city}
                   </p>
                   {restaurant.phone_number && (
-                    <p className="text-gray-600 text-base leading-tight font-medium">
+                    <p className="text-gray-500 text-sm leading-tight">
                       {restaurant.phone_number}
                     </p>
                   )}
-                  
-                  {/* Category tags */}
-                  {restaurant.merchant_categories && restaurant.merchant_categories.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-2">
-                      {restaurant.merchant_categories.map((merchantCategory: any) => (
-                        <Badge 
-                          key={merchantCategory.id} 
-                          variant="outline" 
-                          className="text-sm px-3 py-1 font-medium border-primary/20 text-foreground/80 bg-background/50 leading-tight"
-                        >
-                          {merchantCategory.categories.name}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
                 </div>
-                
-                <div className="flex flex-col gap-1.5">
-                  {hasActiveOffers && (
-                    <Badge 
-                      variant="default" 
-                      className="flex-shrink-0 text-sm px-2.5 py-1.5 font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm leading-tight"
-                    >
-                      🎉 Offer Available
-                    </Badge>
-                  )}
-                  {todaysHappyHours.length > 0 ? (
-                    todaysHappyHours.map((hh, index) => (
-                      <Badge 
-                        key={index}
-                        variant="secondary" 
-                        className="flex-shrink-0 text-sm px-2.5 py-1.5 font-semibold bg-amber-500/90 hover:bg-amber-600 text-white shadow-sm leading-tight"
-                      >
-                        🍻 {hh.start} - {hh.end}
-                      </Badge>
-                    ))
-                  ) : (
-                    <Badge 
-                      variant="outline" 
-                      className="flex-shrink-0 text-sm px-2.5 py-1.5 font-medium text-muted-foreground border-muted-foreground/30 leading-tight"
-                    >
-                      No Happy Hour Today
-                    </Badge>
-                  )}
-                  {menuTypeBadge && (
-                    <Badge 
-                      variant="secondary" 
-                      className={`flex-shrink-0 text-sm px-2.5 py-1.5 font-semibold shadow-sm leading-tight ${
-                        menuTypeBadge.type === 'food_and_drinks' 
-                          ? 'bg-teal-500/90 hover:bg-teal-600 text-white' 
-                          : 'bg-purple-500/90 hover:bg-purple-600 text-white'
-                      }`}
-                    >
-                      {menuTypeBadge.emoji} {menuTypeBadge.label}
-                    </Badge>
-                  )}
-                </div>
+                <FavoriteButton merchantId={restaurant.id} className="flex-shrink-0" />
               </div>
+              
+              {/* Badges in horizontal row below info */}
+              <div className="flex flex-wrap gap-2">
+                {hasActiveOffers && (
+                  <Badge 
+                    variant="default" 
+                    className="text-sm px-2.5 py-1.5 font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm leading-tight"
+                  >
+                    🎉 Offer Available
+                  </Badge>
+                )}
+                {todaysHappyHours.length > 0 ? (
+                  todaysHappyHours.map((hh, index) => (
+                    <Badge 
+                      key={index}
+                      variant="secondary" 
+                      className="text-sm px-2.5 py-1.5 font-semibold bg-amber-500/90 hover:bg-amber-600 text-white shadow-sm leading-tight"
+                    >
+                      🍻 {hh.start} - {hh.end}
+                    </Badge>
+                  ))
+                ) : (
+                  <Badge 
+                    variant="outline" 
+                    className="text-sm px-2.5 py-1.5 font-medium text-muted-foreground border-muted-foreground/30 leading-tight"
+                  >
+                    No Happy Hour Today
+                  </Badge>
+                )}
+                {menuTypeBadge && (
+                  <Badge 
+                    variant="secondary" 
+                    className={`text-sm px-2.5 py-1.5 font-semibold shadow-sm leading-tight ${
+                      menuTypeBadge.type === 'food_and_drinks' 
+                        ? 'bg-teal-500/90 hover:bg-teal-600 text-white' 
+                        : 'bg-purple-500/90 hover:bg-purple-600 text-white'
+                    }`}
+                  >
+                    {menuTypeBadge.emoji} {menuTypeBadge.label}
+                  </Badge>
+                )}
+              </div>
+              
+              {/* Category tags on separate line */}
+              {restaurant.merchant_categories && restaurant.merchant_categories.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {restaurant.merchant_categories.map((merchantCategory: any) => (
+                    <Badge 
+                      key={merchantCategory.id} 
+                      variant="outline" 
+                      className="text-sm px-3 py-1 font-medium border-primary/20 text-foreground/80 bg-background/50 leading-tight"
+                    >
+                      {merchantCategory.categories.name}
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
