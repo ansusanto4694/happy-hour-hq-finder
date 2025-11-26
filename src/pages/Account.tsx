@@ -44,7 +44,7 @@ const Account = () => {
       <div className="absolute inset-0 bg-black/10"></div>
       
       {/* Decorative elements */}
-      <div className="absolute top-20 left-20 w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
+      <div className="absolute top-0 left-20 w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
       <div className="absolute bottom-32 right-20 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
       
       <div className="relative z-10">
@@ -56,7 +56,7 @@ const Account = () => {
         
         <PageHeader showSearchBar={true} searchBarVariant="results" />
         
-        <div className="max-w-5xl mx-auto px-4 py-8 mt-32 md:mt-40">
+        <div className="max-w-5xl mx-auto px-4 py-8 pt-32 md:pt-40">
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">
