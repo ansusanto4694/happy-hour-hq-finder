@@ -59,7 +59,7 @@ const Account = () => {
         <div className="max-w-5xl mx-auto px-4 py-8 pt-32 md:pt-40">
         {/* Welcome Section */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">
+          <h1 className="text-3xl font-bold mb-2 text-white">
             Welcome back, {profile.first_name}!
           </h1>
           <p className="text-white">
