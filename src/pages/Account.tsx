@@ -62,7 +62,7 @@ const Account = () => {
           <h1 className="text-3xl font-bold mb-2">
             Welcome back, {profile.first_name}!
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-white">
             Member since {memberSince}
           </p>
         </div>
