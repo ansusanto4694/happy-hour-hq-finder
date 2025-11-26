@@ -158,7 +158,8 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
                 </div>
                 <div className="flex items-center gap-2">
                   <FavoriteButton 
-                    merchantId={restaurant.id} 
+                    merchantId={restaurant.id}
+                    variant="outline"
                     size="icon"
                   />
                   <Button
