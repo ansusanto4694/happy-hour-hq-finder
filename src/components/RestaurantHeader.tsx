@@ -9,6 +9,7 @@ import { SearchBar } from '@/components/SearchBar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileSearchBar } from '@/components/MobileSearchBar';
 import { useToast } from '@/hooks/use-toast';
+import { FavoriteButton } from '@/components/FavoriteButton';
 
 interface RestaurantHeaderProps {
   merchantId?: number;
@@ -81,6 +82,15 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ merchantId, 
             )}
             
             <div className="flex items-center gap-2">
+              {merchantId && (
+                <FavoriteButton 
+                  merchantId={merchantId}
+                  variant="ghost"
+                  size="sm"
+                  className="p-2"
+                />
+              )}
+              
               <Button 
                 variant="ghost" 
                 size="sm"
