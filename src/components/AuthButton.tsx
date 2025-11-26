@@ -50,6 +50,10 @@ export const AuthButton: React.FC = () => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => navigate('/account')}>
+          <User className="w-4 h-4 mr-2" />
+          My Account
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={handleSignOut} className="text-red-600">
           <LogOut className="w-4 h-4 mr-2" />
           Sign Out

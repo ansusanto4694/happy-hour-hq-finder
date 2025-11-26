@@ -20,6 +20,7 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Analytics from "./pages/Analytics";
 import Favorites from "./pages/Favorites";
+import Account from "./pages/Account";
 import { LocationLanding } from "./pages/LocationLanding";
 import NotFound from "./pages/NotFound";
 
@@ -75,6 +76,7 @@ const App = () => (
               <Route path="/contact" element={<Contact />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/favorites" element={<Favorites />} />
+              <Route path="/account" element={<Account />} />
               <Route path="/happy-hour/:citySlug" element={<LocationLanding />} />
               <Route path="/happy-hour/:citySlug/:neighborhoodSlug" element={<LocationLanding />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
