@@ -103,6 +103,20 @@ In development, debug mode is automatically enabled. You'll see:
 [Analytics] GA4 Debug Mode enabled - check DebugView in GA4
 ```
 
+## Next Steps: Advanced Reporting
+
+For detailed instructions on creating custom reports, conversion funnels, and attribution analysis, see:
+
+📊 **[GA4_CUSTOM_REPORTS_GUIDE.md](./GA4_CUSTOM_REPORTS_GUIDE.md)**
+
+This guide covers:
+- Custom dimension configuration
+- Traffic source attribution reports
+- Conversion funnel setup (Search → Contact, Discovery → Engagement)
+- Multi-channel attribution analysis
+- Custom dashboards and automated alerts
+- BigQuery integration for advanced analysis
+
 ## Troubleshooting
 
 ### Events Not Appearing in GA4
@@ -118,7 +132,7 @@ In development, debug mode is automatically enabled. You'll see:
 
 3. Verify GA4 Measurement ID:
    - Check your index.html or GA4 script
-   - Replace `G-XXXXXXXXXX` in `enableGA4Debug()` with your actual ID
+   - Measurement ID: `G-2CLJ0848WF`
 
 ### Custom Dimensions Not Working
 
