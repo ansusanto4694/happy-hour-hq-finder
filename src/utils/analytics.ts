@@ -12,7 +12,7 @@ declare global {
 // Enable GA4 Debug Mode (shows events in GA4 DebugView)
 export const enableGA4Debug = () => {
   if (typeof window !== 'undefined' && window.gtag) {
-    window.gtag('config', 'G-XXXXXXXXXX', { debug_mode: true });
+    window.gtag('config', 'G-2CLJ0848WF', { debug_mode: true });
     console.log('[Analytics] GA4 Debug Mode enabled - check DebugView in GA4');
   }
 };
@@ -56,7 +56,7 @@ const CONVERSION_EVENTS = [
   'directions_clicked',
 ];
 
-// Helper to send events to GA4
+// Helper to send events to GA4 with enhanced attribution
 const sendToGA4 = (eventName: string, eventParams?: Record<string, any>) => {
   if (!verifyGA4Setup()) {
     console.warn('[Analytics] GA4 not available - gtag not found on window');
@@ -67,15 +67,44 @@ const sendToGA4 = (eventName: string, eventParams?: Record<string, any>) => {
     // Clean up parameters
     const cleanedParams = cleanGA4Params(eventParams);
     
-    // Mark as conversion if applicable
+    // Add enhanced attribution data automatically
+    const utmParams = getUtmParameters();
+    const referrerInfo = categorizeReferrer(document.referrer);
+    
+    // Enrich with traffic source data for better attribution
+    const enrichedParams: Record<string, any> = {
+      ...cleanedParams,
+      // Traffic source attribution
+      traffic_source: referrerInfo.traffic_source,
+      traffic_medium: utmParams.utm_medium || referrerInfo.category || 'none',
+      traffic_campaign: utmParams.utm_campaign || '(not set)',
+      referrer_url: document.referrer || '(direct)',
+      // UTM parameters for campaign tracking
+      campaign_source: utmParams.utm_source,
+      campaign_medium: utmParams.utm_medium,
+      campaign_name: utmParams.utm_campaign,
+      campaign_term: utmParams.utm_term,
+      campaign_content: utmParams.utm_content,
+      // Session context
+      session_id: getSessionId(),
+      device_category: getDeviceType(),
+      screen_resolution: `${window.screen.width}x${window.screen.height}`,
+      viewport_size: `${window.innerWidth}x${window.innerHeight}`,
+      // Page context
+      page_location: window.location.href,
+      page_title: document.title,
+    };
+    
+    // Mark as conversion if applicable and add conversion value
     if (CONVERSION_EVENTS.includes(eventName)) {
-      cleanedParams.conversion = true;
+      enrichedParams.conversion = true;
+      enrichedParams.value = 1; // Assign conversion value for GA4 reporting
     }
     
     // Send event to GA4
-    window.gtag!('event', eventName, cleanedParams);
+    window.gtag!('event', eventName, enrichedParams);
     
-    console.log('[Analytics] GA4 event sent:', eventName, cleanedParams);
+    console.log('[Analytics] GA4 event sent:', eventName, enrichedParams);
   } catch (error) {
     console.error('[Analytics] GA4 error:', error);
   }
@@ -587,7 +616,10 @@ export const trackEvent = async (params: TrackEventParams) => {
 
 // Track page views - fully non-blocking, batched with event queue
 export const trackPageView = async (additionalParams?: Partial<TrackEventParams>) => {
-  // Send page view to GA4 with custom dimensions
+  const utmParams = getUtmParameters();
+  const referrerInfo = categorizeReferrer(document.referrer);
+  
+  // Send enhanced page view to GA4 with full attribution data
   sendToGA4('page_view', {
     page_title: document.title,
     page_location: window.location.href,
@@ -597,6 +629,11 @@ export const trackPageView = async (additionalParams?: Partial<TrackEventParams>
     search_term: additionalParams?.searchTerm,
     location_query: additionalParams?.locationQuery,
     device_type: getDeviceType(),
+    user_id: additionalParams?.userId,
+    // Enhanced attribution already added by sendToGA4, but we can include specific page-level data
+    page_referrer: document.referrer,
+    referrer_source: referrerInfo.platform,
+    referrer_category: referrerInfo.category,
   });
   
   // Track the event (queued, non-blocking) - page views will be counted from events
