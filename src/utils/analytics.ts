@@ -514,43 +514,55 @@ export const updateSessionActivity = async () => {
   
   const sessionDuration = Math.floor((now - sessionStartTime) / 1000);
   
-  // Get current session stats to calculate engagement
-  const { data: sessionData } = await supabase
+  // Get current session stats to calculate engagement - use maybeSingle() to handle missing sessions
+  const { data: sessionData, error } = await supabase
     .from('user_sessions')
     .select('page_views, total_events, is_bot')
     .eq('session_id', sessionId)
-    .single();
+    .maybeSingle();
   
-  if (sessionData) {
-    const pageViews = sessionData.page_views || 0;
-    const totalEvents = sessionData.total_events || 0;
-    const isBot = sessionData.is_bot || false;
-    
-    const isBounce = isBounceSession(pageViews, sessionDuration);
-    const isEngaged = isEngagedSession(pageViews, sessionDuration, isBounce, isBot);
-    const engagementScore = calculateEngagementScore(pageViews, sessionDuration, totalEvents);
-    
-    console.log('[Analytics] Updating session activity:', {
-      sessionId,
-      sessionDuration,
-      currentPath,
-      pageViews,
-      isEngaged,
-      engagementScore,
-      isBounce
-    });
-    
-    await supabase
-      .from('user_sessions')
-      .update({
-        last_seen: new Date().toISOString(),
-        exit_page: currentPath,
-        session_duration_seconds: sessionDuration,
-        is_bounce: isBounce,
-        is_engaged: isEngaged,
-        engagement_score: engagementScore,
-      })
-      .eq('session_id', sessionId);
+  if (error) {
+    console.error('[Analytics] Error fetching session data:', error);
+    return;
+  }
+  
+  if (!sessionData) {
+    console.warn('[Analytics] Session not found during activity update, will be created on next event flush');
+    return;
+  }
+  
+  const pageViews = sessionData.page_views || 0;
+  const totalEvents = sessionData.total_events || 0;
+  const isBot = sessionData.is_bot || false;
+  
+  const isBounce = isBounceSession(pageViews, sessionDuration);
+  const isEngaged = isEngagedSession(pageViews, sessionDuration, isBounce, isBot);
+  const engagementScore = calculateEngagementScore(pageViews, sessionDuration, totalEvents);
+  
+  console.log('[Analytics] Updating session activity:', {
+    sessionId,
+    sessionDuration,
+    currentPath,
+    pageViews,
+    isEngaged,
+    engagementScore,
+    isBounce
+  });
+  
+  const { error: updateError } = await supabase
+    .from('user_sessions')
+    .update({
+      last_seen: new Date().toISOString(),
+      exit_page: currentPath,
+      session_duration_seconds: sessionDuration,
+      is_bounce: isBounce,
+      is_engaged: isEngaged,
+      engagement_score: engagementScore,
+    })
+    .eq('session_id', sessionId);
+  
+  if (updateError) {
+    console.error('[Analytics] Error updating session activity:', updateError);
   }
   
   lastActivityTime = now;
@@ -686,17 +698,53 @@ export const flushEventQueue = async () => {
     // Count page views in this batch
     const pageViewCount = eventsToSend.filter(e => e.event_type === 'page_view').length;
     
-    // Insert events and get current session state in parallel
-    const [_, sessionData] = await Promise.all([
+    // Insert events and get current session state in parallel - use maybeSingle() to handle missing sessions
+    const [eventInsertResult, sessionData] = await Promise.all([
       supabase.from('user_events').insert(eventsToSend),
       supabase
         .from('user_sessions')
         .select('total_events, page_views, session_duration_seconds, is_bot')
         .eq('session_id', sessionId)
-        .single()
+        .maybeSingle()
     ]);
     
-    // Update session counts and engagement metrics if we got the data
+    // If event insert failed, log the error
+    if (eventInsertResult.error) {
+      console.error('[Analytics] Error inserting events:', eventInsertResult.error);
+    }
+    
+    // Handle case where session doesn't exist yet (race condition)
+    if (!sessionData.data) {
+      console.warn('[Analytics] Session not found during event flush, initializing now');
+      // Create the session if it doesn't exist
+      await initializeSession();
+      
+      // Re-fetch session data after initialization
+      const { data: newSessionData, error: fetchError } = await supabase
+        .from('user_sessions')
+        .select('total_events, page_views, session_duration_seconds, is_bot')
+        .eq('session_id', sessionId)
+        .maybeSingle();
+      
+      if (fetchError) {
+        console.error('[Analytics] Error fetching session after initialization:', fetchError);
+        // Re-queue events if we can't proceed
+        eventQueue = [...eventsToSend, ...eventQueue];
+        return;
+      }
+      
+      if (!newSessionData) {
+        console.error('[Analytics] Session still not found after initialization');
+        // Re-queue events if we can't proceed
+        eventQueue = [...eventsToSend, ...eventQueue];
+        return;
+      }
+      
+      // Update sessionData to use the newly created session
+      sessionData.data = newSessionData;
+    }
+    
+    // Update session counts and engagement metrics now that we have the data
     if (sessionData.data) {
       const newTotalEvents = (sessionData.data.total_events || 0) + eventsToSend.length;
       const newPageViews = (sessionData.data.page_views || 0) + pageViewCount;
@@ -718,13 +766,19 @@ export const flushEventQueue = async () => {
         updates.page_views = newPageViews;
       }
       
-      await supabase
+      console.log('[Analytics] Updating session with:', updates);
+      
+      const { error: updateError } = await supabase
         .from('user_sessions')
         .update(updates)
         .eq('session_id', sessionId);
+      
+      if (updateError) {
+        console.error('[Analytics] Error updating session counts:', updateError);
+      }
     }
   } catch (error) {
-    console.error('Error sending analytics events:', error);
+    console.error('[Analytics] Error sending analytics events:', error);
     // Re-queue events if failed
     eventQueue = [...eventsToSend, ...eventQueue];
   }
