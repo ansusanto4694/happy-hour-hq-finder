@@ -103,7 +103,7 @@ const Auth = () => {
       <PageHeader showSearchBar={true} searchBarVariant="results" />
       
       {/* Main content - flex-grow to push footer down */}
-      <div className="relative z-10 flex-grow flex items-center justify-center pt-32 pb-12 px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 flex-grow flex items-center justify-center pt-48 md:pt-40 lg:pt-32 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
         <div className="text-center">
         </div>
