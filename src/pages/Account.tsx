@@ -10,16 +10,28 @@ import { ProfileForm } from '@/components/account/ProfileForm';
 import { User, Heart, FolderHeart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 const Account = () => {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
+  const { trackPage } = useAnalytics();
 
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
     }
   }, [user, loading, navigate]);
+
+  // Track account page view
+  useEffect(() => {
+    if (user && profile) {
+      trackPage({
+        eventCategory: 'page_view',
+        eventAction: 'account_page_view'
+      });
+    }
+  }, [user, profile, trackPage]);
 
   if (loading) {
     return (

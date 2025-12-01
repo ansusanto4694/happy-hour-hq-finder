@@ -1,16 +1,27 @@
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { SEOHead } from "@/components/SEOHead";
+import { useAnalytics } from "@/hooks/useAnalytics";
 
 const NotFound = () => {
   const location = useLocation();
+  const { trackPage } = useAnalytics();
 
   useEffect(() => {
     console.error(
       "404 Error: User attempted to access non-existent route:",
       location.pathname
     );
-  }, [location.pathname]);
+    
+    // Track 404 page view
+    trackPage({
+      eventCategory: 'app_error',
+      eventAction: '404_page_view',
+      metadata: {
+        attemptedPath: location.pathname
+      }
+    });
+  }, [location.pathname, trackPage]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">

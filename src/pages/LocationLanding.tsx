@@ -112,7 +112,7 @@ export const LocationLanding = () => {
     return generateLocationStructuredData(city, state, neighborhood);
   }, [city, state, neighborhood]);
 
-  // Track page view on mount and when location changes
+  // Track page view ONCE on mount when location changes - remove merchant count dependency to prevent over-tracking
   useEffect(() => {
     trackPage({
       eventCategory: 'location_landing',
@@ -121,11 +121,10 @@ export const LocationLanding = () => {
       metadata: {
         city,
         state,
-        neighborhood: neighborhood || null,
-        merchant_count: merchants?.length || 0
+        neighborhood: neighborhood || null
       }
     });
-  }, [locationString, city, state, neighborhood, merchants?.length, trackPage]);
+  }, [locationString, city, state, neighborhood, trackPage]);
 
   const pageTitle = neighborhood 
     ? `Happy Hour in ${neighborhood}, ${city} | SipMunchYap`

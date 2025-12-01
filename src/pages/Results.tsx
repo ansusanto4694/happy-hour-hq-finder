@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { SearchBar } from '@/components/SearchBar';
 import { useAnalytics } from '@/hooks/useAnalytics';
@@ -60,17 +60,21 @@ const Results = () => {
     return daysParam ? daysParam.split(',').map(Number) : [];
   })();
 
-  // Track page view on mount
+  // Track page view ONCE on mount only - use ref to prevent over-tracking
+  const hasTrackedPageView = useRef(false);
   useEffect(() => {
-    trackPage({
-      searchTerm: searchTerm || undefined,
-      locationQuery: location || undefined,
-      metadata: {
-        hasFilters: selectedCategories.length > 0 || showOffersOnly,
-        fromCarousel: !!carouselId
-      }
-    });
-  }, [trackPage, searchTerm, location, selectedCategories.length, showOffersOnly, carouselId]);
+    if (!hasTrackedPageView.current) {
+      hasTrackedPageView.current = true;
+      trackPage({
+        searchTerm: searchTerm || undefined,
+        locationQuery: location || undefined,
+        metadata: {
+          hasFilters: selectedCategories.length > 0 || showOffersOnly,
+          fromCarousel: !!carouselId
+        }
+      });
+    }
+  }, [trackPage, searchTerm, location]);
 
   // Handle day change with URL update
   const handleDaysChange = (days: number[]) => {

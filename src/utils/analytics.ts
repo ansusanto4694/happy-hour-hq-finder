@@ -747,22 +747,31 @@ export const flushEventQueue = async () => {
       // Create the session if it doesn't exist (force reinitialize to bypass flag check)
       await initializeSession(true);
       
-      // Re-fetch session data after initialization
-      const { data: newSessionData, error: fetchError } = await supabase
-        .from('user_sessions')
-        .select('total_events, page_views, session_duration_seconds, is_bot')
-        .eq('session_id', sessionId)
-        .maybeSingle();
+      // Re-fetch session data after initialization with retry logic
+      let retries = 3;
+      let newSessionData = null;
       
-      if (fetchError) {
-        console.error('[Analytics] Error fetching session after initialization:', fetchError);
-        // Re-queue events if we can't proceed
-        eventQueue = [...eventsToSend, ...eventQueue];
-        return;
+      while (retries > 0 && !newSessionData) {
+        const { data, error: fetchError } = await supabase
+          .from('user_sessions')
+          .select('total_events, page_views, session_duration_seconds, is_bot')
+          .eq('session_id', sessionId)
+          .maybeSingle();
+        
+        if (fetchError) {
+          console.error('[Analytics] Error fetching session after initialization:', fetchError);
+          retries--;
+          if (retries > 0) {
+            await new Promise(resolve => setTimeout(resolve, 100)); // Wait 100ms before retry
+          }
+          continue;
+        }
+        
+        newSessionData = data;
       }
       
       if (!newSessionData) {
-        console.error('[Analytics] Session still not found after initialization');
+        console.error('[Analytics] Session still not found after initialization and retries');
         // Re-queue events if we can't proceed
         eventQueue = [...eventsToSend, ...eventQueue];
         return;
@@ -790,19 +799,37 @@ export const flushEventQueue = async () => {
         engagement_score: engagementScore,
       };
       
+      // ALWAYS update page_views with the new count for accurate tracking
       if (pageViewCount > 0) {
         updates.page_views = newPageViews;
+        console.log(`[Analytics] Adding ${pageViewCount} page views, new total: ${newPageViews}`);
       }
       
       console.log('[Analytics] Updating session with:', updates);
       
-      const { error: updateError } = await supabase
-        .from('user_sessions')
-        .update(updates)
-        .eq('session_id', sessionId);
+      // Use upsert with retry logic to ensure atomic update
+      let updateRetries = 3;
+      let updateSuccess = false;
       
-      if (updateError) {
-        console.error('[Analytics] Error updating session counts:', updateError);
+      while (updateRetries > 0 && !updateSuccess) {
+        const { error: updateError } = await supabase
+          .from('user_sessions')
+          .update(updates)
+          .eq('session_id', sessionId);
+        
+        if (updateError) {
+          console.error('[Analytics] Error updating session counts:', updateError);
+          updateRetries--;
+          if (updateRetries > 0) {
+            await new Promise(resolve => setTimeout(resolve, 100)); // Wait 100ms before retry
+          }
+        } else {
+          updateSuccess = true;
+        }
+      }
+      
+      if (!updateSuccess) {
+        console.error('[Analytics] Failed to update session after all retries');
       }
     }
   } catch (error) {
