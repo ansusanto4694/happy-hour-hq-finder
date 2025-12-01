@@ -42,145 +42,161 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    
+    // Define background processing function
+    const processBackfill = async () => {
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+      
+      try {
+        console.log('[Comprehensive Backfill] Starting accurate session metrics calculation...');
 
-    console.log('[Comprehensive Backfill] Starting accurate session metrics calculation...');
-
-    // Get all sessions
-    const { data: sessions, error: sessionsError } = await supabase
-      .from('user_sessions')
-      .select('session_id, is_bot, first_seen, last_seen')
-      .order('created_at', { ascending: true });
-
-    if (sessionsError) {
-      throw new Error(`Failed to fetch sessions: ${sessionsError.message}`);
-    }
-
-    console.log(`[Comprehensive Backfill] Found ${sessions.length} sessions to process`);
-
-    let processedCount = 0;
-    let updatedCount = 0;
-    const batchSize = 50;
-
-    // Process sessions in batches
-    for (let i = 0; i < sessions.length; i += batchSize) {
-      const batch = sessions.slice(i, i + batchSize);
-      const sessionIds = batch.map(s => s.session_id);
-
-      // Fetch ALL events for these sessions in one query
-      const { data: events, error: eventsError } = await supabase
-        .from('user_events')
-        .select('session_id, event_type, created_at')
-        .in('session_id', sessionIds)
-        .order('created_at', { ascending: true });
-
-      if (eventsError) {
-        console.error('[Comprehensive Backfill] Error fetching events:', eventsError);
-        continue;
-      }
-
-      // Group events by session
-      const eventsBySession = events.reduce((acc, event) => {
-        if (!acc[event.session_id]) {
-          acc[event.session_id] = [];
-        }
-        acc[event.session_id].push(event);
-        return acc;
-      }, {} as Record<string, any[]>);
-
-      // Process each session
-      for (const session of batch) {
-        const sessionEvents = eventsBySession[session.session_id] || [];
-        
-        // Calculate accurate metrics directly from events
-        const totalEvents = sessionEvents.length;
-        const pageViews = sessionEvents.filter(e => e.event_type === 'page_view').length;
-        
-        // Calculate session duration from first and last event
-        let sessionDuration = 0;
-        if (sessionEvents.length > 0) {
-          const firstEvent = new Date(sessionEvents[0].created_at);
-          const lastEvent = new Date(sessionEvents[sessionEvents.length - 1].created_at);
-          sessionDuration = Math.round((lastEvent.getTime() - firstEvent.getTime()) / 1000);
-        }
-
-        // Calculate engagement metrics
-        const isBounce = isBounceSession(pageViews, sessionDuration);
-        const isEngaged = isEngagedSession(pageViews, sessionDuration, isBounce, session.is_bot);
-        const engagementScore = calculateEngagementScore(pageViews, sessionDuration, totalEvents);
-
-        // Update session with accurate counts
-        const { error: updateError } = await supabase
+        // Get all sessions
+        const { data: sessions, error: sessionsError } = await supabase
           .from('user_sessions')
-          .update({
-            total_events: totalEvents,
-            page_views: pageViews,
-            session_duration_seconds: sessionDuration,
-            is_bounce: isBounce,
-            is_engaged: isEngaged,
-            engagement_score: engagementScore,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('session_id', session.session_id);
+          .select('session_id, is_bot, first_seen, last_seen')
+          .order('created_at', { ascending: true });
 
-        if (updateError) {
-          console.error(`[Comprehensive Backfill] Error updating session ${session.session_id}:`, updateError);
-        } else {
-          updatedCount++;
+        if (sessionsError) {
+          throw new Error(`Failed to fetch sessions: ${sessionsError.message}`);
         }
 
-        processedCount++;
-        
-        if (processedCount % 100 === 0) {
-          console.log(`[Comprehensive Backfill] Processed ${processedCount}/${sessions.length} sessions`);
+        console.log(`[Comprehensive Backfill] Found ${sessions.length} sessions to process`);
+
+        let processedCount = 0;
+        let updatedCount = 0;
+        const batchSize = 50;
+
+        // Process sessions in batches
+        for (let i = 0; i < sessions.length; i += batchSize) {
+          const batch = sessions.slice(i, i + batchSize);
+          const sessionIds = batch.map(s => s.session_id);
+
+          // Fetch ALL events for these sessions in one query
+          const { data: events, error: eventsError } = await supabase
+            .from('user_events')
+            .select('session_id, event_type, created_at')
+            .in('session_id', sessionIds)
+            .order('created_at', { ascending: true });
+
+          if (eventsError) {
+            console.error('[Comprehensive Backfill] Error fetching events:', eventsError);
+            continue;
+          }
+
+          // Group events by session
+          const eventsBySession = events.reduce((acc, event) => {
+            if (!acc[event.session_id]) {
+              acc[event.session_id] = [];
+            }
+            acc[event.session_id].push(event);
+            return acc;
+          }, {} as Record<string, any[]>);
+
+          // Process each session
+          for (const session of batch) {
+            const sessionEvents = eventsBySession[session.session_id] || [];
+            
+            // Calculate accurate metrics directly from events
+            const totalEvents = sessionEvents.length;
+            const pageViews = sessionEvents.filter(e => e.event_type === 'page_view').length;
+            
+            // Calculate session duration from first and last event
+            let sessionDuration = 0;
+            if (sessionEvents.length > 0) {
+              const firstEvent = new Date(sessionEvents[0].created_at);
+              const lastEvent = new Date(sessionEvents[sessionEvents.length - 1].created_at);
+              sessionDuration = Math.round((lastEvent.getTime() - firstEvent.getTime()) / 1000);
+            }
+
+            // Calculate engagement metrics
+            const isBounce = isBounceSession(pageViews, sessionDuration);
+            const isEngaged = isEngagedSession(pageViews, sessionDuration, isBounce, session.is_bot);
+            const engagementScore = calculateEngagementScore(pageViews, sessionDuration, totalEvents);
+
+            // Update session with accurate counts
+            const { error: updateError } = await supabase
+              .from('user_sessions')
+              .update({
+                total_events: totalEvents,
+                page_views: pageViews,
+                session_duration_seconds: sessionDuration,
+                is_bounce: isBounce,
+                is_engaged: isEngaged,
+                engagement_score: engagementScore,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('session_id', session.session_id);
+
+            if (updateError) {
+              console.error(`[Comprehensive Backfill] Error updating session ${session.session_id}:`, updateError);
+            } else {
+              updatedCount++;
+            }
+
+            processedCount++;
+            
+            if (processedCount % 100 === 0) {
+              console.log(`[Comprehensive Backfill] Processed ${processedCount}/${sessions.length} sessions`);
+            }
+          }
         }
+
+        // Get summary stats
+        const { data: totalStats } = await supabase
+          .from('user_sessions')
+          .select('page_views, total_events', { count: 'exact' });
+
+        const { data: eventStats, count: totalEventCount } = await supabase
+          .from('user_events')
+          .select('*', { count: 'exact', head: true });
+
+        const { data: pageViewStats, count: totalPageViews } = await supabase
+          .from('user_events')
+          .select('*', { count: 'exact', head: true })
+          .eq('event_type', 'page_view');
+
+        const totalSessionPageViews = totalStats?.reduce((sum, s) => sum + (s.page_views || 0), 0) || 0;
+        const totalSessionEvents = totalStats?.reduce((sum, s) => sum + (s.total_events || 0), 0) || 0;
+
+        const result = {
+          success: true,
+          sessions_processed: processedCount,
+          sessions_updated: updatedCount,
+          total_sessions: sessions.length,
+          accuracy: {
+            page_views: {
+              actual: totalPageViews,
+              session_counters: totalSessionPageViews,
+              match: totalPageViews === totalSessionPageViews,
+              accuracy_pct: totalPageViews > 0 ? ((totalSessionPageViews / totalPageViews) * 100).toFixed(2) + '%' : 'N/A'
+            },
+            total_events: {
+              actual: totalEventCount,
+              session_counters: totalSessionEvents,
+              match: totalEventCount === totalSessionEvents,
+              accuracy_pct: totalEventCount > 0 ? ((totalSessionEvents / totalEventCount) * 100).toFixed(2) + '%' : 'N/A'
+            }
+          },
+          timestamp: new Date().toISOString(),
+        };
+
+        console.log('[Comprehensive Backfill] Completed:', result);
+      } catch (error) {
+        console.error('[Comprehensive Backfill] Background error:', error);
       }
-    }
-
-    // Get summary stats
-    const { data: totalStats } = await supabase
-      .from('user_sessions')
-      .select('page_views, total_events', { count: 'exact' });
-
-    const { data: eventStats, count: totalEventCount } = await supabase
-      .from('user_events')
-      .select('*', { count: 'exact', head: true });
-
-    const { data: pageViewStats, count: totalPageViews } = await supabase
-      .from('user_events')
-      .select('*', { count: 'exact', head: true })
-      .eq('event_type', 'page_view');
-
-    const totalSessionPageViews = totalStats?.reduce((sum, s) => sum + (s.page_views || 0), 0) || 0;
-    const totalSessionEvents = totalStats?.reduce((sum, s) => sum + (s.total_events || 0), 0) || 0;
-
-    const result = {
-      success: true,
-      sessions_processed: processedCount,
-      sessions_updated: updatedCount,
-      total_sessions: sessions.length,
-      accuracy: {
-        page_views: {
-          actual: totalPageViews,
-          session_counters: totalSessionPageViews,
-          match: totalPageViews === totalSessionPageViews,
-          accuracy_pct: totalPageViews > 0 ? ((totalSessionPageViews / totalPageViews) * 100).toFixed(2) + '%' : 'N/A'
-        },
-        total_events: {
-          actual: totalEventCount,
-          session_counters: totalSessionEvents,
-          match: totalEventCount === totalSessionEvents,
-          accuracy_pct: totalEventCount > 0 ? ((totalSessionEvents / totalEventCount) * 100).toFixed(2) + '%' : 'N/A'
-        }
-      },
-      timestamp: new Date().toISOString(),
     };
 
-    console.log('[Comprehensive Backfill] Completed:', result);
+    // Start background processing without waiting
+    EdgeRuntime.waitUntil(processBackfill());
 
-    return new Response(JSON.stringify(result), {
+    // Return immediate response
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'Backfill started in background',
+      timestamp: new Date().toISOString(),
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
+      status: 202, // Accepted
     });
   } catch (error) {
     console.error('[Comprehensive Backfill] Error:', error);
