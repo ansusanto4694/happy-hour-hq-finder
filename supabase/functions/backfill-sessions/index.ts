@@ -23,43 +23,16 @@ Deno.serve(async (req) => {
     // Step 1: Insert missing sessions (sessions in user_events but not in user_sessions)
     console.log('[Backfill] Step 1: Finding and inserting missing sessions...');
     
-    // Get ALL unique session_ids from user_events (use DISTINCT to reduce data)
-    const { data: distinctEventSessions, error: eventSessionsError } = await supabase
-      .rpc('get_distinct_event_session_ids');
+    // Get orphaned session IDs directly from database function
+    const { data: orphanedSessions, error: orphanedError } = await supabase
+      .rpc('get_orphaned_session_ids');
 
-    let uniqueMissingIds: string[] = [];
-
-    if (eventSessionsError) {
-      // Fallback: Get distinct session_ids using aggregation
-      const { data: allEvents, error: fallbackError } = await supabase
-        .from('user_events')
-        .select('session_id')
-        .limit(100000); // Set high limit to get all
-
-      if (fallbackError) {
-        throw new Error(`Failed to get event sessions: ${fallbackError.message}`);
-      }
-
-      const allEventSessionIds = [...new Set(allEvents?.map(s => s.session_id) || [])];
-      console.log(`[Backfill] Found ${allEventSessionIds.length} unique session_ids in user_events (using fallback)`);
-      
-      // Get all existing session_ids from user_sessions
-      const { data: existingSessions, error: existingError } = await supabase
-        .from('user_sessions')
-        .select('session_id')
-        .limit(100000);
-
-      if (existingError) {
-        throw new Error(`Failed to get existing sessions: ${existingError.message}`);
-      }
-
-      const existingSessionIds = new Set(existingSessions?.map(s => s.session_id) || []);
-      console.log(`[Backfill] Found ${existingSessionIds.size} existing sessions in user_sessions`);
-
-      // Find missing session_ids (in events but not in sessions)
-      uniqueMissingIds = allEventSessionIds.filter(id => !existingSessionIds.has(id));
-      console.log(`[Backfill] Found ${uniqueMissingIds.length} missing sessions to create`);
+    if (orphanedError) {
+      throw new Error(`Failed to get orphaned sessions: ${orphanedError.message}`);
     }
+
+    const uniqueMissingIds = orphanedSessions?.map(s => s.session_id) || [];
+    console.log(`[Backfill] Found ${uniqueMissingIds.length} orphaned sessions to create`);
 
     // Process missing sessions in batches
     const insertBatchSize = 100;
