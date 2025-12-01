@@ -79,7 +79,10 @@ Deno.serve(async (req) => {
           const lastSeen = new Date(lastEvent.created_at);
           const sessionDuration = Math.floor((lastSeen.getTime() - firstSeen.getTime()) / 1000);
           const totalEvents = events.length;
-          const pageViews = new Set(events.map(e => e.page_path)).size;
+          
+          // FIX: Count actual page_view events, not unique page paths
+          const pageViews = events.filter(e => e.event_type === 'page_view').length;
+          
           const isBounce = totalEvents <= 1 && sessionDuration < 10;
           const isEngaged = pageViews >= 2 || sessionDuration >= 10 || totalEvents >= 3;
           const engagementScore = Math.floor(pageViews * 10 + Math.min(sessionDuration / 10, 30) + totalEvents * 5);
@@ -181,7 +184,10 @@ Deno.serve(async (req) => {
         const lastSeen = new Date(lastEvent.created_at);
         const sessionDuration = Math.floor((lastSeen.getTime() - firstSeen.getTime()) / 1000);
         const totalEvents = events.length;
-        const pageViews = new Set(events.map(e => e.page_path)).size;
+        
+        // FIX: Count actual page_view events, not unique page paths
+        const pageViews = events.filter(e => e.event_type === 'page_view').length;
+        
         const isBounce = totalEvents <= 1 && sessionDuration < 10;
         const isEngaged = pageViews >= 2 || sessionDuration >= 10 || totalEvents >= 3;
         const engagementScore = Math.floor(pageViews * 10 + Math.min(sessionDuration / 10, 30) + totalEvents * 5);
