@@ -817,7 +817,7 @@ export const trackFunnelStep = async (params: FunnelStep) => {
   });
 };
 
-// Flush event queue - optimized with combined session update and engagement calculation
+// Flush event queue - SIMPLIFIED: Just insert events, let backfill handle metrics
 export const flushEventQueue = async () => {
   if (eventQueue.length === 0) return;
   
@@ -825,133 +825,17 @@ export const flushEventQueue = async () => {
   eventQueue = [];
   
   try {
-    const sessionId = getSessionId();
+    // Just insert the events - no counter updates to prevent drift
+    const { error: eventInsertError } = await supabase
+      .from('user_events')
+      .insert(eventsToSend);
     
-    // Count page views in this batch
-    const pageViewCount = eventsToSend.filter(e => e.event_type === 'page_view').length;
-    
-    // Insert events and get current session state in parallel - use maybeSingle() to handle missing sessions
-    const [eventInsertResult, sessionData] = await Promise.all([
-      supabase.from('user_events').insert(eventsToSend),
-      supabase
-        .from('user_sessions')
-        .select('total_events, page_views, session_duration_seconds, is_bot')
-        .eq('session_id', sessionId)
-        .maybeSingle()
-    ]);
-    
-    // If event insert failed, log the error
-    if (eventInsertResult.error) {
-      console.error('[Analytics] Error inserting events:', eventInsertResult.error);
-    }
-    
-    // Handle case where session doesn't exist yet (race condition)
-    if (!sessionData.data) {
-      console.warn('[Analytics] Session not found during event flush, initializing now');
-      // Create the session if it doesn't exist (force reinitialize to bypass flag check)
-      await initializeSession(true);
-      
-      // Re-fetch session data after initialization with retry logic
-      let retries = 3;
-      let newSessionData = null;
-      
-      while (retries > 0 && !newSessionData) {
-        const { data, error: fetchError } = await supabase
-          .from('user_sessions')
-          .select('total_events, page_views, session_duration_seconds, is_bot')
-          .eq('session_id', sessionId)
-          .maybeSingle();
-        
-        if (fetchError) {
-          console.error('[Analytics] Error fetching session after initialization:', fetchError);
-          retries--;
-          if (retries > 0) {
-            await new Promise(resolve => setTimeout(resolve, 100)); // Wait 100ms before retry
-          }
-          continue;
-        }
-        
-        newSessionData = data;
-      }
-      
-      if (!newSessionData) {
-        console.error('[Analytics] Session still not found after initialization and retries');
-        // Re-queue events if we can't proceed
-        eventQueue = [...eventsToSend, ...eventQueue];
-        return;
-      }
-      
-      // Update sessionData to use the newly created session
-      sessionData.data = newSessionData;
-    }
-    
-    // Update session counts and engagement metrics now that we have the data
-    if (sessionData.data) {
-      const newTotalEvents = (sessionData.data.total_events || 0) + eventsToSend.length;
-      const newPageViews = (sessionData.data.page_views || 0) + pageViewCount;
-      const sessionDuration = sessionData.data.session_duration_seconds || 0;
-      const isBot = sessionData.data.is_bot || false;
-      
-      // Check for potential runaway session
-      if (newTotalEvents >= SESSION_CRITICAL_LIMIT) {
-        console.error('[Analytics] CRITICAL: Session exceeded event limit!', {
-          sessionId,
-          totalEvents: newTotalEvents,
-          pageViews: newPageViews,
-          duration: sessionDuration,
-          isBot
-        });
-      } else if (newTotalEvents >= SESSION_EVENT_LIMIT) {
-        console.warn('[Analytics] WARNING: Session approaching event limit', {
-          sessionId,
-          totalEvents: newTotalEvents,
-          limit: SESSION_EVENT_LIMIT
-        });
-      }
-      
-      const isBounce = isBounceSession(newPageViews, sessionDuration);
-      const isEngaged = isEngagedSession(newPageViews, sessionDuration, isBounce, isBot);
-      const engagementScore = calculateEngagementScore(newPageViews, sessionDuration, newTotalEvents);
-      
-      const updates: any = {
-        total_events: newTotalEvents,
-        is_bounce: isBounce,
-        is_engaged: isEngaged,
-        engagement_score: engagementScore,
-      };
-      
-      // ALWAYS update page_views with the new count for accurate tracking
-      if (pageViewCount > 0) {
-        updates.page_views = newPageViews;
-        console.log(`[Analytics] Adding ${pageViewCount} page views, new total: ${newPageViews}`);
-      }
-      
-      console.log('[Analytics] Updating session with:', updates);
-      
-      // Use upsert with retry logic to ensure atomic update
-      let updateRetries = 3;
-      let updateSuccess = false;
-      
-      while (updateRetries > 0 && !updateSuccess) {
-        const { error: updateError } = await supabase
-          .from('user_sessions')
-          .update(updates)
-          .eq('session_id', sessionId);
-        
-        if (updateError) {
-          console.error('[Analytics] Error updating session counts:', updateError);
-          updateRetries--;
-          if (updateRetries > 0) {
-            await new Promise(resolve => setTimeout(resolve, 100)); // Wait 100ms before retry
-          }
-        } else {
-          updateSuccess = true;
-        }
-      }
-      
-      if (!updateSuccess) {
-        console.error('[Analytics] Failed to update session after all retries');
-      }
+    if (eventInsertError) {
+      console.error('[Analytics] Error inserting events:', eventInsertError);
+      // Re-queue events on failure
+      eventQueue = [...eventsToSend, ...eventQueue];
+    } else {
+      console.log(`[Analytics] Successfully flushed ${eventsToSend.length} events to database`);
     }
   } catch (error) {
     console.error('[Analytics] Error sending analytics events:', error);

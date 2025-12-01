@@ -15,23 +15,12 @@ import { useAnalytics } from '@/hooks/useAnalytics';
 const Account = () => {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
-  const { trackPage } = useAnalytics();
 
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
     }
   }, [user, loading, navigate]);
-
-  // Track account page view
-  useEffect(() => {
-    if (user && profile) {
-      trackPage({
-        eventCategory: 'page_view',
-        eventAction: 'account_page_view'
-      });
-    }
-  }, [user, profile, trackPage]);
 
   if (loading) {
     return (

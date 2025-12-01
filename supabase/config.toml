@@ -47,3 +47,6 @@ verify_jwt = false
 
 [functions.fix-page-view-counts]
 verify_jwt = false
+
+[functions.comprehensive-backfill]
+verify_jwt = false

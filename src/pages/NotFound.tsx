@@ -5,7 +5,7 @@ import { useAnalytics } from "@/hooks/useAnalytics";
 
 const NotFound = () => {
   const location = useLocation();
-  const { trackPage } = useAnalytics();
+  const { track } = useAnalytics();
 
   useEffect(() => {
     console.error(
@@ -13,15 +13,16 @@ const NotFound = () => {
       location.pathname
     );
     
-    // Track 404 page view
-    trackPage({
+    // Track 404 event
+    track({
+      eventType: 'error',
       eventCategory: 'app_error',
       eventAction: '404_page_view',
       metadata: {
         attemptedPath: location.pathname
       }
     });
-  }, [location.pathname, trackPage]);
+  }, [location.pathname, track]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
