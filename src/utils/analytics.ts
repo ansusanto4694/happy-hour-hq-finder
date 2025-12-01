@@ -421,15 +421,12 @@ export const isBounceSession = (
 const capturedReferrer = typeof document !== 'undefined' ? document.referrer : '';
 
 // Initialize or update session - throttled to run only once per page load
-export const initializeSession = async () => {
+export const initializeSession = async (forceReinitialize: boolean = false) => {
   // Check if already initialized in this page session
   const sessionInitKey = 'analytics_session_initialized';
-  if (sessionInitialized || sessionStorage.getItem(sessionInitKey) === 'true') {
+  if (!forceReinitialize && (sessionInitialized || sessionStorage.getItem(sessionInitKey) === 'true')) {
     return;
   }
-  
-  sessionInitialized = true;
-  sessionStorage.setItem(sessionInitKey, 'true');
   
   const sessionId = getSessionId();
   const userId = await getUserId();
@@ -492,12 +489,19 @@ export const initializeSession = async () => {
   
   if (error) {
     console.error('[Analytics] Error initializing session:', error);
+    return; // Don't set flags on error, allow retry
   }
+  
+  // ONLY set flags after successful database insert
+  sessionInitialized = true;
+  sessionStorage.setItem(sessionInitKey, 'true');
   
   // FIX: Store session start time in sessionStorage for persistence across page refreshes
   sessionStartTime = Date.now();
   sessionStorage.setItem('analytics_session_start_time', sessionStartTime.toString());
   lastActivityTime = Date.now();
+  
+  console.log('[Analytics] Session initialized successfully');
 };
 
 // Update session activity with engagement metrics
@@ -716,8 +720,8 @@ export const flushEventQueue = async () => {
     // Handle case where session doesn't exist yet (race condition)
     if (!sessionData.data) {
       console.warn('[Analytics] Session not found during event flush, initializing now');
-      // Create the session if it doesn't exist
-      await initializeSession();
+      // Create the session if it doesn't exist (force reinitialize to bypass flag check)
+      await initializeSession(true);
       
       // Re-fetch session data after initialization
       const { data: newSessionData, error: fetchError } = await supabase
