@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,6 +31,11 @@ const Auth = () => {
     phoneNumber: '',
   });
   
+  // Form interaction tracking state
+  const signupStartTimeRef = useRef<number | null>(null);
+  const fieldInteractionTimesRef = useRef<Record<string, number>>({});
+  const hasInteractedWithFormRef = useRef(false);
+  
   const { signIn, signUp, user, resetPassword } = useAuth();
   const { track, trackFunnel } = useAnalytics();
   const navigate = useNavigate();
@@ -43,7 +48,7 @@ const Auth = () => {
     });
   }, [trackFunnel]);
 
-  // Track tab switching
+  // Track tab switching and signup form entry
   useEffect(() => {
     track({
       eventType: 'interaction',
@@ -51,14 +56,84 @@ const Auth = () => {
       eventAction: 'auth_tab_switch',
       eventLabel: activeTab,
     });
+    
+    // Start timing when user switches to signup tab
+    if (activeTab === 'signup') {
+      signupStartTimeRef.current = Date.now();
+      
+      track({
+        eventType: 'interaction',
+        eventCategory: 'authentication',
+        eventAction: 'signup_form_entry',
+        eventLabel: 'signup_tab_activated',
+      });
+    }
   }, [activeTab, track]);
 
+  // Track form abandonment on page unload
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (activeTab === 'signup' && hasInteractedWithFormRef.current && signupStartTimeRef.current) {
+        const timeSpent = Math.round((Date.now() - signupStartTimeRef.current) / 1000);
+        
+        track({
+          eventType: 'interaction',
+          eventCategory: 'authentication',
+          eventAction: 'signup_form_abandoned',
+          eventLabel: 'page_unload',
+          metadata: {
+            timeSpentSeconds: timeSpent,
+            fieldsInteracted: Object.keys(fieldInteractionTimesRef.current),
+          },
+        });
+      }
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [activeTab, track]);
+  
   // Redirect if already authenticated
   useEffect(() => {
     if (user) {
       navigate('/');
     }
   }, [user, navigate]);
+  
+  // Track field focus
+  const handleFieldFocus = (fieldName: string) => {
+    hasInteractedWithFormRef.current = true;
+    fieldInteractionTimesRef.current[fieldName] = Date.now();
+    
+    track({
+      eventType: 'interaction',
+      eventCategory: 'authentication',
+      eventAction: 'signup_field_focus',
+      eventLabel: fieldName,
+      metadata: {
+        timeFromFormEntry: signupStartTimeRef.current 
+          ? Math.round((Date.now() - signupStartTimeRef.current) / 1000)
+          : 0,
+      },
+    });
+  };
+  
+  // Track field blur
+  const handleFieldBlur = (fieldName: string, hasValue: boolean) => {
+    const focusTime = fieldInteractionTimesRef.current[fieldName];
+    const timeSpent = focusTime ? Math.round((Date.now() - focusTime) / 1000) : 0;
+    
+    track({
+      eventType: 'interaction',
+      eventCategory: 'authentication',
+      eventAction: 'signup_field_blur',
+      eventLabel: fieldName,
+      metadata: {
+        timeSpentSeconds: timeSpent,
+        hasValue: hasValue,
+      },
+    });
+  };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,12 +173,21 @@ const Auth = () => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Track signup attempt
+    // Calculate total time spent on form
+    const timeSpent = signupStartTimeRef.current 
+      ? Math.round((Date.now() - signupStartTimeRef.current) / 1000)
+      : 0;
+    
+    // Track signup attempt with time metrics
     track({
       eventType: 'conversion',
       eventCategory: 'authentication',
       eventAction: 'signup_attempt',
       eventLabel: 'email_password',
+      metadata: {
+        timeSpentSeconds: timeSpent,
+        fieldsInteracted: Object.keys(fieldInteractionTimesRef.current),
+      },
     });
     
     // Track signup funnel step
@@ -292,6 +376,8 @@ const Auth = () => {
                         placeholder="First name"
                         value={signUpData.firstName}
                         onChange={(e) => setSignUpData({ ...signUpData, firstName: e.target.value })}
+                        onFocus={() => handleFieldFocus('firstName')}
+                        onBlur={() => handleFieldBlur('firstName', !!signUpData.firstName)}
                         required
                       />
                     </div>
@@ -303,6 +389,8 @@ const Auth = () => {
                         placeholder="Last name"
                         value={signUpData.lastName}
                         onChange={(e) => setSignUpData({ ...signUpData, lastName: e.target.value })}
+                        onFocus={() => handleFieldFocus('lastName')}
+                        onBlur={() => handleFieldBlur('lastName', !!signUpData.lastName)}
                       />
                     </div>
                   </div>
@@ -314,6 +402,8 @@ const Auth = () => {
                       placeholder="Enter your email"
                       value={signUpData.email}
                       onChange={(e) => setSignUpData({ ...signUpData, email: e.target.value })}
+                      onFocus={() => handleFieldFocus('email')}
+                      onBlur={() => handleFieldBlur('email', !!signUpData.email)}
                       required
                     />
                   </div>
@@ -325,6 +415,8 @@ const Auth = () => {
                       placeholder="Enter your phone number"
                       value={signUpData.phoneNumber}
                       onChange={(e) => setSignUpData({ ...signUpData, phoneNumber: e.target.value })}
+                      onFocus={() => handleFieldFocus('phoneNumber')}
+                      onBlur={() => handleFieldBlur('phoneNumber', !!signUpData.phoneNumber)}
                     />
                   </div>
                   <div className="space-y-2">
@@ -336,6 +428,8 @@ const Auth = () => {
                         placeholder="Create a password"
                         value={signUpData.password}
                         onChange={(e) => setSignUpData({ ...signUpData, password: e.target.value })}
+                        onFocus={() => handleFieldFocus('password')}
+                        onBlur={() => handleFieldBlur('password', !!signUpData.password)}
                         required
                         className="pr-10"
                       />
