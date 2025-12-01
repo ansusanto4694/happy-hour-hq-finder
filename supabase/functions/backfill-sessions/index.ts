@@ -15,97 +15,113 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    console.log('[Backfill] Starting optimized session data backfill...');
+    console.log('[Backfill] Starting complete session data backfill...');
 
     let sessionsInserted = 0;
     let sessionsUpdated = 0;
-
-    // Step 1: Insert missing sessions (sessions in user_events but not in user_sessions)
-    console.log('[Backfill] Step 1: Finding and inserting missing sessions...');
-    
-    // Get orphaned session IDs directly from database function
-    const { data: orphanedSessions, error: orphanedError } = await supabase
-      .rpc('get_orphaned_session_ids');
-
-    if (orphanedError) {
-      throw new Error(`Failed to get orphaned sessions: ${orphanedError.message}`);
-    }
-
-    const uniqueMissingIds = orphanedSessions?.map(s => s.session_id) || [];
-    console.log(`[Backfill] Found ${uniqueMissingIds.length} orphaned sessions to create`);
-
-    // Process missing sessions in batches
+    let totalIterations = 0;
+    const maxIterations = 50; // Safety limit to prevent infinite loops
     const insertBatchSize = 100;
-    for (let i = 0; i < uniqueMissingIds.length; i += insertBatchSize) {
-      const batchIds = uniqueMissingIds.slice(i, i + insertBatchSize);
+
+    // Step 1: Insert ALL missing sessions by looping until none remain
+    console.log('[Backfill] Step 1: Draining all orphaned sessions...');
+    
+    let hasMoreOrphans = true;
+    while (hasMoreOrphans && totalIterations < maxIterations) {
+      totalIterations++;
       
-      // Get aggregated data for this batch
-      const { data: batchData } = await supabase
-        .from('user_events')
-        .select('*')
-        .in('session_id', batchIds);
+      // Get orphaned session IDs directly from database function
+      const { data: orphanedSessions, error: orphanedError } = await supabase
+        .rpc('get_orphaned_session_ids');
 
-      if (!batchData || batchData.length === 0) continue;
+      if (orphanedError) {
+        throw new Error(`Failed to get orphaned sessions: ${orphanedError.message}`);
+      }
 
-      // Group by session_id and aggregate
-      const sessionMap = new Map<string, any[]>();
-      batchData.forEach(event => {
-        if (!sessionMap.has(event.session_id)) {
-          sessionMap.set(event.session_id, []);
-        }
-        sessionMap.get(event.session_id)!.push(event);
-      });
+      const uniqueMissingIds = orphanedSessions?.map(s => s.session_id) || [];
+      console.log(`[Backfill] Iteration ${totalIterations}: Found ${uniqueMissingIds.length} orphaned sessions`);
 
-      // Build insert records
-      const insertRecords = Array.from(sessionMap.entries()).map(([sessionId, events]) => {
-        const sortedEvents = events.sort((a, b) => 
-          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-        );
+      if (uniqueMissingIds.length === 0) {
+        hasMoreOrphans = false;
+        break;
+      }
+
+      // Process this iteration's orphaned sessions in batches
+      for (let i = 0; i < uniqueMissingIds.length; i += insertBatchSize) {
+        const batchIds = uniqueMissingIds.slice(i, i + insertBatchSize);
         
-        const firstEvent = sortedEvents[0];
-        const lastEvent = sortedEvents[sortedEvents.length - 1];
-        const firstSeen = new Date(firstEvent.created_at);
-        const lastSeen = new Date(lastEvent.created_at);
-        const sessionDuration = Math.floor((lastSeen.getTime() - firstSeen.getTime()) / 1000);
-        const totalEvents = events.length;
-        const pageViews = new Set(events.map(e => e.page_path)).size;
-        const isBounce = totalEvents <= 1 && sessionDuration < 10;
-        const isEngaged = pageViews >= 2 || sessionDuration >= 10 || totalEvents >= 3;
-        const engagementScore = Math.floor(pageViews * 10 + Math.min(sessionDuration / 10, 30) + totalEvents * 5);
-        const anonymousUserId = events.find(e => e.anonymous_user_id)?.anonymous_user_id;
-        const isMobile = events.some(e => e.is_mobile);
+        // Get aggregated data for this batch
+        const { data: batchData } = await supabase
+          .from('user_events')
+          .select('*')
+          .in('session_id', batchIds);
 
-        return {
-          session_id: sessionId,
-          anonymous_user_id: anonymousUserId,
-          first_seen: firstSeen.toISOString(),
-          last_seen: lastSeen.toISOString(),
-          entry_page: firstEvent.page_path,
-          exit_page: lastEvent.page_path !== firstEvent.page_path ? lastEvent.page_path : firstEvent.page_path,
-          session_duration_seconds: sessionDuration,
-          total_events: totalEvents,
-          page_views: pageViews,
-          is_bounce: isBounce,
-          device_type: isMobile ? 'mobile' : 'desktop',
-          is_engaged: isEngaged,
-          engagement_score: engagementScore,
-        };
-      });
+        if (!batchData || batchData.length === 0) continue;
 
-      // Insert batch
-      const { error: insertError } = await supabase
-        .from('user_sessions')
-        .insert(insertRecords);
+        // Group by session_id and aggregate
+        const sessionMap = new Map<string, any[]>();
+        batchData.forEach(event => {
+          if (!sessionMap.has(event.session_id)) {
+            sessionMap.set(event.session_id, []);
+          }
+          sessionMap.get(event.session_id)!.push(event);
+        });
 
-      if (insertError) {
-        console.error(`[Backfill] Error inserting batch ${i}-${i + insertBatchSize}:`, insertError);
-      } else {
-        sessionsInserted += insertRecords.length;
-        console.log(`[Backfill] Inserted batch: ${insertRecords.length} sessions (total: ${sessionsInserted})`);
+        // Build insert records
+        const insertRecords = Array.from(sessionMap.entries()).map(([sessionId, events]) => {
+          const sortedEvents = events.sort((a, b) => 
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          );
+          
+          const firstEvent = sortedEvents[0];
+          const lastEvent = sortedEvents[sortedEvents.length - 1];
+          const firstSeen = new Date(firstEvent.created_at);
+          const lastSeen = new Date(lastEvent.created_at);
+          const sessionDuration = Math.floor((lastSeen.getTime() - firstSeen.getTime()) / 1000);
+          const totalEvents = events.length;
+          const pageViews = new Set(events.map(e => e.page_path)).size;
+          const isBounce = totalEvents <= 1 && sessionDuration < 10;
+          const isEngaged = pageViews >= 2 || sessionDuration >= 10 || totalEvents >= 3;
+          const engagementScore = Math.floor(pageViews * 10 + Math.min(sessionDuration / 10, 30) + totalEvents * 5);
+          const anonymousUserId = events.find(e => e.anonymous_user_id)?.anonymous_user_id;
+          const isMobile = events.some(e => e.is_mobile);
+
+          return {
+            session_id: sessionId,
+            anonymous_user_id: anonymousUserId,
+            first_seen: firstSeen.toISOString(),
+            last_seen: lastSeen.toISOString(),
+            entry_page: firstEvent.page_path,
+            exit_page: lastEvent.page_path !== firstEvent.page_path ? lastEvent.page_path : firstEvent.page_path,
+            session_duration_seconds: sessionDuration,
+            total_events: totalEvents,
+            page_views: pageViews,
+            is_bounce: isBounce,
+            device_type: isMobile ? 'mobile' : 'desktop',
+            is_engaged: isEngaged,
+            engagement_score: engagementScore,
+          };
+        });
+
+        // Insert batch
+        const { error: insertError } = await supabase
+          .from('user_sessions')
+          .insert(insertRecords);
+
+        if (insertError) {
+          console.error(`[Backfill] Error inserting batch:`, insertError);
+        } else {
+          sessionsInserted += insertRecords.length;
+          console.log(`[Backfill] Inserted batch: ${insertRecords.length} sessions (total: ${sessionsInserted})`);
+        }
       }
     }
 
-    console.log(`[Backfill] Step 1 complete: ${sessionsInserted} sessions inserted`);
+    if (totalIterations >= maxIterations) {
+      console.log(`[Backfill] Reached max iterations (${maxIterations}), stopping...`);
+    }
+
+    console.log(`[Backfill] Step 1 complete: ${sessionsInserted} sessions inserted in ${totalIterations} iterations`);
 
     // Step 2: Update existing sessions with missing data
     console.log('[Backfill] Step 2: Updating existing sessions with missing data...');
