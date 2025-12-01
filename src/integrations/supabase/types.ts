@@ -853,13 +853,11 @@ export type Database = {
           is_bounce: boolean
           is_engaged: boolean | null
           last_seen: string
-          page_views: number
           referrer_category: string | null
           referrer_platform: string | null
           referrer_source: string | null
           session_duration_seconds: number | null
           session_id: string
-          total_events: number
           traffic_source: string | null
           updated_at: string
           user_agent: string | null
@@ -886,13 +884,11 @@ export type Database = {
           is_bounce?: boolean
           is_engaged?: boolean | null
           last_seen?: string
-          page_views?: number
           referrer_category?: string | null
           referrer_platform?: string | null
           referrer_source?: string | null
           session_duration_seconds?: number | null
           session_id: string
-          total_events?: number
           traffic_source?: string | null
           updated_at?: string
           user_agent?: string | null
@@ -919,13 +915,11 @@ export type Database = {
           is_bounce?: boolean
           is_engaged?: boolean | null
           last_seen?: string
-          page_views?: number
           referrer_category?: string | null
           referrer_platform?: string | null
           referrer_source?: string | null
           session_duration_seconds?: number | null
           session_id?: string
-          total_events?: number
           traffic_source?: string | null
           updated_at?: string
           user_agent?: string | null

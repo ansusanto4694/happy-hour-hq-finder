@@ -113,12 +113,10 @@ Deno.serve(async (req) => {
             const isEngaged = isEngagedSession(pageViews, sessionDuration, isBounce, session.is_bot);
             const engagementScore = calculateEngagementScore(pageViews, sessionDuration, totalEvents);
 
-            // Update session with accurate counts
+            // Update session with accurate engagement metrics (no longer updating counters)
             const { error: updateError } = await supabase
               .from('user_sessions')
               .update({
-                total_events: totalEvents,
-                page_views: pageViews,
                 session_duration_seconds: sessionDuration,
                 is_bounce: isBounce,
                 is_engaged: isEngaged,
@@ -141,41 +139,31 @@ Deno.serve(async (req) => {
           }
         }
 
-        // Get summary stats
-        const { data: totalStats } = await supabase
+        // Get summary stats (comparing actual events to engagement metrics)
+        const { data: sessionStats, count: totalSessions } = await supabase
           .from('user_sessions')
-          .select('page_views, total_events', { count: 'exact' });
+          .select('*', { count: 'exact', head: true });
 
-        const { data: eventStats, count: totalEventCount } = await supabase
+        const { count: totalEventCount } = await supabase
           .from('user_events')
           .select('*', { count: 'exact', head: true });
 
-        const { data: pageViewStats, count: totalPageViews } = await supabase
+        const { count: totalPageViews } = await supabase
           .from('user_events')
           .select('*', { count: 'exact', head: true })
           .eq('event_type', 'page_view');
-
-        const totalSessionPageViews = totalStats?.reduce((sum, s) => sum + (s.page_views || 0), 0) || 0;
-        const totalSessionEvents = totalStats?.reduce((sum, s) => sum + (s.total_events || 0), 0) || 0;
 
         const result = {
           success: true,
           sessions_processed: processedCount,
           sessions_updated: updatedCount,
           total_sessions: sessions.length,
-          accuracy: {
-            page_views: {
-              actual: totalPageViews,
-              session_counters: totalSessionPageViews,
-              match: totalPageViews === totalSessionPageViews,
-              accuracy_pct: totalPageViews > 0 ? ((totalSessionPageViews / totalPageViews) * 100).toFixed(2) + '%' : 'N/A'
-            },
-            total_events: {
-              actual: totalEventCount,
-              session_counters: totalSessionEvents,
-              match: totalEventCount === totalSessionEvents,
-              accuracy_pct: totalEventCount > 0 ? ((totalSessionEvents / totalEventCount) * 100).toFixed(2) + '%' : 'N/A'
-            }
+          summary: {
+            total_sessions: totalSessions,
+            total_events: totalEventCount,
+            total_page_views: totalPageViews,
+            avg_events_per_session: totalSessions > 0 ? (totalEventCount / totalSessions).toFixed(2) : 0,
+            avg_page_views_per_session: totalSessions > 0 ? (totalPageViews / totalSessions).toFixed(2) : 0,
           },
           timestamp: new Date().toISOString(),
         };
