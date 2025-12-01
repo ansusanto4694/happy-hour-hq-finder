@@ -46,6 +46,69 @@ const cleanGA4Params = (params?: Record<string, any>): Record<string, any> => {
   return cleaned;
 };
 
+// Session-level safeguards to prevent runaway tracking
+const SESSION_EVENT_LIMIT = 500; // Max events per session before throttling
+const SESSION_CRITICAL_LIMIT = 1000; // Critical limit - stop tracking entirely
+let sessionEventCount = 0;
+let sessionThrottled = false;
+let sessionBlocked = false;
+
+// Event deduplication cache - prevent duplicate events within short timeframes
+const eventDeduplicationCache = new Map<string, number>();
+const DEDUPLICATION_WINDOW = 1000; // 1 second window for deduplication
+
+// Check if event is duplicate (same event within deduplication window)
+const isDuplicateEvent = (eventKey: string): boolean => {
+  const now = Date.now();
+  const lastEventTime = eventDeduplicationCache.get(eventKey);
+  
+  if (lastEventTime && (now - lastEventTime) < DEDUPLICATION_WINDOW) {
+    return true;
+  }
+  
+  eventDeduplicationCache.set(eventKey, now);
+  
+  // Clean up old entries (older than 5 seconds)
+  if (eventDeduplicationCache.size > 100) {
+    const fiveSecondsAgo = now - 5000;
+    for (const [key, time] of eventDeduplicationCache.entries()) {
+      if (time < fiveSecondsAgo) {
+        eventDeduplicationCache.delete(key);
+      }
+    }
+  }
+  
+  return false;
+};
+
+// Initialize session event count from database
+const initializeSessionEventCount = async () => {
+  const sessionId = getSessionId();
+  
+  try {
+    const { data, error } = await supabase
+      .from('user_sessions')
+      .select('total_events')
+      .eq('session_id', sessionId)
+      .maybeSingle();
+    
+    if (!error && data) {
+      sessionEventCount = data.total_events || 0;
+      
+      // Check if session should be throttled or blocked
+      if (sessionEventCount >= SESSION_CRITICAL_LIMIT) {
+        sessionBlocked = true;
+        console.warn('[Analytics] Session blocked due to excessive events:', sessionEventCount);
+      } else if (sessionEventCount >= SESSION_EVENT_LIMIT) {
+        sessionThrottled = true;
+        console.warn('[Analytics] Session throttled due to high event count:', sessionEventCount);
+      }
+    }
+  } catch (err) {
+    console.error('[Analytics] Error initializing session event count:', err);
+  }
+};
+
 // List of events that should be marked as conversions in GA4
 const CONVERSION_EVENTS = [
   'contact_clicked',
@@ -521,6 +584,9 @@ export const initializeSession = async (forceReinitialize: boolean = false) => {
   sessionStorage.setItem('analytics_session_start_time', sessionStartTime.toString());
   lastActivityTime = Date.now();
   
+  // Initialize session event count for safeguards
+  await initializeSessionEventCount();
+  
   console.log('[Analytics] Session initialized successfully');
 };
 
@@ -592,8 +658,44 @@ export const updateSessionActivity = async () => {
   lastActivityTime = now;
 };
 
-// Track individual events
+// Track individual events with safeguards
 export const trackEvent = async (params: TrackEventParams) => {
+  // SAFEGUARD 1: Block tracking if session exceeded critical limit
+  if (sessionBlocked) {
+    console.warn('[Analytics] Event tracking blocked - session exceeded critical limit');
+    return;
+  }
+  
+  // SAFEGUARD 2: Deduplicate high-frequency events (hover, impression)
+  const highFrequencyEvents = ['hover', 'impression', 'scroll'];
+  const isHighFrequency = highFrequencyEvents.includes(params.eventType);
+  
+  if (isHighFrequency) {
+    const eventKey = `${params.eventCategory}_${params.eventAction}_${params.merchantId || 'none'}`;
+    
+    if (isDuplicateEvent(eventKey)) {
+      // Skip duplicate event
+      return;
+    }
+    
+    // SAFEGUARD 3: Additional throttling for hover/impression when session is already high
+    if (sessionThrottled && Math.random() > 0.1) {
+      // Only track 10% of hover/impression events when throttled
+      return;
+    }
+  }
+  
+  // SAFEGUARD 4: Check if we should start throttling this session
+  sessionEventCount++;
+  if (sessionEventCount >= SESSION_CRITICAL_LIMIT) {
+    sessionBlocked = true;
+    console.error('[Analytics] Session BLOCKED - exceeded critical event limit:', sessionEventCount);
+    return;
+  } else if (sessionEventCount >= SESSION_EVENT_LIMIT && !sessionThrottled) {
+    sessionThrottled = true;
+    console.warn('[Analytics] Session THROTTLED - exceeded event limit:', sessionEventCount);
+  }
+  
   const sessionId = getSessionId();
   const userId = await getUserId();
   const anonymousUserId = getAnonymousUserId();
@@ -615,21 +717,23 @@ export const trackEvent = async (params: TrackEventParams) => {
     is_mobile: isMobileDevice(),
   };
   
-  // Send to GA4 in parallel with custom analytics
-  const ga4EventName = `${params.eventCategory}_${params.eventAction}`.replace(/\s+/g, '_');
-  sendToGA4(ga4EventName, {
-    event_category: params.eventCategory,
-    event_label: params.eventLabel,
-    event_value: params.eventValue,
-    // Custom dimensions (configure these in GA4 Admin)
-    merchant_id: params.merchantId,
-    search_term: params.searchTerm,
-    location_query: params.locationQuery,
-    page_path: params.pagePath || window.location.pathname,
-    user_id: params.userId || await getUserId(),
-    device_type: getDeviceType(),
-    is_mobile: isMobileDevice(),
-  });
+  // Send to GA4 in parallel with custom analytics (unless throttled)
+  if (!sessionThrottled || !isHighFrequency) {
+    const ga4EventName = `${params.eventCategory}_${params.eventAction}`.replace(/\s+/g, '_');
+    sendToGA4(ga4EventName, {
+      event_category: params.eventCategory,
+      event_label: params.eventLabel,
+      event_value: params.eventValue,
+      // Custom dimensions (configure these in GA4 Admin)
+      merchant_id: params.merchantId,
+      search_term: params.searchTerm,
+      location_query: params.locationQuery,
+      page_path: params.pagePath || window.location.pathname,
+      user_id: params.userId || await getUserId(),
+      device_type: getDeviceType(),
+      is_mobile: isMobileDevice(),
+    });
+  }
   
   // Add to queue
   eventQueue.push(event);
@@ -787,6 +891,23 @@ export const flushEventQueue = async () => {
       const newPageViews = (sessionData.data.page_views || 0) + pageViewCount;
       const sessionDuration = sessionData.data.session_duration_seconds || 0;
       const isBot = sessionData.data.is_bot || false;
+      
+      // Check for potential runaway session
+      if (newTotalEvents >= SESSION_CRITICAL_LIMIT) {
+        console.error('[Analytics] CRITICAL: Session exceeded event limit!', {
+          sessionId,
+          totalEvents: newTotalEvents,
+          pageViews: newPageViews,
+          duration: sessionDuration,
+          isBot
+        });
+      } else if (newTotalEvents >= SESSION_EVENT_LIMIT) {
+        console.warn('[Analytics] WARNING: Session approaching event limit', {
+          sessionId,
+          totalEvents: newTotalEvents,
+          limit: SESSION_EVENT_LIMIT
+        });
+      }
       
       const isBounce = isBounceSession(newPageViews, sessionDuration);
       const isEngaged = isEngagedSession(newPageViews, sessionDuration, isBounce, isBot);
