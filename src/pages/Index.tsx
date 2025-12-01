@@ -11,15 +11,14 @@ import { Link } from 'react-router-dom';
 
 const Index = () => {
   const isMobile = useIsMobile();
-  const { trackPage, trackFunnel } = useAnalytics();
+  const { trackFunnel } = useAnalytics();
 
   useEffect(() => {
-    trackPage();
     trackFunnel({
       funnelStep: 'homepage_view',
       stepOrder: 1
     });
-  }, [trackPage, trackFunnel]);
+  }, [trackFunnel]);
 
   // Mobile version - keep existing Hero component
   if (isMobile) {

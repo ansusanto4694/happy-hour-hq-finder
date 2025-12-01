@@ -1,16 +1,9 @@
-import React, { useEffect } from 'react';
-import { useAnalytics } from '@/hooks/useAnalytics';
+import React from 'react';
 import { Footer } from '@/components/Footer';
 import { PageHeader } from '@/components/PageHeader';
 import { SEOHead } from '@/components/SEOHead';
 
 const Contact = () => {
-  const { trackPage } = useAnalytics();
-
-  useEffect(() => {
-    trackPage();
-  }, [trackPage]);
-
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500 flex flex-col">
       <SEOHead 

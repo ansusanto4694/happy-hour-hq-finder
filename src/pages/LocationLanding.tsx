@@ -66,7 +66,7 @@ const generateLocationStructuredData = (city: string, state: string, neighborhoo
 export const LocationLanding = () => {
   const { citySlug, neighborhoodSlug } = useParams<{ citySlug: string; neighborhoodSlug?: string }>();
   const isMobile = useIsMobile();
-  const { trackPage, track } = useAnalytics();
+  const { track } = useAnalytics();
   
   // Scroll to top when navigating to this page
   useLayoutEffect(() => {
@@ -111,20 +111,6 @@ export const LocationLanding = () => {
   const structuredData = useMemo(() => {
     return generateLocationStructuredData(city, state, neighborhood);
   }, [city, state, neighborhood]);
-
-  // Track page view ONCE on mount when location changes - remove merchant count dependency to prevent over-tracking
-  useEffect(() => {
-    trackPage({
-      eventCategory: 'location_landing',
-      eventAction: 'page_view',
-      locationQuery: locationString,
-      metadata: {
-        city,
-        state,
-        neighborhood: neighborhood || null
-      }
-    });
-  }, [locationString, city, state, neighborhood, trackPage]);
 
   const pageTitle = neighborhood 
     ? `Happy Hour in ${neighborhood}, ${city} | SipMunchYap`

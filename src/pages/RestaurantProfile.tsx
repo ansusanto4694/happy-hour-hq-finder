@@ -155,24 +155,14 @@ const generateBreadcrumbStructuredData = (restaurant: any) => {
 
 const RestaurantProfile = () => {
   const { id } = useParams();
-  const { trackPage, track } = useAnalytics();
+  const { track } = useAnalytics();
   
   useEffect(() => {
     if (id) {
       const merchantId = parseInt(id, 10);
       trackFunnelStep({ funnelStep: 'profile_viewed', merchantId, stepOrder: 5 });
-      
-      // Track explicit page view
-      trackPage({
-        eventCategory: 'restaurant_profile',
-        eventAction: 'page_view',
-        merchantId,
-        metadata: {
-          merchant_id: merchantId
-        }
-      });
     }
-  }, [id, trackPage]);
+  }, [id]);
 
   // Track scroll depth
   useEffect(() => {

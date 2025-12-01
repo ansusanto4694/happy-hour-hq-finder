@@ -30,22 +30,16 @@ const Auth = () => {
   });
   
   const { signIn, signUp, user, resetPassword } = useAuth();
-  const { trackPage, track, trackFunnel } = useAnalytics();
+  const { track, trackFunnel } = useAnalytics();
   const navigate = useNavigate();
 
-  // Track page view and auth funnel entry
+  // Track auth funnel entry
   useEffect(() => {
-    trackPage({
-      eventCategory: 'authentication',
-      eventAction: 'auth_page_view',
-    });
-    
-    // Track auth funnel entry
     trackFunnel({
       funnelStep: 'auth_page_view',
       stepOrder: 1,
     });
-  }, [trackPage, trackFunnel]);
+  }, [trackFunnel]);
 
   // Track tab switching
   useEffect(() => {
