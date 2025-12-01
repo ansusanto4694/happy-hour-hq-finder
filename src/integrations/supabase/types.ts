@@ -1014,6 +1014,18 @@ export type Database = {
         Args: never
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      get_distinct_event_session_ids: {
+        Args: never
+        Returns: {
+          session_id: string
+        }[]
+      }
+      get_orphaned_session_ids: {
+        Args: never
+        Returns: {
+          session_id: string
+        }[]
+      }
       get_restaurant_details: {
         Args: { restaurant_id: number }
         Returns: {
