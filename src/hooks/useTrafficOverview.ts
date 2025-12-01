@@ -6,6 +6,7 @@ export interface TrafficOverviewData {
   uniqueVisitors: number;
   totalSessions: number;
   pageViews: number;
+  visitorIds?: string[]; // Array of visitor IDs for proper unique counting
 }
 
 interface UseTrafficOverviewOptions {
@@ -100,13 +101,14 @@ export const useTrafficOverview = ({ startDate, endDate }: UseTrafficOverviewOpt
         }
       });
 
-      // Convert to array and format
+      // Convert to array and format, including visitor IDs for accurate totals
       const result: TrafficOverviewData[] = Object.values(groupedByDate)
         .map(item => ({
           date: item.date,
           uniqueVisitors: item.uniqueVisitors.size,
           totalSessions: item.totalSessions,
           pageViews: item.pageViews,
+          visitorIds: Array.from(item.uniqueVisitors), // Include visitor IDs for cross-day deduplication
         }))
         .sort((a, b) => a.date.localeCompare(b.date));
 
