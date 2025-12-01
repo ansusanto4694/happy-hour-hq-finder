@@ -20,7 +20,7 @@ export const useSessionMetrics = ({ startDate, endDate }: UseSessionMetricsOptio
     queryFn: async () => {
       let query = supabase
         .from('user_sessions')
-        .select('session_duration_seconds, is_bounce, is_engaged, page_views, is_bot');
+        .select('session_duration_seconds, is_bounce, is_engaged, is_bot');
 
       if (startDate) {
         query = query.gte('created_at', startDate);

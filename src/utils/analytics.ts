@@ -81,19 +81,19 @@ const isDuplicateEvent = (eventKey: string): boolean => {
   return false;
 };
 
-// Initialize session event count from database
+// Initialize session event count from database by querying actual events
 const initializeSessionEventCount = async () => {
   const sessionId = getSessionId();
   
   try {
-    const { data, error } = await supabase
-      .from('user_sessions')
-      .select('total_events')
-      .eq('session_id', sessionId)
-      .maybeSingle();
+    // Query actual event count from user_events table
+    const { count, error } = await supabase
+      .from('user_events')
+      .select('*', { count: 'exact', head: true })
+      .eq('session_id', sessionId);
     
-    if (!error && data) {
-      sessionEventCount = data.total_events || 0;
+    if (!error) {
+      sessionEventCount = count || 0;
       
       // Check if session should be throttled or blocked
       if (sessionEventCount >= SESSION_CRITICAL_LIMIT) {
