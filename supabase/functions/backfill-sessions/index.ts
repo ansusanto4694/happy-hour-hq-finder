@@ -21,13 +21,15 @@ Deno.serve(async (req) => {
     let sessionsUpdated = 0;
     const updateBatchSize = 50;
 
-    // Get all sessions to recalculate
+    // Only get sessions that haven't been updated in the last 6 hours (stale sessions)
+    const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
     const { data: allSessions } = await supabase
       .from('user_sessions')
-      .select('session_id');
+      .select('session_id')
+      .lt('updated_at', sixHoursAgo);
 
     const sessionIds = allSessions?.map(s => s.session_id) || [];
-    console.log(`[Backfill v2] Found ${sessionIds.length} sessions to process`);
+    console.log(`[Backfill v2] Found ${sessionIds.length} stale sessions to process (not updated since ${sixHoursAgo})`);
 
     // Process in smaller batches
     for (let i = 0; i < sessionIds.length; i += updateBatchSize) {
