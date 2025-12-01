@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useFavorites } from '@/hooks/useFavorites';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { Navigate, Link } from 'react-router-dom';
 import { Heart, MapPin } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,6 +12,14 @@ import { SEOHead } from '@/components/SEOHead';
 export default function Favorites() {
   const { user } = useAuth();
   const { favorites, isLoading } = useFavorites(user?.id);
+  const { trackPage } = useAnalytics();
+
+  useEffect(() => {
+    trackPage({
+      eventCategory: 'navigation',
+      eventAction: 'favorites_view',
+    });
+  }, [trackPage]);
 
   // Redirect to auth if not logged in
   if (!user) {
