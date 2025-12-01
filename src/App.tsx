@@ -15,6 +15,7 @@ import Index from "./pages/Index";
 import Results from "./pages/Results";
 import RestaurantProfile from "./pages/RestaurantProfile";
 import Auth from "./pages/Auth";
+import AuthConfirm from "./pages/AuthConfirm";
 import ResetPassword from "./pages/ResetPassword";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
@@ -71,6 +72,7 @@ const App = () => (
               <Route path="/results" element={<Results />} />
               <Route path="/restaurant/:id" element={<RestaurantProfile />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/auth/confirm" element={<AuthConfirm />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
