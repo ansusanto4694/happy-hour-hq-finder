@@ -41,13 +41,21 @@ export const TrafficOverviewChart: React.FC<TrafficOverviewChartProps> = ({
     );
   }
 
-  // Calculate totals
+  // Calculate totals - properly deduplicate unique visitors across all days
+  const allVisitorIds = new Set<string>();
   const totals = data.reduce(
-    (acc, day) => ({
-      uniqueVisitors: acc.uniqueVisitors + day.uniqueVisitors,
-      totalSessions: acc.totalSessions + day.totalSessions,
-      pageViews: acc.pageViews + day.pageViews,
-    }),
+    (acc, day) => {
+      // Collect all unique visitor IDs across days to count actual unique visitors
+      if (day.visitorIds) {
+        day.visitorIds.forEach(id => allVisitorIds.add(id));
+      }
+      
+      return {
+        uniqueVisitors: allVisitorIds.size, // Count of truly unique visitors across entire period
+        totalSessions: acc.totalSessions + day.totalSessions,
+        pageViews: acc.pageViews + day.pageViews,
+      };
+    },
     { uniqueVisitors: 0, totalSessions: 0, pageViews: 0 }
   );
 
