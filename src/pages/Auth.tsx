@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Eye, EyeOff } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Eye, EyeOff, Mail, Clock } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { PageHeader } from '@/components/PageHeader';
@@ -20,6 +21,7 @@ const Auth = () => {
   const [showSignInPassword, setShowSignInPassword] = useState(false);
   const [showSignUpPassword, setShowSignUpPassword] = useState(false);
   const [activeTab, setActiveTab] = useState('signin');
+  const [showEmailSentMessage, setShowEmailSentMessage] = useState(false);
   const [signInData, setSignInData] = useState({ email: '', password: '' });
   const [signUpData, setSignUpData] = useState({
     email: '',
@@ -131,6 +133,9 @@ const Auth = () => {
         eventAction: 'signup_success',
         eventLabel: 'email_password',
       });
+      
+      // Show email sent message
+      setShowEmailSentMessage(true);
     } else {
       // Track signup failure
       track({
@@ -264,6 +269,19 @@ const Auth = () => {
               </TabsContent>
               
               <TabsContent value="signup">
+                {showEmailSentMessage && (
+                  <Alert className="mb-4 border-primary/50 bg-primary/10">
+                    <Mail className="h-4 w-4" />
+                    <AlertTitle>Check Your Email</AlertTitle>
+                    <AlertDescription className="space-y-2">
+                      <p>We've sent a confirmation email to <strong>{signUpData.email}</strong></p>
+                      <div className="flex items-start gap-2 text-sm text-muted-foreground mt-2">
+                        <Clock className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                        <span>Email may take up to 1 minute to arrive. Please check your spam folder if you don't see it.</span>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
