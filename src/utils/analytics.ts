@@ -604,15 +604,15 @@ export const updateSessionActivity = async () => {
   
   const sessionDuration = Math.floor((now - sessionStartTime) / 1000);
   
-  // Get current session stats to calculate engagement - use maybeSingle() to handle missing sessions
-  const { data: sessionData, error } = await supabase
+  // Get actual event counts from user_events table for accurate engagement metrics
+  const { data: sessionData, error: sessionError } = await supabase
     .from('user_sessions')
-    .select('page_views, total_events, is_bot')
+    .select('is_bot')
     .eq('session_id', sessionId)
     .maybeSingle();
   
-  if (error) {
-    console.error('[Analytics] Error fetching session data:', error);
+  if (sessionError) {
+    console.error('[Analytics] Error fetching session data:', sessionError);
     return;
   }
   
@@ -621,8 +621,31 @@ export const updateSessionActivity = async () => {
     return;
   }
   
-  const pageViews = sessionData.page_views || 0;
-  const totalEvents = sessionData.total_events || 0;
+  // Query actual page view count from user_events
+  const { count: actualPageViews, error: pageViewError } = await supabase
+    .from('user_events')
+    .select('*', { count: 'exact', head: true })
+    .eq('session_id', sessionId)
+    .eq('event_type', 'page_view');
+  
+  if (pageViewError) {
+    console.error('[Analytics] Error counting page views:', pageViewError);
+    return;
+  }
+  
+  // Query actual total event count from user_events
+  const { count: actualTotalEvents, error: totalEventsError } = await supabase
+    .from('user_events')
+    .select('*', { count: 'exact', head: true })
+    .eq('session_id', sessionId);
+  
+  if (totalEventsError) {
+    console.error('[Analytics] Error counting total events:', totalEventsError);
+    return;
+  }
+  
+  const pageViews = actualPageViews || 0;
+  const totalEvents = actualTotalEvents || 0;
   const isBot = sessionData.is_bot || false;
   
   const isBounce = isBounceSession(pageViews, sessionDuration);
