@@ -49,13 +49,28 @@ export const useSessionMetrics = ({ startDate, endDate }: UseSessionMetricsOptio
       const totalDuration = sessions.reduce((sum, s) => sum + (s.session_duration_seconds || 0), 0);
       const bounces = sessions.filter(s => s.is_bounce).length;
       const engaged = sessions.filter(s => s.is_engaged).length;
-      const totalPageViews = sessions.reduce((sum, s) => sum + (s.page_views || 0), 0);
+
+      // Query actual page views from user_events for accuracy
+      let eventsQuery = supabase
+        .from('user_events')
+        .select('session_id', { count: 'exact' })
+        .eq('event_type', 'page_view');
+
+      if (startDate) {
+        eventsQuery = eventsQuery.gte('created_at', startDate);
+      }
+      if (endDate) {
+        eventsQuery = eventsQuery.lte('created_at', endDate);
+      }
+
+      const { count: totalPageViews } = await eventsQuery;
+      const pageViewCount = totalPageViews || 0;
 
       const result: SessionMetrics = {
         avgSessionDuration: Math.round(totalDuration / totalSessions),
         bounceRate: parseFloat(((bounces / totalSessions) * 100).toFixed(1)),
         engagementRate: parseFloat(((engaged / totalSessions) * 100).toFixed(1)),
-        avgPageViews: parseFloat((totalPageViews / totalSessions).toFixed(1)),
+        avgPageViews: parseFloat((pageViewCount / totalSessions).toFixed(1)),
         totalSessions,
       };
 
