@@ -42,5 +42,8 @@ verify_jwt = false
 [functions.backfill-page-views]
 verify_jwt = false
 
+[functions.cleanup-problem-sessions]
+verify_jwt = false
+
 [functions.fix-page-view-counts]
 verify_jwt = false
