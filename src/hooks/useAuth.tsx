@@ -144,7 +144,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signUp = async (email: string, password: string, firstName: string, lastName: string, phoneNumber?: string) => {
     const redirectUrl = `${window.location.origin}/`;
     
-    const { error } = await supabase.auth.signUp({
+    const { error, data } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -158,12 +158,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     if (error) {
+      // Track signup failure
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('event', 'sign_up_failed', {
+          event_category: 'authentication',
+          event_label: 'email_password',
+          error_message: error.message
+        });
+      }
       toast({
         title: 'Sign Up Error',
         description: error.message,
         variant: 'destructive',
       });
     } else {
+      // Track successful signup
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('event', 'sign_up', {
+          event_category: 'authentication',
+          method: 'email',
+          user_id: data.user?.id
+        });
+      }
       toast({
         title: 'Success',
         description: 'Please check your email to confirm your account.',
@@ -174,18 +190,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error, data } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error) {
+      // Track login failure
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('event', 'login_failed', {
+          event_category: 'authentication',
+          event_label: 'email_password',
+          error_message: error.message
+        });
+      }
       toast({
         title: 'Sign In Error',
         description: error.message,
         variant: 'destructive',
       });
     } else {
+      // Track successful login
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('event', 'login', {
+          event_category: 'authentication',
+          method: 'email',
+          user_id: data.user?.id
+        });
+      }
       toast({
         title: 'Success',
         description: 'Welcome back!',

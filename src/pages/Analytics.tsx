@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ConversionFunnelChart } from '@/components/analytics/ConversionFunnelChart';
+import { TrafficOverviewChart } from '@/components/analytics/TrafficOverviewChart';
+import { SessionMetricsCard } from '@/components/analytics/SessionMetricsCard';
+import { TrafficSourcesChart } from '@/components/analytics/TrafficSourcesChart';
+import { DeviceBreakdownChart } from '@/components/analytics/DeviceBreakdownChart';
 import { SEOHead } from '@/components/SEOHead';
 import { Calendar } from 'lucide-react';
 
@@ -24,22 +29,22 @@ export default function Analytics() {
         description="Track user behavior and conversion rates through the customer journey"
       />
       
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-background py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl font-bold text-foreground mb-2">
               Analytics Dashboard
             </h1>
-            <p className="text-gray-600">
-              Track user behavior and identify conversion opportunities
+            <p className="text-muted-foreground">
+              Track user behavior, traffic patterns, and conversion opportunities
             </p>
           </div>
 
           {/* Date Range Selector */}
           <Card className="mb-6">
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-4">
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <Calendar className="w-5 h-5" />
@@ -76,8 +81,36 @@ export default function Analytics() {
             </CardHeader>
           </Card>
 
-          {/* Conversion Funnel */}
-          <ConversionFunnelChart startDate={start} endDate={end} />
+          {/* Analytics Tabs */}
+          <Tabs defaultValue="traffic" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-5">
+              <TabsTrigger value="traffic">Traffic</TabsTrigger>
+              <TabsTrigger value="behavior">Behavior</TabsTrigger>
+              <TabsTrigger value="sources">Sources</TabsTrigger>
+              <TabsTrigger value="devices">Devices</TabsTrigger>
+              <TabsTrigger value="funnel">Funnel</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="traffic" className="space-y-6">
+              <TrafficOverviewChart startDate={start} endDate={end} />
+            </TabsContent>
+
+            <TabsContent value="behavior" className="space-y-6">
+              <SessionMetricsCard startDate={start} endDate={end} />
+            </TabsContent>
+
+            <TabsContent value="sources" className="space-y-6">
+              <TrafficSourcesChart startDate={start} endDate={end} />
+            </TabsContent>
+
+            <TabsContent value="devices" className="space-y-6">
+              <DeviceBreakdownChart startDate={start} endDate={end} />
+            </TabsContent>
+
+            <TabsContent value="funnel" className="space-y-6">
+              <ConversionFunnelChart startDate={start} endDate={end} />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </>
