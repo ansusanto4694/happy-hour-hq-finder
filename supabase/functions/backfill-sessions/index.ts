@@ -27,6 +27,8 @@ Deno.serve(async (req) => {
     const { data: distinctEventSessions, error: eventSessionsError } = await supabase
       .rpc('get_distinct_event_session_ids');
 
+    let uniqueMissingIds: string[] = [];
+
     if (eventSessionsError) {
       // Fallback: Get distinct session_ids using aggregation
       const { data: allEvents, error: fallbackError } = await supabase
@@ -55,8 +57,9 @@ Deno.serve(async (req) => {
       console.log(`[Backfill] Found ${existingSessionIds.size} existing sessions in user_sessions`);
 
       // Find missing session_ids (in events but not in sessions)
-      const uniqueMissingIds = allEventSessionIds.filter(id => !existingSessionIds.has(id));
+      uniqueMissingIds = allEventSessionIds.filter(id => !existingSessionIds.has(id));
       console.log(`[Backfill] Found ${uniqueMissingIds.length} missing sessions to create`);
+    }
 
     // Process missing sessions in batches
     const insertBatchSize = 100;
