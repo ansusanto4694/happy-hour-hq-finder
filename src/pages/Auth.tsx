@@ -30,13 +30,32 @@ const Auth = () => {
   });
   
   const { signIn, signUp, user, resetPassword } = useAuth();
-  const { trackPage } = useAnalytics();
+  const { trackPage, track, trackFunnel } = useAnalytics();
   const navigate = useNavigate();
 
-  // Track page view on mount
+  // Track page view and auth funnel entry
   useEffect(() => {
-    trackPage();
-  }, [trackPage]);
+    trackPage({
+      eventCategory: 'authentication',
+      eventAction: 'auth_page_view',
+    });
+    
+    // Track auth funnel entry
+    trackFunnel({
+      funnelStep: 'auth_page_view',
+      stepOrder: 1,
+    });
+  }, [trackPage, trackFunnel]);
+
+  // Track tab switching
+  useEffect(() => {
+    track({
+      eventType: 'interaction',
+      eventCategory: 'authentication',
+      eventAction: 'auth_tab_switch',
+      eventLabel: activeTab,
+    });
+  }, [activeTab, track]);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -49,10 +68,31 @@ const Auth = () => {
     e.preventDefault();
     setIsLoading(true);
     
+    // Track signin attempt
+    track({
+      eventType: 'conversion',
+      eventCategory: 'authentication',
+      eventAction: 'signin_attempt',
+      eventLabel: 'email_password',
+    });
+    
     const { error } = await signIn(signInData.email, signInData.password);
     
     if (!error) {
+      // Track successful signin (also tracked in useAuth)
+      trackFunnel({
+        funnelStep: 'signin_success',
+        stepOrder: 3,
+      });
       navigate('/');
+    } else {
+      // Track signin failure
+      track({
+        eventType: 'error',
+        eventCategory: 'authentication',
+        eventAction: 'signin_failed',
+        eventLabel: error.message,
+      });
     }
     
     setIsLoading(false);
@@ -62,6 +102,20 @@ const Auth = () => {
     e.preventDefault();
     setIsLoading(true);
     
+    // Track signup attempt
+    track({
+      eventType: 'conversion',
+      eventCategory: 'authentication',
+      eventAction: 'signup_attempt',
+      eventLabel: 'email_password',
+    });
+    
+    // Track signup funnel step
+    trackFunnel({
+      funnelStep: 'signup_form_submitted',
+      stepOrder: 2,
+    });
+    
     const { error } = await signUp(
       signUpData.email,
       signUpData.password,
@@ -69,6 +123,29 @@ const Auth = () => {
       signUpData.lastName,
       signUpData.phoneNumber
     );
+    
+    if (!error) {
+      // Track successful signup completion
+      trackFunnel({
+        funnelStep: 'signup_success',
+        stepOrder: 3,
+      });
+      
+      track({
+        eventType: 'conversion',
+        eventCategory: 'authentication',
+        eventAction: 'signup_success',
+        eventLabel: 'email_password',
+      });
+    } else {
+      // Track signup failure
+      track({
+        eventType: 'error',
+        eventCategory: 'authentication',
+        eventAction: 'signup_failed',
+        eventLabel: error.message,
+      });
+    }
     
     setIsLoading(false);
   };

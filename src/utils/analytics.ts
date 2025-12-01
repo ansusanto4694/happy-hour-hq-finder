@@ -111,7 +111,7 @@ const sendToGA4 = (eventName: string, eventParams?: Record<string, any>) => {
 };
 
 export interface TrackEventParams {
-  eventType: 'click' | 'page_view' | 'form_submit' | 'interaction' | 'hover' | 'impression' | 'focus' | 'input' | 'change' | 'error' | 'performance' | 'scroll';
+  eventType: 'click' | 'page_view' | 'form_submit' | 'interaction' | 'hover' | 'impression' | 'focus' | 'input' | 'change' | 'error' | 'performance' | 'scroll' | 'conversion';
   eventCategory: 'navigation' | 'search' | 'carousel' | 'filter' | 'merchant_interaction' | 'authentication' | 'map_interaction' | 'page_view' | 'form' | 'web_vitals' | 'component_render' | 'resources' | 'error_recovery' | 'app_error' | 'location_landing' | 'mobile_filter_drawer' | 'restaurant_profile';
   eventAction: string;
   eventLabel?: string;
@@ -128,7 +128,7 @@ export interface TrackEventParams {
 }
 
 export interface FunnelStep {
-  funnelStep: 'homepage_view' | 'search_initiated' | 'results_viewed' | 'merchant_clicked' | 'profile_viewed' | 'contact_clicked';
+  funnelStep: 'homepage_view' | 'search_initiated' | 'results_viewed' | 'merchant_clicked' | 'profile_viewed' | 'contact_clicked' | 'auth_page_view' | 'signup_form_submitted' | 'signup_success' | 'signin_success';
   merchantId?: number;
   stepOrder?: number;
 }
@@ -246,6 +246,7 @@ export const getUserId = async (): Promise<string | null> => {
 };
 
 // Get or create anonymous user ID for persistent tracking across sessions
+// CRITICAL: This MUST always return a valid ID for accurate visitor tracking
 export const getAnonymousUserId = (): string => {
   try {
     let anonUserId = localStorage.getItem('analytics_anonymous_user_id');
@@ -254,15 +255,24 @@ export const getAnonymousUserId = (): string => {
       anonUserId = `anon_user_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
       localStorage.setItem('analytics_anonymous_user_id', anonUserId);
       console.log('[Analytics] Created new anonymous user ID:', anonUserId);
-    } else {
-      console.log('[Analytics] Retrieved existing anonymous user ID:', anonUserId);
     }
     
     return anonUserId;
   } catch (error) {
     console.error('[Analytics] Error accessing localStorage for anonymous user ID:', error);
     // Fallback: generate session-only ID if localStorage fails
-    return `anon_user_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+    // Store in sessionStorage so at least it's consistent within the session
+    try {
+      let sessionAnonId = sessionStorage.getItem('analytics_anonymous_user_id_fallback');
+      if (!sessionAnonId) {
+        sessionAnonId = `anon_user_fallback_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+        sessionStorage.setItem('analytics_anonymous_user_id_fallback', sessionAnonId);
+      }
+      return sessionAnonId;
+    } catch {
+      // Last resort: generate ephemeral ID (won't persist)
+      return `anon_user_temp_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+    }
   }
 };
 
@@ -430,7 +440,17 @@ export const initializeSession = async (forceReinitialize: boolean = false) => {
   
   const sessionId = getSessionId();
   const userId = await getUserId();
+  
+  // CRITICAL: Always generate anonymous user ID FIRST before any other operations
+  // This ensures 100% of sessions have it
   const anonymousUserId = getAnonymousUserId();
+  
+  // Verify we got a valid anonymous user ID
+  if (!anonymousUserId || anonymousUserId === '') {
+    console.error('[Analytics] CRITICAL: Failed to generate anonymous user ID!');
+    return; // Don't proceed without anonymous ID
+  }
+  
   const deviceType = getDeviceType();
   const currentPath = window.location.pathname;
   // FIX: Use captured referrer from page load, not current document.referrer
@@ -445,7 +465,7 @@ export const initializeSession = async (forceReinitialize: boolean = false) => {
   // Determine traffic source (prioritize UTM params over referrer)
   const finalTrafficSource = utmParams.utm_source ? 'campaign' : traffic_source;
   
-  console.log('[Analytics] Initializing session:', {
+  console.log('[Analytics] Initializing session with GUARANTEED anonymous_user_id:', {
     sessionId,
     anonymousUserId,
     referrer,
@@ -678,6 +698,10 @@ export const trackFunnelStep = async (params: FunnelStep) => {
     merchant_clicked: 4,
     profile_viewed: 5,
     contact_clicked: 6,
+    auth_page_view: 1, // Auth funnel starts here
+    signup_form_submitted: 2, // User submitted signup form
+    signup_success: 3, // Signup completed successfully
+    signin_success: 3, // Signin completed successfully (same level as signup)
   };
   
   await supabase.from('funnel_events').insert({
