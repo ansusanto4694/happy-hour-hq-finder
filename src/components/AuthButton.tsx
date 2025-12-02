@@ -30,11 +30,12 @@ export const AuthButton: React.FC = () => {
     signOut();
   };
 
-  if (loading) {
-    return <div className="w-8 h-8 animate-pulse bg-gray-200 rounded-full" />;
+  // Show loading state if auth is loading OR if user exists but profile hasn't loaded yet
+  if (loading || (user && !profile)) {
+    return <div className="w-8 h-8 animate-pulse bg-muted rounded-full" />;
   }
 
-  if (!user || !profile) {
+  if (!user) {
     return (
       <Button onClick={handleSignIn} variant="outline">
         Sign In
