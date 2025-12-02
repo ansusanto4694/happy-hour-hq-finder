@@ -153,27 +153,10 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
     // For multiple restaurants, use fitBounds via the map ref
     if (mapRef.current) {
       const map = mapRef.current.getMap();
-      
-      // Extra bottom padding on mobile to account for peek drawer
-      const paddingBottom = isMobile ? 150 : 50;
-      
-      // Listen for animation completion to sync React state
-      map.once('moveend', () => {
-        const center = map.getCenter();
-        const zoom = map.getZoom();
-        const newViewState = {
-          longitude: center.lng,
-          latitude: center.lat,
-          zoom: zoom
-        };
-        setViewState(newViewState);
-        onViewStateChange?.(newViewState);
-      });
-      
       map.fitBounds(
         [[minLng, minLat], [maxLng, maxLat]],
         {
-          padding: { top: 50, bottom: paddingBottom, left: 50, right: 50 },
+          padding: { top: 50, bottom: 50, left: 50, right: 50 },
           duration: 500,
           maxZoom: 15
         }
@@ -204,8 +187,7 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
       setViewState(newViewState);
       onViewStateChange?.(newViewState);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resultsKey, restaurants.length, isUsingMapSearch, isMobile]);
+  }, [resultsKey, restaurants.length, isUsingMapSearch]);
 
   // Sync with external viewState when it changes
   useEffect(() => {
