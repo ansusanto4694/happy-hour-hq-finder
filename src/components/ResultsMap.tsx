@@ -35,6 +35,7 @@ interface ResultsMapProps {
   isMobile?: boolean;
   hoveredRestaurantId?: number | null;
   searchLocation?: string;
+  resultsKey?: string; // Unique key that changes when navigating to new result sets
 }
 
 const ResultsMapComponent: React.FC<ResultsMapProps> = ({ 
@@ -47,7 +48,8 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
   onViewStateChange,
   isMobile: mobileOverride,
   hoveredRestaurantId,
-  searchLocation
+  searchLocation,
+  resultsKey
 }) => {
   const [viewState, setViewState] = useState(externalViewState || {
     longitude: -73.9712,
@@ -116,36 +118,76 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
     setHoveredRestaurant(null);
   }, [isMobile]);
 
-  // Update map center based on restaurants with coordinates (only when not manually searching)
+  // Auto-fit map to show all markers when navigating to new result sets
   useEffect(() => {
     // Skip automatic centering/zooming if user is using manual map search
     if (isUsingMapSearch) return;
-    
-    // Only auto-center if there's a location-based search
-    // Don't auto-center when showing all restaurants with no location filter
-    if (!searchLocation || searchLocation.trim() === '') return;
     
     const restaurantsWithCoords = restaurants.filter(
       restaurant => restaurant.latitude && restaurant.longitude
     );
 
-    if (restaurantsWithCoords.length > 0) {
-      // Calculate center point of all restaurants
-      const avgLat = restaurantsWithCoords.reduce((sum, r) => sum + (r.latitude || 0), 0) / restaurantsWithCoords.length;
-      const avgLng = restaurantsWithCoords.reduce((sum, r) => sum + (r.longitude || 0), 0) / restaurantsWithCoords.length;
+    if (restaurantsWithCoords.length === 0) return;
+    
+    // Calculate bounding box of all markers
+    const lats = restaurantsWithCoords.map(r => r.latitude!);
+    const lngs = restaurantsWithCoords.map(r => r.longitude!);
+    
+    const minLat = Math.min(...lats);
+    const maxLat = Math.max(...lats);
+    const minLng = Math.min(...lngs);
+    const maxLng = Math.max(...lngs);
+    
+    // For a single restaurant, center on it with reasonable zoom
+    if (restaurantsWithCoords.length === 1) {
+      const newViewState = {
+        longitude: lngs[0],
+        latitude: lats[0],
+        zoom: 15
+      };
+      setViewState(newViewState);
+      onViewStateChange?.(newViewState);
+      return;
+    }
+    
+    // For multiple restaurants, use fitBounds via the map ref
+    if (mapRef.current) {
+      const map = mapRef.current.getMap();
+      map.fitBounds(
+        [[minLng, minLat], [maxLng, maxLat]],
+        {
+          padding: { top: 50, bottom: 50, left: 50, right: 50 },
+          duration: 500,
+          maxZoom: 15
+        }
+      );
+    } else {
+      // Fallback if map ref not ready - calculate center and approximate zoom
+      const centerLat = (minLat + maxLat) / 2;
+      const centerLng = (minLng + maxLng) / 2;
+      
+      // Calculate zoom based on bounds spread
+      const latSpread = maxLat - minLat;
+      const lngSpread = maxLng - minLng;
+      const maxSpread = Math.max(latSpread, lngSpread);
+      
+      // Approximate zoom level based on spread
+      let zoom = 13;
+      if (maxSpread > 0.5) zoom = 10;
+      else if (maxSpread > 0.2) zoom = 11;
+      else if (maxSpread > 0.1) zoom = 12;
+      else if (maxSpread > 0.05) zoom = 13;
+      else zoom = 14;
       
       const newViewState = {
-        ...viewState,
-        latitude: avgLat,
-        longitude: avgLng,
-        zoom: 13
+        longitude: centerLng,
+        latitude: centerLat,
+        zoom
       };
-      
       setViewState(newViewState);
-      // Notify parent of view state change
       onViewStateChange?.(newViewState);
     }
-  }, [restaurants, isUsingMapSearch, searchLocation]);
+  }, [resultsKey, restaurants.length, isUsingMapSearch]);
 
   // Sync with external viewState when it changes
   useEffect(() => {
@@ -390,6 +432,7 @@ export const ResultsMap = React.memo(ResultsMapComponent, (prevProps, nextProps)
     prevProps.isMobile === nextProps.isMobile &&
     prevProps.hoveredRestaurantId === nextProps.hoveredRestaurantId &&
     prevProps.searchLocation === nextProps.searchLocation &&
+    prevProps.resultsKey === nextProps.resultsKey &&
     prevProps.onMapMove === nextProps.onMapMove &&
     prevProps.onSearchThisArea === nextProps.onSearchThisArea &&
     prevProps.onViewStateChange === nextProps.onViewStateChange
