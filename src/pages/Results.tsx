@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { SearchBar } from '@/components/SearchBar';
 import { useAnalytics } from '@/hooks/useAnalytics';
@@ -59,20 +59,6 @@ const Results = () => {
     const daysParam = searchParams.get('days');
     return daysParam ? daysParam.split(',').map(Number) : [];
   })();
-
-  // Generate a unique key that changes when navigating to new result sets
-  // This triggers map re-centering for carousels, searches, locations, etc.
-  const resultsKey = useMemo(() => {
-    return `${carouselId || ''}-${searchTerm || ''}-${location || ''}-${useGPS ? `${gpsLat},${gpsLng}` : ''}`;
-  }, [carouselId, searchTerm, location, useGPS, gpsLat, gpsLng]);
-
-  // Reset map search mode when navigating to new results
-  useEffect(() => {
-    setIsUsingMapSearch(false);
-    setShowSearchThisArea(false);
-    setShowSearchThisAreaDesktop(false);
-    setHasMapMoved(false);
-  }, [resultsKey]);
 
   // Handle day change with URL update
   const handleDaysChange = (days: number[]) => {
@@ -353,7 +339,6 @@ const Results = () => {
               isMobile={true}
               hoveredRestaurantId={hoveredRestaurantId}
               searchLocation={location}
-              resultsKey={resultsKey}
             />
           </div>
           
@@ -471,7 +456,6 @@ const Results = () => {
                     onViewStateChange={handleViewStateChange}
                     hoveredRestaurantId={hoveredRestaurantId}
                     searchLocation={location}
-                    resultsKey={resultsKey}
                   />
                 </div>
               </div>
@@ -531,7 +515,6 @@ const Results = () => {
                   onViewStateChange={handleViewStateChange}
                   hoveredRestaurantId={hoveredRestaurantId}
                   searchLocation={location}
-                  resultsKey={resultsKey}
                 />
             </div>
           </div>

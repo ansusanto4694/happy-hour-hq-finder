@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { useMemo, useState, useLayoutEffect } from 'react';
+import { useMemo, useState, useLayoutEffect, useEffect } from 'react';
 import { SEOHead } from '@/components/SEOHead';
 import { useMerchants } from '@/hooks/useMerchants';
 import { SearchResultCard } from '@/components/SearchResultCard';
@@ -321,7 +321,6 @@ export const LocationLanding = () => {
                       isMobile={false}
                       hoveredRestaurantId={hoveredRestaurantId}
                       searchLocation={locationString}
-                      resultsKey={`location-${citySlug}-${neighborhoodSlug || ''}`}
                     />
                   </div>
                 )}

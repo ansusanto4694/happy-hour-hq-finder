@@ -35,7 +35,6 @@ interface ResultsMapProps {
   isMobile?: boolean;
   hoveredRestaurantId?: number | null;
   searchLocation?: string;
-  resultsKey?: string; // Unique key that changes when navigating to new result sets
 }
 
 const ResultsMapComponent: React.FC<ResultsMapProps> = ({ 
@@ -48,8 +47,7 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
   onViewStateChange,
   isMobile: mobileOverride,
   hoveredRestaurantId,
-  searchLocation,
-  resultsKey
+  searchLocation
 }) => {
   const [viewState, setViewState] = useState(externalViewState || {
     longitude: -73.9712,
@@ -118,89 +116,43 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
     setHoveredRestaurant(null);
   }, [isMobile]);
 
-  // Create a stable key from restaurant IDs to detect actual data changes
-  const restaurantsDataKey = React.useMemo(() => {
-    return restaurants
-      .filter(r => r.latitude && r.longitude)
-      .map(r => r.id)
-      .sort((a, b) => a - b)
-      .join(',');
-  }, [restaurants]);
-
-  // Helper function to calculate zoom level from bounds
-  const calculateZoomFromBounds = (minLat: number, maxLat: number, minLng: number, maxLng: number): number => {
-    const latSpread = maxLat - minLat;
-    const lngSpread = maxLng - minLng;
-    const maxSpread = Math.max(latSpread, lngSpread);
-    
-    // Calculate zoom based on spread - these values work well for most cases
-    if (maxSpread > 1.0) return 8;
-    if (maxSpread > 0.5) return 9;
-    if (maxSpread > 0.25) return 10;
-    if (maxSpread > 0.1) return 11;
-    if (maxSpread > 0.05) return 12;
-    if (maxSpread > 0.02) return 13;
-    if (maxSpread > 0.01) return 14;
-    return 15;
-  };
-
-  // Auto-fit map to show all markers when navigating to new result sets
+  // Update map center based on restaurants with coordinates (only when not manually searching)
   useEffect(() => {
     // Skip automatic centering/zooming if user is using manual map search
     if (isUsingMapSearch) return;
     
-    // Skip if no restaurant data key (no restaurants with coordinates)
-    if (!restaurantsDataKey) return;
+    // Only auto-center if there's a location-based search
+    // Don't auto-center when showing all restaurants with no location filter
+    if (!searchLocation || searchLocation.trim() === '') return;
     
     const restaurantsWithCoords = restaurants.filter(
       restaurant => restaurant.latitude && restaurant.longitude
     );
 
-    if (restaurantsWithCoords.length === 0) return;
-    
-    // Calculate bounding box of all markers
-    const lats = restaurantsWithCoords.map(r => r.latitude!);
-    const lngs = restaurantsWithCoords.map(r => r.longitude!);
-    
-    const minLat = Math.min(...lats);
-    const maxLat = Math.max(...lats);
-    const minLng = Math.min(...lngs);
-    const maxLng = Math.max(...lngs);
-    
-    // Calculate center
-    const centerLat = (minLat + maxLat) / 2;
-    const centerLng = (minLng + maxLng) / 2;
-    
-    // Calculate appropriate zoom level
-    let zoom: number;
-    if (restaurantsWithCoords.length === 1) {
-      zoom = 15; // Single restaurant - zoom in close
-    } else {
-      zoom = calculateZoomFromBounds(minLat, maxLat, minLng, maxLng);
+    if (restaurantsWithCoords.length > 0) {
+      // Calculate center point of all restaurants
+      const avgLat = restaurantsWithCoords.reduce((sum, r) => sum + (r.latitude || 0), 0) / restaurantsWithCoords.length;
+      const avgLng = restaurantsWithCoords.reduce((sum, r) => sum + (r.longitude || 0), 0) / restaurantsWithCoords.length;
+      
+      const newViewState = {
+        ...viewState,
+        latitude: avgLat,
+        longitude: avgLng,
+        zoom: 13
+      };
+      
+      setViewState(newViewState);
+      // Notify parent of view state change
+      onViewStateChange?.(newViewState);
     }
-    
-    const newViewState = {
-      longitude: centerLng,
-      latitude: centerLat,
-      zoom
-    };
-    
-    // Update both local state and parent state
-    setViewState(newViewState);
-    onViewStateChange?.(newViewState);
-    
-    console.log('[Map] Auto-centering to fit', restaurantsWithCoords.length, 'restaurants, zoom:', zoom);
-  }, [resultsKey, restaurantsDataKey, isUsingMapSearch, onViewStateChange]);
+  }, [restaurants, isUsingMapSearch, searchLocation]);
 
-  // Only sync with external viewState on initial mount, not on every change
-  // This prevents the parent state from overriding auto-centering
-  const hasInitialized = useRef(false);
+  // Sync with external viewState when it changes
   useEffect(() => {
-    if (!hasInitialized.current && externalViewState) {
+    if (externalViewState) {
       setViewState(externalViewState);
-      hasInitialized.current = true;
     }
-  }, []);
+  }, [externalViewState]);
 
   // Handle map move events to update search results
   const handleMoveEnd = useCallback(() => {
@@ -438,7 +390,6 @@ export const ResultsMap = React.memo(ResultsMapComponent, (prevProps, nextProps)
     prevProps.isMobile === nextProps.isMobile &&
     prevProps.hoveredRestaurantId === nextProps.hoveredRestaurantId &&
     prevProps.searchLocation === nextProps.searchLocation &&
-    prevProps.resultsKey === nextProps.resultsKey &&
     prevProps.onMapMove === nextProps.onMapMove &&
     prevProps.onSearchThisArea === nextProps.onSearchThisArea &&
     prevProps.onViewStateChange === nextProps.onViewStateChange
