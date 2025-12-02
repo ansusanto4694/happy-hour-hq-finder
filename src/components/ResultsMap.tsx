@@ -118,6 +118,15 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
     setHoveredRestaurant(null);
   }, [isMobile]);
 
+  // Create a stable key from restaurant IDs to detect actual data changes
+  const restaurantsDataKey = React.useMemo(() => {
+    return restaurants
+      .filter(r => r.latitude && r.longitude)
+      .map(r => r.id)
+      .sort((a, b) => a - b)
+      .join(',');
+  }, [restaurants]);
+
   // Auto-fit map to show all markers when navigating to new result sets
   useEffect(() => {
     // Skip automatic centering/zooming if user is using manual map search
@@ -187,7 +196,7 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
       setViewState(newViewState);
       onViewStateChange?.(newViewState);
     }
-  }, [resultsKey, restaurants.length, isUsingMapSearch]);
+  }, [resultsKey, restaurantsDataKey, isUsingMapSearch]);
 
   // Sync with external viewState when it changes
   useEffect(() => {
