@@ -127,10 +127,30 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
       .join(',');
   }, [restaurants]);
 
+  // Helper function to calculate zoom level from bounds
+  const calculateZoomFromBounds = (minLat: number, maxLat: number, minLng: number, maxLng: number): number => {
+    const latSpread = maxLat - minLat;
+    const lngSpread = maxLng - minLng;
+    const maxSpread = Math.max(latSpread, lngSpread);
+    
+    // Calculate zoom based on spread - these values work well for most cases
+    if (maxSpread > 1.0) return 8;
+    if (maxSpread > 0.5) return 9;
+    if (maxSpread > 0.25) return 10;
+    if (maxSpread > 0.1) return 11;
+    if (maxSpread > 0.05) return 12;
+    if (maxSpread > 0.02) return 13;
+    if (maxSpread > 0.01) return 14;
+    return 15;
+  };
+
   // Auto-fit map to show all markers when navigating to new result sets
   useEffect(() => {
     // Skip automatic centering/zooming if user is using manual map search
     if (isUsingMapSearch) return;
+    
+    // Skip if no restaurant data key (no restaurants with coordinates)
+    if (!restaurantsDataKey) return;
     
     const restaurantsWithCoords = restaurants.filter(
       restaurant => restaurant.latitude && restaurant.longitude
@@ -147,63 +167,40 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
     const minLng = Math.min(...lngs);
     const maxLng = Math.max(...lngs);
     
-    // For a single restaurant, center on it with reasonable zoom
+    // Calculate center
+    const centerLat = (minLat + maxLat) / 2;
+    const centerLng = (minLng + maxLng) / 2;
+    
+    // Calculate appropriate zoom level
+    let zoom: number;
     if (restaurantsWithCoords.length === 1) {
-      const newViewState = {
-        longitude: lngs[0],
-        latitude: lats[0],
-        zoom: 15
-      };
-      setViewState(newViewState);
-      onViewStateChange?.(newViewState);
-      return;
+      zoom = 15; // Single restaurant - zoom in close
+    } else {
+      zoom = calculateZoomFromBounds(minLat, maxLat, minLng, maxLng);
     }
     
-    // For multiple restaurants, use fitBounds via the map ref
-    if (mapRef.current) {
-      const map = mapRef.current.getMap();
-      map.fitBounds(
-        [[minLng, minLat], [maxLng, maxLat]],
-        {
-          padding: { top: 50, bottom: 50, left: 50, right: 50 },
-          duration: 500,
-          maxZoom: 15
-        }
-      );
-    } else {
-      // Fallback if map ref not ready - calculate center and approximate zoom
-      const centerLat = (minLat + maxLat) / 2;
-      const centerLng = (minLng + maxLng) / 2;
-      
-      // Calculate zoom based on bounds spread
-      const latSpread = maxLat - minLat;
-      const lngSpread = maxLng - minLng;
-      const maxSpread = Math.max(latSpread, lngSpread);
-      
-      // Approximate zoom level based on spread
-      let zoom = 13;
-      if (maxSpread > 0.5) zoom = 10;
-      else if (maxSpread > 0.2) zoom = 11;
-      else if (maxSpread > 0.1) zoom = 12;
-      else if (maxSpread > 0.05) zoom = 13;
-      else zoom = 14;
-      
-      const newViewState = {
-        longitude: centerLng,
-        latitude: centerLat,
-        zoom
-      };
-      setViewState(newViewState);
-      onViewStateChange?.(newViewState);
-    }
-  }, [resultsKey, restaurantsDataKey, isUsingMapSearch]);
+    const newViewState = {
+      longitude: centerLng,
+      latitude: centerLat,
+      zoom
+    };
+    
+    // Update both local state and parent state
+    setViewState(newViewState);
+    onViewStateChange?.(newViewState);
+    
+    console.log('[Map] Auto-centering to fit', restaurantsWithCoords.length, 'restaurants, zoom:', zoom);
+  }, [resultsKey, restaurantsDataKey, isUsingMapSearch, onViewStateChange]);
 
-  // Sync with external viewState when it changes
+  // Only sync with external viewState on initial mount, not on every change
+  // This prevents the parent state from overriding auto-centering
+  const hasInitialized = useRef(false);
   useEffect(() => {
-    if (externalViewState) {
+    if (!hasInitialized.current && externalViewState) {
       setViewState(externalViewState);
+      hasInitialized.current = true;
     }
-  }, [externalViewState]);
+  }, []);
 
   // Handle map move events to update search results
   const handleMoveEnd = useCallback(() => {
