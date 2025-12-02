@@ -106,40 +106,72 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
+    let mounted = true;
+
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
+        if (!mounted) return;
+        
+        console.log('[Auth] onAuthStateChange:', event, session?.user?.email);
+        
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Fetch profile data when user signs in
-          setTimeout(() => {
-            fetchProfile(session.user.id);
+          // Fetch profile data when user signs in - wait for completion before setting loading false
+          setTimeout(async () => {
+            if (!mounted) return;
+            try {
+              await fetchProfile(session.user.id);
+            } catch (error) {
+              console.error('[Auth] Profile fetch error in onAuthStateChange:', error);
+            } finally {
+              if (mounted) setLoading(false);
+            }
           }, 0);
         } else {
           setProfile(null);
           setIsAdmin(false);
+          setLoading(false);
         }
-        
-        setLoading(false);
       }
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!mounted) return;
+      
+      console.log('[Auth] getSession:', session?.user?.email);
+      
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        fetchProfile(session.user.id);
+        try {
+          await fetchProfile(session.user.id);
+        } catch (error) {
+          console.error('[Auth] Profile fetch error in getSession:', error);
+        }
       } else {
         setIsAdmin(false);
       }
-      setLoading(false);
+      if (mounted) setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    // Safety timeout - never stay loading forever (5 seconds max)
+    const timeout = setTimeout(() => {
+      if (mounted && loading) {
+        console.warn('[Auth] Safety timeout reached - forcing loading to false');
+        setLoading(false);
+      }
+    }, 5000);
+
+    return () => {
+      mounted = false;
+      clearTimeout(timeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signUp = async (email: string, password: string, firstName: string, lastName: string, phoneNumber?: string) => {
