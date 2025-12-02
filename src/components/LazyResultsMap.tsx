@@ -18,6 +18,7 @@ interface LazyResultsMapProps {
   isMobile?: boolean;
   hoveredRestaurantId?: number | null;
   searchLocation?: string;
+  resultsKey?: string;
 }
 
 // Loading fallback for map
