@@ -21,6 +21,7 @@ interface AuthContextType {
   isAdmin: boolean;
   signUp: (email: string, password: string, firstName: string, lastName: string, phoneNumber?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signInWithGoogle: () => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: any }>;
@@ -227,6 +228,41 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return { error };
   };
 
+  const signInWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/`,
+      }
+    });
+
+    if (error) {
+      // Track Google OAuth failure
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('event', 'login_failed', {
+          event_category: 'authentication',
+          event_label: 'google',
+          error_message: error.message
+        });
+      }
+      toast({
+        title: 'Google Sign In Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } else {
+      // Track Google OAuth attempt (success tracked after redirect)
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('event', 'login_started', {
+          event_category: 'authentication',
+          method: 'google'
+        });
+      }
+    }
+
+    return { error };
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -291,6 +327,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     isAdmin,
     signUp,
     signIn,
+    signInWithGoogle,
     signOut,
     refreshProfile,
     resetPassword,
