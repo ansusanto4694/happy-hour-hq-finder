@@ -204,7 +204,8 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
       setViewState(newViewState);
       onViewStateChange?.(newViewState);
     }
-  }, [resultsKey, restaurants.length, isUsingMapSearch, isMobile, onViewStateChange]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resultsKey, restaurants.length, isUsingMapSearch, isMobile]);
 
   // Sync with external viewState when it changes
   useEffect(() => {
