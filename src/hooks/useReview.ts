@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -25,6 +26,7 @@ export const useReview = (merchantId: number) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -299,6 +301,10 @@ export const useReview = (merchantId: number) => {
           ? 'Thank you for sharing your experience'
           : 'Your review has been saved as a draft',
       });
+
+      // Invalidate queries to refresh My Reviews and draft count
+      queryClient.invalidateQueries({ queryKey: ['my-reviews'] });
+      queryClient.invalidateQueries({ queryKey: ['draft-count'] });
 
       if (status === 'published') {
         navigate(`/restaurant/${merchantId}`);
