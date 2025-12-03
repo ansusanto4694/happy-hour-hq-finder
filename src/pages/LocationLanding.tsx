@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useMemo, useState, useLayoutEffect, useEffect } from 'react';
 import { SEOHead } from '@/components/SEOHead';
 import { useMerchants } from '@/hooks/useMerchants';
@@ -65,6 +65,7 @@ const generateLocationStructuredData = (city: string, state: string, neighborhoo
 
 export const LocationLanding = () => {
   const { citySlug, neighborhoodSlug } = useParams<{ citySlug: string; neighborhoodSlug?: string }>();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { track } = useAnalytics();
   
@@ -300,7 +301,7 @@ export const LocationLanding = () => {
                       <SearchResultCard
                         key={merchant.id}
                         restaurant={merchant}
-                        onClick={(id) => window.location.href = `/restaurant/${id}`}
+                        onClick={(id) => navigate(`/restaurant/${id}`)}
                         isMobile={isMobile}
                         onHover={!isMobile ? setHoveredRestaurantId : undefined}
                       />

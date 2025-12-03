@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -141,7 +141,7 @@ const AuthConfirm = () => {
                   </div>
                   
                   <div className="text-center text-sm text-muted-foreground">
-                    <p>Need help? <a href="/contact" className="text-primary hover:underline">Contact support</a></p>
+                    <p>Need help? <Link to="/contact" className="text-primary hover:underline">Contact support</Link></p>
                   </div>
                 </>
               )}
