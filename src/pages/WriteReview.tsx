@@ -126,20 +126,20 @@ const WriteReview: React.FC = () => {
 
           {/* Merchant Info */}
           <Card className="mb-8">
-            <CardContent className="flex items-center gap-4 py-4">
+          <CardContent className="flex items-center gap-4 py-4">
+            <div className={`w-16 h-16 ${merchant.logo_url ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100'} border border-border rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0`}>
               {merchant.logo_url ? (
                 <img
                   src={merchant.logo_url}
                   alt={merchant.restaurant_name}
-                  className="w-16 h-16 rounded-lg object-cover"
+                  className="w-full h-full object-contain"
                 />
               ) : (
-                <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center">
-                  <span className="text-2xl font-bold text-muted-foreground">
-                    {merchant.restaurant_name.charAt(0)}
-                  </span>
-                </div>
+                <span className="text-2xl font-bold text-muted-foreground">
+                  {merchant.restaurant_name.charAt(0)}
+                </span>
               )}
+            </div>
               <div>
                 <h2 className="text-lg font-semibold">{merchant.restaurant_name}</h2>
                 <p className="text-sm text-muted-foreground">
