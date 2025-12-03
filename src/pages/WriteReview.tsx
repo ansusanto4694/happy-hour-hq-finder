@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Save, Send, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, Send, Loader2, Check, CloudOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useReview } from '@/hooks/useReview';
@@ -13,6 +13,43 @@ import { RatingDimensionCard } from '@/components/reviews/RatingDimensionCard';
 import { ReviewTextEditor } from '@/components/reviews/ReviewTextEditor';
 import { ReviewMediaUpload } from '@/components/reviews/ReviewMediaUpload';
 import { SEOHead } from '@/components/SEOHead';
+import { cn } from '@/lib/utils';
+
+const AutoSaveIndicator: React.FC<{ status: string }> = ({ status }) => {
+  if (status === 'idle') return null;
+  
+  return (
+    <div className={cn(
+      "flex items-center gap-2 text-sm transition-all duration-300",
+      status === 'saving' && "text-muted-foreground",
+      status === 'saved' && "text-green-600",
+      status === 'pending' && "text-amber-600",
+      status === 'error' && "text-destructive"
+    )}>
+      {status === 'saving' && (
+        <>
+          <Loader2 className="h-3 w-3 animate-spin" />
+          <span>Saving...</span>
+        </>
+      )}
+      {status === 'saved' && (
+        <>
+          <Check className="h-3 w-3" />
+          <span>Draft saved</span>
+        </>
+      )}
+      {status === 'pending' && (
+        <span className="text-muted-foreground">Unsaved changes</span>
+      )}
+      {status === 'error' && (
+        <>
+          <CloudOff className="h-3 w-3" />
+          <span>Failed to save</span>
+        </>
+      )}
+    </div>
+  );
+};
 
 const WriteReview: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -40,6 +77,7 @@ const WriteReview: React.FC = () => {
   const {
     isLoading: reviewLoading,
     isSaving,
+    autoSaveStatus,
     ratings,
     setRatings,
     reviewText,
@@ -57,20 +95,6 @@ const WriteReview: React.FC = () => {
       navigate(`/auth?redirect=/restaurant/${merchantId}/review`);
     }
   }, [authLoading, user, merchantId, navigate]);
-
-  // Auto-save draft on page unload
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (reviewText.trim() || Object.values(ratings).some(r => r !== null)) {
-        saveDraft();
-        e.preventDefault();
-        e.returnValue = '';
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [reviewText, ratings, saveDraft]);
 
   const isLoading = authLoading || merchantLoading || reviewLoading;
   const canSubmit = reviewText.trim().length > 0;
@@ -114,13 +138,16 @@ const WriteReview: React.FC = () => {
         <div className="max-w-2xl mx-auto px-4 py-8">
           {/* Header */}
           <div className="mb-8">
-            <Link
-              to={`/restaurant/${merchantId}`}
-              className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-4"
-            >
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Back to Restaurant
-            </Link>
+            <div className="flex items-center justify-between mb-4">
+              <Link
+                to={`/restaurant/${merchantId}`}
+                className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
+              >
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Back to Restaurant
+              </Link>
+              <AutoSaveIndicator status={autoSaveStatus} />
+            </div>
             <h1 className="text-3xl font-bold">Write a Review</h1>
           </div>
 
@@ -229,7 +256,7 @@ const WriteReview: React.FC = () => {
 
           {/* Auto-save notice */}
           <p className="text-sm text-muted-foreground text-center mb-6">
-            Your review will be automatically saved as a draft if you navigate away
+            Your changes are automatically saved as a draft
           </p>
 
           {/* Action Buttons */}

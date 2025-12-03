@@ -1,14 +1,15 @@
 import React from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import { format, formatDistanceToNow } from 'date-fns';
+import { Star, Pencil, Trash2, ExternalLink, AlertCircle } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Star, Edit, Trash2, ExternalLink } from 'lucide-react';
-import { toast } from 'sonner';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,26 +24,24 @@ import {
 
 interface ReviewWithMerchant {
   id: string;
-  merchant_id: number;
   review_text: string;
   status: string;
   created_at: string;
   updated_at: string;
   published_at: string | null;
+  merchant_id: number;
   merchant: {
     restaurant_name: string;
-    logo_url: string | null;
     city: string;
     state: string;
+    logo_url: string | null;
   } | null;
-  ratings: {
-    dimension: string;
-    rating: number;
-  }[];
+  ratings: Array<{ dimension: string; rating: number }>;
 }
 
-export const MyReviews = () => {
+export const MyReviews: React.FC = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: reviews, isLoading } = useQuery({
@@ -50,39 +49,24 @@ export const MyReviews = () => {
     queryFn: async () => {
       if (!user) return [];
 
-      const { data: reviewsData, error: reviewsError } = await supabase
+      const { data, error } = await supabase
         .from('merchant_reviews')
-        .select('*')
+        .select(`
+          id,
+          review_text,
+          status,
+          created_at,
+          updated_at,
+          published_at,
+          merchant_id,
+          merchant:Merchant(restaurant_name, city, state, logo_url),
+          ratings:merchant_review_ratings(dimension, rating)
+        `)
         .eq('user_id', user.id)
         .order('updated_at', { ascending: false });
 
-      if (reviewsError) throw reviewsError;
-      if (!reviewsData || reviewsData.length === 0) return [];
-
-      // Fetch merchant details and ratings for each review
-      const reviewsWithDetails = await Promise.all(
-        reviewsData.map(async (review) => {
-          const [merchantResult, ratingsResult] = await Promise.all([
-            supabase
-              .from('Merchant')
-              .select('restaurant_name, logo_url, city, state')
-              .eq('id', review.merchant_id)
-              .maybeSingle(),
-            supabase
-              .from('merchant_review_ratings')
-              .select('dimension, rating')
-              .eq('review_id', review.id)
-          ]);
-
-          return {
-            ...review,
-            merchant: merchantResult.data,
-            ratings: ratingsResult.data || []
-          } as ReviewWithMerchant;
-        })
-      );
-
-      return reviewsWithDetails;
+      if (error) throw error;
+      return data as unknown as ReviewWithMerchant[];
     },
     enabled: !!user,
   });
@@ -93,66 +77,72 @@ export const MyReviews = () => {
         .from('merchant_reviews')
         .delete()
         .eq('id', reviewId);
+
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-reviews'] });
-      toast.success('Review deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['draft-count'] });
+      toast({
+        title: 'Review deleted',
+        description: 'Your review has been removed',
+      });
     },
-    onError: () => {
-      toast.error('Failed to delete review');
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to delete review',
+        variant: 'destructive',
+      });
     },
   });
-
-  const getAverageRating = (ratings: { dimension: string; rating: number }[]) => {
-    if (ratings.length === 0) return null;
-    const sum = ratings.reduce((acc, r) => acc + r.rating, 0);
-    return (sum / ratings.length).toFixed(1);
-  };
 
   if (isLoading) {
     return (
       <div className="space-y-4">
         {[1, 2, 3].map((i) => (
-          <Card key={i}>
-            <CardContent className="p-4">
-              <div className="flex gap-4">
-                <Skeleton className="w-16 h-16 rounded-lg" />
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-5 w-48" />
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-4 w-full" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <Skeleton key={i} className="h-32 w-full" />
         ))}
       </div>
     );
   }
 
+  // Separate drafts from published reviews
+  const drafts = reviews?.filter(r => r.status === 'draft') || [];
+  const published = reviews?.filter(r => r.status === 'published') || [];
+
   if (!reviews || reviews.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <Star className="w-16 h-16 text-muted-foreground mb-4" />
-        <p className="text-center text-muted-foreground mb-4">
-          You haven't written any reviews yet
-        </p>
+      <div className="text-center py-12">
+        <p className="text-muted-foreground mb-4">You haven't written any reviews yet</p>
         <Button asChild>
-          <Link to="/results">Find places to review</Link>
+          <Link to="/results">Find Places to Review</Link>
         </Button>
       </div>
     );
   }
 
-  return (
-    <div className="space-y-4">
-      {reviews.map((review) => (
-        <Card key={review.id}>
-          <CardContent className="p-4">
-            <div className="flex gap-4">
-              {/* Merchant Logo */}
-              <div className={`w-16 h-16 ${review.merchant?.logo_url ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100'} border border-border rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0`}>
+  const getAverageRating = (ratings: Array<{ dimension: string; rating: number }>) => {
+    if (!ratings || ratings.length === 0) return null;
+    const sum = ratings.reduce((acc, r) => acc + r.rating, 0);
+    return (sum / ratings.length).toFixed(1);
+  };
+
+  const isStale = (updatedAt: string) => {
+    const daysOld = (Date.now() - new Date(updatedAt).getTime()) / (1000 * 60 * 60 * 24);
+    return daysOld > 7;
+  };
+
+  const ReviewCard = ({ review, isDraft }: { review: ReviewWithMerchant; isDraft: boolean }) => {
+    const avgRating = getAverageRating(review.ratings);
+    const stale = isDraft && isStale(review.updated_at);
+
+    return (
+      <Card className={isDraft ? 'border-amber-200 bg-amber-50/50 dark:border-amber-900 dark:bg-amber-950/20' : ''}>
+        <CardHeader className="pb-2">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 ${review.merchant?.logo_url ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100'} border border-border rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0`}>
                 {review.merchant?.logo_url ? (
                   <img
                     src={review.merchant.logo_url}
@@ -160,91 +150,145 @@ export const MyReviews = () => {
                     className="w-full h-full object-contain"
                   />
                 ) : (
-                  <span className="text-2xl font-bold text-muted-foreground">
+                  <span className="text-sm font-bold text-muted-foreground">
                     {review.merchant?.restaurant_name?.charAt(0) || '?'}
                   </span>
                 )}
               </div>
-
-              {/* Review Content */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <Link
-                      to={`/restaurant/${review.merchant_id}`}
-                      className="font-semibold hover:underline flex items-center gap-1"
-                    >
-                      {review.merchant?.restaurant_name || 'Unknown Restaurant'}
-                      <ExternalLink className="w-3 h-3" />
-                    </Link>
-                    <p className="text-sm text-muted-foreground">
-                      {review.merchant?.city}, {review.merchant?.state}
-                    </p>
-                  </div>
-                  <Badge variant={review.status === 'published' ? 'default' : 'secondary'}>
-                    {review.status === 'published' ? 'Published' : 'Draft'}
-                  </Badge>
-                </div>
-
-                {/* Rating */}
-                {review.ratings.length > 0 && (
-                  <div className="flex items-center gap-1 mt-2">
-                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    <span className="text-sm font-medium">{getAverageRating(review.ratings)}</span>
-                    <span className="text-sm text-muted-foreground">
-                      ({review.ratings.length} ratings)
-                    </span>
-                  </div>
-                )}
-
-                {/* Review Text Preview */}
-                <p className="text-sm mt-2 line-clamp-2">{review.review_text}</p>
-
-                {/* Date and Actions */}
-                <div className="flex items-center justify-between mt-3">
-                  <span className="text-xs text-muted-foreground">
-                    {review.status === 'published' && review.published_at
-                      ? `Published ${new Date(review.published_at).toLocaleDateString()}`
-                      : `Last edited ${new Date(review.updated_at).toLocaleDateString()}`}
-                  </span>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" asChild>
-                      <Link to={`/restaurant/${review.merchant_id}/review`}>
-                        <Edit className="w-4 h-4 mr-1" />
-                        Edit
-                      </Link>
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Review</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Are you sure you want to delete this review? This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => deleteMutation.mutate(review.id)}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                          >
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </div>
+              <div>
+                <CardTitle className="text-base">
+                  <Link 
+                    to={`/restaurant/${review.merchant_id}`}
+                    className="hover:underline"
+                  >
+                    {review.merchant?.restaurant_name || 'Unknown Restaurant'}
+                  </Link>
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  {review.merchant?.city}, {review.merchant?.state}
+                </p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      ))}
+            <div className="flex items-center gap-2">
+              {isDraft ? (
+                <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900 dark:text-amber-200 dark:border-amber-700">
+                  Draft
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300 dark:bg-green-900 dark:text-green-200 dark:border-green-700">
+                  Published
+                </Badge>
+              )}
+              {avgRating && (
+                <div className="flex items-center gap-1 text-sm">
+                  <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                  <span>{avgRating}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {stale && (
+            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 text-sm mb-3 p-2 bg-amber-100/50 dark:bg-amber-900/30 rounded">
+              <AlertCircle className="h-4 w-4" />
+              <span>This draft is over a week old. Consider finishing or removing it.</span>
+            </div>
+          )}
+          
+          {review.review_text ? (
+            <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+              {review.review_text}
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground italic mb-3">
+              No review text yet
+            </p>
+          )}
+          
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">
+              {isDraft ? (
+                <>Last edited {formatDistanceToNow(new Date(review.updated_at), { addSuffix: true })}</>
+              ) : (
+                <>Published {format(new Date(review.published_at!), 'MMM d, yyyy')}</>
+              )}
+            </p>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" asChild>
+                <Link to={`/restaurant/${review.merchant_id}`}>
+                  <ExternalLink className="h-4 w-4 mr-1" />
+                  View
+                </Link>
+              </Button>
+              <Button variant="ghost" size="sm" asChild>
+                <Link to={`/restaurant/${review.merchant_id}/review`}>
+                  <Pencil className="h-4 w-4 mr-1" />
+                  {isDraft ? 'Continue' : 'Edit'}
+                </Link>
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete {isDraft ? 'draft' : 'review'}?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete your 
+                      {isDraft ? ' draft' : ' review'} for {review.merchant?.restaurant_name}.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => deleteMutation.mutate(review.id)}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Drafts Section */}
+      {drafts.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-semibold">Drafts in Progress</h3>
+            <Badge variant="secondary" className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
+              {drafts.length}
+            </Badge>
+          </div>
+          <div className="space-y-4">
+            {drafts.map((review) => (
+              <ReviewCard key={review.id} review={review} isDraft={true} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Published Reviews Section */}
+      {published.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">Published Reviews</h3>
+          <div className="space-y-4">
+            {published.map((review) => (
+              <ReviewCard key={review.id} review={review} isDraft={false} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

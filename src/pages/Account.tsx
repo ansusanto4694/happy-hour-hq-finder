@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { PageHeader } from '@/components/PageHeader';
 import { Footer } from '@/components/Footer';
 import { SEOHead } from '@/components/SEOHead';
@@ -9,8 +10,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ProfileForm } from '@/components/account/ProfileForm';
 import { MyReviews } from '@/components/account/MyReviews';
 import { User, Heart, Star } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/integrations/supabase/client';
 
 const Account = () => {
   const { user, profile, loading } = useAuth();
@@ -37,6 +39,23 @@ const Account = () => {
   const memberSince = new Date(profile.created_at).toLocaleDateString('en-US', {
     month: 'long',
     year: 'numeric'
+  });
+
+  // Fetch draft count for badge
+  const { data: draftCount } = useQuery({
+    queryKey: ['draft-count', user?.id],
+    queryFn: async () => {
+      if (!user) return 0;
+      const { count, error } = await supabase
+        .from('merchant_reviews')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('status', 'draft');
+      
+      if (error) return 0;
+      return count || 0;
+    },
+    enabled: !!user,
   });
 
   return (
@@ -78,6 +97,11 @@ const Account = () => {
             <TabsTrigger value="reviews" className="flex items-center gap-2">
               <Star className="w-4 h-4" />
               My Reviews
+              {draftCount && draftCount > 0 && (
+                <Badge variant="secondary" className="ml-1 bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 text-xs px-1.5 py-0">
+                  {draftCount}
+                </Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger value="favorites" className="flex items-center gap-2">
               <Heart className="w-4 h-4" />
