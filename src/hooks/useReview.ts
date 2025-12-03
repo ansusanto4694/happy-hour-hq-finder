@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useReviewAutoSave, AutoSaveStatus } from '@/hooks/useReviewAutoSave';
 import type { MediaFile } from '@/components/reviews/ReviewMediaUpload';
 
 export interface ReviewRatings {
@@ -36,6 +37,84 @@ export const useReview = (merchantId: number) => {
   const [reviewText, setReviewText] = useState('');
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
   const [existingMedia, setExistingMedia] = useState<Array<{ id: string; storage_path: string; media_type: string }>>([]);
+  const initialLoadRef = useRef(true);
+
+  // Internal save function for auto-save (no toasts, no navigation)
+  const saveReviewInternal = useCallback(async (): Promise<boolean> => {
+    if (!user) return false;
+    
+    // Don't auto-save if there's nothing to save
+    const hasContent = reviewText.trim() || Object.values(ratings).some(r => r !== null);
+    if (!hasContent) return false;
+
+    try {
+      let reviewId = existingReviewId;
+
+      if (reviewId) {
+        const { error } = await supabase
+          .from('merchant_reviews')
+          .update({
+            review_text: reviewText,
+            status: 'draft',
+          })
+          .eq('id', reviewId);
+
+        if (error) throw error;
+      } else {
+        const { data, error } = await supabase
+          .from('merchant_reviews')
+          .insert({
+            user_id: user.id,
+            merchant_id: merchantId,
+            review_text: reviewText || '',
+            status: 'draft',
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        reviewId = data.id;
+        setExistingReviewId(reviewId);
+      }
+
+      // Save ratings
+      await supabase
+        .from('merchant_review_ratings')
+        .delete()
+        .eq('review_id', reviewId!);
+
+      const ratingsToInsert = Object.entries(ratings)
+        .filter(([_, value]) => value !== null)
+        .map(([dimension, rating]) => ({
+          review_id: reviewId!,
+          dimension,
+          rating: rating as number,
+        }));
+
+      if (ratingsToInsert.length > 0) {
+        await supabase
+          .from('merchant_review_ratings')
+          .insert(ratingsToInsert);
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Auto-save error:', error);
+      return false;
+    }
+  }, [user, merchantId, reviewText, ratings, existingReviewId]);
+
+  // Auto-save hook
+  const { status: autoSaveStatus, markDirty } = useReviewAutoSave({
+    onSave: saveReviewInternal,
+    debounceMs: 3000,
+  });
+
+  // Mark dirty when content changes (but not on initial load)
+  useEffect(() => {
+    if (initialLoadRef.current) return;
+    markDirty();
+  }, [reviewText, ratings, markDirty]);
 
   // Load existing draft or review
   useEffect(() => {
@@ -46,7 +125,6 @@ export const useReview = (merchantId: number) => {
       }
 
       try {
-        // Check for existing review (draft or published)
         const { data: review, error: reviewError } = await supabase
           .from('merchant_reviews')
           .select('*')
@@ -60,7 +138,6 @@ export const useReview = (merchantId: number) => {
           setExistingReviewId(review.id);
           setReviewText(review.review_text || '');
 
-          // Load ratings
           const { data: ratingsData } = await supabase
             .from('merchant_review_ratings')
             .select('*')
@@ -80,7 +157,6 @@ export const useReview = (merchantId: number) => {
             setRatings(loadedRatings);
           }
 
-          // Load existing media
           const { data: mediaData } = await supabase
             .from('merchant_review_media')
             .select('*')
@@ -95,6 +171,10 @@ export const useReview = (merchantId: number) => {
         console.error('Error loading review:', error);
       } finally {
         setIsLoading(false);
+        // Allow marking dirty after initial load
+        setTimeout(() => {
+          initialLoadRef.current = false;
+        }, 100);
       }
     };
 
@@ -133,13 +213,11 @@ export const useReview = (merchantId: number) => {
   };
 
   const saveRatings = async (reviewId: string) => {
-    // Delete existing ratings first
     await supabase
       .from('merchant_review_ratings')
       .delete()
       .eq('review_id', reviewId);
 
-    // Insert new ratings
     const ratingsToInsert = Object.entries(ratings)
       .filter(([_, value]) => value !== null)
       .map(([dimension, rating]) => ({
@@ -180,7 +258,6 @@ export const useReview = (merchantId: number) => {
       let reviewId = existingReviewId;
 
       if (reviewId) {
-        // Update existing review
         const { error } = await supabase
           .from('merchant_reviews')
           .update({
@@ -192,7 +269,6 @@ export const useReview = (merchantId: number) => {
 
         if (error) throw error;
       } else {
-        // Create new review
         const { data, error } = await supabase
           .from('merchant_reviews')
           .insert({
@@ -210,13 +286,11 @@ export const useReview = (merchantId: number) => {
         setExistingReviewId(reviewId);
       }
 
-      // Save ratings
       await saveRatings(reviewId!);
 
-      // Upload new media files
       if (mediaFiles.length > 0) {
         await uploadMedia(reviewId!, mediaFiles);
-        setMediaFiles([]); // Clear uploaded files
+        setMediaFiles([]);
       }
 
       toast({
@@ -250,6 +324,7 @@ export const useReview = (merchantId: number) => {
   return {
     isLoading,
     isSaving,
+    autoSaveStatus,
     existingReviewId,
     ratings,
     setRatings,
