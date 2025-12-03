@@ -698,6 +698,128 @@ export type Database = {
           },
         ]
       }
+      merchant_review_media: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          media_type: string
+          review_id: string
+          storage_path: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          media_type: string
+          review_id: string
+          storage_path: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          media_type?: string
+          review_id?: string
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_review_media_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_review_ratings: {
+        Row: {
+          created_at: string
+          dimension: string
+          id: string
+          rating: number
+          review_id: string
+        }
+        Insert: {
+          created_at?: string
+          dimension: string
+          id?: string
+          rating: number
+          review_id: string
+        }
+        Update: {
+          created_at?: string
+          dimension?: string
+          id?: string
+          rating?: number
+          review_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_review_ratings_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_reviews: {
+        Row: {
+          created_at: string
+          id: string
+          merchant_id: number
+          published_at: string | null
+          review_text: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          merchant_id: number
+          published_at?: string | null
+          review_text: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          merchant_id?: number
+          published_at?: string | null
+          review_text?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_reviews_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "Merchant"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_reviews_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_reviews_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string

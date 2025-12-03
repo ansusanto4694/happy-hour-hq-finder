@@ -1,10 +1,11 @@
 
 import React, { useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Share, Utensils } from 'lucide-react';
+import { Share, Utensils, PenLine } from 'lucide-react';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { RestaurantBasicInfo } from '@/components/RestaurantBasicInfo';
 import { RestaurantContactInfo } from '@/components/RestaurantContactInfo';
@@ -157,6 +158,17 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
                   <h1 className="text-3xl font-bold text-gray-900">{restaurant.restaurant_name}</h1>
                 </div>
                 <div className="flex items-center gap-2">
+                  <Button
+                    asChild
+                    variant="default"
+                    size="sm"
+                    className="hidden sm:flex"
+                  >
+                    <Link to={`/restaurant/${restaurant.id}/review`}>
+                      <PenLine className="h-4 w-4 mr-2" />
+                      Write a Review
+                    </Link>
+                  </Button>
                   <FavoriteButton 
                     merchantId={restaurant.id}
                     variant="outline"
