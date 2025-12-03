@@ -39,6 +39,7 @@ export const useReview = (merchantId: number) => {
   const [reviewText, setReviewText] = useState('');
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
   const [existingMedia, setExistingMedia] = useState<Array<{ id: string; storage_path: string; media_type: string }>>([]);
+  const [deletingMediaId, setDeletingMediaId] = useState<string | null>(null);
   const initialLoadRef = useRef(true);
 
   // Internal save function for auto-save (no toasts, no navigation)
@@ -327,6 +328,47 @@ export const useReview = (merchantId: number) => {
   const saveDraft = useCallback(() => saveReview('draft'), [saveReview]);
   const submitReview = useCallback(() => saveReview('published'), [saveReview]);
 
+  const deleteMedia = useCallback(async (mediaId: string, storagePath: string) => {
+    if (!user) return false;
+    
+    setDeletingMediaId(mediaId);
+    
+    try {
+      // Delete from storage
+      const { error: storageError } = await supabase.storage
+        .from('review-media')
+        .remove([storagePath]);
+
+      if (storageError) {
+        console.error('Storage delete error:', storageError);
+        // Continue anyway - file might already be deleted
+      }
+
+      // Delete from database
+      const { error: dbError } = await supabase
+        .from('merchant_review_media')
+        .delete()
+        .eq('id', mediaId);
+
+      if (dbError) throw dbError;
+
+      // Update local state
+      setExistingMedia(prev => prev.filter(m => m.id !== mediaId));
+      
+      return true;
+    } catch (error: any) {
+      console.error('Error deleting media:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to delete media',
+        variant: 'destructive',
+      });
+      return false;
+    } finally {
+      setDeletingMediaId(null);
+    }
+  }, [user, toast]);
+
   return {
     isLoading,
     isSaving,
@@ -339,6 +381,8 @@ export const useReview = (merchantId: number) => {
     mediaFiles,
     setMediaFiles,
     existingMedia,
+    deleteMedia,
+    deletingMediaId,
     saveDraft,
     submitReview,
   };

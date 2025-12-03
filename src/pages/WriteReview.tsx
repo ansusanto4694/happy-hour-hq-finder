@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Save, Send, Loader2, Check, CloudOff } from 'lucide-react';
+import { ArrowLeft, Save, Send, Loader2, Check, CloudOff, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useReview } from '@/hooks/useReview';
@@ -85,6 +85,8 @@ const WriteReview: React.FC = () => {
     mediaFiles,
     setMediaFiles,
     existingMedia,
+    deleteMedia,
+    deletingMediaId,
     saveDraft,
     submitReview,
   } = useReview(merchantId);
@@ -234,7 +236,7 @@ const WriteReview: React.FC = () => {
                 </p>
                 <div className="grid grid-cols-4 gap-2">
                   {existingMedia.map((media) => (
-                    <div key={media.id} className="aspect-square rounded-lg overflow-hidden bg-muted">
+                    <div key={media.id} className="relative aspect-square rounded-lg overflow-hidden bg-muted group">
                       {media.media_type === 'image' ? (
                         <img
                           src={`https://gohcqazhofdhkghfxfok.supabase.co/storage/v1/object/public/review-media/${media.storage_path}`}
@@ -247,6 +249,18 @@ const WriteReview: React.FC = () => {
                           className="w-full h-full object-cover"
                         />
                       )}
+                      <button
+                        onClick={() => deleteMedia(media.id, media.storage_path)}
+                        disabled={deletingMediaId === media.id}
+                        className="absolute top-1 right-1 p-1 bg-destructive/90 text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive disabled:opacity-50"
+                        title="Delete media"
+                      >
+                        {deletingMediaId === media.id ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <X className="h-3 w-3" />
+                        )}
+                      </button>
                     </div>
                   ))}
                 </div>
