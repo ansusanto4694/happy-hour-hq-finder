@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import Map, { Marker, NavigationControl } from 'react-map-gl';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import { useUserLocation } from '@/hooks/useUserLocation';
 import { Map as MapIcon, MapPin } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { getDeviceType } from '@/utils/analytics';
+import type { LngLatBoundsLike } from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 interface Restaurant {
@@ -58,12 +59,23 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
   const [hoveredRestaurant, setHoveredRestaurant] = useState<Restaurant | null>(null);
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [mapLoaded, setMapLoaded] = useState(false);
 
   const mapRef = useRef<any>(null);
   const navigate = useNavigate();
   const isMobile = mobileOverride ?? useIsMobile();
   const { userLocation } = useUserLocation();
   const { track, trackFunnel } = useAnalytics();
+
+  // Create a stable reference for tracking when result set changes
+  const restaurantIds = useMemo(() => 
+    restaurants
+      .filter(r => r.latitude && r.longitude)
+      .map(r => r.id)
+      .sort((a, b) => a - b)
+      .join(','),
+    [restaurants]
+  );
 
   // Handle restaurant marker click
   const handleRestaurantClick = useCallback(async (restaurant: Restaurant) => {
@@ -116,36 +128,62 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
     setHoveredRestaurant(null);
   }, [isMobile]);
 
-  // Update map center based on restaurants with coordinates (only when not manually searching)
+  // Update map to fit all restaurant markers (only when not manually searching)
   useEffect(() => {
     // Skip automatic centering/zooming if user is using manual map search
     if (isUsingMapSearch) return;
     
-    // Only auto-center if there's a location-based search
-    // Don't auto-center when showing all restaurants with no location filter
-    if (!searchLocation || searchLocation.trim() === '') return;
+    // Wait for map to be loaded
+    if (!mapLoaded || !mapRef.current) return;
     
     const restaurantsWithCoords = restaurants.filter(
       restaurant => restaurant.latitude && restaurant.longitude
     );
 
-    if (restaurantsWithCoords.length > 0) {
-      // Calculate center point of all restaurants
-      const avgLat = restaurantsWithCoords.reduce((sum, r) => sum + (r.latitude || 0), 0) / restaurantsWithCoords.length;
-      const avgLng = restaurantsWithCoords.reduce((sum, r) => sum + (r.longitude || 0), 0) / restaurantsWithCoords.length;
-      
+    if (restaurantsWithCoords.length === 0) return;
+
+    // If only one restaurant, center on it with a reasonable zoom
+    if (restaurantsWithCoords.length === 1) {
       const newViewState = {
-        ...viewState,
-        latitude: avgLat,
-        longitude: avgLng,
-        zoom: 13
+        longitude: restaurantsWithCoords[0].longitude!,
+        latitude: restaurantsWithCoords[0].latitude!,
+        zoom: 15
       };
-      
       setViewState(newViewState);
-      // Notify parent of view state change
       onViewStateChange?.(newViewState);
+      return;
     }
-  }, [restaurants, isUsingMapSearch, searchLocation]);
+
+    // Calculate bounding box of all restaurants
+    const lats = restaurantsWithCoords.map(r => r.latitude!);
+    const lngs = restaurantsWithCoords.map(r => r.longitude!);
+    
+    const bounds: LngLatBoundsLike = [
+      [Math.min(...lngs), Math.min(...lats)], // Southwest corner [lng, lat]
+      [Math.max(...lngs), Math.max(...lats)]  // Northeast corner [lng, lat]
+    ];
+
+    // Use fitBounds to show all markers
+    const map = mapRef.current.getMap();
+    map.fitBounds(bounds, {
+      padding: { top: 50, bottom: 50, left: 50, right: 50 },
+      maxZoom: 15, // Don't zoom in too close
+      duration: 500 // Smooth animation
+    });
+
+    // Sync view state after fitBounds completes
+    map.once('moveend', () => {
+      const center = map.getCenter();
+      const zoom = map.getZoom();
+      const newViewState = {
+        longitude: center.lng,
+        latitude: center.lat,
+        zoom: zoom
+      };
+      setViewState(newViewState);
+      onViewStateChange?.(newViewState);
+    });
+  }, [restaurantIds, isUsingMapSearch, mapLoaded]);
 
   // Sync with external viewState when it changes
   useEffect(() => {
@@ -185,6 +223,7 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
         <Map
           ref={mapRef}
           {...viewState}
+          onLoad={() => setMapLoaded(true)}
           onMove={evt => {
             const newViewState = evt.viewState;
             setViewState(newViewState);
@@ -289,6 +328,7 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
           <Map
             ref={mapRef}
             {...viewState}
+            onLoad={() => setMapLoaded(true)}
             onMove={evt => {
               const newViewState = evt.viewState;
               setViewState(newViewState);
