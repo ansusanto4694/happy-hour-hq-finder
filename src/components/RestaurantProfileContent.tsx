@@ -15,6 +15,7 @@ import { RestaurantEventsFeed } from '@/components/RestaurantEventsFeed';
 import { RestaurantProfileEditor } from '@/components/RestaurantProfileEditor';
 import { ReportIssueModal } from '@/components/ReportIssueModal';
 import { MerchantOffersSection } from '@/components/merchant-offers/MerchantOffersSection';
+import { MerchantReviews } from '@/components/MerchantReviews';
 import { MobileCTABar } from '@/components/MobileCTABar';
 import { useMerchantOffers } from '@/hooks/useMerchantOffers';
 import { useAuth } from '@/hooks/useAuth';
@@ -235,6 +236,16 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
 
             {/* Restaurant Events Feed */}
             <RestaurantEventsFeed restaurantId={restaurant.id} />
+
+            {/* Reviews Section */}
+            <Card className="shadow-lg border-l-4 border-amber-500 bg-white">
+              <CardContent className="p-6">
+                <MerchantReviews 
+                  merchantId={restaurant.id} 
+                  merchantName={restaurant.restaurant_name}
+                />
+              </CardContent>
+            </Card>
           </div>
 
           {/* Sidebar - Right Column (1/4 width, sticky) */}
