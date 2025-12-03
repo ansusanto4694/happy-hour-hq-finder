@@ -7,10 +7,10 @@ import { SEOHead } from '@/components/SEOHead';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ProfileForm } from '@/components/account/ProfileForm';
-import { User, Heart, FolderHeart } from 'lucide-react';
+import { MyReviews } from '@/components/account/MyReviews';
+import { User, Heart, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { useAnalytics } from '@/hooks/useAnalytics';
 
 const Account = () => {
   const { user, profile, loading } = useAuth();
@@ -70,10 +70,14 @@ const Account = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-8">
+          <TabsList className="grid w-full grid-cols-3 mb-8">
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <User className="w-4 h-4" />
               Profile
+            </TabsTrigger>
+            <TabsTrigger value="reviews" className="flex items-center gap-2">
+              <Star className="w-4 h-4" />
+              My Reviews
             </TabsTrigger>
             <TabsTrigger value="favorites" className="flex items-center gap-2">
               <Heart className="w-4 h-4" />
@@ -92,6 +96,21 @@ const Account = () => {
               </CardHeader>
               <CardContent>
                 <ProfileForm />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Reviews Tab */}
+          <TabsContent value="reviews">
+            <Card>
+              <CardHeader>
+                <CardTitle>My Reviews</CardTitle>
+                <CardDescription>
+                  View and manage your restaurant reviews
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <MyReviews />
               </CardContent>
             </Card>
           </TabsContent>
