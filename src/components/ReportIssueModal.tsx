@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Flag } from 'lucide-react';
+import { z } from 'zod';
 
 interface ReportIssueModalProps {
   merchantId: number;
@@ -23,6 +24,16 @@ const issueOptions = [
   { id: 'other', label: 'Other' },
 ];
 
+// Validation schema
+const reportSchema = z.object({
+  selectedIssues: z.array(z.string()).min(1, 'Please select at least one issue to report'),
+  additionalFeedback: z.string().max(2000, 'Feedback must be less than 2000 characters').optional(),
+  reporterEmail: z.union([
+    z.string().length(0),
+    z.string().email('Please enter a valid email address').max(255, 'Email must be less than 255 characters')
+  ]).optional(),
+});
+
 export const ReportIssueModal: React.FC<ReportIssueModalProps> = ({ 
   merchantId, 
   merchantName, 
@@ -34,6 +45,7 @@ export const ReportIssueModal: React.FC<ReportIssueModalProps> = ({
   const [additionalFeedback, setAdditionalFeedback] = useState('');
   const [reporterEmail, setReporterEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; feedback?: string; issues?: string }>({});
   const { toast } = useToast();
 
   const handleIssueChange = (issueId: string, checked: boolean) => {
@@ -42,19 +54,59 @@ export const ReportIssueModal: React.FC<ReportIssueModalProps> = ({
     } else {
       setSelectedIssues(selectedIssues.filter(id => id !== issueId));
     }
+    // Clear issues error when user selects something
+    if (errors.issues) {
+      setErrors(prev => ({ ...prev, issues: undefined }));
+    }
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setReporterEmail(e.target.value);
+    if (errors.email) {
+      setErrors(prev => ({ ...prev, email: undefined }));
+    }
+  };
+
+  const handleFeedbackChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setAdditionalFeedback(e.target.value);
+    if (errors.feedback) {
+      setErrors(prev => ({ ...prev, feedback: undefined }));
+    }
   };
 
   const handleSubmit = async () => {
-    if (selectedIssues.length === 0) {
+    // Validate form data
+    const result = reportSchema.safeParse({
+      selectedIssues,
+      additionalFeedback: additionalFeedback.trim(),
+      reporterEmail: reporterEmail.trim(),
+    });
+
+    if (!result.success) {
+      const fieldErrors: { email?: string; feedback?: string; issues?: string } = {};
+      result.error.errors.forEach((err) => {
+        if (err.path[0] === 'reporterEmail') {
+          fieldErrors.email = err.message;
+        } else if (err.path[0] === 'additionalFeedback') {
+          fieldErrors.feedback = err.message;
+        } else if (err.path[0] === 'selectedIssues') {
+          fieldErrors.issues = err.message;
+        }
+      });
+      setErrors(fieldErrors);
+      
+      // Show toast for the first error
+      const firstError = result.error.errors[0];
       toast({
-        title: "Error",
-        description: "Please select at least one issue to report.",
+        title: "Validation Error",
+        description: firstError.message,
         variant: "destructive",
       });
       return;
     }
 
     setIsSubmitting(true);
+    setErrors({});
 
     try {
       const { error } = await supabase
@@ -81,7 +133,6 @@ export const ReportIssueModal: React.FC<ReportIssueModalProps> = ({
       setReporterEmail('');
       setIsOpen(false);
     } catch (error) {
-      console.error('Error submitting report:', error);
       toast({
         title: "Error",
         description: "Failed to submit the report. Please try again.",
@@ -122,6 +173,9 @@ export const ReportIssueModal: React.FC<ReportIssueModalProps> = ({
                 </Label>
               </div>
             ))}
+            {errors.issues && (
+              <p className="text-sm text-destructive">{errors.issues}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -130,9 +184,19 @@ export const ReportIssueModal: React.FC<ReportIssueModalProps> = ({
               id="additional-feedback"
               placeholder="Please describe the issue in more detail..."
               value={additionalFeedback}
-              onChange={(e) => setAdditionalFeedback(e.target.value)}
+              onChange={handleFeedbackChange}
               rows={3}
+              maxLength={2000}
+              className={errors.feedback ? 'border-destructive' : ''}
             />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              {errors.feedback ? (
+                <span className="text-destructive">{errors.feedback}</span>
+              ) : (
+                <span />
+              )}
+              <span>{additionalFeedback.length}/2000</span>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -142,8 +206,13 @@ export const ReportIssueModal: React.FC<ReportIssueModalProps> = ({
               type="email"
               placeholder="your.email@example.com"
               value={reporterEmail}
-              onChange={(e) => setReporterEmail(e.target.value)}
+              onChange={handleEmailChange}
+              maxLength={255}
+              className={errors.email ? 'border-destructive' : ''}
             />
+            {errors.email && (
+              <p className="text-sm text-destructive">{errors.email}</p>
+            )}
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">
