@@ -22,7 +22,7 @@ shadow_port = 54320
 major_version = 15
 
 [functions.geocode-address]
-verify_jwt = false
+verify_jwt = true
 
 [functions.normalize-location]
 verify_jwt = false
