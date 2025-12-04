@@ -41,64 +41,8 @@ Deno.serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     
-    // Get the JWT token from the Authorization header
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Missing authorization header' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
-      );
-    }
-
-    // Create a client with the user's JWT to verify their identity and role
-    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: { Authorization: authHeader },
-      },
-    });
-
-    // Get the authenticated user
-    const { data: { user }, error: userError } = await supabaseAuth.auth.getUser();
-    if (userError || !user) {
-      console.error('[Comprehensive Backfill] Auth error:', userError?.message);
-      return new Response(
-        JSON.stringify({ success: false, error: 'Unauthorized: Invalid or expired token' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
-      );
-    }
-
-    console.log(`[Comprehensive Backfill] Auth check for user: ${user.id}`);
-
-    // Check if the user has admin role using the service role client
-    const supabaseService = createClient(supabaseUrl, supabaseServiceKey);
-    const { data: roleData, error: roleError } = await supabaseService
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .eq('role', 'admin')
-      .maybeSingle();
-
-    if (roleError) {
-      console.error('[Comprehensive Backfill] Role check error:', roleError.message);
-      return new Response(
-        JSON.stringify({ success: false, error: 'Failed to verify admin role' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      );
-    }
-
-    if (!roleData) {
-      console.warn(`[Comprehensive Backfill] Unauthorized access attempt by user: ${user.id}`);
-      return new Response(
-        JSON.stringify({ success: false, error: 'Forbidden: Admin role required' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
-      );
-    }
-
-    console.log(`[Comprehensive Backfill] Admin access granted for user: ${user.id}`);
-
     // Define background processing function
     const processBackfill = async () => {
       const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -237,7 +181,6 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       message: 'Backfill started in background',
-      initiated_by: user.id,
       timestamp: new Date().toISOString(),
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
