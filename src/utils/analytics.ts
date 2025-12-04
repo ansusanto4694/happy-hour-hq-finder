@@ -494,191 +494,209 @@ export const isBounceSession = (
 const capturedReferrer = typeof document !== 'undefined' ? document.referrer : '';
 
 // Initialize or update session - throttled to run only once per page load
+// DEFENSIVE: Wrapped in try-catch to prevent RLS or network errors from crashing the app
 export const initializeSession = async (forceReinitialize: boolean = false) => {
-  // Check if already initialized in this page session
-  const sessionInitKey = 'analytics_session_initialized';
-  if (!forceReinitialize && (sessionInitialized || sessionStorage.getItem(sessionInitKey) === 'true')) {
-    return;
+  try {
+    // Check if already initialized in this page session
+    const sessionInitKey = 'analytics_session_initialized';
+    if (!forceReinitialize && (sessionInitialized || sessionStorage.getItem(sessionInitKey) === 'true')) {
+      return;
+    }
+    
+    const sessionId = getSessionId();
+    const userId = await getUserId();
+    
+    // CRITICAL: Always generate anonymous user ID FIRST before any other operations
+    // This ensures 100% of sessions have it
+    const anonymousUserId = getAnonymousUserId();
+    
+    // Verify we got a valid anonymous user ID
+    if (!anonymousUserId || anonymousUserId === '') {
+      console.warn('[Analytics] Failed to generate anonymous user ID, continuing without session tracking');
+      return;
+    }
+    
+    const deviceType = getDeviceType();
+    const currentPath = window.location.pathname;
+    // FIX: Use captured referrer from page load, not current document.referrer
+    const referrer = capturedReferrer;
+    const now = new Date().toISOString();
+    const utmParams = getUtmParameters();
+    const { category: referrerCategory, platform: referrerPlatform, traffic_source } = categorizeReferrer(referrer);
+    
+    // Detect if this is a bot
+    const botDetection = detectBot();
+    
+    // Determine traffic source (prioritize UTM params over referrer)
+    const finalTrafficSource = utmParams.utm_source ? 'campaign' : traffic_source;
+    
+    console.log('[Analytics] Initializing session with GUARANTEED anonymous_user_id:', {
+      sessionId,
+      anonymousUserId,
+      referrer,
+      referrerCategory,
+      referrerPlatform,
+      deviceType,
+      utmParams
+    });
+    
+    // Use upsert with ON CONFLICT DO UPDATE to handle race conditions
+    // This prevents duplicate key errors when multiple tabs/requests initialize simultaneously
+    const { error } = await supabase.from('user_sessions').upsert({
+      session_id: sessionId,
+      user_id: userId,
+      anonymous_user_id: anonymousUserId,
+      entry_page: currentPath,
+      referrer_source: referrer || null,
+      referrer_category: referrerCategory,
+      referrer_platform: referrerPlatform,
+      traffic_source: finalTrafficSource,
+      device_type: deviceType,
+      user_agent: navigator.userAgent,
+      viewport_width: window.innerWidth,
+      viewport_height: window.innerHeight,
+      first_seen: now,
+      last_seen: now,
+      utm_source: utmParams.utm_source,
+      utm_medium: utmParams.utm_medium,
+      utm_campaign: utmParams.utm_campaign,
+      utm_content: utmParams.utm_content,
+      utm_term: utmParams.utm_term,
+      is_bot: botDetection.isBot,
+      bot_type: botDetection.botType,
+      is_engaged: false,
+      engagement_score: 0,
+      is_bounce: false,
+    }, {
+      onConflict: 'session_id',
+      ignoreDuplicates: false // Update last_seen on conflict
+    });
+    
+    if (error) {
+      console.warn('[Analytics] Session init failed (non-blocking):', error.message);
+      return; // Don't set flags on error, allow retry
+    }
+    
+    // ONLY set flags after successful database insert
+    sessionInitialized = true;
+    sessionStorage.setItem(sessionInitKey, 'true');
+    
+    // FIX: Store session start time in sessionStorage for persistence across page refreshes
+    sessionStartTime = Date.now();
+    sessionStorage.setItem('analytics_session_start_time', sessionStartTime.toString());
+    lastActivityTime = Date.now();
+    
+    // Initialize session event count for safeguards
+    try {
+      await initializeSessionEventCount();
+    } catch (countError) {
+      console.warn('[Analytics] Session event count init failed (non-blocking):', countError);
+    }
+    
+    console.log('[Analytics] Session initialized successfully');
+  } catch (err) {
+    // DEFENSIVE: Catch any unexpected errors to prevent app crashes
+    console.warn('[Analytics] Session init exception (non-blocking):', err);
+    // App continues to function normally even if analytics fails
   }
-  
-  const sessionId = getSessionId();
-  const userId = await getUserId();
-  
-  // CRITICAL: Always generate anonymous user ID FIRST before any other operations
-  // This ensures 100% of sessions have it
-  const anonymousUserId = getAnonymousUserId();
-  
-  // Verify we got a valid anonymous user ID
-  if (!anonymousUserId || anonymousUserId === '') {
-    console.error('[Analytics] CRITICAL: Failed to generate anonymous user ID!');
-    return; // Don't proceed without anonymous ID
-  }
-  
-  const deviceType = getDeviceType();
-  const currentPath = window.location.pathname;
-  // FIX: Use captured referrer from page load, not current document.referrer
-  const referrer = capturedReferrer;
-  const now = new Date().toISOString();
-  const utmParams = getUtmParameters();
-  const { category: referrerCategory, platform: referrerPlatform, traffic_source } = categorizeReferrer(referrer);
-  
-  // Detect if this is a bot
-  const botDetection = detectBot();
-  
-  // Determine traffic source (prioritize UTM params over referrer)
-  const finalTrafficSource = utmParams.utm_source ? 'campaign' : traffic_source;
-  
-  console.log('[Analytics] Initializing session with GUARANTEED anonymous_user_id:', {
-    sessionId,
-    anonymousUserId,
-    referrer,
-    referrerCategory,
-    referrerPlatform,
-    deviceType,
-    utmParams
-  });
-  
-  // Use upsert with ON CONFLICT DO UPDATE to handle race conditions
-  // This prevents duplicate key errors when multiple tabs/requests initialize simultaneously
-  const { error } = await supabase.from('user_sessions').upsert({
-    session_id: sessionId,
-    user_id: userId,
-    anonymous_user_id: anonymousUserId,
-    entry_page: currentPath,
-    referrer_source: referrer || null,
-    referrer_category: referrerCategory,
-    referrer_platform: referrerPlatform,
-    traffic_source: finalTrafficSource,
-    device_type: deviceType,
-    user_agent: navigator.userAgent,
-    viewport_width: window.innerWidth,
-    viewport_height: window.innerHeight,
-    first_seen: now,
-    last_seen: now,
-    utm_source: utmParams.utm_source,
-    utm_medium: utmParams.utm_medium,
-    utm_campaign: utmParams.utm_campaign,
-    utm_content: utmParams.utm_content,
-    utm_term: utmParams.utm_term,
-    is_bot: botDetection.isBot,
-    bot_type: botDetection.botType,
-    is_engaged: false,
-    engagement_score: 0,
-    is_bounce: false,
-  }, {
-    onConflict: 'session_id',
-    ignoreDuplicates: false // Update last_seen on conflict
-  });
-  
-  if (error) {
-    console.error('[Analytics] Error initializing session:', error);
-    return; // Don't set flags on error, allow retry
-  }
-  
-  // ONLY set flags after successful database insert
-  sessionInitialized = true;
-  sessionStorage.setItem(sessionInitKey, 'true');
-  
-  // FIX: Store session start time in sessionStorage for persistence across page refreshes
-  sessionStartTime = Date.now();
-  sessionStorage.setItem('analytics_session_start_time', sessionStartTime.toString());
-  lastActivityTime = Date.now();
-  
-  // Initialize session event count for safeguards
-  await initializeSessionEventCount();
-  
-  console.log('[Analytics] Session initialized successfully');
 };
 
 // Update session activity with engagement metrics
+// DEFENSIVE: Wrapped in try-catch to prevent RLS or network errors from crashing the app
 export const updateSessionActivity = async () => {
-  const sessionId = getSessionId();
-  const currentPath = window.location.pathname;
-  
-  const now = Date.now();
-  // FIX: Ensure sessionStartTime is initialized (defensive coding)
-  if (!sessionStartTime) {
-    const storedStartTime = sessionStorage.getItem('analytics_session_start_time');
-    sessionStartTime = storedStartTime ? parseInt(storedStartTime, 10) : now;
+  try {
+    const sessionId = getSessionId();
+    const currentPath = window.location.pathname;
+    
+    const now = Date.now();
+    // FIX: Ensure sessionStartTime is initialized (defensive coding)
+    if (!sessionStartTime) {
+      const storedStartTime = sessionStorage.getItem('analytics_session_start_time');
+      sessionStartTime = storedStartTime ? parseInt(storedStartTime, 10) : now;
+    }
+    
+    const sessionDuration = Math.floor((now - sessionStartTime) / 1000);
+    
+    // Get actual event counts from user_events table for accurate engagement metrics
+    const { data: sessionData, error: sessionError } = await supabase
+      .from('user_sessions')
+      .select('is_bot')
+      .eq('session_id', sessionId)
+      .maybeSingle();
+    
+    if (sessionError) {
+      console.warn('[Analytics] Session read failed (non-blocking):', sessionError.message);
+      return;
+    }
+    
+    if (!sessionData) {
+      console.warn('[Analytics] Session not found during activity update, will be created on next event flush');
+      return;
+    }
+    
+    // Query actual page view count from user_events
+    const { count: actualPageViews, error: pageViewError } = await supabase
+      .from('user_events')
+      .select('*', { count: 'exact', head: true })
+      .eq('session_id', sessionId)
+      .eq('event_type', 'page_view');
+    
+    if (pageViewError) {
+      console.warn('[Analytics] Page view count failed (non-blocking):', pageViewError.message);
+      return;
+    }
+    
+    // Query actual total event count from user_events
+    const { count: actualTotalEvents, error: totalEventsError } = await supabase
+      .from('user_events')
+      .select('*', { count: 'exact', head: true })
+      .eq('session_id', sessionId);
+    
+    if (totalEventsError) {
+      console.warn('[Analytics] Total events count failed (non-blocking):', totalEventsError.message);
+      return;
+    }
+    
+    const pageViews = actualPageViews || 0;
+    const totalEvents = actualTotalEvents || 0;
+    const isBot = sessionData.is_bot || false;
+    
+    const isBounce = isBounceSession(pageViews, sessionDuration);
+    const isEngaged = isEngagedSession(pageViews, sessionDuration, isBounce, isBot);
+    const engagementScore = calculateEngagementScore(pageViews, sessionDuration, totalEvents);
+    
+    console.log('[Analytics] Updating session activity:', {
+      sessionId,
+      sessionDuration,
+      currentPath,
+      pageViews,
+      isEngaged,
+      engagementScore,
+      isBounce
+    });
+    
+    const { error: updateError } = await supabase
+      .from('user_sessions')
+      .update({
+        last_seen: new Date().toISOString(),
+        exit_page: currentPath,
+        session_duration_seconds: sessionDuration,
+        is_bounce: isBounce,
+        is_engaged: isEngaged,
+        engagement_score: engagementScore,
+      })
+      .eq('session_id', sessionId);
+    
+    if (updateError) {
+      console.warn('[Analytics] Session update failed (non-blocking):', updateError.message);
+    }
+    
+    lastActivityTime = now;
+  } catch (err) {
+    // DEFENSIVE: Catch any unexpected errors to prevent app crashes
+    console.warn('[Analytics] Session activity update exception (non-blocking):', err);
+    // App continues to function normally even if analytics fails
   }
-  
-  const sessionDuration = Math.floor((now - sessionStartTime) / 1000);
-  
-  // Get actual event counts from user_events table for accurate engagement metrics
-  const { data: sessionData, error: sessionError } = await supabase
-    .from('user_sessions')
-    .select('is_bot')
-    .eq('session_id', sessionId)
-    .maybeSingle();
-  
-  if (sessionError) {
-    console.error('[Analytics] Error fetching session data:', sessionError);
-    return;
-  }
-  
-  if (!sessionData) {
-    console.warn('[Analytics] Session not found during activity update, will be created on next event flush');
-    return;
-  }
-  
-  // Query actual page view count from user_events
-  const { count: actualPageViews, error: pageViewError } = await supabase
-    .from('user_events')
-    .select('*', { count: 'exact', head: true })
-    .eq('session_id', sessionId)
-    .eq('event_type', 'page_view');
-  
-  if (pageViewError) {
-    console.error('[Analytics] Error counting page views:', pageViewError);
-    return;
-  }
-  
-  // Query actual total event count from user_events
-  const { count: actualTotalEvents, error: totalEventsError } = await supabase
-    .from('user_events')
-    .select('*', { count: 'exact', head: true })
-    .eq('session_id', sessionId);
-  
-  if (totalEventsError) {
-    console.error('[Analytics] Error counting total events:', totalEventsError);
-    return;
-  }
-  
-  const pageViews = actualPageViews || 0;
-  const totalEvents = actualTotalEvents || 0;
-  const isBot = sessionData.is_bot || false;
-  
-  const isBounce = isBounceSession(pageViews, sessionDuration);
-  const isEngaged = isEngagedSession(pageViews, sessionDuration, isBounce, isBot);
-  const engagementScore = calculateEngagementScore(pageViews, sessionDuration, totalEvents);
-  
-  console.log('[Analytics] Updating session activity:', {
-    sessionId,
-    sessionDuration,
-    currentPath,
-    pageViews,
-    isEngaged,
-    engagementScore,
-    isBounce
-  });
-  
-  const { error: updateError } = await supabase
-    .from('user_sessions')
-    .update({
-      last_seen: new Date().toISOString(),
-      exit_page: currentPath,
-      session_duration_seconds: sessionDuration,
-      is_bounce: isBounce,
-      is_engaged: isEngaged,
-      engagement_score: engagementScore,
-    })
-    .eq('session_id', sessionId);
-  
-  if (updateError) {
-    console.error('[Analytics] Error updating session activity:', updateError);
-  }
-  
-  lastActivityTime = now;
 };
 
 // Track individual events with safeguards
