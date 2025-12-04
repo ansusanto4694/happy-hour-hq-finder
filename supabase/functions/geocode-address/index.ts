@@ -26,6 +26,66 @@ serve(async (req) => {
   }
 
   try {
+    // Initialize Supabase client for database updates
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    // Verify JWT and get user
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      console.error('No authorization header provided');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Authorization required' }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    // Get the user from the JWT token
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userError } = await createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+    ).auth.getUser(token);
+
+    if (userError || !user) {
+      console.error('Invalid token or user not found:', userError);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid authorization token' }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    console.log(`User ${user.id} attempting geocode operation`);
+
+    // Check if the user has admin role
+    const { data: roleData, error: roleError } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .single();
+
+    if (roleError || !roleData) {
+      console.error(`User ${user.id} is not an admin:`, roleError);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Admin access required' }),
+        {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    console.log(`Admin user ${user.id} authorized for geocoding`);
+
     const { address, merchantId }: GeocodeRequest = await req.json();
     
     if (!address) {
@@ -37,12 +97,6 @@ serve(async (req) => {
         }
       );
     }
-
-    // Initialize Supabase client for database updates
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
 
     const mapboxToken = Deno.env.get('MAPBOX_ACCESS_TOKEN');
     if (!mapboxToken) {
@@ -131,7 +185,7 @@ serve(async (req) => {
             );
           }
           
-          console.log(`Successfully updated merchant ${merchantId} with coordinates`);
+          console.log(`Successfully updated merchant ${merchantId} with coordinates by admin ${user.id}`);
         } catch (dbError) {
           console.error(`Database error for merchant ${merchantId}:`, dbError);
           return new Response(
