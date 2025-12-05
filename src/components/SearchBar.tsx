@@ -201,7 +201,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
   const handleSearchKeyDown = (e: React.KeyboardEvent) => {
     if (!showSearchSuggestions || searchSuggestions.length === 0) {
       if (e.key === 'Enter') {
-        handleSearch(false);
+        handleSearch();
       }
       return;
     }
@@ -224,9 +224,10 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
         if (selectedSearchIndex >= 0) {
           const selectedSuggestion = searchSuggestions[selectedSearchIndex];
           selectSearchSuggestion(selectedSuggestion, selectedSearchIndex);
-          handleSearch(true, selectedSuggestion.displayValue);
+          // Pass the selected value directly to avoid race condition
+          handleSearch({ searchTermOverride: selectedSuggestion.displayValue, usedSuggestion: true });
         } else {
-          handleSearch(false);
+          handleSearch();
         }
         break;
       case 'Escape':
@@ -350,35 +351,38 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
   // Track GPS coordinates when using locate me
   const [gpsCoordinates, setGpsCoordinates] = useState<{lat: number; lng: number} | null>(null);
 
-  const handleSearch = (selectedViaSuggestion: boolean | string = false, overrideSearchTerm?: string) => {
-    // Use override if provided, otherwise use state
-    const effectiveSearchTerm = overrideSearchTerm ?? searchTerm;
+  // Robust search handler that always uses explicit parameters to avoid race conditions
+  const handleSearch = (options: { searchTermOverride?: string; locationOverride?: string; usedSuggestion?: boolean } = {}) => {
+    // ALWAYS use overrides if provided, otherwise fall back to current state
+    const effectiveSearchTerm = options.searchTermOverride ?? searchTerm;
+    const effectiveLocation = options.locationOverride ?? location;
+    const usedSuggestion = options.usedSuggestion ?? false;
     
     // Build the full query string for analytics
-    const fullQuery = [effectiveSearchTerm, location].filter(Boolean).join(' in ');
-    const queryType = effectiveSearchTerm && location ? 'full_query' : 
+    const fullQuery = [effectiveSearchTerm, effectiveLocation].filter(Boolean).join(' in ');
+    const queryType = effectiveSearchTerm && effectiveLocation ? 'full_query' : 
                       effectiveSearchTerm ? 'search_term_only' : 
-                      location ? 'location_only' : 'empty_search';
+                      effectiveLocation ? 'location_only' : 'empty_search';
     
     // Track search submission (non-blocking) with enhanced query tracking
     track({
       eventType: 'click',
       eventCategory: 'search',
-      eventAction: typeof selectedViaSuggestion === 'boolean' && selectedViaSuggestion ? 'search_with_suggestion' : 'search_manual',
+      eventAction: usedSuggestion ? 'search_with_suggestion' : 'search_manual',
       searchTerm: effectiveSearchTerm || undefined,
-      locationQuery: location || undefined,
+      locationQuery: effectiveLocation || undefined,
       metadata: {
         fullQuery: fullQuery || 'empty_search',
         queryType: queryType,
         searchTermLength: effectiveSearchTerm.length,
-        locationLength: location.length,
+        locationLength: effectiveLocation.length,
         hasSearchTerm: !!effectiveSearchTerm,
-        hasLocation: !!location,
+        hasLocation: !!effectiveLocation,
         useGPS: !!gpsCoordinates,
         variant: variant,
         hadSuggestions: searchSuggestions.length > 0,
         suggestionCount: searchSuggestions.length,
-        usedSuggestion: typeof selectedViaSuggestion === 'boolean' && selectedViaSuggestion,
+        usedSuggestion: usedSuggestion,
         timestamp: new Date().toISOString()
       },
     });
@@ -392,7 +396,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
     // Create URL search parameters
     const params = new URLSearchParams();
     if (effectiveSearchTerm) params.set('search', effectiveSearchTerm);
-    if (location) params.set('location', location);
+    if (effectiveLocation) params.set('location', effectiveLocation);
     
     // If we have GPS coordinates from locate me, include them
     if (gpsCoordinates) {
@@ -500,7 +504,8 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                     }`}
                     onClick={() => {
                       selectSearchSuggestion(suggestion, index);
-                      handleSearch(true, suggestion.displayValue);
+                      // Pass the selected value directly to avoid race condition
+                      handleSearch({ searchTermOverride: suggestion.displayValue, usedSuggestion: true });
                     }}
                   >
                     <span className="text-sm font-medium text-gray-900">
@@ -643,7 +648,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
           
           {/* Search button */}
           <Button
-            onClick={() => handleSearch(false)}
+            onClick={() => handleSearch()}
             className="w-full py-4 text-lg font-semibold rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white transition-all duration-200 shadow-lg hover:shadow-xl"
           >
             Search
@@ -724,7 +729,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                     }`}
                     onClick={() => {
                       selectSearchSuggestion(suggestion, index);
-                      handleSearch(true, suggestion.displayValue);
+                      handleSearch({ searchTermOverride: suggestion.displayValue, usedSuggestion: true });
                     }}
                   >
                     <span className="text-sm font-medium text-gray-900">
@@ -869,7 +874,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
           
           {/* Search button */}
           <Button
-            onClick={() => handleSearch(false)}
+            onClick={() => handleSearch()}
             className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-8 h-14 text-base font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center"
           >
             Search
