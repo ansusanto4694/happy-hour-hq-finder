@@ -222,8 +222,9 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
       case 'Enter':
         e.preventDefault();
         if (selectedSearchIndex >= 0) {
-          selectSearchSuggestion(searchSuggestions[selectedSearchIndex], selectedSearchIndex);
-          handleSearch(true);
+          const selectedSuggestion = searchSuggestions[selectedSearchIndex];
+          selectSearchSuggestion(selectedSuggestion, selectedSearchIndex);
+          handleSearch(true, selectedSuggestion.displayValue);
         } else {
           handleSearch(false);
         }
@@ -349,32 +350,35 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
   // Track GPS coordinates when using locate me
   const [gpsCoordinates, setGpsCoordinates] = useState<{lat: number; lng: number} | null>(null);
 
-  const handleSearch = (selectedViaSuggestion = false) => {
+  const handleSearch = (selectedViaSuggestion: boolean | string = false, overrideSearchTerm?: string) => {
+    // Use override if provided, otherwise use state
+    const effectiveSearchTerm = overrideSearchTerm ?? searchTerm;
+    
     // Build the full query string for analytics
-    const fullQuery = [searchTerm, location].filter(Boolean).join(' in ');
-    const queryType = searchTerm && location ? 'full_query' : 
-                      searchTerm ? 'search_term_only' : 
+    const fullQuery = [effectiveSearchTerm, location].filter(Boolean).join(' in ');
+    const queryType = effectiveSearchTerm && location ? 'full_query' : 
+                      effectiveSearchTerm ? 'search_term_only' : 
                       location ? 'location_only' : 'empty_search';
     
     // Track search submission (non-blocking) with enhanced query tracking
     track({
       eventType: 'click',
       eventCategory: 'search',
-      eventAction: selectedViaSuggestion ? 'search_with_suggestion' : 'search_manual',
-      searchTerm: searchTerm || undefined,
+      eventAction: typeof selectedViaSuggestion === 'boolean' && selectedViaSuggestion ? 'search_with_suggestion' : 'search_manual',
+      searchTerm: effectiveSearchTerm || undefined,
       locationQuery: location || undefined,
       metadata: {
         fullQuery: fullQuery || 'empty_search',
         queryType: queryType,
-        searchTermLength: searchTerm.length,
+        searchTermLength: effectiveSearchTerm.length,
         locationLength: location.length,
-        hasSearchTerm: !!searchTerm,
+        hasSearchTerm: !!effectiveSearchTerm,
         hasLocation: !!location,
         useGPS: !!gpsCoordinates,
         variant: variant,
         hadSuggestions: searchSuggestions.length > 0,
         suggestionCount: searchSuggestions.length,
-        usedSuggestion: selectedViaSuggestion,
+        usedSuggestion: typeof selectedViaSuggestion === 'boolean' && selectedViaSuggestion,
         timestamp: new Date().toISOString()
       },
     });
@@ -387,7 +391,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
     
     // Create URL search parameters
     const params = new URLSearchParams();
-    if (searchTerm) params.set('search', searchTerm);
+    if (effectiveSearchTerm) params.set('search', effectiveSearchTerm);
     if (location) params.set('location', location);
     
     // If we have GPS coordinates from locate me, include them
@@ -496,7 +500,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                     }`}
                     onClick={() => {
                       selectSearchSuggestion(suggestion, index);
-                      handleSearch(true);
+                      handleSearch(true, suggestion.displayValue);
                     }}
                   >
                     <span className="text-sm font-medium text-gray-900">
@@ -720,7 +724,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                     }`}
                     onClick={() => {
                       selectSearchSuggestion(suggestion, index);
-                      handleSearch(true);
+                      handleSearch(true, suggestion.displayValue);
                     }}
                   >
                     <span className="text-sm font-medium text-gray-900">
