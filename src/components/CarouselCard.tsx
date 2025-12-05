@@ -13,6 +13,7 @@ interface CarouselCardProps {
     restaurant_name: string;
     logo_url?: string | null;
     neighborhood?: string | null;
+    slug?: string | null;
     merchant_happy_hour?: Array<{
       day_of_week: number;
       happy_hour_start: string;
@@ -48,7 +49,9 @@ export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick })
       stepOrder: 4
     });
     
-    navigate(`/restaurant/${merchant.id}`);
+    // Use slug if available, fallback to ID
+    const urlIdentifier = merchant.slug || merchant.id.toString();
+    navigate(`/restaurant/${urlIdentifier}`);
   };
 
   return (

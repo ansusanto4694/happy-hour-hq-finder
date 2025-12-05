@@ -1,6 +1,6 @@
 
 import React, { useEffect, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -73,16 +73,21 @@ const generateRestaurantStructuredData = (restaurant: any) => {
   // Combine all offers
   const allOffers = [...happyHourOffers, ...dealOffers];
 
+  // Use slug for canonical URLs, fallback to ID
+  const restaurantUrl = restaurant.slug 
+    ? `https://sipmunchyap.com/restaurant/${restaurant.slug}`
+    : `https://sipmunchyap.com/restaurant/${restaurant.id}`;
+
   // Base Restaurant & LocalBusiness schema
   const baseSchema: any = {
     "@context": "https://schema.org",
     "@type": ["Restaurant", "LocalBusiness", "BarOrPub"],
-    "@id": `https://sipmunchyap.com/restaurant/${restaurant.id}`,
+    "@id": restaurantUrl,
     "name": restaurant.restaurant_name,
     "description": `${restaurant.restaurant_name} in ${restaurant.city}, ${restaurant.state}. Find happy hour specials, deals, and drink offers.`,
     "address": address,
     "geo": geo,
-    "url": `https://sipmunchyap.com/restaurant/${restaurant.id}`,
+    "url": restaurantUrl,
     "image": restaurant.logo_url || "https://lovable.dev/opengraph-image-p98pqg.png",
     "priceRange": "$$",
     "servesCuisine": cuisineTypes.length > 0 ? cuisineTypes : ["American"],
@@ -147,7 +152,9 @@ const generateBreadcrumbStructuredData = (restaurant: any) => {
         "@type": "ListItem",
         "position": 3,
         "name": restaurant.restaurant_name,
-        "item": `https://sipmunchyap.com/restaurant/${restaurant.id}`
+        "item": restaurant.slug 
+          ? `https://sipmunchyap.com/restaurant/${restaurant.slug}`
+          : `https://sipmunchyap.com/restaurant/${restaurant.id}`
       }
     ]
   };
@@ -156,53 +163,18 @@ const generateBreadcrumbStructuredData = (restaurant: any) => {
 const RestaurantProfile = () => {
   const { id } = useParams();
   const { track } = useAnalytics();
+  const navigate = useNavigate();
   
-  useEffect(() => {
-    if (id) {
-      const merchantId = parseInt(id, 10);
-      trackFunnelStep({ funnelStep: 'profile_viewed', merchantId, stepOrder: 5 });
-    }
-  }, [id]);
+  // Determine if the param is a numeric ID or a slug
+  const isNumericId = id ? /^\d+$/.test(id) : false;
 
-  // Track scroll depth
-  useEffect(() => {
-    const scrollDepths = [25, 50, 75, 100];
-    const tracked = new Set<number>();
-    
-    const handleScroll = () => {
-      const windowHeight = window.innerHeight;
-      const documentHeight = document.documentElement.scrollHeight - windowHeight;
-      const scrollTop = window.scrollY;
-      const scrollPercent = (scrollTop / documentHeight) * 100;
-      
-      scrollDepths.forEach(depth => {
-        if (scrollPercent >= depth && !tracked.has(depth)) {
-          tracked.add(depth);
-          track({
-            eventType: 'scroll',
-            eventCategory: 'restaurant_profile',
-            eventAction: 'scroll_depth',
-            eventLabel: `${depth}%`,
-            merchantId: id ? parseInt(id, 10) : undefined,
-            metadata: { scroll_depth: depth }
-          });
-        }
-      });
-    };
-    
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [id, track]);
   
   const { data: restaurant, isLoading, error } = useQuery({
     queryKey: ['restaurant', id],
     queryFn: async () => {
-      if (!id) throw new Error('Restaurant ID is required');
+      if (!id) throw new Error('Restaurant identifier is required');
       
-      const restaurantId = parseInt(id, 10);
-      if (isNaN(restaurantId)) throw new Error('Invalid restaurant ID');
-      
-      const { data, error } = await supabase
+      let query = supabase
         .from('Merchant')
         .select(`
           *,
@@ -227,9 +199,17 @@ const RestaurantProfile = () => {
             deal_description,
             active
           )
-        `)
-        .eq('id', restaurantId)
-        .maybeSingle();
+        `);
+      
+      // Query by ID if numeric, otherwise by slug
+      if (isNumericId) {
+        const restaurantId = parseInt(id, 10);
+        query = query.eq('id', restaurantId);
+      } else {
+        query = query.eq('slug', id);
+      }
+      
+      const { data, error } = await query.maybeSingle();
 
       if (error) {
         console.error('Error fetching restaurant:', error);
@@ -240,6 +220,51 @@ const RestaurantProfile = () => {
     },
     enabled: !!id,
   });
+  
+  // 301 redirect from numeric ID to slug URL
+  useEffect(() => {
+    if (isNumericId && restaurant?.slug) {
+      // Replace current URL with slug URL (acts as 301 for SEO)
+      navigate(`/restaurant/${restaurant.slug}`, { replace: true });
+    }
+  }, [isNumericId, restaurant?.slug, navigate]);
+  
+  // Track funnel step after we have the restaurant data
+  useEffect(() => {
+    if (restaurant?.id) {
+      trackFunnelStep({ funnelStep: 'profile_viewed', merchantId: restaurant.id, stepOrder: 5 });
+    }
+  }, [restaurant?.id]);
+
+  // Track scroll depth
+  useEffect(() => {
+    const scrollDepths = [25, 50, 75, 100];
+    const tracked = new Set<number>();
+    
+    const handleScroll = () => {
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight - windowHeight;
+      const scrollTop = window.scrollY;
+      const scrollPercent = (scrollTop / documentHeight) * 100;
+      
+      scrollDepths.forEach(depth => {
+        if (scrollPercent >= depth && !tracked.has(depth)) {
+          tracked.add(depth);
+          track({
+            eventType: 'scroll',
+            eventCategory: 'restaurant_profile',
+            eventAction: 'scroll_depth',
+            eventLabel: `${depth}%`,
+            merchantId: restaurant?.id,
+            metadata: { scroll_depth: depth }
+          });
+        }
+      });
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [restaurant?.id, track]);
 
   const structuredData = useMemo(() => {
     if (!restaurant) return null;
@@ -279,7 +304,7 @@ const RestaurantProfile = () => {
         title={`${restaurant.restaurant_name} - Happy Hour in ${restaurant.city}, ${restaurant.state}`}
         description={`Find happy hour deals and specials at ${restaurant.restaurant_name} in ${restaurant.city}. Check hours, menu, and location details.`}
         keywords={`${restaurant.restaurant_name}, happy hour, ${restaurant.city} bars, ${restaurant.city} restaurants, drink specials`}
-        canonical={`https://sipmunchyap.com/restaurant/${restaurant.id}`}
+        canonical={`https://sipmunchyap.com/restaurant/${restaurant.slug || restaurant.id}`}
         ogImage={restaurant.logo_url || "https://lovable.dev/opengraph-image-p98pqg.png"}
         structuredData={structuredData}
       />

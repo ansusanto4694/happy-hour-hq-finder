@@ -145,7 +145,11 @@ export const HomepageCarousel: React.FC<HomepageCarouselProps> = ({ carousel }) 
             <CarouselItem key={merchantData.id} className="pl-3 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4 2xl:basis-1/5">
               <CarouselCard
                 merchant={merchantData.merchant}
-                onClick={(merchantId) => navigate(`/restaurant/${merchantId}`)}
+                onClick={(merchantId) => {
+                  // Use slug if available, fallback to ID
+                  const urlIdentifier = merchantData.merchant.slug || merchantId;
+                  navigate(`/restaurant/${urlIdentifier}`);
+                }}
               />
             </CarouselItem>
           ))}

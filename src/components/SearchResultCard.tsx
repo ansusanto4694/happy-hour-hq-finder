@@ -10,7 +10,7 @@ import { FavoriteButton } from '@/components/FavoriteButton';
 
 interface SearchResultCardProps {
   restaurant: any;
-  onClick: (restaurantId: number) => void;
+  onClick: (restaurantId: number, slug?: string | null) => void;
   isMobile?: boolean;
   onHover?: (restaurantId: number | null) => void;
 }
@@ -112,7 +112,8 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
       stepOrder: 4
     });
     
-    onClick(restaurant.id);
+    // Pass slug as second argument if available
+    onClick(restaurant.id, restaurant.slug);
   };
 
   const handleHover = async () => {
