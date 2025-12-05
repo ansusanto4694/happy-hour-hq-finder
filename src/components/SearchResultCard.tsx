@@ -1,8 +1,8 @@
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Store } from 'lucide-react';
+import { Store, Star } from 'lucide-react';
 import { getTodaysHappyHour, getAllTodaysHappyHours, getMenuTypeBadge } from '@/utils/timeUtils';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { getDeviceType } from '@/utils/analytics';
@@ -24,6 +24,29 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
   const { track, trackFunnel } = useAnalytics();
   const cardRef = useRef<HTMLDivElement>(null);
   const [hasTrackedImpression, setHasTrackedImpression] = useState(false);
+
+  // Calculate aggregate rating from reviews
+  const ratingData = useMemo(() => {
+    const reviews = restaurant.merchant_reviews?.filter((r: any) => r.status === 'published') || [];
+    if (reviews.length === 0) return null;
+    
+    let totalSum = 0;
+    let totalCount = 0;
+    
+    reviews.forEach((review: any) => {
+      review.merchant_review_ratings?.forEach((r: { rating: number }) => {
+        totalSum += r.rating;
+        totalCount += 1;
+      });
+    });
+    
+    if (totalCount === 0) return null;
+    
+    return {
+      average: totalSum / totalCount,
+      reviewCount: reviews.length
+    };
+  }, [restaurant.merchant_reviews]);
 
   // Check if merchant has active offers that haven't expired
   const now = new Date();
@@ -146,9 +169,18 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
                   <h3 className="text-xl font-bold text-gray-900 break-words leading-snug">
                     {restaurant.restaurant_name}
                   </h3>
-                  <p className="text-sm text-gray-600 break-words leading-tight font-medium">
-                    {restaurant.neighborhood || restaurant.city}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm text-gray-600 break-words leading-tight font-medium">
+                      {restaurant.neighborhood || restaurant.city}
+                    </p>
+                    {ratingData && (
+                      <div className="flex items-center gap-1">
+                        <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                        <span className="text-sm font-semibold">{ratingData.average.toFixed(1)}</span>
+                        <span className="text-xs text-muted-foreground">({ratingData.reviewCount})</span>
+                      </div>
+                    )}
+                  </div>
                   {restaurant.phone_number && (
                     <p className="text-sm text-gray-500 leading-tight">
                       {restaurant.phone_number}
@@ -250,9 +282,18 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
                   <h3 className="text-xl font-bold text-gray-900 break-words leading-snug">
                     {restaurant.restaurant_name}
                   </h3>
-                  <p className="text-gray-600 text-sm break-words leading-tight font-medium">
-                    {restaurant.neighborhood || restaurant.city}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-gray-600 text-sm break-words leading-tight font-medium">
+                      {restaurant.neighborhood || restaurant.city}
+                    </p>
+                    {ratingData && (
+                      <div className="flex items-center gap-1">
+                        <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                        <span className="text-sm font-semibold">{ratingData.average.toFixed(1)}</span>
+                        <span className="text-xs text-muted-foreground">({ratingData.reviewCount})</span>
+                      </div>
+                    )}
+                  </div>
                   {restaurant.phone_number && (
                     <p className="text-gray-500 text-sm leading-tight">
                       {restaurant.phone_number}
@@ -338,6 +379,7 @@ export const SearchResultCard = React.memo(SearchResultCardComponent, (prevProps
     prevProps.onHover === nextProps.onHover &&
     JSON.stringify(prevProps.restaurant.merchant_offers) === JSON.stringify(nextProps.restaurant.merchant_offers) &&
     JSON.stringify(prevProps.restaurant.merchant_categories) === JSON.stringify(nextProps.restaurant.merchant_categories) &&
-    JSON.stringify(prevProps.restaurant.merchant_happy_hour) === JSON.stringify(nextProps.restaurant.merchant_happy_hour)
+    JSON.stringify(prevProps.restaurant.merchant_happy_hour) === JSON.stringify(nextProps.restaurant.merchant_happy_hour) &&
+    JSON.stringify(prevProps.restaurant.merchant_reviews) === JSON.stringify(nextProps.restaurant.merchant_reviews)
   );
 });
