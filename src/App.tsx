@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { trackPageView } from "@/utils/analytics";
 import { initPerformanceMonitoring } from "@/utils/performanceMonitoring";
@@ -64,6 +64,7 @@ const RouteTracker = () => {
 // This handles edge cases where the Lovable preview iframe encodes query params incorrectly
 const URLSanitizer = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   
   useEffect(() => {
     const { pathname, search, hash } = location;
@@ -76,23 +77,36 @@ const URLSanitizer = () => {
       
       if (questionMarkIndex !== -1) {
         const actualPath = decodedPath.substring(0, questionMarkIndex);
-        const queryString = decodedPath.substring(questionMarkIndex);
+        const encodedQueryString = decodedPath.substring(questionMarkIndex + 1); // Skip the ?
         
-        // Construct the correct URL
-        const correctedUrl = actualPath + queryString + (search ? '&' + search.substring(1) : '') + hash;
+        // Parse the encoded query params and merge with existing search params
+        const encodedParams = new URLSearchParams(encodedQueryString);
+        const existingParams = new URLSearchParams(search);
+        
+        // Merge params, with encoded params taking priority (they're the intended ones)
+        const mergedParams = new URLSearchParams();
+        encodedParams.forEach((value, key) => mergedParams.set(key, value));
+        // Add existing params that aren't duplicates (like __lovable_token)
+        existingParams.forEach((value, key) => {
+          if (!mergedParams.has(key)) {
+            mergedParams.set(key, value);
+          }
+        });
+        
+        // Construct the correct URL for React Router navigation
+        const correctedUrl = actualPath + '?' + mergedParams.toString() + hash;
         
         console.log('[URLSanitizer] Fixing malformed URL:', {
           original: pathname + search,
           corrected: correctedUrl
         });
         
-        // Replace the current URL with the correct one
-        window.history.replaceState(null, '', correctedUrl);
-        // Force a page reload to pick up the corrected URL
-        window.location.reload();
+        // Use React Router navigate with replace to avoid infinite loops
+        // This stays within the SPA and doesn't trigger a full page reload
+        navigate(correctedUrl, { replace: true });
       }
     }
-  }, [location.pathname]);
+  }, [location.pathname, navigate]);
   
   return null;
 };
