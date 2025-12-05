@@ -5,7 +5,7 @@ import { useAnalytics } from '@/hooks/useAnalytics';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Share, Utensils, PenLine } from 'lucide-react';
+import { Share, Utensils, PenLine, Star } from 'lucide-react';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { RestaurantBasicInfo } from '@/components/RestaurantBasicInfo';
 import { RestaurantContactInfo } from '@/components/RestaurantContactInfo';
@@ -18,6 +18,7 @@ import { MerchantOffersSection } from '@/components/merchant-offers/MerchantOffe
 import { MerchantReviews } from '@/components/MerchantReviews';
 import { MobileCTABar } from '@/components/MobileCTABar';
 import { useMerchantOffers } from '@/hooks/useMerchantOffers';
+import { useMerchantRating } from '@/hooks/useMerchantRating';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -59,6 +60,7 @@ interface RestaurantProfileContentProps {
 export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> = ({ restaurant }) => {
   const { isAdmin } = useAuth();
   const { data: offers } = useMerchantOffers(restaurant.id);
+  const { data: ratingData } = useMerchantRating(restaurant.id);
   const { toast } = useToast();
   const isMobile = useIsMobile();
   
@@ -113,6 +115,17 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
               {/* Centered Restaurant Name - text-2xl */}
               <h1 className="text-2xl font-bold text-foreground">{restaurant.restaurant_name}</h1>
 
+              {/* Rating Display */}
+              {ratingData?.overallAverage !== null && ratingData?.overallAverage !== undefined && (
+                <div className="flex items-center gap-2">
+                  <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
+                  <span className="text-xl font-bold">{ratingData.overallAverage.toFixed(1)}</span>
+                  <span className="text-sm text-muted-foreground">
+                    ({ratingData.reviewCount} {ratingData.reviewCount === 1 ? 'review' : 'reviews'})
+                  </span>
+                </div>
+              )}
+
               {/* Centered Category Badges with Icons */}
               {restaurant.merchant_categories && restaurant.merchant_categories.length > 0 && (
                 <div className="flex flex-wrap justify-center gap-2">
@@ -156,7 +169,18 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
                       <span className="text-gray-400 text-xs font-medium">LOGO</span>
                     )}
                   </div>
-                  <h1 className="text-3xl font-bold text-gray-900">{restaurant.restaurant_name}</h1>
+                  <div>
+                    <h1 className="text-3xl font-bold text-gray-900">{restaurant.restaurant_name}</h1>
+                    {ratingData?.overallAverage !== null && ratingData?.overallAverage !== undefined && (
+                      <div className="flex items-center gap-2 mt-1">
+                        <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
+                        <span className="text-lg font-bold">{ratingData.overallAverage.toFixed(1)}</span>
+                        <span className="text-sm text-muted-foreground">
+                          ({ratingData.reviewCount} {ratingData.reviewCount === 1 ? 'review' : 'reviews'})
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
