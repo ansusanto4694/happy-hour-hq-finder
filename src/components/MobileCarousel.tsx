@@ -64,7 +64,7 @@ export const MobileCarousel: React.FC<MobileCarouselProps> = ({ carousel }) => {
         <MobileCarouselCard
           key={item.merchant.id}
           merchant={item.merchant}
-          onClick={() => handleRestaurantClick(item.merchant.id)}
+          onClick={() => handleRestaurantClick(item.merchant.id, item.merchant.slug)}
         />
       ))}
       </div>

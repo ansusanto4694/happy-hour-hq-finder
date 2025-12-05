@@ -33,7 +33,23 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
       let query = supabase
         .from('Merchant')
         .select(`
-          *,
+          id,
+          restaurant_name,
+          street_address,
+          street_address_line_2,
+          city,
+          state,
+          zip_code,
+          phone_number,
+          website,
+          latitude,
+          longitude,
+          logo_url,
+          neighborhood,
+          slug,
+          is_active,
+          created_at,
+          updated_at,
           merchant_happy_hour (
             id,
             day_of_week,

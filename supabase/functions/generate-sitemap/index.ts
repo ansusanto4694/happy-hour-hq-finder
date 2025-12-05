@@ -12,6 +12,7 @@ interface Merchant {
   city: string;
   state: string;
   neighborhood: string | null;
+  slug: string | null;
 }
 
 function slugify(text: string): string {
@@ -32,12 +33,12 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log('Generating dynamic sitemap...');
+    console.log('Generating dynamic sitemap with SEO-friendly slugs...');
 
-    // Fetch all active merchants with neighborhoods
+    // Fetch all active merchants with neighborhoods and slugs
     const { data: merchants, error } = await supabase
       .from('Merchant')
-      .select('id, restaurant_name, updated_at, city, state, neighborhood')
+      .select('id, restaurant_name, updated_at, city, state, neighborhood, slug')
       .eq('is_active', true)
       .order('updated_at', { ascending: false });
 
@@ -113,15 +114,18 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Add restaurant pages
+    // Add restaurant pages using SEO-friendly slugs
     if (merchants && merchants.length > 0) {
       for (const merchant of merchants) {
         const lastmod = merchant.updated_at 
           ? new Date(merchant.updated_at).toISOString().split('T')[0]
           : currentDate;
         
+        // Use slug if available, fallback to ID
+        const urlIdentifier = merchant.slug || merchant.id.toString();
+        
         sitemap += '  <url>\n';
-        sitemap += `    <loc>https://sipmunchyap.com/restaurant/${merchant.id}</loc>\n`;
+        sitemap += `    <loc>https://sipmunchyap.com/restaurant/${urlIdentifier}</loc>\n`;
         sitemap += `    <lastmod>${lastmod}</lastmod>\n`;
         sitemap += `    <changefreq>weekly</changefreq>\n`;
         sitemap += `    <priority>0.8</priority>\n`;
@@ -132,7 +136,7 @@ Deno.serve(async (req) => {
     // Close the sitemap
     sitemap += '</urlset>';
 
-    console.log('Sitemap generated successfully');
+    console.log('Sitemap generated successfully with SEO-friendly slugs');
 
     // Return the sitemap with proper XML content type
     return new Response(sitemap, {

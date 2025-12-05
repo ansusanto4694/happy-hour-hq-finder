@@ -11,6 +11,7 @@ interface MobileCarouselCardProps {
     restaurant_name: string;
     logo_url?: string | null;
     neighborhood?: string | null;
+    slug?: string | null;
     merchant_happy_hour?: Array<{
       day_of_week: number;
       happy_hour_start: string;
