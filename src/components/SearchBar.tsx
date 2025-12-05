@@ -176,6 +176,13 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
 
   // Handle search term suggestion selection
   const selectSearchSuggestion = (suggestion: { value: string; displayValue: string; type: string }, position: number) => {
+    console.log('[Search] Suggestion selected:', {
+      suggestion,
+      position,
+      previousSearchTerm: searchTerm,
+      totalSuggestions: searchSuggestions.length
+    });
+    
     track({
       eventType: 'click',
       eventCategory: 'search',
@@ -201,6 +208,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
   const handleSearchKeyDown = (e: React.KeyboardEvent) => {
     if (!showSearchSuggestions || searchSuggestions.length === 0) {
       if (e.key === 'Enter') {
+        console.log('[Search] Enter pressed (no suggestions visible):', { searchTerm });
         handleSearch();
       }
       return;
@@ -223,10 +231,16 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
         e.preventDefault();
         if (selectedSearchIndex >= 0) {
           const selectedSuggestion = searchSuggestions[selectedSearchIndex];
+          console.log('[Search] Enter pressed with suggestion selected:', {
+            selectedSearchIndex,
+            selectedSuggestion,
+            willPassOverride: selectedSuggestion.displayValue
+          });
           selectSearchSuggestion(selectedSuggestion, selectedSearchIndex);
           // Pass the selected value directly to avoid race condition
           handleSearch({ searchTermOverride: selectedSuggestion.displayValue, usedSuggestion: true });
         } else {
+          console.log('[Search] Enter pressed (no suggestion highlighted):', { searchTerm });
           handleSearch();
         }
         break;
@@ -358,6 +372,18 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
     const effectiveLocation = options.locationOverride ?? location;
     const usedSuggestion = options.usedSuggestion ?? false;
     
+    // Debug logging for search flow
+    console.log('[Search] handleSearch called:', {
+      options,
+      effectiveSearchTerm,
+      effectiveLocation,
+      usedSuggestion,
+      stateSearchTerm: searchTerm,
+      stateLocation: location,
+      hasGpsCoordinates: !!gpsCoordinates,
+      variant
+    });
+    
     // Build the full query string for analytics
     const fullQuery = [effectiveSearchTerm, effectiveLocation].filter(Boolean).join(' in ');
     const queryType = effectiveSearchTerm && effectiveLocation ? 'full_query' : 
@@ -405,8 +431,17 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
       params.set('useGPS', 'true');
     }
     
+    const targetUrl = `/results?${params.toString()}`;
+    
+    // Debug logging before navigation
+    console.log('[Search] Navigating to:', {
+      targetUrl,
+      params: Object.fromEntries(params.entries()),
+      paramsString: params.toString()
+    });
+    
     // Navigate immediately without waiting for analytics
-    navigate(`/results?${params.toString()}`);
+    navigate(targetUrl);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -503,6 +538,11 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                       index === selectedSearchIndex ? 'bg-blue-50 border-blue-200' : ''
                     }`}
                     onClick={() => {
+                      console.log('[Search] Suggestion clicked (hero variant):', {
+                        suggestion,
+                        index,
+                        willPassOverride: suggestion.displayValue
+                      });
                       selectSearchSuggestion(suggestion, index);
                       // Pass the selected value directly to avoid race condition
                       handleSearch({ searchTermOverride: suggestion.displayValue, usedSuggestion: true });
@@ -728,6 +768,11 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                       index === selectedSearchIndex ? 'bg-blue-50 border-blue-200' : ''
                     }`}
                     onClick={() => {
+                      console.log('[Search] Suggestion clicked (results variant):', {
+                        suggestion,
+                        index,
+                        willPassOverride: suggestion.displayValue
+                      });
                       selectSearchSuggestion(suggestion, index);
                       handleSearch({ searchTermOverride: suggestion.displayValue, usedSuggestion: true });
                     }}
