@@ -1,5 +1,5 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useMemo, useState, useLayoutEffect, useEffect } from 'react';
+import { useMemo, useState, useLayoutEffect } from 'react';
 import { SEOHead } from '@/components/SEOHead';
 import { useMerchants } from '@/hooks/useMerchants';
 import { SearchResultCard } from '@/components/SearchResultCard';
@@ -12,6 +12,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { ViewToggle } from '@/components/ViewToggle';
 import { LazyResultsMap } from '@/components/LazyResultsMap';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import NotFound from '@/pages/NotFound';
 
 // Location landing page with analytics tracking
 
@@ -159,6 +160,12 @@ export const LocationLanding = () => {
     setMapViewState(viewState);
   };
 
+  // Return 404 for invalid city/neighborhood combinations
+  // This tells search engines this page doesn't exist
+  if (isInvalidLocation) {
+    return <NotFound />;
+  }
+
   return (
     <>
       <SEOHead
@@ -167,6 +174,7 @@ export const LocationLanding = () => {
         keywords={keywords}
         canonical={`https://sipmunchyap.com/happy-hour/${citySlug}${neighborhoodSlug ? '/' + neighborhoodSlug : ''}`}
         structuredData={structuredData}
+        noIndex={isInvalidLocation}
       />
       
       <div className="min-h-screen bg-background">
