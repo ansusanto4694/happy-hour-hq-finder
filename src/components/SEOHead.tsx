@@ -18,7 +18,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
   description = "Discover amazing happy hour deals, great drinks, and perfect spots to unwind after work. Find the best happy hours near you!",
   keywords = "happy hour, drinks, bars, restaurants, deals, food, nightlife",
   canonical,
-  ogImage = "https://lovable.dev/opengraph-image-p98pqg.png",
+  ogImage = "https://sipmunchyap.com/og-image.png",
   location,
   businessType = 'happy_hour',
   structuredData,

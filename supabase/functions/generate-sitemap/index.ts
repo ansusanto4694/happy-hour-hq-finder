@@ -74,6 +74,22 @@ Deno.serve(async (req) => {
     let sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n';
     sitemap += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
 
+    // Add core static pages
+    const staticPages = [
+      { loc: 'https://sipmunchyap.com/', priority: '1.0', changefreq: 'daily' },
+      { loc: 'https://sipmunchyap.com/about', priority: '0.7', changefreq: 'monthly' },
+      { loc: 'https://sipmunchyap.com/contact', priority: '0.7', changefreq: 'monthly' },
+    ];
+
+    for (const page of staticPages) {
+      sitemap += '  <url>\n';
+      sitemap += `    <loc>${page.loc}</loc>\n`;
+      sitemap += `    <lastmod>${currentDate}</lastmod>\n`;
+      sitemap += `    <changefreq>${page.changefreq}</changefreq>\n`;
+      sitemap += `    <priority>${page.priority}</priority>\n`;
+      sitemap += '  </url>\n';
+    }
+
     // Add location landing pages (city and neighborhood)
     for (const location of locationSet) {
       if (location.startsWith('city:')) {
