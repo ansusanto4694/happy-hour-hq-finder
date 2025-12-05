@@ -217,6 +217,13 @@ export type Database = {
             foreignKeyName: "funnel_events_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "profile_display_names"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funnel_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -284,6 +291,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "happy_hour_deals_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "profile_display_names"
             referencedColumns: ["id"]
           },
           {
@@ -458,6 +472,13 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "business"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_verification_verified_by_fkey"
+            columns: ["verification_verified_by"]
+            isOneToOne: false
+            referencedRelation: "profile_display_names"
             referencedColumns: ["id"]
           },
           {
@@ -818,6 +839,13 @@ export type Database = {
             foreignKeyName: "merchant_reviews_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "profile_display_names"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_reviews_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -928,6 +956,13 @@ export type Database = {
             columns: ["merchant_id"]
             isOneToOne: false
             referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profile_display_names"
             referencedColumns: ["id"]
           },
           {
@@ -1083,6 +1118,13 @@ export type Database = {
             foreignKeyName: "user_sessions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "profile_display_names"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -1090,6 +1132,24 @@ export type Database = {
       }
     }
     Views: {
+      profile_display_names: {
+        Row: {
+          first_name: string | null
+          id: string | null
+          last_name_initial: string | null
+        }
+        Insert: {
+          first_name?: string | null
+          id?: string | null
+          last_name_initial?: never
+        }
+        Update: {
+          first_name?: string | null
+          id?: string | null
+          last_name_initial?: never
+        }
+        Relationships: []
+      }
       restaurants_public: {
         Row: {
           city: string | null

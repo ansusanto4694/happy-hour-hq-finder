@@ -14,9 +14,9 @@ interface Review {
   review_text: string;
   published_at: string;
   user_id: string;
-  profile: {
+  profile_display_names: {
     first_name: string;
-    last_name: string | null;
+    last_name_initial: string | null;
   } | null;
   ratings: Array<{ dimension: string; rating: number }>;
   media: Array<{ id: string; storage_path: string; media_type: string }>;
@@ -42,7 +42,7 @@ export const MerchantReviews: React.FC<MerchantReviewsProps> = ({ merchantId, me
           review_text,
           published_at,
           user_id,
-          profile:profiles(first_name, last_name),
+          profile_display_names(first_name, last_name_initial),
           ratings:merchant_review_ratings(dimension, rating),
           media:merchant_review_media(id, storage_path, media_type)
         `)
@@ -61,9 +61,9 @@ export const MerchantReviews: React.FC<MerchantReviewsProps> = ({ merchantId, me
     return (sum / ratings.length).toFixed(1);
   };
 
-  const getInitials = (firstName: string, lastName: string | null) => {
+  const getInitials = (firstName: string, lastNameInitial: string | null) => {
     const first = firstName?.charAt(0)?.toUpperCase() || '';
-    const last = lastName?.charAt(0)?.toUpperCase() || '';
+    const last = lastNameInitial?.charAt(0)?.toUpperCase() || '';
     return first + last || '?';
   };
 
@@ -231,15 +231,15 @@ export const MerchantReviews: React.FC<MerchantReviewsProps> = ({ merchantId, me
                     <Avatar className="h-10 w-10">
                       <AvatarFallback className="bg-amber-100 text-amber-700 font-medium">
                         {getInitials(
-                          review.profile?.first_name || '',
-                          review.profile?.last_name
+                          review.profile_display_names?.first_name || '',
+                          review.profile_display_names?.last_name_initial
                         )}
                       </AvatarFallback>
                     </Avatar>
                     <div>
                       <p className="font-medium">
-                        {review.profile?.first_name || 'Anonymous'}
-                        {review.profile?.last_name ? ` ${review.profile.last_name.charAt(0)}.` : ''}
+                        {review.profile_display_names?.first_name || 'Anonymous'}
+                        {review.profile_display_names?.last_name_initial ? ` ${review.profile_display_names.last_name_initial}` : ''}
                       </p>
                       <p className="text-sm text-muted-foreground">
                         {format(new Date(review.published_at), 'MMM d, yyyy')}
