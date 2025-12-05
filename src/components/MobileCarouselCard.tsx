@@ -1,7 +1,9 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
+import { Star } from 'lucide-react';
 import { getTodaysHappyHour, getMenuTypeBadge } from '@/utils/timeUtils';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useMerchantRating } from '@/hooks/useMerchantRating';
 
 interface MobileCarouselCardProps {
   merchant: {
@@ -27,6 +29,7 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
   onClick 
 }) => {
   const { track, trackFunnel } = useAnalytics();
+  const { data: ratingData } = useMerchantRating(merchant.id);
   const todaysHappyHourText = getTodaysHappyHour(merchant.merchant_happy_hour || []);
   const menuTypeBadge = getMenuTypeBadge(merchant.happy_hour_deals || []);
 
@@ -73,9 +76,22 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
       </div>
 
       {/* Merchant name */}
-      <h4 className="text-foreground font-bold text-lg text-center mb-4 line-clamp-2 px-1 leading-snug">
+      <h4 className="text-foreground font-bold text-lg text-center mb-2 line-clamp-2 px-1 leading-snug">
         {merchant.restaurant_name}
       </h4>
+
+      {/* Rating */}
+      {ratingData?.overallAverage && (
+        <div className="flex items-center justify-center gap-1 mb-2">
+          <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+          <span className="text-sm font-medium text-foreground">
+            {ratingData.overallAverage.toFixed(1)}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            ({ratingData.reviewCount})
+          </span>
+        </div>
+      )}
 
       {/* Happy hour status */}
       <div className="text-center flex flex-col items-center gap-1.5">
