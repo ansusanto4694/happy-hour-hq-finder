@@ -94,7 +94,7 @@ export const LocationLanding = () => {
     ? `${neighborhood}, ${city}, ${state}`
     : `${city}, ${state}`;
 
-  const { data: merchants, isLoading } = useMerchants(
+  const { data: merchants, isLoading, isFetched } = useMerchants(
     undefined, // categoryIds
     undefined, // searchTerm
     undefined, // startTime
@@ -109,11 +109,22 @@ export const LocationLanding = () => {
     neighborhood // neighborhood - filter by exact neighborhood if provided
   );
 
+  // Determine if this is an invalid location (404 case)
+  // For neighborhood pages: if data loaded but no merchants found AND this is a specific neighborhood
+  const isInvalidLocation = useMemo(() => {
+    if (!isFetched || isLoading) return false;
+    // If it's a neighborhood page with no results, it's likely an invalid combination
+    if (neighborhoodSlug && (!merchants || merchants.length === 0)) {
+      return true;
+    }
+    return false;
+  }, [isFetched, isLoading, neighborhoodSlug, merchants]);
+
   const structuredData = useMemo(() => {
     return generateLocationStructuredData(city, state, neighborhood);
   }, [city, state, neighborhood]);
 
-  const pageTitle = neighborhood 
+  const pageTitle = neighborhood
     ? `Happy Hour in ${neighborhood}, ${city} | SipMunchYap`
     : `Happy Hour in ${city}, ${state} | SipMunchYap`;
 
