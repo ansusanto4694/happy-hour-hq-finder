@@ -143,6 +143,12 @@ export const MobileSearchBar = ({ onExpandedChange }: MobileSearchBarProps = {})
 
   // Handle suggestion selection
   const selectSuggestion = (suggestion: LocationSuggestion) => {
+    console.log('[MobileSearch] Location suggestion selected:', {
+      suggestion,
+      previousLocation: location,
+      totalSuggestions: locationSuggestions.length
+    });
+    
     setLocation(suggestion.place_name);
     setShowSuggestions(false);
     setSelectedSuggestionIndex(-1);
@@ -164,6 +170,7 @@ export const MobileSearchBar = ({ onExpandedChange }: MobileSearchBarProps = {})
   const handleLocationKeyDown = (e: React.KeyboardEvent) => {
     if (!showSuggestions || locationSuggestions.length === 0) {
       if (e.key === 'Enter') {
+        console.log('[MobileSearch] Enter pressed (no suggestions visible):', { searchTerm, location });
         handleSearch();
       }
       return;
@@ -199,8 +206,14 @@ export const MobileSearchBar = ({ onExpandedChange }: MobileSearchBarProps = {})
       case 'Enter':
         e.preventDefault();
         if (selectedSuggestionIndex >= 0) {
-          selectSuggestion(locationSuggestions[selectedSuggestionIndex]);
+          const selectedSuggestion = locationSuggestions[selectedSuggestionIndex];
+          console.log('[MobileSearch] Enter pressed with suggestion selected:', {
+            selectedSuggestionIndex,
+            selectedSuggestion
+          });
+          selectSuggestion(selectedSuggestion);
         } else {
+          console.log('[MobileSearch] Enter pressed (no suggestion highlighted):', { searchTerm, location });
           handleSearch();
         }
         break;
@@ -234,6 +247,15 @@ export const MobileSearchBar = ({ onExpandedChange }: MobileSearchBarProps = {})
   }, []);
 
   const handleSearch = () => {
+    // Debug logging for search flow
+    console.log('[MobileSearch] handleSearch called:', {
+      searchTerm,
+      location,
+      hasGpsCoordinates: !!gpsCoordinates,
+      gpsCoordinates,
+      isExpanded
+    });
+    
     const params = new URLSearchParams();
     if (searchTerm) params.set('search', searchTerm);
     if (location) params.set('location', location);
@@ -271,12 +293,22 @@ export const MobileSearchBar = ({ onExpandedChange }: MobileSearchBarProps = {})
       }
     });
     
-    navigate(`/results?${params.toString()}`);
+    const targetUrl = `/results?${params.toString()}`;
+    
+    // Debug logging before navigation
+    console.log('[MobileSearch] Navigating to:', {
+      targetUrl,
+      params: Object.fromEntries(params.entries()),
+      paramsString: params.toString()
+    });
+    
+    navigate(targetUrl);
     setIsExpanded(false);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
+      console.log('[MobileSearch] Enter key pressed in search input:', { searchTerm });
       handleSearch();
     }
   };
