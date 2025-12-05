@@ -79,6 +79,8 @@ export const MerchantReviews: React.FC<MerchantReviewsProps> = ({ merchantId, me
   const calculateAggregateRatings = (reviews: Review[]) => {
     const dimensions = ['happy_hour_value', 'food', 'ambience'] as const;
     const aggregates: Record<string, { sum: number; count: number }> = {};
+    let totalSum = 0;
+    let totalCount = 0;
     
     dimensions.forEach(dim => {
       aggregates[dim] = { sum: 0, count: 0 };
@@ -89,20 +91,28 @@ export const MerchantReviews: React.FC<MerchantReviewsProps> = ({ merchantId, me
         if (aggregates[rating.dimension]) {
           aggregates[rating.dimension].sum += rating.rating;
           aggregates[rating.dimension].count += 1;
+          totalSum += rating.rating;
+          totalCount += 1;
         }
       });
     });
     
-    return dimensions.map(dim => ({
+    const dimensionAverages = dimensions.map(dim => ({
       dimension: dim,
       average: aggregates[dim].count > 0 
         ? aggregates[dim].sum / aggregates[dim].count 
         : null,
       count: aggregates[dim].count
     }));
+
+    const overallAverage = totalCount > 0 ? totalSum / totalCount : null;
+
+    return { dimensionAverages, overallAverage };
   };
 
-  const aggregateRatings = reviews ? calculateAggregateRatings(reviews) : [];
+  const { dimensionAverages: aggregateRatings, overallAverage } = reviews 
+    ? calculateAggregateRatings(reviews) 
+    : { dimensionAverages: [], overallAverage: null };
 
   if (isLoading) {
     return (
@@ -164,10 +174,18 @@ export const MerchantReviews: React.FC<MerchantReviewsProps> = ({ merchantId, me
       ) : (
         <div className="space-y-6">
           {/* Ratings Summary */}
-          <div className="bg-muted/50 rounded-lg p-4 space-y-3">
-            <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
-              Ratings Overview
-            </h3>
+          <div className="bg-muted/50 rounded-lg p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                Ratings Overview
+              </h3>
+              {overallAverage !== null && (
+                <div className="flex items-center gap-2">
+                  <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
+                  <span className="text-2xl font-bold">{overallAverage.toFixed(1)}</span>
+                </div>
+              )}
+            </div>
             <div className="grid gap-2">
               {aggregateRatings.map(({ dimension, average }) => (
                 <div key={dimension} className="flex items-center justify-between">
