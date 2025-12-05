@@ -387,6 +387,7 @@ export type Database = {
           neighborhood: string | null
           phone_number: string | null
           restaurant_name: string
+          slug: string | null
           state: string
           street_address: string
           street_address_line_2: string | null
@@ -412,6 +413,7 @@ export type Database = {
           neighborhood?: string | null
           phone_number?: string | null
           restaurant_name: string
+          slug?: string | null
           state: string
           street_address: string
           street_address_line_2?: string | null
@@ -437,6 +439,7 @@ export type Database = {
           neighborhood?: string | null
           phone_number?: string | null
           restaurant_name?: string
+          slug?: string | null
           state?: string
           street_address?: string
           street_address_line_2?: string | null
@@ -1147,6 +1150,14 @@ export type Database = {
         Args: { partition_date: string }
         Returns: undefined
       }
+      generate_merchant_slug: {
+        Args: {
+          p_city: string
+          p_neighborhood: string
+          p_restaurant_name: string
+        }
+        Returns: string
+      }
       get_current_user_role: {
         Args: never
         Returns: Database["public"]["Enums"]["app_role"]
@@ -1192,6 +1203,7 @@ export type Database = {
       }
       is_admin: { Args: never; Returns: boolean }
       maintain_user_events_partitions: { Args: never; Returns: undefined }
+      slugify: { Args: { input_text: string }; Returns: string }
       update_merchant_coordinates: {
         Args: { latitude: number; longitude: number; merchant_id: number }
         Returns: undefined
