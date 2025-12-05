@@ -963,6 +963,7 @@ export type Database = {
       user_sessions: {
         Row: {
           anonymous_user_id: string | null
+          attribution_type: string | null
           bot_type: string | null
           created_at: string
           device_type: string
@@ -970,6 +971,11 @@ export type Database = {
           entry_page: string
           exit_page: string | null
           first_seen: string
+          first_touch_utm_campaign: string | null
+          first_touch_utm_content: string | null
+          first_touch_utm_medium: string | null
+          first_touch_utm_source: string | null
+          first_touch_utm_term: string | null
           id: string
           is_bot: boolean
           is_bounce: boolean
@@ -986,6 +992,7 @@ export type Database = {
           user_id: string | null
           utm_campaign: string | null
           utm_content: string | null
+          utm_landing_page: string | null
           utm_medium: string | null
           utm_source: string | null
           utm_term: string | null
@@ -994,6 +1001,7 @@ export type Database = {
         }
         Insert: {
           anonymous_user_id?: string | null
+          attribution_type?: string | null
           bot_type?: string | null
           created_at?: string
           device_type: string
@@ -1001,6 +1009,11 @@ export type Database = {
           entry_page: string
           exit_page?: string | null
           first_seen?: string
+          first_touch_utm_campaign?: string | null
+          first_touch_utm_content?: string | null
+          first_touch_utm_medium?: string | null
+          first_touch_utm_source?: string | null
+          first_touch_utm_term?: string | null
           id?: string
           is_bot?: boolean
           is_bounce?: boolean
@@ -1017,6 +1030,7 @@ export type Database = {
           user_id?: string | null
           utm_campaign?: string | null
           utm_content?: string | null
+          utm_landing_page?: string | null
           utm_medium?: string | null
           utm_source?: string | null
           utm_term?: string | null
@@ -1025,6 +1039,7 @@ export type Database = {
         }
         Update: {
           anonymous_user_id?: string | null
+          attribution_type?: string | null
           bot_type?: string | null
           created_at?: string
           device_type?: string
@@ -1032,6 +1047,11 @@ export type Database = {
           entry_page?: string
           exit_page?: string | null
           first_seen?: string
+          first_touch_utm_campaign?: string | null
+          first_touch_utm_content?: string | null
+          first_touch_utm_medium?: string | null
+          first_touch_utm_source?: string | null
+          first_touch_utm_term?: string | null
           id?: string
           is_bot?: boolean
           is_bounce?: boolean
@@ -1048,6 +1068,7 @@ export type Database = {
           user_id?: string | null
           utm_campaign?: string | null
           utm_content?: string | null
+          utm_landing_page?: string | null
           utm_medium?: string | null
           utm_source?: string | null
           utm_term?: string | null

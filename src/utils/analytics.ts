@@ -350,14 +350,46 @@ export const isMobileDevice = (): boolean => {
   return getDeviceType() === 'mobile';
 };
 
-// Parse UTM parameters from URL
-export const getUtmParameters = (): {
+// ============= UTM TRACKING UTILITIES =============
+
+// Storage keys for UTM persistence
+const UTM_SESSION_KEY = 'analytics_utm_params';
+const UTM_FIRST_TOUCH_KEY = 'analytics_first_touch_utm';
+const UTM_LANDING_PAGE_KEY = 'analytics_utm_landing_page';
+
+export interface UtmParams {
   utm_source: string | null;
   utm_medium: string | null;
   utm_campaign: string | null;
   utm_content: string | null;
   utm_term: string | null;
-} => {
+}
+
+// Normalize and validate UTM parameters
+const normalizeUtmValue = (value: string | null): string | null => {
+  if (!value) return null;
+  const trimmed = value.trim().toLowerCase();
+  if (trimmed === '' || trimmed === 'undefined' || trimmed === 'null') return null;
+  // Remove common URL encoding artifacts and clean up
+  return decodeURIComponent(trimmed).replace(/\+/g, ' ');
+};
+
+const normalizeUtmParams = (params: UtmParams): UtmParams => ({
+  utm_source: normalizeUtmValue(params.utm_source),
+  utm_medium: normalizeUtmValue(params.utm_medium),
+  utm_campaign: normalizeUtmValue(params.utm_campaign),
+  utm_content: normalizeUtmValue(params.utm_content),
+  utm_term: normalizeUtmValue(params.utm_term),
+});
+
+// Check if UTM params object has any values
+const hasUtmParams = (params: UtmParams): boolean => {
+  return !!(params.utm_source || params.utm_medium || params.utm_campaign || 
+            params.utm_content || params.utm_term);
+};
+
+// Parse UTM parameters from current URL
+const getUtmFromUrl = (): UtmParams => {
   const params = new URLSearchParams(window.location.search);
   return {
     utm_source: params.get('utm_source'),
@@ -366,6 +398,138 @@ export const getUtmParameters = (): {
     utm_content: params.get('utm_content'),
     utm_term: params.get('utm_term'),
   };
+};
+
+// Store UTM params in sessionStorage for persistence across SPA navigation
+const storeUtmInSession = (params: UtmParams): void => {
+  try {
+    sessionStorage.setItem(UTM_SESSION_KEY, JSON.stringify(params));
+    // Also store the landing page where UTM was captured
+    if (hasUtmParams(params)) {
+      sessionStorage.setItem(UTM_LANDING_PAGE_KEY, window.location.href);
+    }
+  } catch (e) {
+    console.warn('[Analytics] Failed to store UTM in sessionStorage:', e);
+  }
+};
+
+// Get UTM params from sessionStorage
+const getUtmFromSession = (): UtmParams | null => {
+  try {
+    const stored = sessionStorage.getItem(UTM_SESSION_KEY);
+    return stored ? JSON.parse(stored) : null;
+  } catch (e) {
+    return null;
+  }
+};
+
+// Store first-touch UTM in localStorage (never overwrite)
+const storeFirstTouchUtm = (params: UtmParams): void => {
+  try {
+    // Only store if we don't already have first-touch data
+    if (!localStorage.getItem(UTM_FIRST_TOUCH_KEY) && hasUtmParams(params)) {
+      localStorage.setItem(UTM_FIRST_TOUCH_KEY, JSON.stringify({
+        ...params,
+        captured_at: new Date().toISOString(),
+        landing_page: window.location.href,
+      }));
+      console.log('[Analytics] Stored first-touch UTM:', params);
+    }
+  } catch (e) {
+    console.warn('[Analytics] Failed to store first-touch UTM:', e);
+  }
+};
+
+// Get first-touch UTM from localStorage
+export const getFirstTouchUtm = (): UtmParams & { captured_at?: string; landing_page?: string } | null => {
+  try {
+    const stored = localStorage.getItem(UTM_FIRST_TOUCH_KEY);
+    return stored ? JSON.parse(stored) : null;
+  } catch (e) {
+    return null;
+  }
+};
+
+// Get UTM landing page URL
+export const getUtmLandingPage = (): string | null => {
+  try {
+    return sessionStorage.getItem(UTM_LANDING_PAGE_KEY);
+  } catch (e) {
+    return null;
+  }
+};
+
+// Main function: Get UTM parameters with persistence
+// Priority: 1. URL params (freshest), 2. Session storage (survives SPA navigation)
+export const getUtmParameters = (): UtmParams => {
+  // First, check URL for UTM params
+  const urlParams = normalizeUtmParams(getUtmFromUrl());
+  
+  if (hasUtmParams(urlParams)) {
+    // Found UTM in URL - store for session persistence and first-touch
+    storeUtmInSession(urlParams);
+    storeFirstTouchUtm(urlParams);
+    return urlParams;
+  }
+  
+  // No UTM in URL - check session storage
+  const sessionParams = getUtmFromSession();
+  if (sessionParams && hasUtmParams(sessionParams)) {
+    return normalizeUtmParams(sessionParams);
+  }
+  
+  // No UTM params found
+  return {
+    utm_source: null,
+    utm_medium: null,
+    utm_campaign: null,
+    utm_content: null,
+    utm_term: null,
+  };
+};
+
+// Determine attribution type based on UTM data
+export const getAttributionType = (): 'first_touch' | 'last_touch' | 'multi_touch' | 'direct' => {
+  const currentUtm = getUtmParameters();
+  const firstTouchUtm = getFirstTouchUtm();
+  
+  if (!hasUtmParams(currentUtm) && !firstTouchUtm) {
+    return 'direct';
+  }
+  
+  if (!firstTouchUtm) {
+    return 'first_touch'; // This is the first UTM we're seeing
+  }
+  
+  // Check if current UTM differs from first touch
+  if (hasUtmParams(currentUtm) && (
+    currentUtm.utm_source !== firstTouchUtm.utm_source ||
+    currentUtm.utm_campaign !== firstTouchUtm.utm_campaign
+  )) {
+    return 'multi_touch'; // User came back with different campaign
+  }
+  
+  return 'first_touch';
+};
+
+// Generate UTM-tagged URL for marketing campaigns
+export const generateUtmUrl = (
+  baseUrl: string,
+  params: {
+    source: string;
+    medium: string;
+    campaign: string;
+    content?: string;
+    term?: string;
+  }
+): string => {
+  const url = new URL(baseUrl);
+  url.searchParams.set('utm_source', params.source);
+  url.searchParams.set('utm_medium', params.medium);
+  url.searchParams.set('utm_campaign', params.campaign);
+  if (params.content) url.searchParams.set('utm_content', params.content);
+  if (params.term) url.searchParams.set('utm_term', params.term);
+  return url.toString();
 };
 
 // Categorize and parse referrer information
@@ -522,22 +686,29 @@ export const initializeSession = async (forceReinitialize: boolean = false) => {
     const referrer = capturedReferrer;
     const now = new Date().toISOString();
     const utmParams = getUtmParameters();
+    const firstTouchUtm = getFirstTouchUtm();
+    const utmLandingPage = getUtmLandingPage();
+    const attributionType = getAttributionType();
     const { category: referrerCategory, platform: referrerPlatform, traffic_source } = categorizeReferrer(referrer);
     
     // Detect if this is a bot
     const botDetection = detectBot();
     
     // Determine traffic source (prioritize UTM params over referrer)
-    const finalTrafficSource = utmParams.utm_source ? 'campaign' : traffic_source;
+    const hasUtm = !!(utmParams.utm_source || utmParams.utm_medium || utmParams.utm_campaign);
+    const finalTrafficSource = hasUtm ? 'campaign' : traffic_source;
     
-    console.log('[Analytics] Initializing session with GUARANTEED anonymous_user_id:', {
+    console.log('[Analytics] Initializing session with enhanced UTM tracking:', {
       sessionId,
       anonymousUserId,
       referrer,
       referrerCategory,
       referrerPlatform,
       deviceType,
-      utmParams
+      utmParams,
+      firstTouchUtm,
+      utmLandingPage,
+      attributionType,
     });
     
     // Use upsert with ON CONFLICT DO UPDATE to handle race conditions
@@ -557,11 +728,21 @@ export const initializeSession = async (forceReinitialize: boolean = false) => {
       viewport_height: window.innerHeight,
       first_seen: now,
       last_seen: now,
+      // Current/last-touch UTM params
       utm_source: utmParams.utm_source,
       utm_medium: utmParams.utm_medium,
       utm_campaign: utmParams.utm_campaign,
       utm_content: utmParams.utm_content,
       utm_term: utmParams.utm_term,
+      // First-touch UTM params (from localStorage)
+      first_touch_utm_source: firstTouchUtm?.utm_source || utmParams.utm_source,
+      first_touch_utm_medium: firstTouchUtm?.utm_medium || utmParams.utm_medium,
+      first_touch_utm_campaign: firstTouchUtm?.utm_campaign || utmParams.utm_campaign,
+      first_touch_utm_content: firstTouchUtm?.utm_content || utmParams.utm_content,
+      first_touch_utm_term: firstTouchUtm?.utm_term || utmParams.utm_term,
+      // Attribution metadata
+      utm_landing_page: utmLandingPage || (hasUtm ? window.location.href : null),
+      attribution_type: attributionType,
       is_bot: botDetection.isBot,
       bot_type: botDetection.botType,
       is_engaged: false,
