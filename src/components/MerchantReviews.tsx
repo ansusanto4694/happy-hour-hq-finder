@@ -70,11 +70,39 @@ export const MerchantReviews: React.FC<MerchantReviewsProps> = ({ merchantId, me
   const getDimensionLabel = (dimension: string) => {
     const labels: Record<string, string> = {
       happy_hour_value: 'Happy Hour Value',
-      food: 'Food',
+      food: 'Food Quality',
       ambience: 'Ambience',
     };
     return labels[dimension] || dimension;
   };
+
+  const calculateAggregateRatings = (reviews: Review[]) => {
+    const dimensions = ['happy_hour_value', 'food', 'ambience'] as const;
+    const aggregates: Record<string, { sum: number; count: number }> = {};
+    
+    dimensions.forEach(dim => {
+      aggregates[dim] = { sum: 0, count: 0 };
+    });
+    
+    reviews?.forEach(review => {
+      review.ratings?.forEach(rating => {
+        if (aggregates[rating.dimension]) {
+          aggregates[rating.dimension].sum += rating.rating;
+          aggregates[rating.dimension].count += 1;
+        }
+      });
+    });
+    
+    return dimensions.map(dim => ({
+      dimension: dim,
+      average: aggregates[dim].count > 0 
+        ? aggregates[dim].sum / aggregates[dim].count 
+        : null,
+      count: aggregates[dim].count
+    }));
+  };
+
+  const aggregateRatings = reviews ? calculateAggregateRatings(reviews) : [];
 
   if (isLoading) {
     return (
@@ -134,6 +162,42 @@ export const MerchantReviews: React.FC<MerchantReviewsProps> = ({ merchantId, me
           </Button>
         </div>
       ) : (
+        <div className="space-y-6">
+          {/* Ratings Summary */}
+          <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+            <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+              Ratings Overview
+            </h3>
+            <div className="grid gap-2">
+              {aggregateRatings.map(({ dimension, average }) => (
+                <div key={dimension} className="flex items-center justify-between">
+                  <span className="text-sm">{getDimensionLabel(dimension)}</span>
+                  {average !== null ? (
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-0.5">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className={`h-4 w-4 ${
+                              star <= Math.round(average)
+                                ? 'fill-amber-400 text-amber-400'
+                                : 'text-muted-foreground/30'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-sm font-medium w-8">{average.toFixed(1)}</span>
+                    </div>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">No Rating Yet</span>
+                  )}
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground pt-2 border-t">
+              {reviews.length} {reviews.length === 1 ? 'review' : 'reviews'}
+            </p>
+          </div>
         <div className="space-y-4">
           {reviews.map((review) => {
             const avgRating = getAverageRating(review.ratings);
@@ -230,6 +294,7 @@ export const MerchantReviews: React.FC<MerchantReviewsProps> = ({ merchantId, me
               </div>
             );
           })}
+          </div>
         </div>
       )}
     </div>
