@@ -58,6 +58,13 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
             id,
             is_active,
             end_time
+          ),
+          merchant_reviews (
+            id,
+            status,
+            merchant_review_ratings (
+              rating
+            )
           )
         `)
         .eq('is_active', true);
