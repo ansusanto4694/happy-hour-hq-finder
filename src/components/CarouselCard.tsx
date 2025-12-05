@@ -1,9 +1,11 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Star } from 'lucide-react';
 import { getTodaysHappyHour, getMenuTypeBadge } from "@/utils/timeUtils";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { useNavigate } from 'react-router-dom';
+import { useMerchantRating } from "@/hooks/useMerchantRating";
 
 interface CarouselCardProps {
   merchant: {
@@ -27,9 +29,9 @@ interface CarouselCardProps {
 export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick }) => {
   const { track, trackFunnel } = useAnalytics();
   const navigate = useNavigate();
+  const { data: ratingData } = useMerchantRating(merchant.id);
   const todaysHappyHour = merchant.merchant_happy_hour ? getTodaysHappyHour(merchant.merchant_happy_hour) : 'No Happy Hour Today';
   const menuTypeBadge = getMenuTypeBadge(merchant.happy_hour_deals || []);
-  console.log('CarouselCard merchant neighborhood:', merchant.restaurant_name, merchant.neighborhood);
   
   const handleClick = async () => {
     await track({
@@ -77,7 +79,19 @@ export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick })
           <h3 className="font-semibold text-foreground text-lg leading-tight truncate">
             {merchant.restaurant_name}
           </h3>
-          <div className="mt-2 flex flex-col gap-1.5">
+          {/* Rating */}
+          {ratingData?.overallAverage && (
+            <div className="flex items-center gap-1 mt-1">
+              <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+              <span className="text-sm font-medium text-foreground">
+                {ratingData.overallAverage.toFixed(1)}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                ({ratingData.reviewCount})
+              </span>
+            </div>
+          )}
+          <div className="mt-1.5 flex flex-col gap-1.5">
             {todaysHappyHour !== 'No Happy Hour Today' ? (
               <span className="text-sm font-semibold text-white bg-amber-500/90 px-3 py-1.5 rounded-full shadow-sm inline-flex items-center gap-1 leading-tight w-fit">
                 🍻 {todaysHappyHour}
@@ -101,7 +115,7 @@ export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick })
             )}
           </div>
           {merchant.neighborhood && (
-            <p className="text-sm text-muted-foreground mt-2">
+            <p className="text-sm text-muted-foreground mt-1">
               {merchant.neighborhood}
             </p>
           )}
