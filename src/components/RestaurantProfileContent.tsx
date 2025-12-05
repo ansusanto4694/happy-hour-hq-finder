@@ -5,7 +5,7 @@ import { useAnalytics } from '@/hooks/useAnalytics';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Share, Utensils, PenLine, Star } from 'lucide-react';
+import { Share, Utensils, PenLine, Star, MapPin } from 'lucide-react';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { RestaurantBasicInfo } from '@/components/RestaurantBasicInfo';
 import { RestaurantContactInfo } from '@/components/RestaurantContactInfo';
@@ -300,6 +300,24 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
                   <RestaurantHappyHours happyHours={restaurant.merchant_happy_hour || []} />
                 </CardContent>
               </Card>
+
+              {/* Neighborhood Backlink */}
+              {restaurant.neighborhood && (
+                <Card className="shadow-lg border-l-4 border-amber-500 bg-white">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-2 mb-3">
+                      <MapPin className="h-5 w-5 text-amber-500" />
+                      <h3 className="font-semibold text-foreground">Explore the Area</h3>
+                    </div>
+                    <Link 
+                      to={`/happy-hour/${restaurant.city.toLowerCase()}-${restaurant.state.toLowerCase()}/${restaurant.neighborhood.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}`}
+                      className="text-amber-600 hover:text-amber-700 hover:underline font-medium"
+                    >
+                      More Happy Hours in {restaurant.neighborhood} →
+                    </Link>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         </div>

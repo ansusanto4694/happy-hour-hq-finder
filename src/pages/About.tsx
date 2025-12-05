@@ -3,6 +3,26 @@ import { Footer } from '@/components/Footer';
 import { PageHeader } from '@/components/PageHeader';
 import { SEOHead } from '@/components/SEOHead';
 
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "SipMunchYap",
+  "url": "https://sipmunchyap.com",
+  "logo": "https://sipmunchyap.com/logo.png",
+  "description": "SipMunchYap helps you discover the best happy hour deals at local restaurants and bars in NYC.",
+  "foundingDate": "2024",
+  "areaServed": {
+    "@type": "City",
+    "name": "New York"
+  },
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "email": "andrew@sipmunchyap.com",
+    "contactType": "customer service"
+  },
+  "sameAs": []
+};
+
 const About = () => {
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500 flex flex-col">
@@ -11,6 +31,7 @@ const About = () => {
         description="Learn about SipMunchYap and our mission to help you discover the best happy hour deals in NYC. Find local restaurants and bars with amazing specials."
         keywords="about sipmunchyap, happy hour platform, restaurant discovery, bar finder"
         canonical="https://sipmunchyap.com/about"
+        structuredData={organizationSchema}
       />
       
       {/* Background overlay */}
