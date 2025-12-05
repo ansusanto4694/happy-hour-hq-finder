@@ -60,6 +60,43 @@ const RouteTracker = () => {
   return null;
 };
 
+// URL Sanitizer: Fix malformed URLs where ? is encoded as %3F
+// This handles edge cases where the Lovable preview iframe encodes query params incorrectly
+const URLSanitizer = () => {
+  const location = useLocation();
+  
+  useEffect(() => {
+    const { pathname, search, hash } = location;
+    
+    // Check if pathname contains encoded query string (e.g., /results%3Fsearch=pizza)
+    if (pathname.includes('%3F') || pathname.includes('%3f')) {
+      // Decode the pathname to get the actual path and query string
+      const decodedPath = decodeURIComponent(pathname);
+      const questionMarkIndex = decodedPath.indexOf('?');
+      
+      if (questionMarkIndex !== -1) {
+        const actualPath = decodedPath.substring(0, questionMarkIndex);
+        const queryString = decodedPath.substring(questionMarkIndex);
+        
+        // Construct the correct URL
+        const correctedUrl = actualPath + queryString + (search ? '&' + search.substring(1) : '') + hash;
+        
+        console.log('[URLSanitizer] Fixing malformed URL:', {
+          original: pathname + search,
+          corrected: correctedUrl
+        });
+        
+        // Replace the current URL with the correct one
+        window.history.replaceState(null, '', correctedUrl);
+        // Force a page reload to pick up the corrected URL
+        window.location.reload();
+      }
+    }
+  }, [location.pathname]);
+  
+  return null;
+};
+
 // Initialize performance monitoring once
 if (typeof window !== 'undefined') {
   initPerformanceMonitoring();
@@ -77,6 +114,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <RouteTracker />
+            <URLSanitizer />
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<Index />} />
