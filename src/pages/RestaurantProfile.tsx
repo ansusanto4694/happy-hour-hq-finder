@@ -1,7 +1,7 @@
 
 import React, { useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { RestaurantHeader } from '@/components/RestaurantHeader';
@@ -169,7 +169,7 @@ const RestaurantProfile = () => {
   const isNumericId = id ? /^\d+$/.test(id) : false;
 
   
-  const { data: restaurant, isLoading, error } = useQuery({
+  const { data: restaurant, isLoading, isFetching, error } = useQuery({
     queryKey: ['restaurant', id],
     queryFn: async () => {
       if (!id) throw new Error('Restaurant identifier is required');
@@ -219,6 +219,7 @@ const RestaurantProfile = () => {
       return data;
     },
     enabled: !!id,
+    placeholderData: keepPreviousData, // Keep previous data during refetch to prevent flash
   });
   
   // 301 redirect from numeric ID to slug URL
@@ -285,7 +286,8 @@ const RestaurantProfile = () => {
     );
   }
 
-  if (error || !restaurant) {
+  // Only show error state if there's an actual error AND we're not refetching (to prevent flash during updates)
+  if ((error || !restaurant) && !isFetching) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
