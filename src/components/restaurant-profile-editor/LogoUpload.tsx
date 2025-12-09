@@ -3,6 +3,7 @@ import { Upload, X, Image } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface LogoUploadProps {
   restaurantId: number;
@@ -19,6 +20,7 @@ export const LogoUpload: React.FC<LogoUploadProps> = ({
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const uploadFile = useCallback(async (file: File) => {
     if (!file) return;
@@ -80,6 +82,9 @@ export const LogoUpload: React.FC<LogoUploadProps> = ({
         throw updateError;
       }
 
+      // Invalidate all restaurant queries to refresh data everywhere
+      queryClient.invalidateQueries({ queryKey: ['restaurant'] });
+      
       onLogoUpdate(publicUrl);
       toast({
         title: "Success",
@@ -147,6 +152,9 @@ export const LogoUpload: React.FC<LogoUploadProps> = ({
         throw error;
       }
 
+      // Invalidate all restaurant queries to refresh data everywhere
+      queryClient.invalidateQueries({ queryKey: ['restaurant'] });
+      
       onLogoUpdate(null);
       toast({
         title: "Success",
