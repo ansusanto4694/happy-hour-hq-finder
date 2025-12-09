@@ -29,6 +29,30 @@ const displayNameToSlug = (name: string): string => {
   return name.toLowerCase().replace(/['\s]+/g, '-');
 };
 
+// Type for merchant with categories
+interface MerchantWithCategories {
+  id: number;
+  restaurant_name: string;
+  street_address: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  phone_number?: string | null;
+  website?: string | null;
+  logo_url?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  slug?: string | null;
+  neighborhood?: string | null;
+  merchant_categories?: Array<{
+    categories: {
+      id: string;
+      name: string;
+      slug: string;
+    } | null;
+  }>;
+}
+
 const generateLocationStructuredData = (city: string, state: string, neighborhood?: string) => {
   const locationName = neighborhood ? `${neighborhood}, ${city}, ${state}` : `${city}, ${state}`;
   
@@ -61,6 +85,75 @@ const generateLocationStructuredData = (city: string, state: string, neighborhoo
         }] : [])
       ]
     }
+  };
+};
+
+// Generate ItemList schema for restaurant listings (limited to 20)
+const generateRestaurantListSchema = (
+  merchants: MerchantWithCategories[],
+  city: string,
+  state: string,
+  neighborhood?: string
+) => {
+  const limitedMerchants = merchants.slice(0, 20);
+  const locationName = neighborhood ? `${neighborhood}, ${city}` : `${city}, ${state}`;
+  
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": `Happy Hour Restaurants in ${locationName}`,
+    "description": `List of ${limitedMerchants.length} restaurants and bars with happy hour deals in ${locationName}`,
+    "numberOfItems": limitedMerchants.length,
+    "itemListElement": limitedMerchants.map((merchant, index) => {
+      // Extract cuisine types from categories
+      const cuisineTypes = merchant.merchant_categories
+        ?.map(mc => mc.categories?.name)
+        .filter((name): name is string => !!name) || [];
+
+      // Build restaurant schema with only available data
+      const restaurantSchema: Record<string, unknown> = {
+        "@type": "Restaurant",
+        "@id": merchant.slug 
+          ? `https://sipmunchyap.com/restaurant/${merchant.slug}` 
+          : `https://sipmunchyap.com/restaurant/${merchant.id}`,
+        "name": merchant.restaurant_name,
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": merchant.street_address,
+          "addressLocality": merchant.city,
+          "addressRegion": merchant.state,
+          "postalCode": merchant.zip_code,
+          "addressCountry": "US"
+        }
+      };
+
+      // Add optional fields only if they exist
+      if (merchant.phone_number) {
+        restaurantSchema.telephone = merchant.phone_number;
+      }
+      if (merchant.website) {
+        restaurantSchema.url = merchant.website;
+      }
+      if (merchant.logo_url) {
+        restaurantSchema.image = merchant.logo_url;
+      }
+      if (merchant.latitude && merchant.longitude) {
+        restaurantSchema.geo = {
+          "@type": "GeoCoordinates",
+          "latitude": merchant.latitude,
+          "longitude": merchant.longitude
+        };
+      }
+      if (cuisineTypes.length > 0) {
+        restaurantSchema.servesCuisine = cuisineTypes;
+      }
+
+      return {
+        "@type": "ListItem",
+        "position": index + 1,
+        "item": restaurantSchema
+      };
+    })
   };
 };
 
@@ -121,9 +214,18 @@ export const LocationLanding = () => {
     return false;
   }, [isFetched, isLoading, neighborhoodSlug, merchants]);
 
+  // Generate combined structured data (WebPage + ItemList)
   const structuredData = useMemo(() => {
-    return generateLocationStructuredData(city, state, neighborhood);
-  }, [city, state, neighborhood]);
+    const pageSchema = generateLocationStructuredData(city, state, neighborhood);
+    
+    // Only add ItemList if we have merchants
+    if (merchants && merchants.length > 0) {
+      const itemListSchema = generateRestaurantListSchema(merchants, city, state, neighborhood);
+      return [pageSchema, itemListSchema];
+    }
+    
+    return pageSchema;
+  }, [city, state, neighborhood, merchants]);
 
   const pageTitle = neighborhood
     ? `Happy Hour in ${neighborhood}, ${city} | SipMunchYap`
