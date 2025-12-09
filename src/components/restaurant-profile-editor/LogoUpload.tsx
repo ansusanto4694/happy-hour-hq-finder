@@ -81,9 +81,8 @@ export const LogoUpload: React.FC<LogoUploadProps> = ({
       if (updateError) {
         throw updateError;
       }
-
-      // Invalidate all restaurant queries to refresh data everywhere
-      queryClient.invalidateQueries({ queryKey: ['restaurant'] });
+      // Force refetch all restaurant queries to refresh data immediately
+      await queryClient.refetchQueries({ queryKey: ['restaurant'] });
       
       onLogoUpdate(publicUrl);
       toast({
@@ -151,9 +150,8 @@ export const LogoUpload: React.FC<LogoUploadProps> = ({
       if (error) {
         throw error;
       }
-
-      // Invalidate all restaurant queries to refresh data everywhere
-      queryClient.invalidateQueries({ queryKey: ['restaurant'] });
+      // Force refetch all restaurant queries to refresh data immediately
+      await queryClient.refetchQueries({ queryKey: ['restaurant'] });
       
       onLogoUpdate(null);
       toast({
