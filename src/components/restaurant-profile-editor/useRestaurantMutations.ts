@@ -35,7 +35,8 @@ export const useRestaurantMutations = (restaurantId: number) => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['restaurant', restaurantId.toString()] });
+      // Invalidate all restaurant queries to handle both ID and slug-based queries
+      queryClient.invalidateQueries({ queryKey: ['restaurant'] });
       toast({
         title: "Success",
         description: "Restaurant information updated successfully",
@@ -76,7 +77,8 @@ export const useRestaurantMutations = (restaurantId: number) => {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['restaurant', restaurantId.toString()] });
+      // Invalidate all restaurant queries to handle both ID and slug-based queries
+      queryClient.invalidateQueries({ queryKey: ['restaurant'] });
       toast({
         title: "Success",
         description: "Happy hour times updated successfully",
