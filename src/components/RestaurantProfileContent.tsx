@@ -91,7 +91,7 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
 
   return (
     <div className="w-full">
-      <div className={`max-w-[1600px] mx-auto ${isMobile ? 'pb-24' : ''}`}>
+      <div className={`max-w-[1600px] mx-auto ${isMobile ? 'pb-24' : 'pt-40'}`}>
         {/* Mobile Hero Section */}
         {isMobile ? (
           <div className="bg-white py-8 px-4 relative overflow-hidden border-b border-border">
@@ -152,7 +152,7 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
           </div>
         ) : (
           /* Desktop Header Card */
-          <Card className="bg-white shadow-lg mb-8 mt-8 mx-4 sm:mx-6 lg:mx-8">
+          <Card className="bg-white shadow-lg mb-8 mx-4 sm:mx-6 lg:mx-8">
             <CardContent className="p-8">
               {/* Header with Restaurant Name, Logo and Edit Button */}
               <div className="flex items-center justify-between mb-6">
