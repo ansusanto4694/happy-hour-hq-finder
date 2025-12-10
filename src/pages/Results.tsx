@@ -403,7 +403,7 @@ const Results = () => {
       )}
 
       {/* Desktop/Tablet Content with padding */}
-      <div className={`${isMobile ? 'hidden' : 'pt-32 px-4 py-6'}`}>
+      <div className={`${isMobile ? 'hidden' : 'pt-40 px-4 py-6'}`}>
 
         {/* Tablet Layout (768px - 1280px) */}
         {!isMobile && (

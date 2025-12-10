@@ -31,7 +31,7 @@ export default function Favorites() {
         <div className="absolute inset-0 bg-black/10"></div>
         <div className="relative z-10">
           {!isMobile && <PageHeader showSearchBar={true} searchBarVariant="results" />}
-          <div className={`container mx-auto px-4 max-w-6xl ${isMobile ? 'py-8' : 'pt-32 pb-8'}`}>
+          <div className={`container mx-auto px-4 max-w-6xl ${isMobile ? 'py-8' : 'pt-40 pb-8'}`}>
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-foreground mb-2 flex items-center gap-3">
               <Heart className="h-8 w-8 text-red-500 fill-current" />

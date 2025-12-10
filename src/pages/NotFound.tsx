@@ -42,7 +42,7 @@ const NotFound = () => {
         
         {!isMobile && <PageHeader />}
         
-        <div className={`flex-1 flex items-center justify-center ${isMobile ? 'px-4' : 'pt-32'}`}>
+        <div className={`flex-1 flex items-center justify-center ${isMobile ? 'px-4' : 'pt-40'}`}>
           <div className="text-center bg-white/90 backdrop-blur-sm rounded-2xl p-8 md:p-12 shadow-xl max-w-md mx-auto">
             <h1 className="text-6xl font-bold text-primary mb-4">404</h1>
             <p className="text-xl text-muted-foreground mb-6">Oops! Page not found</p>

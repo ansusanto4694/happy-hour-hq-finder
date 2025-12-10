@@ -76,7 +76,7 @@ const Account = () => {
         
         <PageHeader showSearchBar={true} searchBarVariant="results" />
         
-        <div className="max-w-5xl mx-auto px-4 py-8 pt-32 md:pt-40">
+        <div className="max-w-5xl mx-auto px-4 py-8 pt-40">
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2 text-white">
