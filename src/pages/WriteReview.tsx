@@ -13,6 +13,9 @@ import { RatingDimensionCard } from '@/components/reviews/RatingDimensionCard';
 import { ReviewTextEditor } from '@/components/reviews/ReviewTextEditor';
 import { ReviewMediaUpload } from '@/components/reviews/ReviewMediaUpload';
 import { SEOHead } from '@/components/SEOHead';
+import { PageHeader } from '@/components/PageHeader';
+import { Footer } from '@/components/Footer';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
 const AutoSaveIndicator: React.FC<{ status: string }> = ({ status }) => {
@@ -55,6 +58,7 @@ const WriteReview: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
+  const isMobile = useIsMobile();
   const merchantId = parseInt(id || '0', 10);
 
   // Fetch merchant data
@@ -136,8 +140,11 @@ const WriteReview: React.FC = () => {
         noIndex
       />
       
-      <div className="min-h-screen bg-background">
-        <div className="max-w-2xl mx-auto px-4 py-8">
+      <div className="min-h-screen relative bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500">
+        <div className="absolute inset-0 bg-black/10"></div>
+        <div className="relative z-10">
+          {!isMobile && <PageHeader showSearchBar={true} searchBarVariant="results" />}
+          <div className={`max-w-2xl mx-auto px-4 ${isMobile ? 'py-8' : 'pt-32 pb-8'}`}>
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
@@ -299,6 +306,8 @@ const WriteReview: React.FC = () => {
               Submit Review
             </Button>
           </div>
+          </div>
+          <Footer />
         </div>
       </div>
     </>
