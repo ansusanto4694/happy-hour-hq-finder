@@ -1,13 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
-import { Star, MessageSquare, PenLine } from 'lucide-react';
+import { Star, MessageSquare, PenLine, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 interface Review {
   id: string;
@@ -31,6 +32,7 @@ const SUPABASE_URL = 'https://gohcqazhofdhkghfxfok.supabase.co';
 
 export const MerchantReviews: React.FC<MerchantReviewsProps> = ({ merchantId, merchantName }) => {
   const { user } = useAuth();
+  const [selectedMedia, setSelectedMedia] = useState<{ media: Array<{ id: string; storage_path: string; media_type: string }>; index: number } | null>(null);
 
   const { data: reviews, isLoading } = useQuery({
     queryKey: ['merchant-reviews', merchantId],
@@ -113,6 +115,19 @@ export const MerchantReviews: React.FC<MerchantReviewsProps> = ({ merchantId, me
   const { dimensionAverages: aggregateRatings, overallAverage } = reviews 
     ? calculateAggregateRatings(reviews) 
     : { dimensionAverages: [], overallAverage: null };
+
+  const navigateMedia = (direction: 'prev' | 'next') => {
+    if (!selectedMedia) return;
+    const newIndex = direction === 'prev' 
+      ? (selectedMedia.index - 1 + selectedMedia.media.length) % selectedMedia.media.length
+      : (selectedMedia.index + 1) % selectedMedia.media.length;
+    setSelectedMedia({ ...selectedMedia, index: newIndex });
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowLeft') navigateMedia('prev');
+    if (e.key === 'ArrowRight') navigateMedia('next');
+  };
 
   if (isLoading) {
     return (
@@ -288,10 +303,11 @@ export const MerchantReviews: React.FC<MerchantReviewsProps> = ({ merchantId, me
                 {/* Media */}
                 {review.media && review.media.length > 0 && (
                   <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                    {review.media.map((m) => (
-                      <div
+                    {review.media.map((m, idx) => (
+                      <button
                         key={m.id}
-                        className="aspect-square rounded-lg overflow-hidden bg-muted"
+                        onClick={() => setSelectedMedia({ media: review.media, index: idx })}
+                        className="aspect-square rounded-lg overflow-hidden bg-muted cursor-pointer hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                       >
                         {m.media_type === 'image' ? (
                           <img
@@ -305,7 +321,7 @@ export const MerchantReviews: React.FC<MerchantReviewsProps> = ({ merchantId, me
                             className="w-full h-full object-cover"
                           />
                         )}
-                      </div>
+                      </button>
                     ))}
                   </div>
                 )}
@@ -315,6 +331,66 @@ export const MerchantReviews: React.FC<MerchantReviewsProps> = ({ merchantId, me
           </div>
         </div>
       )}
+
+      {/* Media Lightbox */}
+      <Dialog open={!!selectedMedia} onOpenChange={() => setSelectedMedia(null)}>
+        <DialogContent 
+          className="max-w-[95vw] max-h-[95vh] p-0 bg-black/95 border-none"
+          onKeyDown={handleKeyDown}
+        >
+          <button
+            onClick={() => setSelectedMedia(null)}
+            className="absolute top-4 right-4 z-50 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+          >
+            <X className="h-6 w-6" />
+          </button>
+
+          {selectedMedia && (
+            <div className="relative flex items-center justify-center w-full h-[85vh]">
+              {/* Navigation arrows for multiple images */}
+              {selectedMedia.media.length > 1 && (
+                <>
+                  <button
+                    onClick={() => navigateMedia('prev')}
+                    className="absolute left-4 z-50 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                  >
+                    <ChevronLeft className="h-6 w-6" />
+                  </button>
+                  <button
+                    onClick={() => navigateMedia('next')}
+                    className="absolute right-4 z-50 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                  >
+                    <ChevronRight className="h-6 w-6" />
+                  </button>
+                </>
+              )}
+
+              {/* Image/Video display */}
+              {selectedMedia.media[selectedMedia.index].media_type === 'image' ? (
+                <img
+                  src={`${SUPABASE_URL}/storage/v1/object/public/review-media/${selectedMedia.media[selectedMedia.index].storage_path}`}
+                  alt="Review photo enlarged"
+                  className="max-w-full max-h-full object-contain"
+                />
+              ) : (
+                <video
+                  src={`${SUPABASE_URL}/storage/v1/object/public/review-media/${selectedMedia.media[selectedMedia.index].storage_path}`}
+                  className="max-w-full max-h-full object-contain"
+                  controls
+                  autoPlay
+                />
+              )}
+
+              {/* Image counter */}
+              {selectedMedia.media.length > 1 && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/50 text-white text-sm">
+                  {selectedMedia.index + 1} / {selectedMedia.media.length}
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
