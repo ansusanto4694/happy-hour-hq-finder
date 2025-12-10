@@ -239,7 +239,9 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
         )}
 
         {/* Two-Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 px-4 sm:px-6 lg:px-4 py-8 bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500">
+        <div className="relative bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500">
+          <div className="absolute inset-0 bg-black/10"></div>
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-8 px-4 sm:px-6 lg:px-4 py-8">
           {/* Main Content - Left Column (2/3 width) */}
           <div className="lg:col-span-2 space-y-8">
             {/* Current Offers Section - Only show if offers exist */}
@@ -319,6 +321,7 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
                 </Card>
               )}
             </div>
+          </div>
           </div>
         </div>
 
