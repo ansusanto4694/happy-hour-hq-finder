@@ -285,27 +285,27 @@ export const LocationLanding = () => {
         <div className="relative z-10">
           {!isMobile && <PageHeader showSearchBar={true} searchBarVariant="results" />}
         {/* Hero Section */}
-        <section className={`bg-gradient-to-br from-primary/10 via-background to-secondary/10 py-12 px-4 ${!isMobile ? 'pt-40' : ''}`}>
+        <section className={`py-12 px-4 ${!isMobile ? 'pt-40' : ''}`}>
           <div className="container mx-auto max-w-6xl">
             {/* Breadcrumb */}
-            <nav className="mb-6 text-sm text-muted-foreground">
-              <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
+            <nav className="mb-6 text-sm text-white/80">
+              <Link to="/" className="hover:text-white transition-colors">Home</Link>
               <span className="mx-2">/</span>
-              <Link to={`/happy-hour/${citySlug}`} className="hover:text-foreground transition-colors">
+              <Link to={`/happy-hour/${citySlug}`} className="hover:text-white transition-colors">
                 Happy Hour {city}, {state}
               </Link>
               {neighborhood && (
                 <>
                   <span className="mx-2">/</span>
-                  <span className="text-foreground">{neighborhood}</span>
+                  <span className="text-white">{neighborhood}</span>
                 </>
               )}
             </nav>
 
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white">
               Happy Hour in {neighborhood ? `${neighborhood}, ${city}` : `${city}, ${state}`}
             </h1>
-            <p className="text-lg text-muted-foreground mb-6 max-w-2xl">
+            <p className="text-lg text-white/90 mb-6 max-w-2xl">
               {neighborhood 
                 ? `Discover the best happy hour spots in ${neighborhood}. Find amazing deals on drinks and food at local bars and restaurants.`
                 : `Browse happy hour deals across ${city}. Select a neighborhood below or explore all locations.`
@@ -313,17 +313,17 @@ export const LocationLanding = () => {
             </p>
 
             {/* Stats */}
-            <div className="flex flex-wrap gap-6 text-sm">
+            <div className="flex flex-wrap gap-6 text-sm text-white">
               <div className="flex items-center gap-2">
-                <Utensils className="h-5 w-5 text-primary" />
+                <Utensils className="h-5 w-5 text-white" />
                 <span className="font-semibold">{merchants?.length || 0} Restaurants & Bars</span>
               </div>
               <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-primary" />
+                <Clock className="h-5 w-5 text-white" />
                 <span className="font-semibold">Daily Happy Hour Deals</span>
               </div>
               <div className="flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-primary" />
+                <MapPin className="h-5 w-5 text-white" />
                 <span className="font-semibold">{neighborhood || `${neighborhoods.length} Neighborhoods`}</span>
               </div>
             </div>
@@ -334,7 +334,7 @@ export const LocationLanding = () => {
           {/* Neighborhoods Grid (City page only) */}
           {!neighborhood && neighborhoods.length > 0 && (
             <section className="mb-6">
-              <h2 className="text-2xl font-bold mb-6 text-foreground">Browse by Neighborhood</h2>
+              <h2 className="text-2xl font-bold mb-6 text-white">Browse by Neighborhood</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {neighborhoods.map((hood) => (
                   <Link
