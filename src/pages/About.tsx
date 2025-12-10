@@ -26,6 +26,7 @@ const organizationSchema = {
 const About = () => {
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500 flex flex-col">
+      <div className="absolute inset-0 bg-black/10"></div>
       <SEOHead 
         title="About SipMunchYap - Your Happy Hour Discovery Platform"
         description="Learn about SipMunchYap and our mission to help you discover the best happy hour deals in NYC. Find local restaurants and bars with amazing specials."

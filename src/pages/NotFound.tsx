@@ -31,7 +31,7 @@ const NotFound = () => {
 
   return (
     <div className="min-h-screen relative bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500">
-      
+      <div className="absolute inset-0 bg-black/10"></div>
       <div className="relative z-10 flex flex-col min-h-screen">
         <SEOHead 
           title="Page Not Found - SipMunchYap"

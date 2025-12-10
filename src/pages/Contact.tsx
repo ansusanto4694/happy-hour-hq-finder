@@ -20,6 +20,7 @@ const contactPageSchema = {
 const Contact = () => {
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500 flex flex-col">
+      <div className="absolute inset-0 bg-black/10"></div>
       <SEOHead 
         title="Contact SipMunchYap - Get in Touch"
         description="Have questions or want to list your restaurant? Contact SipMunchYap to learn more about our happy hour platform and business opportunities."
