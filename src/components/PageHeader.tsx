@@ -34,7 +34,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
 
   const baseClasses = transparent
     ? 'relative top-4 left-4 right-4 md:top-6 md:left-6 md:right-6 z-20'
-    : 'backdrop-blur-md border-b border-white/20 fixed top-0 left-0 right-0 z-50';
+    : 'bg-gradient-to-r from-orange-400 via-amber-500 to-yellow-500 shadow-md fixed top-0 left-0 right-0 z-50';
 
   const containerClasses = transparent
     ? 'flex justify-between items-center px-4 md:px-6'
