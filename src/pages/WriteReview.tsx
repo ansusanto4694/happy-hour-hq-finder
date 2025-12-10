@@ -144,7 +144,7 @@ const WriteReview: React.FC = () => {
         <div className="absolute inset-0 bg-black/10"></div>
         <div className="relative z-10">
           {!isMobile && <PageHeader showSearchBar={true} searchBarVariant="results" />}
-          <div className={`max-w-2xl mx-auto px-4 ${isMobile ? 'py-8' : 'pt-32 pb-8'}`}>
+          <div className={`max-w-2xl mx-auto px-4 ${isMobile ? 'py-8' : 'pt-40 pb-8'}`}>
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
