@@ -34,8 +34,6 @@ const About = () => {
         structuredData={organizationSchema}
       />
       
-      {/* Background overlay */}
-      <div className="absolute inset-0 bg-black/10"></div>
       
       {/* Header with logo, search bar, and navigation */}
       <PageHeader showSearchBar={true} searchBarVariant="results" />

@@ -67,8 +67,6 @@ const AuthConfirm = () => {
         noIndex={true}
       />
       
-      {/* Background overlay */}
-      <div className="absolute inset-0 bg-black/10"></div>
       
       {/* Header */}
       <PageHeader showSearchBar={true} searchBarVariant="results" />
