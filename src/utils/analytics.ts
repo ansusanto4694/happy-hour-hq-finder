@@ -880,6 +880,52 @@ export const updateSessionActivity = async () => {
   }
 };
 
+// GA4 event name mapping for long event names (40 char limit)
+const GA4_EVENT_NAME_MAP: Record<string, string> = {
+  // Authentication events with long names
+  'authentication_auth_required_signin_clicked': 'auth_required_signin_click',
+  'authentication_auth_required_dismissed': 'auth_required_dismissed',
+  'authentication_auth_required_action_attempted': 'auth_required_action',
+  'authentication_signup_field_focus': 'auth_signup_field_focus',
+  'authentication_signup_field_blur': 'auth_signup_field_blur',
+  'authentication_signup_form_abandoned': 'auth_signup_abandoned',
+  
+  // Merchant interaction events with long names
+  'merchant_interaction_unfavorite_restaurant': 'merchant_unfavorite',
+  'merchant_interaction_favorite_restaurant': 'merchant_favorite',
+  'merchant_interaction_happy_hour_deals_viewed': 'merchant_hh_deals_viewed',
+  'merchant_interaction_happy_hour_deal_clicked': 'merchant_hh_deal_clicked',
+  'merchant_interaction_result_card_impression': 'merchant_card_impression',
+  'merchant_interaction_result_card_clicked': 'merchant_card_clicked',
+  'merchant_interaction_result_card_hover': 'merchant_card_hover',
+  
+  // Search events with long names  
+  'search_keyboard_navigation': 'search_keyboard_nav',
+  'search_search_submitted_keyboard': 'search_submitted_keyboard',
+  'search_gps_location_obtained': 'search_gps_obtained',
+  'search_mobile_search_drawer_closed': 'search_mobile_drawer_closed',
+  'search_location_suggestion_keyboard_selected': 'search_loc_suggestion_kbd',
+};
+
+// Get GA4-compatible event name (max 40 chars)
+const getGA4EventName = (category: string, action: string): string => {
+  const fullName = `${category}_${action}`.replace(/\s+/g, '_');
+  
+  // Check if we have a mapped shorter name
+  if (GA4_EVENT_NAME_MAP[fullName]) {
+    return GA4_EVENT_NAME_MAP[fullName];
+  }
+  
+  // If under 40 chars, use as-is
+  if (fullName.length <= 40) {
+    return fullName;
+  }
+  
+  // Fallback: truncate to 40 chars and log warning
+  console.warn(`[Analytics] GA4 event name truncated: ${fullName} -> ${fullName.substring(0, 40)}`);
+  return fullName.substring(0, 40);
+};
+
 // Track individual events with safeguards
 export const trackEvent = async (params: TrackEventParams) => {
   // SAFEGUARD 1: Block tracking if session exceeded critical limit
@@ -941,7 +987,7 @@ export const trackEvent = async (params: TrackEventParams) => {
   
   // Send to GA4 in parallel with custom analytics (unless throttled)
   if (!sessionThrottled || !isHighFrequency) {
-    const ga4EventName = `${params.eventCategory}_${params.eventAction}`.replace(/\s+/g, '_');
+    const ga4EventName = getGA4EventName(params.eventCategory, params.eventAction);
     sendToGA4(ga4EventName, {
       event_category: params.eventCategory,
       event_label: params.eventLabel,
