@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useFavorites } from '@/hooks/useFavorites';
 import { Navigate, Link } from 'react-router-dom';
@@ -7,10 +6,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { SEOHead } from '@/components/SEOHead';
+import { PageHeader } from '@/components/PageHeader';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Footer } from '@/components/Footer';
 
 export default function Favorites() {
   const { user } = useAuth();
   const { favorites, isLoading } = useFavorites(user?.id);
+  const isMobile = useIsMobile();
 
   // Redirect to auth if not logged in
   if (!user) {
@@ -24,8 +27,11 @@ export default function Favorites() {
         description="View your saved favorite restaurants and happy hour spots"
       />
       
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="min-h-screen relative bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500">
+        <div className="absolute inset-0 bg-black/10"></div>
+        <div className="relative z-10">
+          {!isMobile && <PageHeader showSearchBar={true} searchBarVariant="results" />}
+          <div className={`container mx-auto px-4 max-w-6xl ${isMobile ? 'py-8' : 'pt-32 pb-8'}`}>
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-foreground mb-2 flex items-center gap-3">
               <Heart className="h-8 w-8 text-red-500 fill-current" />
@@ -117,6 +123,8 @@ export default function Favorites() {
               })}
             </div>
           )}
+          </div>
+          <Footer />
         </div>
       </div>
     </>

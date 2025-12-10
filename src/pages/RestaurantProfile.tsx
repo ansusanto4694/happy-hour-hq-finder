@@ -5,11 +5,13 @@ import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { RestaurantHeader } from '@/components/RestaurantHeader';
+import { PageHeader } from '@/components/PageHeader';
 import { RestaurantProfileContent } from '@/components/RestaurantProfileContent';
 import { SEOHead } from '@/components/SEOHead';
 import { trackFunnelStep } from '@/utils/analytics';
 import { Footer } from '@/components/Footer';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Restaurant profile page with enhanced analytics tracking
 
@@ -164,6 +166,7 @@ const RestaurantProfile = () => {
   const { id } = useParams();
   const { track } = useAnalytics();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   
   // Determine if the param is a numeric ID or a slug
   const isNumericId = id ? /^\d+$/.test(id) : false;
@@ -301,21 +304,28 @@ const RestaurantProfile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <SEOHead
-        title={`${restaurant.restaurant_name} - Happy Hour in ${restaurant.city}, ${restaurant.state}`}
-        description={`Find happy hour deals and specials at ${restaurant.restaurant_name} in ${restaurant.city}. Check hours, menu, and location details.`}
-        keywords={`${restaurant.restaurant_name}, happy hour, ${restaurant.city} bars, ${restaurant.city} restaurants, drink specials`}
-        canonical={`https://sipmunchyap.com/restaurant/${restaurant.slug || restaurant.id}`}
-        ogImage={restaurant.logo_url || "https://lovable.dev/opengraph-image-p98pqg.png"}
-        structuredData={structuredData}
-      />
-      <RestaurantHeader 
-        merchantId={restaurant.id} 
-        merchantName={restaurant.restaurant_name} 
-      />
-      <RestaurantProfileContent restaurant={restaurant} />
-      <Footer />
+    <div className="min-h-screen relative bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500">
+      <div className="absolute inset-0 bg-black/10"></div>
+      <div className="relative z-10">
+        <SEOHead
+          title={`${restaurant.restaurant_name} - Happy Hour in ${restaurant.city}, ${restaurant.state}`}
+          description={`Find happy hour deals and specials at ${restaurant.restaurant_name} in ${restaurant.city}. Check hours, menu, and location details.`}
+          keywords={`${restaurant.restaurant_name}, happy hour, ${restaurant.city} bars, ${restaurant.city} restaurants, drink specials`}
+          canonical={`https://sipmunchyap.com/restaurant/${restaurant.slug || restaurant.id}`}
+          ogImage={restaurant.logo_url || "https://lovable.dev/opengraph-image-p98pqg.png"}
+          structuredData={structuredData}
+        />
+        {isMobile ? (
+          <RestaurantHeader 
+            merchantId={restaurant.id} 
+            merchantName={restaurant.restaurant_name} 
+          />
+        ) : (
+          <PageHeader showSearchBar={true} searchBarVariant="results" />
+        )}
+        <RestaurantProfileContent restaurant={restaurant} />
+        <Footer />
+      </div>
     </div>
   );
 };

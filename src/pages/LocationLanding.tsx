@@ -13,6 +13,7 @@ import { ViewToggle } from '@/components/ViewToggle';
 import { LazyResultsMap } from '@/components/LazyResultsMap';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import NotFound from '@/pages/NotFound';
+import { PageHeader } from '@/components/PageHeader';
 
 // Location landing page with analytics tracking
 
@@ -279,7 +280,10 @@ export const LocationLanding = () => {
         noIndex={isInvalidLocation}
       />
       
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen relative bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500">
+        <div className="absolute inset-0 bg-black/10"></div>
+        <div className="relative z-10">
+          {!isMobile && <PageHeader showSearchBar={true} searchBarVariant="results" />}
         {/* Hero Section */}
         <section className="bg-gradient-to-br from-primary/10 via-background to-secondary/10 py-12 px-4">
           <div className="container mx-auto max-w-6xl">
@@ -467,8 +471,9 @@ export const LocationLanding = () => {
             </p>
           </section>
         </div>
+        <Footer />
+        </div>
       </div>
-      <Footer />
     </>
   );
 };
