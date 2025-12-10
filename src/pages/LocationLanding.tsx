@@ -460,10 +460,10 @@ export const LocationLanding = () => {
 
           {/* SEO Content */}
           <section className="mt-12 prose prose-sm max-w-none">
-            <h2 className="text-xl font-semibold mb-4 text-foreground">
+            <h2 className="text-xl font-semibold mb-4 text-white">
               About Happy Hour in {neighborhood || city}
             </h2>
-            <p className="text-muted-foreground">
+            <p className="text-white/90">
               {neighborhood 
                 ? `${neighborhood} is known for its vibrant dining and nightlife scene. Whether you're looking for craft cocktails, local brews, or delicious appetizers, ${neighborhood} offers a diverse selection of happy hour venues. Browse our listings to find the perfect spot for after-work drinks or a casual evening out.`
                 : `${city} is home to some of the best happy hours in ${state}. From rooftop bars to cozy neighborhood pubs, the city offers endless options for enjoying discounted drinks and food. Use our neighborhood guides to discover hidden gems and popular spots in your area.`
