@@ -285,7 +285,7 @@ export const LocationLanding = () => {
         <div className="relative z-10">
           {!isMobile && <PageHeader showSearchBar={true} searchBarVariant="results" />}
         {/* Hero Section */}
-        <section className={`bg-gradient-to-br from-primary/10 via-background to-secondary/10 py-12 px-4 ${!isMobile ? 'pt-32' : ''}`}>
+        <section className={`bg-gradient-to-br from-primary/10 via-background to-secondary/10 py-12 px-4 ${!isMobile ? 'pt-40' : ''}`}>
           <div className="container mx-auto max-w-6xl">
             {/* Breadcrumb */}
             <nav className="mb-6 text-sm text-muted-foreground">
