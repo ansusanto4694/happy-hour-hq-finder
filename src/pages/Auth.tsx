@@ -265,6 +265,7 @@ const Auth = () => {
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500 flex flex-col">
+      <div className="absolute inset-0 bg-black/10"></div>
       <SEOHead 
         title="Sign In - SipMunchYap"
         description="Sign in to your SipMunchYap account to save favorite happy hours and get personalized recommendations."

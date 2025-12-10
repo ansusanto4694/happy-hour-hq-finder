@@ -60,6 +60,7 @@ const AuthConfirm = () => {
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500 flex flex-col">
+      <div className="absolute inset-0 bg-black/10"></div>
       <SEOHead 
         title="Email Confirmation - SipMunchYap"
         description="Confirm your email address for SipMunchYap"
