@@ -28,7 +28,7 @@ export default function Favorites() {
       />
       
       <div className="min-h-screen relative bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500">
-        <div className="absolute inset-0 bg-black/10"></div>
+        
         <div className="relative z-10">
           {!isMobile && <PageHeader showSearchBar={true} searchBarVariant="results" />}
           <div className={`container mx-auto px-4 max-w-6xl ${isMobile ? 'py-8' : 'pt-40 pb-8'}`}>

@@ -24,8 +24,6 @@ const Index = () => {
   if (isMobile) {
     return (
       <div className="relative min-h-screen bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500">
-        {/* Background overlay */}
-        <div className="absolute inset-0 bg-black/10"></div>
         
         <div className="relative z-10">
           <SEOHead 
@@ -47,8 +45,6 @@ const Index = () => {
   // Desktop version - new layout
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500">
-      {/* Background overlay */}
-      <div className="absolute inset-0 bg-black/10"></div>
       
       {/* Decorative elements */}
       <div className="absolute top-20 left-20 w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
