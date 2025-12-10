@@ -258,8 +258,8 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
               </CardContent>
             </Card>
 
-            {/* Restaurant Events Feed */}
-            <RestaurantEventsFeed restaurantId={restaurant.id} />
+            {/* Restaurant Events Feed - Hidden until we have restaurant partners */}
+            {/* <RestaurantEventsFeed restaurantId={restaurant.id} /> */}
 
             {/* Reviews Section */}
             <Card className="shadow-lg border-l-4 border-amber-500 bg-white">
