@@ -80,17 +80,17 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
       </div>
       
       {/* Merchant name */}
-      <h4 className="font-semibold text-sm text-foreground line-clamp-1 mb-1">
+      <h4 className="font-semibold text-sm text-foreground line-clamp-1 mb-1 text-center">
         {merchant.restaurant_name}
       </h4>
       
       {/* Rating + Neighborhood row */}
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1.5">
+      <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground mb-1.5">
         {ratingData?.overallAverage && (
           <>
             <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
             <span className="font-medium text-foreground">{ratingData.overallAverage.toFixed(1)}</span>
-            <span className="text-muted-foreground/60">•</span>
+            {merchant.neighborhood && <span className="text-muted-foreground/60">•</span>}
           </>
         )}
         {merchant.neighborhood && (
@@ -100,27 +100,29 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
       
       {/* Happy hour badge */}
       {todaysHappyHourText !== 'No Happy Hour Today' ? (
-        <div className="text-[11px] font-medium text-amber-600 bg-amber-50 dark:bg-amber-500/20 dark:text-amber-400 px-2 py-1 rounded-md mb-1.5 truncate">
+        <div className="text-[11px] font-medium text-amber-600 bg-amber-50 dark:bg-amber-500/20 dark:text-amber-400 px-2 py-1 rounded-md mb-1.5 truncate text-center">
           🍻 {todaysHappyHourText}
         </div>
       ) : (
-        <div className="text-[11px] text-muted-foreground px-2 py-1 mb-1.5">
+        <div className="text-[11px] text-muted-foreground px-2 py-1 mb-1.5 text-center">
           No happy hour today
         </div>
       )}
       
       {/* Menu type badge */}
       {menuTypeBadge && (
-        <Badge 
-          variant="secondary" 
-          className={`text-[10px] px-2 py-0.5 font-medium ${
-            menuTypeBadge.type === 'food_and_drinks' 
-              ? 'bg-teal-500/10 text-teal-600 dark:text-teal-400 hover:bg-teal-500/20' 
-              : 'bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20'
-          }`}
-        >
-          {menuTypeBadge.emoji} {menuTypeBadge.label}
-        </Badge>
+        <div className="flex justify-center">
+          <Badge 
+            variant="secondary" 
+            className={`text-[10px] px-2 py-0.5 font-medium ${
+              menuTypeBadge.type === 'food_and_drinks' 
+                ? 'bg-teal-500/10 text-teal-600 dark:text-teal-400 hover:bg-teal-500/20' 
+                : 'bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20'
+            }`}
+          >
+            {menuTypeBadge.emoji} {menuTypeBadge.label}
+          </Badge>
+        </div>
       )}
     </div>
   );
