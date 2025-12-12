@@ -12,6 +12,7 @@ import { trackFunnelStep } from '@/utils/analytics';
 import { Footer } from '@/components/Footer';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { MobileCTABar } from '@/components/MobileCTABar';
 
 // Restaurant profile page with enhanced analytics tracking
 
@@ -304,7 +305,7 @@ const RestaurantProfile = () => {
   }
 
   return (
-    <div className="min-h-screen relative bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500">
+    <div className={`min-h-screen relative bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500 ${isMobile ? 'pb-32' : ''}`}>
       <div className="absolute inset-0 bg-black/10"></div>
       <div className="relative z-10">
         <SEOHead
@@ -326,6 +327,20 @@ const RestaurantProfile = () => {
         <RestaurantProfileContent restaurant={restaurant} />
         <Footer />
       </div>
+      
+      {/* Mobile CTA Bar - positioned above bottom nav */}
+      {isMobile && (
+        <MobileCTABar
+          phoneNumber={restaurant.phone_number}
+          address={{
+            street: restaurant.street_address,
+            city: restaurant.city,
+            state: restaurant.state,
+            zipCode: restaurant.zip_code,
+          }}
+          website={restaurant.website}
+        />
+      )}
     </div>
   );
 };
