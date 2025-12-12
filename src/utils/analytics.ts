@@ -532,6 +532,92 @@ export const generateUtmUrl = (
   return url.toString();
 };
 
+// UTM templates for common marketing channels
+export const UTM_TEMPLATES = {
+  // Social Media - Organic
+  instagram_bio: { source: 'instagram', medium: 'social', campaign: 'bio_link' },
+  instagram_story: { source: 'instagram', medium: 'social', campaign: 'story' },
+  instagram_post: { source: 'instagram', medium: 'social', campaign: 'organic_post' },
+  facebook_post: { source: 'facebook', medium: 'social', campaign: 'organic_post' },
+  facebook_group: { source: 'facebook', medium: 'social', campaign: 'group_post' },
+  twitter_post: { source: 'twitter', medium: 'social', campaign: 'organic_post' },
+  reddit_post: { source: 'reddit', medium: 'social', campaign: 'organic_post' },
+  linkedin_post: { source: 'linkedin', medium: 'social', campaign: 'organic_post' },
+  tiktok_bio: { source: 'tiktok', medium: 'social', campaign: 'bio_link' },
+  
+  // Social Media - Paid
+  facebook_ad: { source: 'facebook', medium: 'paid_social', campaign: '' },
+  instagram_ad: { source: 'instagram', medium: 'paid_social', campaign: '' },
+  tiktok_ad: { source: 'tiktok', medium: 'paid_social', campaign: '' },
+  
+  // Search - Paid
+  google_ad: { source: 'google', medium: 'cpc', campaign: '' },
+  bing_ad: { source: 'bing', medium: 'cpc', campaign: '' },
+  
+  // Email
+  email_newsletter: { source: 'newsletter', medium: 'email', campaign: '' },
+  email_promo: { source: 'email', medium: 'email', campaign: 'promotion' },
+  email_welcome: { source: 'email', medium: 'email', campaign: 'welcome_series' },
+  
+  // Partnerships & Referrals
+  partner_referral: { source: '', medium: 'referral', campaign: 'partner' },
+  influencer: { source: '', medium: 'influencer', campaign: '' },
+  press_mention: { source: '', medium: 'pr', campaign: '' },
+  
+  // QR Codes & Print
+  qr_code: { source: 'qr_code', medium: 'offline', campaign: '' },
+  print_ad: { source: 'print', medium: 'offline', campaign: '' },
+  flyer: { source: 'flyer', medium: 'offline', campaign: '' },
+} as const;
+
+// Generate UTM URL using a template
+export const generateUtmUrlFromTemplate = (
+  baseUrl: string,
+  templateName: keyof typeof UTM_TEMPLATES,
+  overrides?: Partial<{ source: string; medium: string; campaign: string; content?: string; term?: string }>
+): string => {
+  const template = UTM_TEMPLATES[templateName];
+  return generateUtmUrl(baseUrl, {
+    source: overrides?.source || template.source,
+    medium: overrides?.medium || template.medium,
+    campaign: overrides?.campaign || template.campaign,
+    content: overrides?.content,
+    term: overrides?.term,
+  });
+};
+
+// Mobile app referrer patterns
+const MOBILE_APP_PATTERNS: Record<string, { platform: string; category: string }> = {
+  'com.reddit': { platform: 'reddit', category: 'social_media' },
+  'com.facebook': { platform: 'facebook', category: 'social_media' },
+  'com.instagram': { platform: 'instagram', category: 'social_media' },
+  'com.twitter': { platform: 'twitter', category: 'social_media' },
+  'com.linkedin': { platform: 'linkedin', category: 'social_media' },
+  'com.google.android.gm': { platform: 'gmail', category: 'email' },
+  'com.google.android.apps.messaging': { platform: 'google_messages', category: 'messaging' },
+  'com.whatsapp': { platform: 'whatsapp', category: 'messaging' },
+  'org.telegram': { platform: 'telegram', category: 'messaging' },
+  'com.Slack': { platform: 'slack', category: 'messaging' },
+  'com.discord': { platform: 'discord', category: 'messaging' },
+  'com.tiktok': { platform: 'tiktok', category: 'social_media' },
+  'com.pinterest': { platform: 'pinterest', category: 'social_media' },
+  'com.snapchat': { platform: 'snapchat', category: 'social_media' },
+};
+
+// Social media link trackers and shorteners
+const SOCIAL_LINK_TRACKERS: Record<string, string> = {
+  'l.facebook.com': 'facebook',
+  'lm.facebook.com': 'facebook',
+  'l.instagram.com': 'instagram',
+  't.co': 'twitter',
+  'lnkd.in': 'linkedin',
+  'pin.it': 'pinterest',
+  'vm.tiktok.com': 'tiktok',
+  'youtu.be': 'youtube',
+  'redd.it': 'reddit',
+  'out.reddit.com': 'reddit',
+};
+
 // Categorize and parse referrer information
 export const categorizeReferrer = (referrer: string): {
   category: string | null;
@@ -542,9 +628,28 @@ export const categorizeReferrer = (referrer: string): {
     return { category: 'direct', platform: null, traffic_source: 'direct' };
   }
 
+  // Handle mobile app referrers (android-app://, ios-app://)
+  if (referrer.startsWith('android-app://') || referrer.startsWith('ios-app://')) {
+    const appId = referrer.replace(/^(android-app|ios-app):\/\//, '').split('/')[0];
+    
+    for (const [pattern, info] of Object.entries(MOBILE_APP_PATTERNS)) {
+      if (appId.includes(pattern)) {
+        return { 
+          category: info.category, 
+          platform: info.platform, 
+          traffic_source: info.category === 'social_media' ? 'social' : info.category 
+        };
+      }
+    }
+    
+    // Unknown app - still better than "direct"
+    return { category: 'app_referral', platform: appId, traffic_source: 'app' };
+  }
+
   try {
     const referrerUrl = new URL(referrer);
     const hostname = referrerUrl.hostname.toLowerCase();
+    const pathname = referrerUrl.pathname.toLowerCase();
     const currentHostname = window.location.hostname.toLowerCase();
 
     // Internal referral
@@ -552,60 +657,132 @@ export const categorizeReferrer = (referrer: string): {
       return { category: 'internal', platform: currentHostname, traffic_source: 'internal' };
     }
 
-    // Search engines
-    const searchEngines = {
-      'google.com': 'google',
-      'google.co.uk': 'google',
-      'google.ca': 'google',
+    // Check social link trackers first (these are referral tracking domains)
+    for (const [trackerDomain, platform] of Object.entries(SOCIAL_LINK_TRACKERS)) {
+      if (hostname === trackerDomain || hostname.endsWith(`.${trackerDomain}`)) {
+        return { category: 'social_media', platform, traffic_source: 'social' };
+      }
+    }
+
+    // Search engines - be strict about what qualifies as search
+    // Exclude non-search Google properties like docs.google.com, drive.google.com, etc.
+    const googleSearchPatterns = [
+      /^(www\.)?google\.(com|co\.[a-z]{2}|[a-z]{2,3})$/,  // google.com, google.co.uk, google.de
+      /^search\.google\.com$/,
+    ];
+    
+    const isGoogleSearch = googleSearchPatterns.some(pattern => pattern.test(hostname));
+    if (isGoogleSearch) {
+      return { category: 'search_engine', platform: 'google', traffic_source: 'organic' };
+    }
+
+    // Other search engines (more permissive matching is OK for these)
+    const otherSearchEngines: Record<string, string> = {
       'bing.com': 'bing',
+      'www.bing.com': 'bing',
       'yahoo.com': 'yahoo',
+      'search.yahoo.com': 'yahoo',
       'duckduckgo.com': 'duckduckgo',
       'baidu.com': 'baidu',
       'yandex.com': 'yandex',
+      'yandex.ru': 'yandex',
       'ask.com': 'ask',
       'aol.com': 'aol',
       'ecosia.org': 'ecosia',
       'startpage.com': 'startpage',
+      'qwant.com': 'qwant',
+      'brave.com': 'brave',
     };
 
-    for (const [domain, engine] of Object.entries(searchEngines)) {
-      if (hostname.includes(domain)) {
+    // Check exact hostname match first
+    if (otherSearchEngines[hostname]) {
+      return { category: 'search_engine', platform: otherSearchEngines[hostname], traffic_source: 'organic' };
+    }
+    
+    // Then check if hostname ends with the search engine domain
+    for (const [domain, engine] of Object.entries(otherSearchEngines)) {
+      if (hostname === domain || hostname.endsWith(`.${domain}`)) {
         return { category: 'search_engine', platform: engine, traffic_source: 'organic' };
       }
     }
 
     // Social media platforms
-    const socialPlatforms = {
+    const socialPlatforms: Record<string, string> = {
       'facebook.com': 'facebook',
+      'www.facebook.com': 'facebook',
+      'm.facebook.com': 'facebook',
       'fb.com': 'facebook',
+      'fb.me': 'facebook',
       'twitter.com': 'twitter',
+      'www.twitter.com': 'twitter',
+      'mobile.twitter.com': 'twitter',
       'x.com': 'twitter',
-      't.co': 'twitter',
       'instagram.com': 'instagram',
+      'www.instagram.com': 'instagram',
       'linkedin.com': 'linkedin',
+      'www.linkedin.com': 'linkedin',
       'reddit.com': 'reddit',
+      'www.reddit.com': 'reddit',
+      'old.reddit.com': 'reddit',
       'pinterest.com': 'pinterest',
+      'www.pinterest.com': 'pinterest',
       'tiktok.com': 'tiktok',
+      'www.tiktok.com': 'tiktok',
       'youtube.com': 'youtube',
+      'www.youtube.com': 'youtube',
+      'm.youtube.com': 'youtube',
       'snapchat.com': 'snapchat',
       'tumblr.com': 'tumblr',
       'whatsapp.com': 'whatsapp',
+      'web.whatsapp.com': 'whatsapp',
       'telegram.org': 'telegram',
+      'web.telegram.org': 'telegram',
       'discord.com': 'discord',
+      'discord.gg': 'discord',
       'threads.net': 'threads',
+      'www.threads.net': 'threads',
+      'nextdoor.com': 'nextdoor',
     };
 
+    // Check exact hostname match first for social
+    if (socialPlatforms[hostname]) {
+      return { category: 'social_media', platform: socialPlatforms[hostname], traffic_source: 'social' };
+    }
+    
+    // Then check if hostname ends with the social domain
     for (const [domain, platform] of Object.entries(socialPlatforms)) {
-      if (hostname.includes(domain)) {
+      if (hostname.endsWith(`.${domain}`)) {
         return { category: 'social_media', platform, traffic_source: 'social' };
       }
     }
 
-    // External referral
+    // Email services (not search engines!)
+    const emailProviders = ['mail.google.com', 'outlook.live.com', 'outlook.office.com', 'mail.yahoo.com'];
+    if (emailProviders.some(provider => hostname === provider || hostname.endsWith(`.${provider}`))) {
+      return { category: 'email', platform: hostname.split('.')[0], traffic_source: 'email' };
+    }
+
+    // CDN/static content (often from Teams, Slack, etc.) - categorize better than "direct"
+    const cdnPatterns = [
+      { pattern: 'teams.cdn.office.net', platform: 'microsoft_teams', category: 'messaging' },
+      { pattern: 'slack.com', platform: 'slack', category: 'messaging' },
+      { pattern: 'notion.so', platform: 'notion', category: 'referral' },
+      { pattern: 'docs.google.com', platform: 'google_docs', category: 'referral' },
+      { pattern: 'drive.google.com', platform: 'google_drive', category: 'referral' },
+    ];
+    
+    for (const { pattern, platform, category } of cdnPatterns) {
+      if (hostname.includes(pattern)) {
+        return { category, platform, traffic_source: category === 'messaging' ? 'messaging' : 'referral' };
+      }
+    }
+
+    // External referral (anything else)
     return { category: 'referral', platform: hostname, traffic_source: 'referral' };
   } catch (error) {
+    // If URL parsing fails and it's not a mobile app scheme, it's truly unknown
     console.error('Error parsing referrer:', error);
-    return { category: 'direct', platform: null, traffic_source: 'direct' };
+    return { category: 'unknown', platform: null, traffic_source: 'unknown' };
   }
 };
 
