@@ -1,5 +1,5 @@
-import { useLocation, Link } from "react-router-dom";
-import { useEffect } from "react";
+import { useLocation, Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { SEOHead } from "@/components/SEOHead";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { PageHeader } from "@/components/PageHeader";
@@ -9,25 +9,70 @@ import { Button } from "@/components/ui/button";
 
 const NotFound = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { track } = useAnalytics();
   const isMobile = useIsMobile();
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
-    console.error(
-      "404 Error: User attempted to access non-existent route:",
-      location.pathname
-    );
+    const { pathname, search, hash } = location;
     
-    // Track 404 event
-    track({
-      eventType: 'error',
-      eventCategory: 'app_error',
-      eventAction: '404_page_view',
-      metadata: {
-        attemptedPath: location.pathname
+    // Check if pathname contains encoded query string (e.g., /results%3Fsearch=pizza)
+    if (pathname.includes('%3F') || pathname.includes('%3f')) {
+      const decodedPath = decodeURIComponent(pathname);
+      const questionMarkIndex = decodedPath.indexOf('?');
+      
+      if (questionMarkIndex !== -1) {
+        const actualPath = decodedPath.substring(0, questionMarkIndex);
+        const encodedQueryString = decodedPath.substring(questionMarkIndex + 1);
+        
+        // Parse and merge params
+        const encodedParams = new URLSearchParams(encodedQueryString);
+        const existingParams = new URLSearchParams(search);
+        const mergedParams = new URLSearchParams();
+        
+        encodedParams.forEach((value, key) => mergedParams.set(key, value));
+        existingParams.forEach((value, key) => {
+          if (!mergedParams.has(key)) {
+            mergedParams.set(key, value);
+          }
+        });
+        
+        const correctedUrl = actualPath + '?' + mergedParams.toString() + hash;
+        
+        console.log('[NotFound] Fixing malformed URL:', {
+          original: pathname + search,
+          corrected: correctedUrl
+        });
+        
+        setIsRedirecting(true);
+        navigate(correctedUrl, { replace: true });
+        return;
       }
-    });
-  }, [location.pathname, track]);
+    }
+    
+    // Only log 404 if we're not redirecting
+    if (!isRedirecting) {
+      console.error(
+        "404 Error: User attempted to access non-existent route:",
+        pathname
+      );
+      
+      track({
+        eventType: 'error',
+        eventCategory: 'app_error',
+        eventAction: '404_page_view',
+        metadata: {
+          attemptedPath: pathname
+        }
+      });
+    }
+  }, [location.pathname, location.search, location.hash, navigate, track, isRedirecting]);
+
+  // Don't render 404 page if we're redirecting
+  if (isRedirecting) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen relative bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500">
