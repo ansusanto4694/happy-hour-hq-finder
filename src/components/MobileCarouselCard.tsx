@@ -1,6 +1,6 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Star } from 'lucide-react';
+import { Star, MapPin } from 'lucide-react';
 import { getTodaysHappyHour, getMenuTypeBadge } from '@/utils/timeUtils';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useMerchantRating } from '@/hooks/useMerchantRating';
@@ -58,75 +58,70 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
   return (
     <div 
       onClick={handleClick}
-      className="flex-shrink-0 w-64 h-[140px] bg-card border rounded-lg p-3 cursor-pointer mr-2 active:scale-[0.98] transition-all contain-layout"
+      className="flex-shrink-0 w-44 bg-card border rounded-xl p-3 cursor-pointer mr-2 active:scale-[0.98] transition-all contain-layout"
       style={{ scrollSnapAlign: 'start' }}
     >
-      <div className="flex items-start gap-3 h-full">
-        {/* Logo - compact, on left */}
-        <div className={`flex-shrink-0 w-14 h-14 ${merchant.logo_url ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100'} border border-border rounded-lg flex items-center justify-center overflow-hidden`}>
-          {merchant.logo_url ? (
-            <img 
-              src={merchant.logo_url} 
-              alt={`${merchant.restaurant_name} logo`}
-              className="w-full h-full object-contain p-1"
-              width={56}
-              height={56}
-              loading="lazy"
-            />
-          ) : (
-            <span className="text-muted-foreground font-bold text-lg">
-              {merchant.restaurant_name.charAt(0).toUpperCase()}
-            </span>
-          )}
-        </div>
-        
-        {/* Content - stacked vertically on right */}
-        <div className="flex-1 min-w-0 flex flex-col gap-1">
-          {/* Merchant name - single line */}
-          <h4 className="font-bold text-sm text-foreground truncate leading-tight">
-            {merchant.restaurant_name}
-          </h4>
-          
-          {/* Rating */}
-          {ratingData?.overallAverage && (
-            <div className="flex items-center gap-1">
-              <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-              <span className="text-xs font-medium text-foreground">{ratingData.overallAverage.toFixed(1)}</span>
-              <span className="text-xs text-muted-foreground">({ratingData.reviewCount})</span>
-            </div>
-          )}
-          
-          {/* Happy hour time - compact badge */}
-          {todaysHappyHourText !== 'No Happy Hour Today' ? (
-            <span className="text-xs font-semibold text-white bg-amber-500 px-2 py-0.5 rounded-full w-fit leading-tight">
-              🍻 {todaysHappyHourText}
-            </span>
-          ) : (
-            <span className="text-xs text-muted-foreground">No happy hour today</span>
-          )}
-          
-          {/* Menu type badge */}
-          {menuTypeBadge && (
-            <Badge 
-              variant="secondary" 
-              className={`text-[10px] px-1.5 py-0.5 w-fit font-semibold ${
-                menuTypeBadge.type === 'food_and_drinks' 
-                  ? 'bg-teal-500 hover:bg-teal-600 text-white' 
-                  : 'bg-purple-500 hover:bg-purple-600 text-white'
-              }`}
-            >
-              {menuTypeBadge.emoji} {menuTypeBadge.label}
-            </Badge>
-          )}
-          
-          {/* Neighborhood */}
-          {merchant.neighborhood && (
-            <p className="text-xs text-muted-foreground truncate">
-              📍 {merchant.neighborhood}
-            </p>
-          )}
-        </div>
+      {/* Logo - prominent */}
+      <div className={`w-full aspect-square mb-2 ${merchant.logo_url ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100'} border border-border rounded-lg flex items-center justify-center overflow-hidden`}>
+        {merchant.logo_url ? (
+          <img 
+            src={merchant.logo_url} 
+            alt={`${merchant.restaurant_name} logo`}
+            className="w-full h-full object-contain p-2"
+            width={152}
+            height={152}
+            loading="lazy"
+          />
+        ) : (
+          <span className="text-muted-foreground font-bold text-3xl">
+            {merchant.restaurant_name.charAt(0).toUpperCase()}
+          </span>
+        )}
       </div>
+      
+      {/* Merchant name */}
+      <h4 className="font-semibold text-sm text-foreground line-clamp-1 mb-1">
+        {merchant.restaurant_name}
+      </h4>
+      
+      {/* Rating + Neighborhood row */}
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1.5">
+        {ratingData?.overallAverage && (
+          <>
+            <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+            <span className="font-medium text-foreground">{ratingData.overallAverage.toFixed(1)}</span>
+            <span className="text-muted-foreground/60">•</span>
+          </>
+        )}
+        {merchant.neighborhood && (
+          <span className="truncate">{merchant.neighborhood}</span>
+        )}
+      </div>
+      
+      {/* Happy hour badge */}
+      {todaysHappyHourText !== 'No Happy Hour Today' ? (
+        <div className="text-[11px] font-medium text-amber-600 bg-amber-50 dark:bg-amber-500/20 dark:text-amber-400 px-2 py-1 rounded-md mb-1.5 truncate">
+          🍻 {todaysHappyHourText}
+        </div>
+      ) : (
+        <div className="text-[11px] text-muted-foreground px-2 py-1 mb-1.5">
+          No happy hour today
+        </div>
+      )}
+      
+      {/* Menu type badge */}
+      {menuTypeBadge && (
+        <Badge 
+          variant="secondary" 
+          className={`text-[10px] px-2 py-0.5 font-medium ${
+            menuTypeBadge.type === 'food_and_drinks' 
+              ? 'bg-teal-500/10 text-teal-600 dark:text-teal-400 hover:bg-teal-500/20' 
+              : 'bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20'
+          }`}
+        >
+          {menuTypeBadge.emoji} {menuTypeBadge.label}
+        </Badge>
+      )}
     </div>
   );
 };
