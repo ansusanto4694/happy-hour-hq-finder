@@ -20,7 +20,7 @@ export const MobileCarousels: React.FC = () => {
             </div>
             <div className="flex space-x-2 overflow-hidden">
               {[1, 2].map((j) => (
-                <Skeleton key={j} className="h-[220px] w-64 flex-shrink-0 rounded-lg" />
+                <Skeleton key={j} className="h-[140px] w-64 flex-shrink-0 rounded-lg" />
               ))}
             </div>
           </div>
