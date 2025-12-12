@@ -102,11 +102,13 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
       
       {/* Happy hour badge */}
       {todaysHappyHourText !== 'No Happy Hour Today' ? (
-        <div className="text-xs font-medium text-amber-600 bg-amber-50 dark:bg-amber-500/20 dark:text-amber-400 px-2 py-1 rounded-md mb-1.5 truncate text-center">
-          🍻 {todaysHappyHourText}
+        <div className="flex justify-center mb-1.5">
+          <span className="text-xs font-semibold text-white bg-amber-500/90 px-2.5 py-1 rounded-full shadow-sm inline-flex items-center gap-1 leading-tight truncate max-w-full">
+            🍻 {todaysHappyHourText}
+          </span>
         </div>
       ) : (
-        <div className="text-xs text-muted-foreground px-2 py-1 mb-1.5 text-center">
+        <div className="text-xs text-muted-foreground px-2 py-1 mb-1.5 text-center font-medium">
           No happy hour today
         </div>
       )}
@@ -116,10 +118,10 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
         <div className="flex justify-center">
           <Badge 
             variant="secondary" 
-            className={`text-xs px-2 py-0.5 font-medium ${
+            className={`text-xs px-2 py-0.5 font-semibold shadow-sm ${
               menuTypeBadge.type === 'food_and_drinks' 
-                ? 'bg-teal-500/10 text-teal-600 dark:text-teal-400 hover:bg-teal-500/20' 
-                : 'bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20'
+                ? 'bg-teal-500/90 hover:bg-teal-600 text-white' 
+                : 'bg-purple-500/90 hover:bg-purple-600 text-white'
             }`}
           >
             {menuTypeBadge.emoji} {menuTypeBadge.label}
