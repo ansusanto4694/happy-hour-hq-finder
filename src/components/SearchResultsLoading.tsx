@@ -12,31 +12,30 @@ export const SearchResultsLoading: React.FC = () => {
         <Card key={i} className="animate-fade-in">
           <CardContent className="p-4 sm:p-6">
             {isMobile ? (
-              // Mobile skeleton layout
-              <div className="flex items-start space-x-4">
+              // Mobile skeleton layout - matches actual card height
+              <div className="flex items-start space-x-3 min-h-[120px]">
                 {/* Logo skeleton */}
                 <div className="flex-shrink-0">
                   <Skeleton className="w-20 h-20 rounded-lg" />
                 </div>
                 
-                <div className="flex-1 min-w-0 space-y-2">
-                  {/* Restaurant name skeleton */}
-                  <Skeleton className="h-6 w-3/4" />
-                  
-                  {/* Location skeleton */}
-                  <Skeleton className="h-5 w-1/2" />
+                <div className="flex-1 min-w-0 space-y-2.5">
+                  {/* Restaurant name and location skeleton */}
+                  <div className="space-y-1">
+                    <Skeleton className="h-6 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
                   
                   {/* Badges skeleton */}
                   <div className="flex flex-col gap-1.5">
-                    <Skeleton className="h-7 w-32" />
-                    <Skeleton className="h-7 w-28" />
+                    <Skeleton className="h-8 w-36 rounded-full" />
+                    <Skeleton className="h-8 w-28 rounded-full" />
                   </div>
                   
                   {/* Category tags skeleton */}
                   <div className="flex flex-wrap gap-1.5">
-                    <Skeleton className="h-7 w-20" />
-                    <Skeleton className="h-7 w-24" />
-                    <Skeleton className="h-7 w-16" />
+                    <Skeleton className="h-6 w-16 rounded-full" />
+                    <Skeleton className="h-6 w-20 rounded-full" />
                   </div>
                 </div>
               </div>
