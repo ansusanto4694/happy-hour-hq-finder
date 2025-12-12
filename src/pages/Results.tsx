@@ -342,9 +342,9 @@ const Results = () => {
             />
           </div>
           
-          {/* Swipeable Peek Handle */}
+          {/* Swipeable Peek Handle - positioned above bottom nav */}
           <div 
-            className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl z-50"
+            className="fixed bottom-16 left-0 right-0 bg-white rounded-t-2xl shadow-2xl z-50"
             style={{ height: 'calc(100vh / 8)' }}
             onTouchStart={(e) => {
               const startY = e.touches[0].clientY;

@@ -10,6 +10,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { trackPageView } from "@/utils/analytics";
 import { initPerformanceMonitoring } from "@/utils/performanceMonitoring";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { Loader2 } from "lucide-react";
 
 // Lazy load all pages for better initial bundle size
@@ -149,6 +150,7 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
+            <MobileBottomNav />
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>
