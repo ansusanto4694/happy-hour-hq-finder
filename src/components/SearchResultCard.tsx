@@ -133,7 +133,7 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
       ref={cardRef}
       className={`${
         isMobile 
-          ? 'min-h-[120px] active:scale-[0.98] active:shadow-sm transition-all cursor-pointer' 
+          ? 'min-h-[140px] active:scale-[0.98] active:bg-muted/50 transition-all duration-150 cursor-pointer touch-manipulation border-l-4 border-l-primary/40' 
           : 'hover:shadow-lg hover:scale-[1.02] hover:border-l-4 hover:border-l-primary/60 transition-all duration-300 cursor-pointer group'
       }`}
       onClick={handleClick}
@@ -144,13 +144,13 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
         }
       }}
     >
-      <CardContent className="p-4 sm:p-6">
+      <CardContent className={isMobile ? "p-4" : "p-4 sm:p-6"}>
         {isMobile ? (
-          // Mobile Layout - Polished with improved spacing and organization
-          <div className="flex items-start space-x-3">
+          // Mobile Layout - Enhanced touch targets and clear CTA
+          <div className="flex items-start gap-3">
             {/* Logo with improved placeholder */}
             <div className="flex-shrink-0">
-              <div className={`w-20 h-20 ${restaurant.logo_url ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100'} border border-gray-200 rounded-lg shadow-sm flex items-center justify-center overflow-hidden`}>
+              <div className={`w-20 h-20 ${restaurant.logo_url ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100'} border border-border rounded-lg shadow-sm flex items-center justify-center overflow-hidden`}>
                 {restaurant.logo_url ? (
                   <img 
                     src={restaurant.logo_url} 
@@ -166,69 +166,65 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
               </div>
             </div>
             
-            <div className="flex-1 min-w-0 space-y-2.5">
-              {/* Info block with tighter spacing */}
+            <div className="flex-1 min-w-0 space-y-2">
+              {/* Header with name and favorite */}
               <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0 space-y-0.5">
-                  <h3 className="text-xl font-bold text-gray-900 break-words leading-snug">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg font-bold text-foreground break-words leading-tight line-clamp-2">
                     {restaurant.restaurant_name}
                   </h3>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm text-gray-600 break-words leading-tight font-medium">
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <p className="text-sm text-muted-foreground break-words leading-tight font-medium">
                       {restaurant.neighborhood || restaurant.city}
                     </p>
                     {ratingData && (
                       <div className="flex items-center gap-1">
                         <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
                         <span className="text-sm font-semibold">{ratingData.average.toFixed(1)}</span>
-                        <span className="text-xs text-muted-foreground">({ratingData.reviewCount})</span>
                       </div>
                     )}
                   </div>
-                  {restaurant.phone_number && (
-                    <p className="text-sm text-gray-500 leading-tight">
-                      {restaurant.phone_number}
-                    </p>
-                  )}
                 </div>
-                <FavoriteButton merchantId={restaurant.id} size="sm" className="flex-shrink-0" />
+                <FavoriteButton 
+                  merchantId={restaurant.id} 
+                  size="sm" 
+                  className="flex-shrink-0 -mt-1 -mr-1 p-2" 
+                />
               </div>
               
-              {/* Badges in column layout (mobile-optimized) */}
-              <div className="flex flex-col gap-1.5">
+              {/* Compact badges row */}
+              <div className="flex flex-wrap gap-1.5">
                 {hasActiveOffers && (
                   <Badge 
                     variant="default" 
-                    className="text-sm px-2.5 py-1.5 font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm w-fit leading-tight"
+                    className="text-xs px-2 py-1 font-semibold bg-emerald-600 text-white shadow-sm"
                   >
-                    🎉 Offer Available
+                    🎉 Offer
                   </Badge>
                 )}
                 {todaysHappyHours.length > 0 ? (
-                  todaysHappyHours.map((hh, index) => (
-                    <Badge 
-                      key={index}
-                      variant="secondary" 
-                      className="text-sm px-2.5 py-1.5 font-semibold bg-amber-500/90 hover:bg-amber-600 text-white shadow-sm w-fit leading-tight"
-                    >
-                      🍻 {hh.start} - {hh.end}
-                    </Badge>
-                  ))
+                  <Badge 
+                    variant="secondary" 
+                    className="text-xs px-2 py-1 font-semibold bg-amber-500/90 text-white shadow-sm"
+                  >
+                    🍻 {todaysHappyHours[0].start} - {todaysHappyHours[0].end}
+                    {todaysHappyHours.length > 1 && ` +${todaysHappyHours.length - 1}`}
+                  </Badge>
                 ) : (
                   <Badge 
                     variant="outline" 
-                    className="text-sm px-2.5 py-1.5 font-medium text-muted-foreground border-muted-foreground/30 w-fit leading-tight"
+                    className="text-xs px-2 py-1 font-medium text-muted-foreground border-muted-foreground/30"
                   >
-                    No Happy Hour Today
+                    No HH Today
                   </Badge>
                 )}
                 {menuTypeBadge && (
                   <Badge 
                     variant="secondary" 
-                    className={`text-sm px-2.5 py-1.5 font-semibold shadow-sm w-fit leading-tight ${
+                    className={`text-xs px-2 py-1 font-semibold shadow-sm ${
                       menuTypeBadge.type === 'food_and_drinks' 
-                        ? 'bg-teal-500/90 hover:bg-teal-600 text-white' 
-                        : 'bg-purple-500/90 hover:bg-purple-600 text-white'
+                        ? 'bg-teal-500/90 text-white' 
+                        : 'bg-purple-500/90 text-white'
                     }`}
                   >
                     {menuTypeBadge.emoji} {menuTypeBadge.label}
@@ -236,28 +232,33 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
                 )}
               </div>
               
-              {/* Category tags */}
-              {restaurant.merchant_categories && restaurant.merchant_categories.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {restaurant.merchant_categories.slice(0, 3).map((merchantCategory: any) => (
-                    <Badge 
-                      key={merchantCategory.id} 
-                      variant="outline" 
-                      className="text-sm px-3 py-1 font-medium border-primary/20 text-foreground/80 bg-background/50 leading-tight"
-                    >
-                      {merchantCategory.categories.name}
-                    </Badge>
-                  ))}
-                  {restaurant.merchant_categories.length > 3 && (
-                    <Badge 
-                      variant="outline" 
-                      className="text-sm px-3 py-1 font-medium text-muted-foreground border-muted-foreground/20 bg-background/50 leading-tight"
-                    >
-                      +{restaurant.merchant_categories.length - 3}
-                    </Badge>
-                  )}
-                </div>
-              )}
+              {/* Clear CTA indicator */}
+              <div className="flex items-center justify-between pt-1">
+                {restaurant.merchant_categories && restaurant.merchant_categories.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {restaurant.merchant_categories.slice(0, 2).map((merchantCategory: any) => (
+                      <Badge 
+                        key={merchantCategory.id} 
+                        variant="outline" 
+                        className="text-xs px-2 py-0.5 font-medium border-primary/20 text-muted-foreground bg-background/50"
+                      >
+                        {merchantCategory.categories.name}
+                      </Badge>
+                    ))}
+                    {restaurant.merchant_categories.length > 2 && (
+                      <Badge 
+                        variant="outline" 
+                        className="text-xs px-2 py-0.5 font-medium text-muted-foreground border-muted-foreground/20 bg-background/50"
+                      >
+                        +{restaurant.merchant_categories.length - 2}
+                      </Badge>
+                    )}
+                  </div>
+                )}
+                <span className="text-xs font-semibold text-primary flex items-center gap-1 ml-auto pl-2">
+                  View Details →
+                </span>
+              </div>
             </div>
           </div>
         ) : (
