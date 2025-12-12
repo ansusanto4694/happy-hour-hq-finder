@@ -23,7 +23,7 @@ const Index = () => {
   // Mobile version - keep existing Hero component
   if (isMobile) {
     return (
-      <div className="relative min-h-screen bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500">
+      <div className="relative min-h-screen pb-16 bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500">
         <div className="absolute inset-0 bg-black/10"></div>
         <div className="relative z-10">
           <SEOHead 
