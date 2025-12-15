@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { MobileCarouselCard } from './MobileCarouselCard';
 import { HomepageCarousel as CarouselType } from '@/hooks/useHomepageCarousels';
-import { useSearchResultsNavigation } from '@/hooks/useSearchResultsNavigation';
 import { useAnalytics } from '@/hooks/useAnalytics';
 
 interface MobileCarouselProps {
@@ -13,7 +12,6 @@ interface MobileCarouselProps {
 export const MobileCarousel: React.FC<MobileCarouselProps> = ({ carousel }) => {
   const navigate = useNavigate();
   const { track } = useAnalytics();
-  const { handleRestaurantClick } = useSearchResultsNavigation();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   if (!carousel.merchants || carousel.merchants.length === 0) {
@@ -64,7 +62,6 @@ export const MobileCarousel: React.FC<MobileCarouselProps> = ({ carousel }) => {
         <MobileCarouselCard
           key={item.merchant.id}
           merchant={item.merchant}
-          onClick={() => handleRestaurantClick(item.merchant.id, item.merchant.slug)}
         />
       ))}
       </div>
