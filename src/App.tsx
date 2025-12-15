@@ -11,6 +11,7 @@ import { trackPageView } from "@/utils/analytics";
 import { initPerformanceMonitoring } from "@/utils/performanceMonitoring";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
+import { ScrollRestoration } from "@/hooks/useScrollRestoration";
 import { Loader2 } from "lucide-react";
 
 // Lazy load all pages for better initial bundle size
@@ -130,6 +131,7 @@ const App = () => (
           <BrowserRouter>
             <RouteTracker />
             <URLSanitizer />
+            <ScrollRestoration />
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<Index />} />
