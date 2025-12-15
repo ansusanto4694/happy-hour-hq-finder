@@ -17,6 +17,13 @@ export const useScrollRestoration = () => {
   // Create a consistent key using pathname + search
   const locationKey = location.pathname + location.search;
 
+  // Debug: Log navigation info
+  console.log('[ScrollRestoration] Navigation:', {
+    locationKey,
+    navigationType,
+    currentScroll: typeof window !== 'undefined' ? window.scrollY : 0
+  });
+
   // Debounced save of scroll position on every scroll
   const saveScrollPosition = useCallback(() => {
     if (scrollTimeout.current) {
@@ -27,6 +34,7 @@ export const useScrollRestoration = () => {
       const positions = JSON.parse(sessionStorage.getItem(SCROLL_POSITIONS_KEY) || '{}');
       positions[locationKey] = window.scrollY;
       sessionStorage.setItem(SCROLL_POSITIONS_KEY, JSON.stringify(positions));
+      console.log('[ScrollRestoration] Saved position:', { locationKey, position: window.scrollY });
     }, 100);
   }, [locationKey]);
 
@@ -40,6 +48,7 @@ export const useScrollRestoration = () => {
       const positions = JSON.parse(sessionStorage.getItem(SCROLL_POSITIONS_KEY) || '{}');
       positions[locationKey] = window.scrollY;
       sessionStorage.setItem(SCROLL_POSITIONS_KEY, JSON.stringify(positions));
+      console.log('[ScrollRestoration] Cleanup - saved position:', { locationKey, position: window.scrollY });
       
       if (scrollTimeout.current) {
         clearTimeout(scrollTimeout.current);
@@ -56,14 +65,21 @@ export const useScrollRestoration = () => {
     const positions = JSON.parse(sessionStorage.getItem(SCROLL_POSITIONS_KEY) || '{}');
     const savedPosition = positions[locationKey];
 
+    console.log('[ScrollRestoration] Restore check:', {
+      locationKey,
+      navigationType,
+      savedPosition,
+      allPositions: positions
+    });
+
     if (navigationType === 'POP' && savedPosition !== undefined && savedPosition > 0) {
+      console.log('[ScrollRestoration] Attempting to restore to:', savedPosition);
+      
       // Back/forward navigation - restore scroll position
-      // Try multiple times to handle async content loading
       const restoreScroll = () => {
-        // Only scroll if we're not already at the right position
-        if (Math.abs(window.scrollY - savedPosition) > 10) {
-          window.scrollTo(0, savedPosition);
-        }
+        const before = window.scrollY;
+        window.scrollTo(0, savedPosition);
+        console.log('[ScrollRestoration] Restore attempt:', { before, after: window.scrollY, target: savedPosition });
       };
       
       // Attempt restoration at multiple intervals to handle async data loading
@@ -73,7 +89,7 @@ export const useScrollRestoration = () => {
         restoreAttempts.current.push(timeout);
       });
     } else if (navigationType === 'PUSH') {
-      // New forward navigation - scroll to top
+      console.log('[ScrollRestoration] PUSH navigation - scrolling to top');
       window.scrollTo(0, 0);
     }
     
