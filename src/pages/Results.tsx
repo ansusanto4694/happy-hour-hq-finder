@@ -21,21 +21,20 @@ const Results = () => {
   const isMobile = useIsMobile();
   const { track, trackFunnel } = useAnalytics();
 
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedRadius, setSelectedRadius] = useState<RadiusOption>('walking');
-  const [showOffersOnly, setShowOffersOnly] = useState(false);
-  const [selectedMenuType, setSelectedMenuType] = useState<'all' | 'food_and_drinks' | 'drinks_only'>('all');
+  // Read filter state from URL params (persisted across navigation)
+  const selectedCategories = searchParams.get('categories')?.split(',').filter(Boolean) || [];
+  const selectedRadius = (searchParams.get('radius') as RadiusOption) || 'walking';
+  const showOffersOnly = searchParams.get('offers') === 'true';
+  const selectedMenuType = (searchParams.get('menuType') as 'all' | 'food_and_drinks' | 'drinks_only') || 'all';
+
   const [isListDrawerOpen, setIsListDrawerOpen] = useState(false);
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [showSearchThisAreaDesktop, setShowSearchThisAreaDesktop] = useState(false);
   const [mapBounds, setMapBounds] = useState<{ north: number; south: number; east: number; west: number } | null>(null);
-  const [selectedDaysState, setSelectedDaysState] = useState<number[]>([]);
   const [hasMapMoved, setHasMapMoved] = useState(false);
   const [showSearchThisArea, setShowSearchThisArea] = useState(false);
   const [searchedBounds, setSearchedBounds] = useState<{ north: number; south: number; east: number; west: number } | null>(null);
   const [isUsingMapSearch, setIsUsingMapSearch] = useState(false);
-  const [startTimeState, setStartTimeState] = useState(searchParams.get('startTime') || '');
-  const [endTimeState, setEndTimeState] = useState(searchParams.get('endTime') || '');
   // Persist map view state across view toggles
   const [mapViewState, setMapViewState] = useState({
     longitude: -73.9712,
@@ -44,6 +43,47 @@ const Results = () => {
   });
   // Track hovered restaurant for map icon highlighting (desktop only)
   const [hoveredRestaurantId, setHoveredRestaurantId] = useState<number | null>(null);
+
+  // Helper functions to update filters in URL
+  const setSelectedCategories = (categories: string[]) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (categories.length > 0) {
+      newParams.set('categories', categories.join(','));
+    } else {
+      newParams.delete('categories');
+    }
+    setSearchParams(newParams, { replace: true });
+  };
+
+  const setSelectedRadius = (radius: RadiusOption) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (radius !== 'walking') {
+      newParams.set('radius', radius);
+    } else {
+      newParams.delete('radius');
+    }
+    setSearchParams(newParams, { replace: true });
+  };
+
+  const setShowOffersOnly = (show: boolean) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (show) {
+      newParams.set('offers', 'true');
+    } else {
+      newParams.delete('offers');
+    }
+    setSearchParams(newParams, { replace: true });
+  };
+
+  const setSelectedMenuType = (menuType: 'all' | 'food_and_drinks' | 'drinks_only') => {
+    const newParams = new URLSearchParams(searchParams);
+    if (menuType !== 'all') {
+      newParams.set('menuType', menuType);
+    } else {
+      newParams.delete('menuType');
+    }
+    setSearchParams(newParams, { replace: true });
+  };
 
   // Extract search parameters
   const searchTerm = searchParams.get('search') || '';
@@ -62,37 +102,34 @@ const Results = () => {
 
   // Handle day change with URL update
   const handleDaysChange = (days: number[]) => {
-    setSelectedDaysState(days);
     const newSearchParams = new URLSearchParams(searchParams);
     if (days.length > 0) {
       newSearchParams.set('days', days.join(','));
     } else {
       newSearchParams.delete('days');
     }
-    setSearchParams(newSearchParams);
+    setSearchParams(newSearchParams, { replace: true });
   };
 
   // Handle time changes with URL update
   const handleStartTimeChange = (time: string) => {
-    setStartTimeState(time);
     const newSearchParams = new URLSearchParams(searchParams);
     if (time) {
       newSearchParams.set('startTime', time);
     } else {
       newSearchParams.delete('startTime');
     }
-    setSearchParams(newSearchParams);
+    setSearchParams(newSearchParams, { replace: true });
   };
 
   const handleEndTimeChange = (time: string) => {
-    setEndTimeState(time);
     const newSearchParams = new URLSearchParams(searchParams);
     if (time) {
       newSearchParams.set('endTime', time);
     } else {
       newSearchParams.delete('endTime');
     }
-    setSearchParams(newSearchParams);
+    setSearchParams(newSearchParams, { replace: true });
   };
 
   // Check if radius filtering should be enabled (location OR GPS coordinates provided)
@@ -100,9 +137,9 @@ const Results = () => {
   // Use selected radius for both GPS and location-based searches
   const radiusMiles = getRadiusMiles(selectedRadius);
 
-  // Use filter state or URL params for time values  
-  const currentStartTime = startTimeState || startTime;
-  const currentEndTime = endTimeState || endTime;
+  // Time values directly from URL params
+  const currentStartTime = startTime;
+  const currentEndTime = endTime;
 
   const { data: merchants, isLoading, error } = useMerchants(
     selectedCategories, 
