@@ -30,10 +30,11 @@ export const useTrafficOverview = ({ startDate, endDate }: UseTrafficOverviewOpt
         sessionQuery = sessionQuery.lte('created_at', endDate);
       }
 
-      // Query user_events for accurate page view counts
+      // Query user_events for accurate page view counts - filter server-side to avoid row limit issues
       let eventsQuery = supabase
         .from('user_events')
-        .select('created_at, session_id, event_type');
+        .select('created_at, session_id')
+        .eq('event_type', 'page_view');
 
       if (startDate) {
         eventsQuery = eventsQuery.gte('created_at', startDate);
@@ -57,9 +58,9 @@ export const useTrafficOverview = ({ startDate, endDate }: UseTrafficOverviewOpt
       const validSessions = sessions.filter(session => !session.is_bot);
       const botSessionIds = new Set(sessions.filter(s => s.is_bot).map(s => s.session_id));
       
-      // Count page views from events (excluding bot sessions)
+      // Count page views from events (excluding bot sessions) - already filtered to page_view events server-side
       const pageViewsByDate = events
-        .filter(e => e.event_type === 'page_view' && !botSessionIds.has(e.session_id))
+        .filter(e => !botSessionIds.has(e.session_id))
         .reduce((acc, event) => {
           const date = new Date(event.created_at).toISOString().split('T')[0];
           acc[date] = (acc[date] || 0) + 1;
