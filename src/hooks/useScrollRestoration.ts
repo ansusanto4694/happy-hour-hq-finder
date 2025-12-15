@@ -1,44 +1,59 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 
 const SCROLL_POSITIONS_KEY = 'scroll-positions';
 
 export const useScrollRestoration = () => {
   const location = useLocation();
+  const isNavigatingBack = useRef(false);
+  
+  // Create a consistent key using pathname + search (not location.key which changes)
+  const locationKey = location.pathname + location.search;
 
+  // Listen for popstate to detect back/forward navigation
   useEffect(() => {
-    // Save scroll position before navigation
+    const handlePopState = () => {
+      isNavigatingBack.current = true;
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Save scroll position when leaving this route
+  useEffect(() => {
     const saveScrollPosition = () => {
       const positions = JSON.parse(sessionStorage.getItem(SCROLL_POSITIONS_KEY) || '{}');
-      positions[location.key || location.pathname] = window.scrollY;
+      positions[locationKey] = window.scrollY;
       sessionStorage.setItem(SCROLL_POSITIONS_KEY, JSON.stringify(positions));
     };
 
-    // Save on scroll (debounced via beforeunload and popstate)
     window.addEventListener('beforeunload', saveScrollPosition);
     
     return () => {
-      // Save position when leaving this route
       saveScrollPosition();
       window.removeEventListener('beforeunload', saveScrollPosition);
     };
-  }, [location.key, location.pathname]);
+  }, [locationKey]);
 
+  // Restore scroll position when navigating back, or scroll to top for new pages
   useEffect(() => {
-    // Restore scroll position when navigating back
     const positions = JSON.parse(sessionStorage.getItem(SCROLL_POSITIONS_KEY) || '{}');
-    const savedPosition = positions[location.key || location.pathname];
+    const savedPosition = positions[locationKey];
 
-    if (savedPosition !== undefined && window.history.state?.idx !== undefined) {
-      // Small delay to ensure DOM is rendered
+    if (isNavigatingBack.current && savedPosition !== undefined) {
+      // Navigating back - restore position after DOM renders
       requestAnimationFrame(() => {
-        window.scrollTo(0, savedPosition);
+        requestAnimationFrame(() => {
+          window.scrollTo(0, savedPosition);
+        });
       });
-    } else {
-      // Scroll to top for new pages
+      isNavigatingBack.current = false;
+    } else if (!isNavigatingBack.current) {
+      // New navigation - scroll to top
       window.scrollTo(0, 0);
     }
-  }, [location.key, location.pathname]);
+  }, [locationKey]);
 };
 
 // Component version for use in App.tsx
