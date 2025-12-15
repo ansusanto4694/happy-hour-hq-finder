@@ -146,7 +146,7 @@ export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ re
                     className="text-xs text-blue-700 underline break-all max-w-full"
                     title={deal.source_url}
                   >
-                    {deal.source_label || "Source"}
+                    {deal.source_label || "Click to view official menu source"}
                   </a>
                 )}
               </div>
