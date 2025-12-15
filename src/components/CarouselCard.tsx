@@ -1,10 +1,10 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Star } from 'lucide-react';
 import { getTodaysHappyHour, getMenuTypeBadge } from "@/utils/timeUtils";
 import { useAnalytics } from "@/hooks/useAnalytics";
-import { useNavigate } from 'react-router-dom';
 import { useMerchantRating } from "@/hooks/useMerchantRating";
 
 interface CarouselCardProps {
@@ -24,18 +24,20 @@ interface CarouselCardProps {
       menu_type: 'food_and_drinks' | 'drinks_only' | null;
     }>;
   };
-  onClick: (merchantId: string) => void;
+  onClick?: (merchantId: string) => void;
 }
 
 export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick }) => {
   const { track, trackFunnel } = useAnalytics();
-  const navigate = useNavigate();
   const { data: ratingData } = useMerchantRating(merchant.id);
   const todaysHappyHour = merchant.merchant_happy_hour ? getTodaysHappyHour(merchant.merchant_happy_hour) : 'No Happy Hour Today';
   const menuTypeBadge = getMenuTypeBadge(merchant.happy_hour_deals || []);
   
-  const handleClick = async () => {
-    await track({
+  // Build the merchant URL
+  const merchantUrl = `/restaurant/${merchant.slug || merchant.id}`;
+  
+  const handleClick = () => {
+    track({
       eventType: 'click',
       eventCategory: 'carousel',
       eventAction: 'carousel_card_clicked',
@@ -43,22 +45,20 @@ export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick })
       metadata: { merchantName: merchant.restaurant_name },
     });
     
-    await trackFunnel({
+    trackFunnel({
       funnelStep: 'merchant_clicked',
       merchantId: merchant.id,
       stepOrder: 4
     });
     
-    // Use slug if available, fallback to ID
-    const urlIdentifier = merchant.slug || merchant.id.toString();
-    navigate(`/restaurant/${urlIdentifier}`);
+    onClick?.(merchant.id.toString());
   };
 
   return (
-    <Card 
-      className="cursor-pointer hover:shadow-lg hover:scale-[1.02] hover:border-primary/50 transition-all duration-300 bg-card border border-border h-40"
-      onClick={handleClick}
-    >
+    <Link to={merchantUrl} onClick={handleClick} className="block">
+      <Card 
+        className="cursor-pointer hover:shadow-lg hover:scale-[1.02] hover:border-primary/50 transition-all duration-300 bg-card border border-border h-40"
+      >
       <CardContent className="p-4 h-full flex items-center space-x-4">
         {/* Logo */}
         <div className="flex-shrink-0 w-24 h-24 bg-white border border-border rounded-lg flex items-center justify-center overflow-hidden">
@@ -125,5 +125,6 @@ export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick })
         </div>
       </CardContent>
     </Card>
+    </Link>
   );
 };
