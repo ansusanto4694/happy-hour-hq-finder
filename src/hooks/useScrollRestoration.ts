@@ -10,9 +10,9 @@ if (typeof window !== 'undefined' && 'scrollRestoration' in history) {
 
 export const useScrollRestoration = () => {
   const location = useLocation();
-  const navigationType = useNavigationType(); // 'POP' for back/forward, 'PUSH' for new navigation
+  const navigationType = useNavigationType();
   const scrollTimeout = useRef<NodeJS.Timeout | null>(null);
-  const hasRestored = useRef(false);
+  const restoreAttempts = useRef<NodeJS.Timeout[]>([]);
   
   // Create a consistent key using pathname + search
   const locationKey = location.pathname + location.search;
@@ -49,31 +49,38 @@ export const useScrollRestoration = () => {
 
   // Handle scroll restoration on location change
   useEffect(() => {
-    // Reset restored flag for new location
-    hasRestored.current = false;
+    // Clear any pending restore attempts from previous navigation
+    restoreAttempts.current.forEach(clearTimeout);
+    restoreAttempts.current = [];
     
     const positions = JSON.parse(sessionStorage.getItem(SCROLL_POSITIONS_KEY) || '{}');
     const savedPosition = positions[locationKey];
 
-    if (navigationType === 'POP' && savedPosition !== undefined) {
-      // Back/forward navigation - restore scroll position after render
+    if (navigationType === 'POP' && savedPosition !== undefined && savedPosition > 0) {
+      // Back/forward navigation - restore scroll position
+      // Try multiple times to handle async content loading
       const restoreScroll = () => {
-        if (!hasRestored.current) {
+        // Only scroll if we're not already at the right position
+        if (Math.abs(window.scrollY - savedPosition) > 10) {
           window.scrollTo(0, savedPosition);
-          hasRestored.current = true;
         }
       };
       
-      // Multiple attempts to ensure DOM is ready
-      requestAnimationFrame(() => {
-        requestAnimationFrame(restoreScroll);
+      // Attempt restoration at multiple intervals to handle async data loading
+      const delays = [0, 50, 150, 300, 500, 1000];
+      delays.forEach(delay => {
+        const timeout = setTimeout(restoreScroll, delay);
+        restoreAttempts.current.push(timeout);
       });
-      setTimeout(restoreScroll, 100);
     } else if (navigationType === 'PUSH') {
       // New forward navigation - scroll to top
       window.scrollTo(0, 0);
     }
-    // REPLACE navigations (like URL sanitizer) don't change scroll
+    
+    return () => {
+      restoreAttempts.current.forEach(clearTimeout);
+      restoreAttempts.current = [];
+    };
   }, [locationKey, navigationType]);
 };
 
