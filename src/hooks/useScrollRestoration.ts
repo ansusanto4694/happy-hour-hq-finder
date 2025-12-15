@@ -1,48 +1,21 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigationType } from 'react-router-dom';
 
 const SCROLL_POSITIONS_KEY = 'scroll-positions';
 
 // Disable browser's automatic scroll restoration
-if ('scrollRestoration' in history) {
+if (typeof window !== 'undefined' && 'scrollRestoration' in history) {
   history.scrollRestoration = 'manual';
 }
 
 export const useScrollRestoration = () => {
   const location = useLocation();
+  const navigationType = useNavigationType(); // 'POP' for back/forward, 'PUSH' for new navigation
   const scrollTimeout = useRef<NodeJS.Timeout | null>(null);
-  const navigationTypeRef = useRef<'push' | 'pop' | 'initial'>('initial');
+  const hasRestored = useRef(false);
   
   // Create a consistent key using pathname + search
   const locationKey = location.pathname + location.search;
-
-  // Listen for popstate to detect back/forward navigation
-  useEffect(() => {
-    const handlePopState = () => {
-      navigationTypeRef.current = 'pop';
-    };
-    
-    // Intercept link clicks to save scroll immediately before navigation
-    const handleClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      const link = target.closest('a');
-      if (link && link.href && !e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) {
-        // Save scroll position immediately before navigation
-        const positions = JSON.parse(sessionStorage.getItem(SCROLL_POSITIONS_KEY) || '{}');
-        positions[locationKey] = window.scrollY;
-        sessionStorage.setItem(SCROLL_POSITIONS_KEY, JSON.stringify(positions));
-        navigationTypeRef.current = 'push';
-      }
-    };
-    
-    window.addEventListener('popstate', handlePopState);
-    document.addEventListener('click', handleClick, { capture: true });
-    
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-      document.removeEventListener('click', handleClick, { capture: true });
-    };
-  }, [locationKey]);
 
   // Debounced save of scroll position on every scroll
   const saveScrollPosition = useCallback(() => {
@@ -63,47 +36,45 @@ export const useScrollRestoration = () => {
     
     return () => {
       window.removeEventListener('scroll', saveScrollPosition);
+      // Save final position on cleanup
+      const positions = JSON.parse(sessionStorage.getItem(SCROLL_POSITIONS_KEY) || '{}');
+      positions[locationKey] = window.scrollY;
+      sessionStorage.setItem(SCROLL_POSITIONS_KEY, JSON.stringify(positions));
+      
       if (scrollTimeout.current) {
         clearTimeout(scrollTimeout.current);
       }
     };
-  }, [saveScrollPosition]);
+  }, [saveScrollPosition, locationKey]);
 
   // Handle scroll restoration on location change
   useEffect(() => {
+    // Reset restored flag for new location
+    hasRestored.current = false;
+    
     const positions = JSON.parse(sessionStorage.getItem(SCROLL_POSITIONS_KEY) || '{}');
     const savedPosition = positions[locationKey];
 
-    if (navigationTypeRef.current === 'pop' && savedPosition !== undefined) {
-      // Back/forward navigation - restore scroll position
-      // Wait for DOM to be fully rendered
+    if (navigationType === 'POP' && savedPosition !== undefined) {
+      // Back/forward navigation - restore scroll position after render
       const restoreScroll = () => {
-        window.scrollTo(0, savedPosition);
+        if (!hasRestored.current) {
+          window.scrollTo(0, savedPosition);
+          hasRestored.current = true;
+        }
       };
       
-      // Try multiple times to ensure DOM is ready
+      // Multiple attempts to ensure DOM is ready
       requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          restoreScroll();
-          // Backup attempt after a short delay
-          setTimeout(restoreScroll, 50);
-        });
+        requestAnimationFrame(restoreScroll);
       });
-    } else if (navigationTypeRef.current === 'push') {
+      setTimeout(restoreScroll, 100);
+    } else if (navigationType === 'PUSH') {
       // New forward navigation - scroll to top
       window.scrollTo(0, 0);
     }
-    // Don't do anything on 'initial' - let the browser handle initial load
-    
-    // Reset for next navigation (but not immediately, to allow effect to use the value)
-    const resetTimeout = setTimeout(() => {
-      if (navigationTypeRef.current !== 'initial') {
-        navigationTypeRef.current = 'push'; // Default for next navigation
-      }
-    }, 100);
-    
-    return () => clearTimeout(resetTimeout);
-  }, [locationKey]);
+    // REPLACE navigations (like URL sanitizer) don't change scroll
+  }, [locationKey, navigationType]);
 };
 
 // Component version for use in App.tsx

@@ -108,7 +108,11 @@ const SearchResultsComponent: React.FC<SearchResultsProps> = ({
 
   const totalResults = merchants.length;
   const totalPages = Math.ceil(totalResults / RESULTS_PER_PAGE);
-  const startIndex = (currentPage - 1) * RESULTS_PER_PAGE;
+  
+  // Ensure currentPage is valid - reset to 1 if out of bounds
+  const validatedPage = Math.min(Math.max(1, currentPage), Math.max(1, totalPages));
+  
+  const startIndex = (validatedPage - 1) * RESULTS_PER_PAGE;
   const endIndex = startIndex + RESULTS_PER_PAGE;
   const paginatedResults = merchants.slice(startIndex, endIndex);
   const resultsToShow = isMobile ? displayedResults : paginatedResults;
@@ -127,7 +131,7 @@ const SearchResultsComponent: React.FC<SearchResultsProps> = ({
   const renderPaginationItems = () => {
     const items = [];
     const maxVisiblePages = 5;
-    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let startPage = Math.max(1, validatedPage - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
     if (endPage - startPage < maxVisiblePages - 1) {
@@ -137,7 +141,7 @@ const SearchResultsComponent: React.FC<SearchResultsProps> = ({
     if (startPage > 1) {
       items.push(
         <PaginationItem key={1}>
-          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={validatedPage === 1}>
             1
           </PaginationLink>
         </PaginationItem>
@@ -154,7 +158,7 @@ const SearchResultsComponent: React.FC<SearchResultsProps> = ({
     for (let i = startPage; i <= endPage; i++) {
       items.push(
         <PaginationItem key={i}>
-          <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+          <PaginationLink onClick={() => handlePageChange(i)} isActive={validatedPage === i}>
             {i}
           </PaginationLink>
         </PaginationItem>
@@ -171,7 +175,7 @@ const SearchResultsComponent: React.FC<SearchResultsProps> = ({
       }
       items.push(
         <PaginationItem key={totalPages}>
-          <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+          <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={validatedPage === totalPages}>
             {totalPages}
           </PaginationLink>
         </PaginationItem>
@@ -188,7 +192,7 @@ const SearchResultsComponent: React.FC<SearchResultsProps> = ({
         startTime={startTime}
         endTime={endTime}
         location={location}
-        currentPage={isMobile ? 1 : currentPage}
+        currentPage={isMobile ? 1 : validatedPage}
         totalPages={isMobile ? 1 : totalPages}
         resultsPerPage={RESULTS_PER_PAGE}
         searchTerm={searchTerm}
@@ -225,8 +229,8 @@ const SearchResultsComponent: React.FC<SearchResultsProps> = ({
             <PaginationContent>
               <PaginationItem>
                 <PaginationPrevious 
-                  onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                  className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  onClick={() => handlePageChange(Math.max(1, validatedPage - 1))}
+                  className={validatedPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                 />
               </PaginationItem>
               
@@ -234,8 +238,8 @@ const SearchResultsComponent: React.FC<SearchResultsProps> = ({
               
               <PaginationItem>
                 <PaginationNext 
-                  onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                  className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  onClick={() => handlePageChange(Math.min(totalPages, validatedPage + 1))}
+                  className={validatedPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                 />
               </PaginationItem>
             </PaginationContent>
