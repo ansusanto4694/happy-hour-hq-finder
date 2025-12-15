@@ -8,53 +8,58 @@ if (typeof window !== 'undefined' && 'scrollRestoration' in history) {
   history.scrollRestoration = 'manual';
 }
 
+// Store the current scroll position before navigation happens
+let lastLocationKey = '';
+let lastScrollY = 0;
+
+// Save scroll position on every scroll (outside of React lifecycle)
+if (typeof window !== 'undefined') {
+  window.addEventListener('scroll', () => {
+    if (lastLocationKey) {
+      lastScrollY = window.scrollY;
+    }
+  }, { passive: true });
+
+  // Save position right before navigation (beforeunload won't work for SPA, but popstate will)
+  window.addEventListener('beforeunload', () => {
+    if (lastLocationKey && lastScrollY > 0) {
+      const positions = JSON.parse(sessionStorage.getItem(SCROLL_POSITIONS_KEY) || '{}');
+      positions[lastLocationKey] = lastScrollY;
+      sessionStorage.setItem(SCROLL_POSITIONS_KEY, JSON.stringify(positions));
+    }
+  });
+}
+
 export const useScrollRestoration = () => {
   const location = useLocation();
   const navigationType = useNavigationType();
-  const scrollTimeout = useRef<NodeJS.Timeout | null>(null);
   const restoreAttempts = useRef<NodeJS.Timeout[]>([]);
+  const hasRestoredRef = useRef(false);
   
   // Create a consistent key using pathname + search
   const locationKey = location.pathname + location.search;
 
-  // Debug: Log navigation info
-  console.log('[ScrollRestoration] Navigation:', {
-    locationKey,
-    navigationType,
-    currentScroll: typeof window !== 'undefined' ? window.scrollY : 0
-  });
-
-  // Debounced save of scroll position on every scroll
-  const saveScrollPosition = useCallback(() => {
-    if (scrollTimeout.current) {
-      clearTimeout(scrollTimeout.current);
+  // Save the previous location's scroll position BEFORE updating the key
+  useEffect(() => {
+    // If we're navigating to a new page (PUSH), save the old position first
+    if (lastLocationKey && lastLocationKey !== locationKey && lastScrollY > 0) {
+      const positions = JSON.parse(sessionStorage.getItem(SCROLL_POSITIONS_KEY) || '{}');
+      positions[lastLocationKey] = lastScrollY;
+      sessionStorage.setItem(SCROLL_POSITIONS_KEY, JSON.stringify(positions));
+      console.log('[ScrollRestoration] Saved previous position:', { 
+        previousKey: lastLocationKey, 
+        position: lastScrollY,
+        newKey: locationKey 
+      });
     }
     
-    scrollTimeout.current = setTimeout(() => {
-      const positions = JSON.parse(sessionStorage.getItem(SCROLL_POSITIONS_KEY) || '{}');
-      positions[locationKey] = window.scrollY;
-      sessionStorage.setItem(SCROLL_POSITIONS_KEY, JSON.stringify(positions));
-      console.log('[ScrollRestoration] Saved position:', { locationKey, position: window.scrollY });
-    }, 100);
-  }, [locationKey]);
-
-  // Save scroll position on every scroll (debounced)
-  useEffect(() => {
-    window.addEventListener('scroll', saveScrollPosition, { passive: true });
+    // Update the current location key
+    lastLocationKey = locationKey;
+    lastScrollY = window.scrollY;
+    hasRestoredRef.current = false;
     
-    return () => {
-      window.removeEventListener('scroll', saveScrollPosition);
-      // Save final position on cleanup
-      const positions = JSON.parse(sessionStorage.getItem(SCROLL_POSITIONS_KEY) || '{}');
-      positions[locationKey] = window.scrollY;
-      sessionStorage.setItem(SCROLL_POSITIONS_KEY, JSON.stringify(positions));
-      console.log('[ScrollRestoration] Cleanup - saved position:', { locationKey, position: window.scrollY });
-      
-      if (scrollTimeout.current) {
-        clearTimeout(scrollTimeout.current);
-      }
-    };
-  }, [saveScrollPosition, locationKey]);
+    console.log('[ScrollRestoration] Location changed:', { locationKey, navigationType });
+  }, [locationKey, navigationType]);
 
   // Handle scroll restoration on location change
   useEffect(() => {
@@ -73,17 +78,25 @@ export const useScrollRestoration = () => {
     });
 
     if (navigationType === 'POP' && savedPosition !== undefined && savedPosition > 0) {
-      console.log('[ScrollRestoration] Attempting to restore to:', savedPosition);
+      console.log('[ScrollRestoration] Will restore to:', savedPosition);
       
-      // Back/forward navigation - restore scroll position
       const restoreScroll = () => {
+        if (hasRestoredRef.current) return;
+        
         const before = window.scrollY;
         window.scrollTo(0, savedPosition);
-        console.log('[ScrollRestoration] Restore attempt:', { before, after: window.scrollY, target: savedPosition });
+        
+        // Check if scroll was successful (content is tall enough)
+        if (Math.abs(window.scrollY - savedPosition) < 50) {
+          hasRestoredRef.current = true;
+          console.log('[ScrollRestoration] Restored successfully:', { before, after: window.scrollY, target: savedPosition });
+        } else {
+          console.log('[ScrollRestoration] Restore attempt (waiting for content):', { before, after: window.scrollY, target: savedPosition });
+        }
       };
       
       // Attempt restoration at multiple intervals to handle async data loading
-      const delays = [0, 50, 150, 300, 500, 1000];
+      const delays = [0, 50, 100, 200, 400, 800, 1500];
       delays.forEach(delay => {
         const timeout = setTimeout(restoreScroll, delay);
         restoreAttempts.current.push(timeout);
