@@ -42,13 +42,13 @@ const SearchResultsComponent: React.FC<SearchResultsProps> = ({
   onRestaurantHover
 }) => {
   const [displayedResults, setDisplayedResults] = useState<any[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   
-  // Extract search term from URL parameters
+  // Extract search term and page from URL parameters
   const searchTerm = searchParams.get('search') || '';
+  const currentPage = parseInt(searchParams.get('page') || '1', 10);
   
   // Intersection observer for infinite scroll
   const { ref, inView } = useInView({
@@ -114,7 +114,13 @@ const SearchResultsComponent: React.FC<SearchResultsProps> = ({
   const resultsToShow = isMobile ? displayedResults : paginatedResults;
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+    const newParams = new URLSearchParams(searchParams);
+    if (page === 1) {
+      newParams.delete('page');
+    } else {
+      newParams.set('page', page.toString());
+    }
+    setSearchParams(newParams, { replace: false });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
