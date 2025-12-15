@@ -1,5 +1,6 @@
 
 import React, { useRef, useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Store, Star } from 'lucide-react';
@@ -10,7 +11,7 @@ import { FavoriteButton } from '@/components/FavoriteButton';
 
 interface SearchResultCardProps {
   restaurant: any;
-  onClick: (restaurantId: number, slug?: string | null) => void;
+  onClick?: (restaurantId: number, slug?: string | null) => void;
   isMobile?: boolean;
   onHover?: (restaurantId: number | null) => void;
 }
@@ -91,8 +92,9 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
     return () => observer.disconnect();
   }, [hasTrackedImpression, restaurant, hasActiveOffers, track]);
 
-  const handleClick = async () => {
-    await track({
+  const handleClick = async (e: React.MouseEvent) => {
+    // Track analytics (don't prevent default - let link work normally)
+    track({
       eventType: 'click',
       eventCategory: 'merchant_interaction',
       eventAction: 'result_card_clicked',
@@ -106,15 +108,18 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
       },
     });
     
-    await trackFunnel({
+    trackFunnel({
       funnelStep: 'merchant_clicked',
       merchantId: restaurant.id,
       stepOrder: 4
     });
     
-    // Pass slug as second argument if available
-    onClick(restaurant.id, restaurant.slug);
+    // Call optional onClick callback
+    onClick?.(restaurant.id, restaurant.slug);
   };
+
+  // Build the merchant URL
+  const merchantUrl = `/restaurant/${restaurant.slug || restaurant.id}`;
 
   const handleHover = async () => {
     if (!isMobile && onHover) {
@@ -129,14 +134,10 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
   };
 
   return (
-    <Card
-      ref={cardRef}
-      className={`${
-        isMobile 
-          ? 'min-h-[140px] active:scale-[0.98] active:bg-muted/50 transition-all duration-150 cursor-pointer touch-manipulation border-l-4 border-l-primary/40' 
-          : 'hover:shadow-lg hover:scale-[1.02] hover:border-l-4 hover:border-l-primary/60 transition-all duration-300 cursor-pointer group'
-      }`}
+    <Link 
+      to={merchantUrl}
       onClick={handleClick}
+      className="block"
       onMouseEnter={handleHover}
       onMouseLeave={() => {
         if (!isMobile && onHover) {
@@ -144,6 +145,14 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
         }
       }}
     >
+      <Card
+        ref={cardRef}
+        className={`${
+          isMobile 
+            ? 'min-h-[140px] active:scale-[0.98] active:bg-muted/50 transition-all duration-150 cursor-pointer touch-manipulation border-l-4 border-l-primary/40' 
+            : 'hover:shadow-lg hover:scale-[1.02] hover:border-l-4 hover:border-l-primary/60 transition-all duration-300 cursor-pointer group'
+        }`}
+      >
       <CardContent className={isMobile ? "p-4" : "p-4 sm:p-6"}>
         {isMobile ? (
           // Mobile Layout - Enhanced touch targets and clear CTA
@@ -372,6 +381,7 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
         )}
       </CardContent>
     </Card>
+    </Link>
   );
 };
 

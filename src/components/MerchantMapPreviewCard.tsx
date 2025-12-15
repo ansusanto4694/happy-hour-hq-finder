@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface Restaurant {
@@ -11,6 +12,7 @@ interface Restaurant {
   latitude?: number | null;
   longitude?: number | null;
   logo_url?: string | null;
+  slug?: string | null;
 }
 
 interface MerchantMapPreviewCardProps {
@@ -31,6 +33,8 @@ export const MerchantMapPreviewCard: React.FC<MerchantMapPreviewCardProps> = ({
   onClose,
 }) => {
   if (!isVisible || !restaurant) return null;
+
+  const merchantUrl = `/restaurant/${restaurant.slug || restaurant.id}`;
 
   if (isMobile) {
     // Mobile: Fixed position at bottom with click handlers
@@ -79,55 +83,58 @@ export const MerchantMapPreviewCard: React.FC<MerchantMapPreviewCardProps> = ({
               </button>
             )}
           </div>
-          {onNavigate && (
-            <button 
-              onClick={onNavigate}
-              className="mt-3 w-full bg-orange-500 text-white py-2 px-4 rounded-md hover:bg-orange-600 transition-colors"
-            >
-              View Restaurant
-            </button>
-          )}
+          <Link 
+            to={merchantUrl}
+            onClick={onNavigate}
+            className="mt-3 w-full bg-orange-500 text-white py-2 px-4 rounded-md hover:bg-orange-600 transition-colors block text-center"
+          >
+            View Restaurant
+          </Link>
         </CardContent>
       </Card>
     );
   }
 
-  // Desktop: Hover positioning
+  // Desktop: Hover positioning - make entire card a link
   return (
-    <Card 
-      className="absolute z-50 shadow-lg border bg-white min-w-[200px] animate-scale-in"
+    <Link 
+      to={merchantUrl}
+      className="absolute z-50 block"
       style={{ 
         left: position.x + 10, 
         top: position.y - 60,
-        pointerEvents: 'none' // Prevent card from interfering with hover
       }}
     >
-      <CardContent className="p-3">
-        <div className="flex items-center space-x-3">
-          {/* Merchant logo */}
-          <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
-            {restaurant.logo_url ? (
-              <img 
-                src={restaurant.logo_url} 
-                alt={`${restaurant.restaurant_name} logo`}
-                className="w-full h-full object-cover rounded-full"
-              />
-            ) : (
-              <span className="text-orange-600 font-semibold text-sm">
-                {restaurant.restaurant_name.charAt(0)}
-              </span>
-            )}
+      <Card 
+        className="shadow-lg border bg-white min-w-[200px] animate-scale-in hover:shadow-xl transition-shadow cursor-pointer"
+      >
+        <CardContent className="p-3">
+          <div className="flex items-center space-x-3">
+            {/* Merchant logo */}
+            <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+              {restaurant.logo_url ? (
+                <img 
+                  src={restaurant.logo_url} 
+                  alt={`${restaurant.restaurant_name} logo`}
+                  className="w-full h-full object-cover rounded-full"
+                />
+              ) : (
+                <span className="text-orange-600 font-semibold text-sm">
+                  {restaurant.restaurant_name.charAt(0)}
+                </span>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-gray-900 text-sm leading-tight truncate">
+                {restaurant.restaurant_name}
+              </h3>
+              <p className="text-xs text-gray-500 truncate">
+                {restaurant.city}, {restaurant.state}
+              </p>
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-gray-900 text-sm leading-tight truncate">
-              {restaurant.restaurant_name}
-            </h3>
-            <p className="text-xs text-gray-500 truncate">
-              {restaurant.city}, {restaurant.state}
-            </p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </Link>
   );
 };

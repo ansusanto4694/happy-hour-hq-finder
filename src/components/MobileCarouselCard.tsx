@@ -1,6 +1,7 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
-import { Star, MapPin } from 'lucide-react';
+import { Star } from 'lucide-react';
 import { getTodaysHappyHour, getMenuTypeBadge } from '@/utils/timeUtils';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useMerchantRating } from '@/hooks/useMerchantRating';
@@ -22,7 +23,7 @@ interface MobileCarouselCardProps {
       menu_type: 'food_and_drinks' | 'drinks_only' | null;
     }>;
   };
-  onClick: () => void;
+  onClick?: () => void;
 }
 
 export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({ 
@@ -34,8 +35,11 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
   const todaysHappyHourText = getTodaysHappyHour(merchant.merchant_happy_hour || []);
   const menuTypeBadge = getMenuTypeBadge(merchant.happy_hour_deals || []);
 
-  const handleClick = async () => {
-    await track({
+  // Build the merchant URL
+  const merchantUrl = `/restaurant/${merchant.slug || merchant.id}`;
+
+  const handleClick = () => {
+    track({
       eventType: 'click',
       eventCategory: 'carousel',
       eventAction: 'carousel_card_clicked',
@@ -46,19 +50,20 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
       },
     });
     
-    await trackFunnel({
+    trackFunnel({
       funnelStep: 'merchant_clicked',
       merchantId: merchant.id,
       stepOrder: 4
     });
     
-    onClick();
+    onClick?.();
   };
 
   return (
-    <div 
+    <Link 
+      to={merchantUrl}
       onClick={handleClick}
-      className="flex-shrink-0 w-52 bg-card border rounded-xl p-3 cursor-pointer mr-2 active:scale-[0.98] transition-all contain-layout"
+      className="flex-shrink-0 w-52 bg-card border rounded-xl p-3 cursor-pointer mr-2 active:scale-[0.98] transition-all contain-layout block"
       style={{ scrollSnapAlign: 'start' }}
     >
       {/* Logo - compact centered */}
@@ -128,6 +133,6 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
           </Badge>
         </div>
       )}
-    </div>
+    </Link>
   );
 };
