@@ -92,7 +92,12 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
     return () => observer.disconnect();
   }, [hasTrackedImpression, restaurant, hasActiveOffers, track]);
 
-  const handleClick = async (e: React.MouseEvent) => {
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    // Allow native behavior for right-click, middle-click, ctrl+click, cmd+click
+    if (e.ctrlKey || e.metaKey || e.button === 1 || e.button === 2) {
+      return; // Let browser handle it natively
+    }
+    
     // Track analytics (don't prevent default - let link work normally)
     track({
       eventType: 'click',
@@ -138,6 +143,7 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
       to={merchantUrl}
       onClick={handleClick}
       className="block"
+      draggable={false}
       onMouseEnter={handleHover}
       onMouseLeave={() => {
         if (!isMobile && onHover) {

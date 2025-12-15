@@ -38,7 +38,12 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
   // Build the merchant URL
   const merchantUrl = `/restaurant/${merchant.slug || merchant.id}`;
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    // Allow native behavior for right-click, middle-click, ctrl+click, cmd+click
+    if (e.ctrlKey || e.metaKey || e.button === 1 || e.button === 2) {
+      return; // Let browser handle it natively
+    }
+    
     track({
       eventType: 'click',
       eventCategory: 'carousel',
@@ -65,6 +70,7 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
       onClick={handleClick}
       className="flex-shrink-0 w-52 bg-card border rounded-xl p-3 cursor-pointer mr-2 active:scale-[0.98] transition-all contain-layout block"
       style={{ scrollSnapAlign: 'start' }}
+      draggable={false}
     >
       {/* Logo - compact centered */}
       <div className="flex justify-center mb-2">

@@ -36,7 +36,12 @@ export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick })
   // Build the merchant URL
   const merchantUrl = `/restaurant/${merchant.slug || merchant.id}`;
   
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    // Allow native behavior for right-click, middle-click, ctrl+click, cmd+click
+    if (e.ctrlKey || e.metaKey || e.button === 1 || e.button === 2) {
+      return; // Let browser handle it natively
+    }
+    
     track({
       eventType: 'click',
       eventCategory: 'carousel',
@@ -55,7 +60,12 @@ export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick })
   };
 
   return (
-    <Link to={merchantUrl} onClick={handleClick} className="block">
+    <Link 
+      to={merchantUrl} 
+      onClick={handleClick} 
+      className="block"
+      draggable={false}
+    >
       <Card 
         className="cursor-pointer hover:shadow-lg hover:scale-[1.02] hover:border-primary/50 transition-all duration-300 bg-card border border-border h-40"
       >
