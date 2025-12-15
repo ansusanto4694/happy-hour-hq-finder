@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ConversionFunnelChart } from '@/components/analytics/ConversionFunnelChart';
@@ -8,19 +8,22 @@ import { SessionMetricsCard } from '@/components/analytics/SessionMetricsCard';
 import { TrafficSourcesChart } from '@/components/analytics/TrafficSourcesChart';
 import { DeviceBreakdownChart } from '@/components/analytics/DeviceBreakdownChart';
 import { SEOHead } from '@/components/SEOHead';
-import { Calendar } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 export default function Analytics() {
-  const [dateRange, setDateRange] = useState<'7d' | '30d' | '90d'>('7d');
+  const [startDate, setStartDate] = useState<Date>(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 7);
+    return date;
+  });
+  const [endDate, setEndDate] = useState<Date>(new Date());
 
-  const getDateRange = () => {
-    const end = new Date().toISOString();
-    const days = dateRange === '7d' ? 7 : dateRange === '30d' ? 30 : 90;
-    const start = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
-    return { start, end };
-  };
-
-  const { start, end } = getDateRange();
+  const start = startDate.toISOString();
+  const end = endDate.toISOString();
 
   return (
     <>
@@ -47,35 +50,63 @@ export default function Analytics() {
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div>
                   <CardTitle className="flex items-center gap-2">
-                    <Calendar className="w-5 h-5" />
+                    <CalendarIcon className="w-5 h-5" />
                     Date Range
                   </CardTitle>
                   <CardDescription>
                     Select time period for analysis
                   </CardDescription>
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant={dateRange === '7d' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setDateRange('7d')}
-                  >
-                    Last 7 Days
-                  </Button>
-                  <Button
-                    variant={dateRange === '30d' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setDateRange('30d')}
-                  >
-                    Last 30 Days
-                  </Button>
-                  <Button
-                    variant={dateRange === '90d' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setDateRange('90d')}
-                  >
-                    Last 90 Days
-                  </Button>
+                <div className="flex items-center gap-2">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-[160px] justify-start text-left font-normal",
+                          !startDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {startDate ? format(startDate, "MMM d, yyyy") : <span>Start date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={startDate}
+                        onSelect={(date) => date && setStartDate(date)}
+                        disabled={(date) => date > endDate || date > new Date()}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <span className="text-muted-foreground">to</span>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-[160px] justify-start text-left font-normal",
+                          !endDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {endDate ? format(endDate, "MMM d, yyyy") : <span>End date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={endDate}
+                        onSelect={(date) => date && setEndDate(date)}
+                        disabled={(date) => date < startDate || date > new Date()}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
             </CardHeader>
