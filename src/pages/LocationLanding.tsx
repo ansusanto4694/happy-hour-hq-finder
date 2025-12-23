@@ -111,12 +111,10 @@ const generateRestaurantListSchema = (
         ?.map(mc => mc.categories?.name)
         .filter((name): name is string => !!name) || [];
 
-      // Build restaurant schema with only available data
+      // Build restaurant schema with only available data - always use slug for SEO
       const restaurantSchema: Record<string, unknown> = {
         "@type": "Restaurant",
-        "@id": merchant.slug 
-          ? `https://sipmunchyap.com/restaurant/${merchant.slug}` 
-          : `https://sipmunchyap.com/restaurant/${merchant.id}`,
+        "@id": `https://sipmunchyap.com/restaurant/${merchant.slug || merchant.id}`,
         "name": merchant.restaurant_name,
         "address": {
           "@type": "PostalAddress",

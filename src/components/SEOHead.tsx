@@ -33,6 +33,12 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
     ? `${keywords}, happy hour ${location}, bars ${location}, drinks ${location}, ${location} restaurants`
     : keywords;
 
+  // Auto-generate canonical URL if not provided (strips query parameters for SEO)
+  const autoCanonical = typeof window !== 'undefined' 
+    ? `${window.location.origin}${window.location.pathname}`
+    : '';
+  const finalCanonical = canonical || autoCanonical;
+
   const defaultStructuredData = {
     "@context": "https://schema.org",
     "@type": "WebSite",
@@ -57,7 +63,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
       <meta name="author" content="SipMunchYap" />
       <meta name="robots" content={noIndex ? "noindex, nofollow" : "index, follow"} />
       
-      {canonical && <link rel="canonical" href={canonical} />}
+      {finalCanonical && <link rel="canonical" href={finalCanonical} />}
       
       {/* Open Graph */}
       <meta property="og:title" content={enhancedTitle} />

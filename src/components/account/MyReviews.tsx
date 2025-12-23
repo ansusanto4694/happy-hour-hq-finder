@@ -35,6 +35,7 @@ interface ReviewWithMerchant {
     city: string;
     state: string;
     logo_url: string | null;
+    slug: string | null;
   } | null;
   ratings: Array<{ dimension: string; rating: number }>;
 }
@@ -59,7 +60,7 @@ export const MyReviews: React.FC = () => {
           updated_at,
           published_at,
           merchant_id,
-          merchant:Merchant(restaurant_name, city, state, logo_url),
+          merchant:Merchant(restaurant_name, city, state, logo_url, slug),
           ratings:merchant_review_ratings(dimension, rating)
         `)
         .eq('user_id', user.id)
@@ -136,6 +137,8 @@ export const MyReviews: React.FC = () => {
   const ReviewCard = ({ review, isDraft }: { review: ReviewWithMerchant; isDraft: boolean }) => {
     const avgRating = getAverageRating(review.ratings);
     const stale = isDraft && isStale(review.updated_at);
+    // Use slug for URLs when available for SEO
+    const merchantUrlId = review.merchant?.slug || review.merchant_id;
 
     return (
       <Card className={isDraft ? 'border-amber-200 bg-amber-50/50 dark:border-amber-900 dark:bg-amber-950/20' : ''}>
@@ -158,7 +161,7 @@ export const MyReviews: React.FC = () => {
               <div>
                 <CardTitle className="text-base">
                   <Link 
-                    to={`/restaurant/${review.merchant_id}`}
+                    to={`/restaurant/${merchantUrlId}`}
                     className="hover:underline"
                   >
                     {review.merchant?.restaurant_name || 'Unknown Restaurant'}
@@ -216,13 +219,13 @@ export const MyReviews: React.FC = () => {
             </p>
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="sm" asChild>
-                <Link to={`/restaurant/${review.merchant_id}`}>
+                <Link to={`/restaurant/${merchantUrlId}`}>
                   <ExternalLink className="h-4 w-4 mr-1" />
                   View
                 </Link>
               </Button>
               <Button variant="ghost" size="sm" asChild>
-                <Link to={`/restaurant/${review.merchant_id}/review`}>
+                <Link to={`/restaurant/${merchantUrlId}/review`}>
                   <Pencil className="h-4 w-4 mr-1" />
                   {isDraft ? 'Continue' : 'Edit'}
                 </Link>
