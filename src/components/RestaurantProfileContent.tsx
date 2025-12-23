@@ -37,6 +37,7 @@ interface Restaurant {
   latitude?: number | null;
   longitude?: number | null;
   neighborhood?: string | null;
+  slug?: string | null;
   merchant_happy_hour: Array<{
     day_of_week: number;
     happy_hour_start: string;
@@ -63,6 +64,9 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
   const { data: ratingData } = useMerchantRating(restaurant.id);
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  
+  // Use slug for URLs when available for SEO
+  const merchantUrlId = restaurant.slug || restaurant.id;
   
   // Transform the merchant_happy_hour data to include IDs for the editor
   const restaurantWithIds = {
@@ -189,7 +193,7 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
                     size="sm"
                     className="hidden sm:flex"
                   >
-                    <Link to={`/restaurant/${restaurant.id}/review`}>
+                    <Link to={`/restaurant/${merchantUrlId}/review`}>
                       <PenLine className="h-4 w-4 mr-2" />
                       Write a Review
                     </Link>
@@ -269,6 +273,7 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
                 <MerchantReviews 
                   merchantId={restaurant.id} 
                   merchantName={restaurant.restaurant_name}
+                  merchantSlug={restaurant.slug}
                 />
               </CardContent>
             </Card>

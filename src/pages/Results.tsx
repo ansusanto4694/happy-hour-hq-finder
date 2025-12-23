@@ -321,7 +321,7 @@ const Results = () => {
                 "name": merchant.restaurant_name,
                 "address": `${merchant.city}, ${merchant.state}`,
                 "telephone": merchant.phone_number,
-                "url": `${typeof window !== 'undefined' ? window.location.origin : ''}/restaurant/${merchant.id}`
+                "url": `${typeof window !== 'undefined' ? window.location.origin : ''}/restaurant/${merchant.slug || merchant.id}`
               }
             })) || []
           }

@@ -26,12 +26,15 @@ interface Review {
 interface MerchantReviewsProps {
   merchantId: number;
   merchantName: string;
+  merchantSlug?: string | null;
 }
 
 const SUPABASE_URL = 'https://gohcqazhofdhkghfxfok.supabase.co';
 
-export const MerchantReviews: React.FC<MerchantReviewsProps> = ({ merchantId, merchantName }) => {
+export const MerchantReviews: React.FC<MerchantReviewsProps> = ({ merchantId, merchantName, merchantSlug }) => {
   const { user } = useAuth();
+  // Use slug for URLs when available for SEO
+  const merchantUrlId = merchantSlug || merchantId;
   const [selectedMedia, setSelectedMedia] = useState<{ media: Array<{ id: string; storage_path: string; media_type: string }>; index: number } | null>(null);
 
   const { data: reviews, isLoading } = useQuery({
@@ -163,7 +166,7 @@ export const MerchantReviews: React.FC<MerchantReviewsProps> = ({ merchantId, me
           )}
         </div>
         <Button asChild size="sm">
-          <Link to={`/restaurant/${merchantId}/review`}>
+          <Link to={`/restaurant/${merchantUrlId}/review`}>
             <PenLine className="h-4 w-4 mr-2" />
             Write a Review
           </Link>
@@ -180,7 +183,7 @@ export const MerchantReviews: React.FC<MerchantReviewsProps> = ({ merchantId, me
             Be the first to share your experience!
           </p>
           <Button asChild>
-            <Link to={`/restaurant/${merchantId}/review`}>
+            <Link to={`/restaurant/${merchantUrlId}/review`}>
               <PenLine className="h-4 w-4 mr-2" />
               Write the First Review
             </Link>

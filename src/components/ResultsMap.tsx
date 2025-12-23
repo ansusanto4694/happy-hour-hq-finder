@@ -23,6 +23,7 @@ interface Restaurant {
   zip_code: string;
   latitude?: number | null;
   longitude?: number | null;
+  slug?: string | null;
 }
 
 interface ResultsMapProps {
@@ -100,8 +101,8 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
       // On mobile, show preview card at bottom instead of navigating
       setSelectedRestaurant(restaurant);
     } else {
-      // On desktop, navigate directly
-      navigate(`/restaurant/${restaurant.id}`);
+      // On desktop, navigate directly - prefer slug for SEO
+      navigate(`/restaurant/${restaurant.slug || restaurant.id}`);
     }
   }, [navigate, isMobile, track, trackFunnel]);
 
@@ -295,7 +296,7 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
           isMobile={isMobile}
           onNavigate={() => {
             if (selectedRestaurant) {
-              navigate(`/restaurant/${selectedRestaurant.id}`);
+              navigate(`/restaurant/${selectedRestaurant.slug || selectedRestaurant.id}`);
             }
           }}
           onClose={() => setSelectedRestaurant(null)}
@@ -403,7 +404,7 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
           isMobile={isMobile}
           onNavigate={() => {
             if (selectedRestaurant) {
-              navigate(`/restaurant/${selectedRestaurant.id}`);
+              navigate(`/restaurant/${selectedRestaurant.slug || selectedRestaurant.id}`);
             }
           }}
           onClose={() => setSelectedRestaurant(null)}
