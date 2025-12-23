@@ -40,8 +40,9 @@ export const MerchantMapPreviewCard: React.FC<MerchantMapPreviewCardProps> = ({
     // Mobile: Fixed position at bottom with click handlers
     return (
       <Card 
-        className="fixed bottom-20 left-4 right-4 z-50 shadow-lg border bg-white animate-slide-up rounded-lg"
+        className="fixed left-4 right-4 z-50 shadow-lg border bg-white animate-slide-up rounded-lg"
         style={{ 
+          bottom: 'calc(64px + 12.5vh + 16px)', // bottom nav (64px) + peek drawer height (100vh/8 = 12.5vh) + spacing (16px)
           pointerEvents: 'auto'
         }}
       >
