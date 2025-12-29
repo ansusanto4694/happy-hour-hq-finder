@@ -18,9 +18,12 @@ export default {
 				'2xl': '1400px'
 			}
 		},
-		extend: {
+	extend: {
 			fontFamily: {
 				'sans': ['Poppins', 'sans-serif'],
+			},
+			spacing: {
+				'18': '4.5rem',
 			},
 			colors: {
 				border: 'hsl(var(--border))',
