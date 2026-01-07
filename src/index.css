@@ -2,16 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Fallback font with size-adjusted metrics to match Poppins and prevent CLS */
-@font-face {
-  font-family: 'Poppins Fallback';
-  src: local('Arial');
-  size-adjust: 110%;
-  ascent-override: 105%;
-  descent-override: 35%;
-  line-gap-override: 10%;
-}
-
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. */
 
 @layer base {
@@ -148,9 +138,5 @@
   
   .contain-content {
     contain: content;
-  }
-  
-  .contain-paint {
-    contain: paint;
   }
 }

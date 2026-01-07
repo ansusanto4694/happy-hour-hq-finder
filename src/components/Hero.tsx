@@ -27,8 +27,6 @@ const Hero = () => {
           src="/lovable-uploads/f30134b8-b54d-491a-b6bc-fc7a20199dd2.png" 
           alt="SipMunchYap Logo" 
           className="h-16 sm:h-20 md:h-32 w-auto"
-          width={128}
-          height={128}
         />
         <nav className="flex items-center space-x-4 md:space-x-6">
           <Link 

@@ -20,14 +20,14 @@ interface LazyResultsMapProps {
   searchLocation?: string;
 }
 
-// Loading fallback for map with fixed dimensions to prevent CLS
+// Loading fallback for map
 const MapLoadingFallback = () => (
-  <Card className="h-full contain-strict">
+  <Card className="h-full">
     <CardHeader className="pb-3">
       <CardTitle className="text-lg font-semibold">Map View</CardTitle>
     </CardHeader>
     <CardContent className="p-4 pt-0">
-      <div className="rounded-lg overflow-hidden h-[calc(100vh-280px)] xl:h-[calc(100vh-240px)] min-h-[400px] flex items-center justify-center bg-muted">
+      <div className="rounded-lg overflow-hidden h-[calc(100vh-280px)] xl:h-[calc(100vh-240px)] flex items-center justify-center bg-muted">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="text-sm text-muted-foreground">Loading map...</p>

@@ -68,13 +68,13 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
     <Link 
       to={merchantUrl}
       onClick={handleClick}
-      className="flex-shrink-0 w-52 min-h-[220px] bg-card border rounded-xl p-3 cursor-pointer mr-2 active:scale-[0.98] transition-all contain-layout block"
+      className="flex-shrink-0 w-52 bg-card border rounded-xl p-3 cursor-pointer mr-2 active:scale-[0.98] transition-all contain-layout block"
       style={{ scrollSnapAlign: 'start' }}
       draggable={false}
     >
-      {/* Logo - compact centered with fixed aspect ratio */}
+      {/* Logo - compact centered */}
       <div className="flex justify-center mb-2">
-        <div className={`w-20 h-20 aspect-square ${merchant.logo_url ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100'} border border-border rounded-lg flex items-center justify-center overflow-hidden`}>
+        <div className={`w-20 h-20 ${merchant.logo_url ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100'} border border-border rounded-lg flex items-center justify-center overflow-hidden`}>
           {merchant.logo_url ? (
             <img 
               src={merchant.logo_url} 
@@ -124,9 +124,9 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
         </div>
       )}
       
-      {/* Menu type badge - reserve space even when empty */}
-      <div className="flex justify-center min-h-[24px]">
-        {menuTypeBadge && (
+      {/* Menu type badge */}
+      {menuTypeBadge && (
+        <div className="flex justify-center">
           <Badge 
             variant="secondary" 
             className={`text-xs px-2 py-0.5 font-semibold shadow-sm ${
@@ -137,8 +137,8 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
           >
             {menuTypeBadge.emoji} {menuTypeBadge.label}
           </Badge>
-        )}
-      </div>
+        </div>
+      )}
     </Link>
   );
 };

@@ -153,19 +153,19 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
     >
       <Card
         ref={cardRef}
-        className={`contain-layout ${
+        className={`${
           isMobile 
-            ? 'min-h-[160px] active:scale-[0.98] active:bg-muted/50 transition-all duration-150 cursor-pointer touch-manipulation border-l-4 border-l-primary/40' 
-            : 'min-h-[140px] hover:shadow-lg hover:scale-[1.02] hover:border-l-4 hover:border-l-primary/60 transition-all duration-300 cursor-pointer group'
+            ? 'min-h-[140px] active:scale-[0.98] active:bg-muted/50 transition-all duration-150 cursor-pointer touch-manipulation border-l-4 border-l-primary/40' 
+            : 'hover:shadow-lg hover:scale-[1.02] hover:border-l-4 hover:border-l-primary/60 transition-all duration-300 cursor-pointer group'
         }`}
       >
       <CardContent className={isMobile ? "p-4" : "p-4 sm:p-6"}>
         {isMobile ? (
           // Mobile Layout - Enhanced touch targets and clear CTA
           <div className="flex items-start gap-3">
-            {/* Logo with fixed aspect ratio */}
+            {/* Logo with improved placeholder */}
             <div className="flex-shrink-0">
-              <div className={`w-20 h-20 aspect-square ${restaurant.logo_url ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100'} border border-border rounded-lg shadow-sm flex items-center justify-center overflow-hidden`}>
+              <div className={`w-20 h-20 ${restaurant.logo_url ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100'} border border-border rounded-lg shadow-sm flex items-center justify-center overflow-hidden`}>
                 {restaurant.logo_url ? (
                   <img 
                     src={restaurant.logo_url} 
@@ -207,8 +207,8 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
                 />
               </div>
               
-              {/* Compact badges row - reserve minimum height */}
-              <div className="flex flex-wrap gap-1.5 min-h-[32px]">
+              {/* Compact badges row */}
+              <div className="flex flex-wrap gap-1.5">
                 {hasActiveOffers && (
                   <Badge 
                     variant="default" 
@@ -279,9 +279,9 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
         ) : (
           // Desktop Layout - Polished version with improved spacing and organization
           <div className="flex items-start space-x-4">
-            {/* Logo with fixed aspect ratio */}
+            {/* Logo with improved placeholder */}
             <div className="flex-shrink-0">
-              <div className={`w-24 h-24 aspect-square ${restaurant.logo_url ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100'} border border-gray-200 rounded-lg shadow-sm flex items-center justify-center overflow-hidden`}>
+              <div className={`w-24 h-24 ${restaurant.logo_url ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100'} border border-gray-200 rounded-lg shadow-sm flex items-center justify-center overflow-hidden`}>
                 {restaurant.logo_url ? (
                   <img 
                     src={restaurant.logo_url} 
