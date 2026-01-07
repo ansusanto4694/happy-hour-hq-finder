@@ -50,12 +50,14 @@ export const MerchantMapPreviewCard: React.FC<MerchantMapPreviewCardProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3 flex-1">
               {/* Merchant logo */}
-              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+              <div className="w-12 h-12 aspect-square bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
                 {restaurant.logo_url ? (
                   <img 
                     src={restaurant.logo_url} 
                     alt={`${restaurant.restaurant_name} logo`}
                     className="w-full h-full object-cover rounded-full"
+                    width={48}
+                    height={48}
                   />
                 ) : (
                   <span className="text-orange-600 font-semibold text-lg">
@@ -112,12 +114,14 @@ export const MerchantMapPreviewCard: React.FC<MerchantMapPreviewCardProps> = ({
         <CardContent className="p-3">
           <div className="flex items-center space-x-3">
             {/* Merchant logo */}
-            <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+            <div className="w-10 h-10 aspect-square bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
               {restaurant.logo_url ? (
                 <img 
                   src={restaurant.logo_url} 
                   alt={`${restaurant.restaurant_name} logo`}
                   className="w-full h-full object-cover rounded-full"
+                  width={40}
+                  height={40}
                 />
               ) : (
                 <span className="text-orange-600 font-semibold text-sm">

@@ -25,9 +25,9 @@ export const HomepageCarousels: React.FC = () => {
               </div>
               <Skeleton className="h-8 w-20" />
             </div>
-            <div className="flex space-x-4">
+            <div className="flex space-x-4 min-h-[160px]">
               {[1, 2, 3].map((j) => (
-                <Skeleton key={j} className="h-48 w-64 flex-shrink-0" />
+                <Skeleton key={j} className="h-40 w-64 flex-shrink-0" />
               ))}
             </div>
           </div>

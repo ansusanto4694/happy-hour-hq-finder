@@ -20,7 +20,7 @@ export default {
 		},
 	extend: {
 			fontFamily: {
-				'sans': ['Poppins', 'sans-serif'],
+				'sans': ['Poppins', 'Poppins Fallback', 'sans-serif'],
 			},
 			spacing: {
 				'18': '4.5rem',
