@@ -12,11 +12,11 @@ export const SearchResultsLoading: React.FC = () => {
         <Card key={i} className="animate-fade-in">
           <CardContent className="p-4 sm:p-6">
             {isMobile ? (
-              // Mobile skeleton layout - matches actual card height
-              <div className="flex items-start space-x-3 min-h-[120px]">
-                {/* Logo skeleton */}
+              // Mobile skeleton layout - matches actual card height (160px)
+              <div className="flex items-start space-x-3 min-h-[140px]">
+                {/* Logo skeleton with aspect ratio */}
                 <div className="flex-shrink-0">
-                  <Skeleton className="w-20 h-20 rounded-lg" />
+                  <Skeleton className="w-20 h-20 aspect-square rounded-lg" />
                 </div>
                 
                 <div className="flex-1 min-w-0 space-y-2.5">
@@ -26,10 +26,10 @@ export const SearchResultsLoading: React.FC = () => {
                     <Skeleton className="h-4 w-1/2" />
                   </div>
                   
-                  {/* Badges skeleton */}
-                  <div className="flex flex-col gap-1.5">
-                    <Skeleton className="h-8 w-36 rounded-full" />
-                    <Skeleton className="h-8 w-28 rounded-full" />
+                  {/* Badges skeleton - matches min-h-[32px] */}
+                  <div className="flex flex-wrap gap-1.5 min-h-[32px]">
+                    <Skeleton className="h-7 w-24 rounded-full" />
+                    <Skeleton className="h-7 w-20 rounded-full" />
                   </div>
                   
                   {/* Category tags skeleton */}
@@ -42,9 +42,9 @@ export const SearchResultsLoading: React.FC = () => {
             ) : (
               // Desktop skeleton layout
               <div className="flex items-start space-x-4">
-                {/* Logo skeleton */}
+                {/* Logo skeleton with aspect ratio */}
                 <div className="flex-shrink-0">
-                  <Skeleton className="w-24 h-24 rounded-lg" />
+                  <Skeleton className="w-24 h-24 aspect-square rounded-lg" />
                 </div>
                 
                 {/* Restaurant details skeleton */}

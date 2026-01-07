@@ -67,16 +67,19 @@ export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick })
       draggable={false}
     >
       <Card 
-        className="cursor-pointer hover:shadow-lg hover:scale-[1.02] hover:border-primary/50 transition-all duration-300 bg-card border border-border h-40"
+        className="cursor-pointer hover:shadow-lg hover:scale-[1.02] hover:border-primary/50 transition-all duration-300 bg-card border border-border h-40 contain-layout"
       >
       <CardContent className="p-4 h-full flex items-center space-x-4">
-        {/* Logo */}
-        <div className="flex-shrink-0 w-24 h-24 bg-white border border-border rounded-lg flex items-center justify-center overflow-hidden">
+        {/* Logo with fixed aspect ratio */}
+        <div className="flex-shrink-0 w-24 h-24 aspect-square bg-white border border-border rounded-lg flex items-center justify-center overflow-hidden">
           {merchant.logo_url ? (
             <img
               src={merchant.logo_url}
               alt={`${merchant.restaurant_name} logo`}
               className="w-full h-full object-contain"
+              width={96}
+              height={96}
+              loading="lazy"
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
