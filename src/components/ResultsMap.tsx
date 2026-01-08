@@ -269,20 +269,25 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
                 latitude={restaurant.latitude!}
                 anchor="bottom"
               >
-                  <div 
-                    className={`rounded-full flex items-center justify-center shadow-lg border-2 border-white cursor-pointer transition-all duration-200 ${
-                      selectedRestaurant?.id === restaurant.id 
-                        ? 'bg-blue-500 w-8 h-8 shadow-xl' 
-                        : 'bg-red-500 w-6 h-6 active:bg-red-600'
-                    }`}
-                  title={restaurant.restaurant_name}
+                {/* Invisible touch target wrapper for 56x56px effective touch area */}
+                <div 
+                  className="p-2 -m-2 cursor-pointer"
                   onClick={() => handleRestaurantClick(restaurant)}
                   onTouchStart={(event) => handleMarkerHover(restaurant, event as any)}
                   onTouchEnd={handleMarkerLeave}
+                  title={restaurant.restaurant_name}
                 >
-                  <div className={`bg-white rounded-full ${
-                    selectedRestaurant?.id === restaurant.id ? 'w-3 h-3' : 'w-2 h-2'
-                  }`}></div>
+                  <div 
+                    className={`rounded-full flex items-center justify-center border-2 border-white transition-all duration-200 ${
+                      selectedRestaurant?.id === restaurant.id 
+                        ? 'bg-primary w-11 h-11 shadow-xl scale-105' 
+                        : 'bg-destructive w-10 h-10 shadow-lg active:scale-95 active:bg-destructive/80'
+                    }`}
+                  >
+                    <div className={`bg-white rounded-full transition-all duration-200 ${
+                      selectedRestaurant?.id === restaurant.id ? 'w-4 h-4' : 'w-3 h-3'
+                    }`}></div>
+                  </div>
                 </div>
               </Marker>
             ))}
