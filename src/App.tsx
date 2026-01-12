@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
-import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, useNavigate, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { trackPageView } from "@/utils/analytics";
 import { initPerformanceMonitoring } from "@/utils/performanceMonitoring";
@@ -148,6 +148,8 @@ const App = () => (
                 <Route path="/account" element={<Account />} />
                 <Route path="/happy-hour/:citySlug" element={<LocationLanding />} />
                 <Route path="/happy-hour/:citySlug/:neighborhoodSlug" element={<LocationLanding />} />
+                {/* Redirect for broken Facebook link typo */}
+                <Route path="/We" element={<Navigate to="/" replace />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
