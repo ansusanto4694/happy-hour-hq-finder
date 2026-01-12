@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const SITEMAP_URL = 'https://happyhourhawaii.com/sitemap.xml';
+const SITEMAP_URL = 'https://sipmunchyap.com/sitemap.xml';
 const GOOGLE_PING_URL = `https://www.google.com/ping?sitemap=${encodeURIComponent(SITEMAP_URL)}`;
 
 Deno.serve(async (req) => {
