@@ -5,6 +5,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const BASE_URL = 'https://sipmunchyap.com';
+const FUNCTION_URL = 'https://gohcqazhofdhkghfxfok.supabase.co/functions/v1/generate-sitemap';
+
 interface Merchant {
   id: number;
   restaurant_name: string;
@@ -22,20 +25,167 @@ function slugify(text: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
+function getCurrentDate(): string {
+  return new Date().toISOString().split('T')[0];
+}
+
+function generateSitemapIndex(currentDate: string): string {
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+  xml += '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+  
+  const sitemapTypes = ['static', 'cities', 'neighborhoods', 'restaurants'];
+  
+  for (const type of sitemapTypes) {
+    xml += '  <sitemap>\n';
+    xml += `    <loc>${FUNCTION_URL}?type=${type}</loc>\n`;
+    xml += `    <lastmod>${currentDate}</lastmod>\n`;
+    xml += '  </sitemap>\n';
+  }
+  
+  xml += '</sitemapindex>';
+  return xml;
+}
+
+function generateStaticSitemap(currentDate: string): string {
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+  xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+  
+  const staticPages = [
+    { loc: `${BASE_URL}/`, priority: '1.0', changefreq: 'daily' },
+    { loc: `${BASE_URL}/about`, priority: '0.7', changefreq: 'monthly' },
+    { loc: `${BASE_URL}/contact`, priority: '0.7', changefreq: 'monthly' },
+  ];
+  
+  for (const page of staticPages) {
+    xml += '  <url>\n';
+    xml += `    <loc>${page.loc}</loc>\n`;
+    xml += `    <lastmod>${currentDate}</lastmod>\n`;
+    xml += `    <changefreq>${page.changefreq}</changefreq>\n`;
+    xml += `    <priority>${page.priority}</priority>\n`;
+    xml += '  </url>\n';
+  }
+  
+  xml += '</urlset>';
+  return xml;
+}
+
+function generateCitiesSitemap(merchants: Merchant[], currentDate: string): string {
+  const citySet = new Set<string>();
+  
+  for (const merchant of merchants) {
+    const citySlug = slugify(`${merchant.city}-${merchant.state}`);
+    citySet.add(citySlug);
+  }
+  
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+  xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+  
+  for (const citySlug of citySet) {
+    xml += '  <url>\n';
+    xml += `    <loc>${BASE_URL}/happy-hour/${citySlug}</loc>\n`;
+    xml += `    <lastmod>${currentDate}</lastmod>\n`;
+    xml += `    <changefreq>daily</changefreq>\n`;
+    xml += `    <priority>0.9</priority>\n`;
+    xml += '  </url>\n';
+  }
+  
+  xml += '</urlset>';
+  return xml;
+}
+
+function generateNeighborhoodsSitemap(merchants: Merchant[], currentDate: string): string {
+  const neighborhoodSet = new Set<string>();
+  
+  for (const merchant of merchants) {
+    if (merchant.neighborhood) {
+      const citySlug = slugify(`${merchant.city}-${merchant.state}`);
+      const neighborhoodSlug = slugify(merchant.neighborhood);
+      neighborhoodSet.add(`${citySlug}/${neighborhoodSlug}`);
+    }
+  }
+  
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+  xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+  
+  for (const path of neighborhoodSet) {
+    xml += '  <url>\n';
+    xml += `    <loc>${BASE_URL}/happy-hour/${path}</loc>\n`;
+    xml += `    <lastmod>${currentDate}</lastmod>\n`;
+    xml += `    <changefreq>daily</changefreq>\n`;
+    xml += `    <priority>0.85</priority>\n`;
+    xml += '  </url>\n';
+  }
+  
+  xml += '</urlset>';
+  return xml;
+}
+
+function generateRestaurantsSitemap(merchants: Merchant[], currentDate: string): string {
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+  xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+  
+  for (const merchant of merchants) {
+    const lastmod = merchant.updated_at 
+      ? new Date(merchant.updated_at).toISOString().split('T')[0]
+      : currentDate;
+    
+    const urlIdentifier = merchant.slug || merchant.id.toString();
+    
+    xml += '  <url>\n';
+    xml += `    <loc>${BASE_URL}/restaurant/${urlIdentifier}</loc>\n`;
+    xml += `    <lastmod>${lastmod}</lastmod>\n`;
+    xml += `    <changefreq>weekly</changefreq>\n`;
+    xml += `    <priority>0.8</priority>\n`;
+    xml += '  </url>\n';
+  }
+  
+  xml += '</urlset>';
+  return xml;
+}
+
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    const url = new URL(req.url);
+    const sitemapType = url.searchParams.get('type');
+    const currentDate = getCurrentDate();
+
+    console.log(`Sitemap request received: type=${sitemapType || 'index'}`);
+
+    // If no type specified, return the sitemap index
+    if (!sitemapType) {
+      console.log('Generating sitemap index');
+      const xml = generateSitemapIndex(currentDate);
+      return new Response(xml, {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/xml; charset=utf-8',
+          'Cache-Control': 'public, max-age=3600',
+        },
+      });
+    }
+
+    // For static sitemap, no database query needed
+    if (sitemapType === 'static') {
+      console.log('Generating static sitemap (3 URLs)');
+      const xml = generateStaticSitemap(currentDate);
+      return new Response(xml, {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/xml; charset=utf-8',
+          'Cache-Control': 'public, max-age=86400', // 24 hours for static
+        },
+      });
+    }
+
+    // For other types, we need merchant data
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log('Generating dynamic sitemap with SEO-friendly slugs...');
-
-    // Fetch all active merchants with neighborhoods and slugs
     const { data: merchants, error } = await supabase
       .from('Merchant')
       .select('id, restaurant_name, updated_at, city, state, neighborhood, slug')
@@ -47,103 +197,52 @@ Deno.serve(async (req) => {
       throw error;
     }
 
-    console.log(`Found ${merchants?.length || 0} active merchants`);
+    console.log(`Fetched ${merchants?.length || 0} active merchants`);
 
-    // Extract unique city/neighborhood combinations
-    const locationSet = new Set<string>();
-    if (merchants && merchants.length > 0) {
-      for (const merchant of merchants) {
-        const citySlug = slugify(`${merchant.city}-${merchant.state}`);
-        
-        // Add city page
-        locationSet.add(`city:${citySlug}`);
-        
-        // Add neighborhood page if available
-        if (merchant.neighborhood) {
-          const neighborhoodSlug = slugify(merchant.neighborhood);
-          locationSet.add(`neighborhood:${citySlug}:${neighborhoodSlug}`);
-        }
+    let xml: string;
+    let cacheControl = 'public, max-age=3600'; // 1 hour default
+
+    switch (sitemapType) {
+      case 'cities': {
+        const cityCount = new Set(merchants?.map(m => slugify(`${m.city}-${m.state}`)) || []).size;
+        console.log(`Generating cities sitemap (${cityCount} URLs)`);
+        xml = generateCitiesSitemap(merchants || [], currentDate);
+        break;
       }
-    }
-
-    console.log(`Found ${locationSet.size} unique location pages`);
-
-    // Get current date for lastmod
-    const currentDate = new Date().toISOString().split('T')[0];
-
-    // Start building the sitemap XML
-    let sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n';
-    sitemap += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
-
-    // Add core static pages
-    const staticPages = [
-      { loc: 'https://sipmunchyap.com/', priority: '1.0', changefreq: 'daily' },
-      { loc: 'https://sipmunchyap.com/about', priority: '0.7', changefreq: 'monthly' },
-      { loc: 'https://sipmunchyap.com/contact', priority: '0.7', changefreq: 'monthly' },
-    ];
-
-    for (const page of staticPages) {
-      sitemap += '  <url>\n';
-      sitemap += `    <loc>${page.loc}</loc>\n`;
-      sitemap += `    <lastmod>${currentDate}</lastmod>\n`;
-      sitemap += `    <changefreq>${page.changefreq}</changefreq>\n`;
-      sitemap += `    <priority>${page.priority}</priority>\n`;
-      sitemap += '  </url>\n';
-    }
-
-    // Add location landing pages (city and neighborhood)
-    for (const location of locationSet) {
-      if (location.startsWith('city:')) {
-        const citySlug = location.replace('city:', '');
-        sitemap += '  <url>\n';
-        sitemap += `    <loc>https://sipmunchyap.com/happy-hour/${citySlug}</loc>\n`;
-        sitemap += `    <lastmod>${currentDate}</lastmod>\n`;
-        sitemap += `    <changefreq>daily</changefreq>\n`;
-        sitemap += `    <priority>0.9</priority>\n`;
-        sitemap += '  </url>\n';
-      } else if (location.startsWith('neighborhood:')) {
-        const parts = location.replace('neighborhood:', '').split(':');
-        const citySlug = parts[0];
-        const neighborhoodSlug = parts[1];
-        sitemap += '  <url>\n';
-        sitemap += `    <loc>https://sipmunchyap.com/happy-hour/${citySlug}/${neighborhoodSlug}</loc>\n`;
-        sitemap += `    <lastmod>${currentDate}</lastmod>\n`;
-        sitemap += `    <changefreq>daily</changefreq>\n`;
-        sitemap += `    <priority>0.85</priority>\n`;
-        sitemap += '  </url>\n';
+      case 'neighborhoods': {
+        const neighborhoodCount = new Set(
+          merchants?.filter(m => m.neighborhood).map(m => {
+            const citySlug = slugify(`${m.city}-${m.state}`);
+            const neighborhoodSlug = slugify(m.neighborhood!);
+            return `${citySlug}/${neighborhoodSlug}`;
+          }) || []
+        ).size;
+        console.log(`Generating neighborhoods sitemap (${neighborhoodCount} URLs)`);
+        xml = generateNeighborhoodsSitemap(merchants || [], currentDate);
+        break;
       }
-    }
-
-    // Add restaurant pages using SEO-friendly slugs
-    if (merchants && merchants.length > 0) {
-      for (const merchant of merchants) {
-        const lastmod = merchant.updated_at 
-          ? new Date(merchant.updated_at).toISOString().split('T')[0]
-          : currentDate;
-        
-        // Use slug if available, fallback to ID
-        const urlIdentifier = merchant.slug || merchant.id.toString();
-        
-        sitemap += '  <url>\n';
-        sitemap += `    <loc>https://sipmunchyap.com/restaurant/${urlIdentifier}</loc>\n`;
-        sitemap += `    <lastmod>${lastmod}</lastmod>\n`;
-        sitemap += `    <changefreq>weekly</changefreq>\n`;
-        sitemap += `    <priority>0.8</priority>\n`;
-        sitemap += '  </url>\n';
+      case 'restaurants': {
+        console.log(`Generating restaurants sitemap (${merchants?.length || 0} URLs)`);
+        xml = generateRestaurantsSitemap(merchants || [], currentDate);
+        cacheControl = 'public, max-age=7200'; // 2 hours for restaurants
+        break;
       }
+      default:
+        console.error(`Invalid sitemap type: ${sitemapType}`);
+        return new Response(
+          JSON.stringify({ error: `Invalid sitemap type: ${sitemapType}` }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
     }
 
-    // Close the sitemap
-    sitemap += '</urlset>';
-
-    console.log('Sitemap generated successfully with SEO-friendly slugs');
-
-    // Return the sitemap with proper XML content type
-    return new Response(sitemap, {
+    return new Response(xml, {
       headers: {
         ...corsHeaders,
         'Content-Type': 'application/xml; charset=utf-8',
-        'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
+        'Cache-Control': cacheControl,
       },
     });
 
