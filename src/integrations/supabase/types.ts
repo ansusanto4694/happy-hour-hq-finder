@@ -881,6 +881,33 @@ export type Database = {
         }
         Relationships: []
       }
+      sitemap_pings: {
+        Row: {
+          created_at: string
+          google_status: number | null
+          google_success: boolean | null
+          id: string
+          sitemap_url: string | null
+          trigger_reason: string | null
+        }
+        Insert: {
+          created_at?: string
+          google_status?: number | null
+          google_success?: boolean | null
+          id?: string
+          sitemap_url?: string | null
+          trigger_reason?: string | null
+        }
+        Update: {
+          created_at?: string
+          google_status?: number | null
+          google_success?: boolean | null
+          id?: string
+          sitemap_url?: string | null
+          trigger_reason?: string | null
+        }
+        Relationships: []
+      }
       user_events: {
         Row: {
           anonymous_user_id: string | null
