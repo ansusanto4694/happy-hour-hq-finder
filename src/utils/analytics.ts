@@ -924,7 +924,7 @@ export const initializeSession = async (forceReinitialize: boolean = false) => {
       bot_type: botDetection.botType,
       is_engaged: false,
       engagement_score: 0,
-      is_bounce: false,
+      is_bounce: true, // Start as bounce, will be updated to false when user engages
     }, {
       onConflict: 'session_id',
       ignoreDuplicates: false // Update last_seen on conflict
@@ -1201,6 +1201,10 @@ export const trackEvent = async (params: TrackEventParams) => {
 
 // Track page views - fully non-blocking, batched with event queue
 export const trackPageView = async (additionalParams?: Partial<TrackEventParams>) => {
+  // Increment page view counter in sessionStorage for bounce calculation
+  const currentCount = parseInt(sessionStorage.getItem('analytics_page_view_count') || '0', 10);
+  sessionStorage.setItem('analytics_page_view_count', (currentCount + 1).toString());
+  
   const utmParams = getUtmParameters();
   const referrerInfo = categorizeReferrer(document.referrer);
   
@@ -1312,25 +1316,43 @@ export const trackClick = async (
   });
 };
 
-// Helper to flush and update session (used by multiple event listeners)
+// Helper to flush and update session with bounce metrics (used by multiple event listeners)
 const flushAndUpdateSession = async () => {
   const sessionId = getSessionId();
   const currentPath = window.location.pathname;
   const now = Date.now();
-  const sessionDuration = sessionStartTime ? Math.floor((now - sessionStartTime) / 1000) : 0;
+  
+  // Restore sessionStartTime from sessionStorage if not set
+  if (!sessionStartTime) {
+    const storedStartTime = sessionStorage.getItem('analytics_session_start_time');
+    sessionStartTime = storedStartTime ? parseInt(storedStartTime, 10) : now;
+  }
+  
+  const sessionDuration = Math.floor((now - sessionStartTime) / 1000);
   
   // Flush events first
   if (eventQueue.length > 0) {
     await flushEventQueue();
   }
   
-  // Update session with current state
+  // Get page view count from sessionStorage for bounce calculation (no DB query needed)
+  const pageViewCount = parseInt(sessionStorage.getItem('analytics_page_view_count') || '1', 10);
+  
+  // Calculate bounce and engagement metrics
+  const isBounce = isBounceSession(pageViewCount, sessionDuration);
+  const isEngaged = isEngagedSession(pageViewCount, sessionDuration, isBounce, false);
+  const engagementScore = calculateEngagementScore(pageViewCount, sessionDuration, pageViewCount);
+  
+  // Update session with final state including bounce metrics
   await supabase
     .from('user_sessions')
     .update({
       last_seen: new Date().toISOString(),
       exit_page: currentPath,
       session_duration_seconds: sessionDuration,
+      is_bounce: isBounce,
+      is_engaged: isEngaged,
+      engagement_score: engagementScore,
     })
     .eq('session_id', sessionId);
 };
