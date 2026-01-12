@@ -38,3 +38,6 @@ verify_jwt = false
 
 [functions.comprehensive-backfill]
 verify_jwt = false
+
+[functions.ping-google-sitemap]
+verify_jwt = false
