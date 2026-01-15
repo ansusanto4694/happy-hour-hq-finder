@@ -425,7 +425,7 @@ const Auth = () => {
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="signup-firstname">First Name</Label>
+                      <Label htmlFor="signup-firstname">First Name <span className="text-destructive">*</span></Label>
                       <Input
                         id="signup-firstname"
                         type="text"
@@ -438,7 +438,7 @@ const Auth = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="signup-lastname">Last Name (Optional)</Label>
+                      <Label htmlFor="signup-lastname">Last Name</Label>
                       <Input
                         id="signup-lastname"
                         type="text"
@@ -451,7 +451,7 @@ const Auth = () => {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
+                    <Label htmlFor="signup-email">Email <span className="text-destructive">*</span></Label>
                     <Input
                       id="signup-email"
                       type="email"
@@ -464,7 +464,7 @@ const Auth = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-phone">Phone Number (Optional)</Label>
+                    <Label htmlFor="signup-phone">Phone Number</Label>
                     <Input
                       id="signup-phone"
                       type="tel"
@@ -476,7 +476,7 @@ const Auth = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
+                    <Label htmlFor="signup-password">Password <span className="text-destructive">*</span></Label>
                     <div className="relative">
                       <Input
                         id="signup-password"
