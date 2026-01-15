@@ -75,20 +75,24 @@ export const RestaurantMapPreview: React.FC<RestaurantMapPreviewProps> = ({
     return null;
   }
 
+  // Map image is 800x600 (4:3 aspect ratio)
+  const aspectRatio = 600 / 800; // 0.75 = 75% height relative to width
+
   return (
     <div className="mb-6">
       <div 
         onClick={handleMapClick}
         className="relative overflow-hidden rounded-lg border border-border shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer group"
+        style={{ paddingBottom: `${aspectRatio * 100}%` }}
       >
         {!imageLoaded && (
-          <Skeleton className="w-full h-[300px]" />
+          <Skeleton className="absolute inset-0 w-full h-full" />
         )}
         
         <img
           src={staticMapUrl}
           alt={`Map showing location of ${restaurantName}`}
-          className={`w-full h-auto object-cover transition-all duration-300 group-hover:scale-105 ${
+          className={`absolute inset-0 w-full h-full object-cover transition-all duration-300 group-hover:scale-105 ${
             imageLoaded ? 'opacity-100' : 'opacity-0'
           }`}
           onLoad={handleImageLoad}
