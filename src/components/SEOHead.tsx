@@ -63,7 +63,12 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
       <meta name="author" content="SipMunchYap" />
       <meta name="robots" content={noIndex ? "noindex, nofollow" : "index, follow"} />
       
-      {finalCanonical && <link rel="canonical" href={finalCanonical} />}
+      {finalCanonical && (
+        <>
+          <link rel="canonical" href={finalCanonical} />
+          <meta property="og:url" content={finalCanonical} />
+        </>
+      )}
       
       {/* Open Graph */}
       <meta property="og:title" content={enhancedTitle} />
