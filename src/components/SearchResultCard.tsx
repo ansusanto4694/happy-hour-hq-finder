@@ -270,9 +270,6 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
                     )}
                   </div>
                 )}
-                <span className="text-xs font-semibold text-primary flex items-center gap-1 ml-auto pl-2">
-                  View Details →
-                </span>
               </div>
             </div>
           </div>
