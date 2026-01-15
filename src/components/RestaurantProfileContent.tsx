@@ -104,7 +104,7 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
             
             <div className="flex flex-col items-center text-center space-y-4 relative">
               {/* Centered Logo - 96px */}
-              <div className="w-24 h-24 bg-white border-2 border-transparent rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden shadow-lg shadow-amber-500/15">
+              <div className="w-24 h-24 bg-white border-2 border-transparent rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
                 {restaurant.logo_url ? (
                   <img 
                     src={restaurant.logo_url} 
