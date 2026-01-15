@@ -1,8 +1,16 @@
 User-agent: Googlebot
 Allow: /
+Disallow: /auth
+Disallow: /reset-password
+Disallow: /account
+Disallow: /write-review
 
 User-agent: Bingbot
 Allow: /
+Disallow: /auth
+Disallow: /reset-password
+Disallow: /account
+Disallow: /write-review
 
 User-agent: Twitterbot
 Allow: /
@@ -12,5 +20,10 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /auth
+Disallow: /reset-password
+Disallow: /account
+Disallow: /write-review
+Crawl-delay: 1
 
 Sitemap: https://sipmunchyap.com/sitemap.xml
