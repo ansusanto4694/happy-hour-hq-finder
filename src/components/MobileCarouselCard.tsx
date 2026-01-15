@@ -68,78 +68,77 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
     <Link 
       to={merchantUrl}
       onClick={handleClick}
-      className="flex-shrink-0 w-52 bg-card border rounded-xl overflow-hidden cursor-pointer mr-2 active:scale-[0.98] transition-all contain-layout block"
+      className="flex-shrink-0 w-52 bg-card border rounded-xl p-3 cursor-pointer mr-2 active:scale-[0.98] transition-all contain-layout block"
       style={{ scrollSnapAlign: 'start' }}
       draggable={false}
     >
-      {/* Logo - full width hero */}
-      <div className={`w-full aspect-[4/3] ${merchant.logo_url ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100'} flex items-center justify-center overflow-hidden`}>
-        {merchant.logo_url ? (
-          <img 
-            src={merchant.logo_url} 
-            alt={`${merchant.restaurant_name} logo`}
-            className="w-full h-full object-contain"
-            width={208}
-            height={156}
-            loading="lazy"
-          />
-        ) : (
-          <span className="text-muted-foreground font-bold text-4xl">
-            {merchant.restaurant_name.charAt(0).toUpperCase()}
-          </span>
+      {/* Logo - compact centered */}
+      <div className="flex justify-center mb-2">
+        <div className={`w-20 h-20 ${merchant.logo_url ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100'} border border-border rounded-lg flex items-center justify-center overflow-hidden`}>
+          {merchant.logo_url ? (
+            <img 
+              src={merchant.logo_url} 
+              alt={`${merchant.restaurant_name} logo`}
+              className="w-full h-full object-contain p-1.5"
+              width={80}
+              height={80}
+              loading="lazy"
+            />
+          ) : (
+            <span className="text-muted-foreground font-bold text-2xl">
+              {merchant.restaurant_name.charAt(0).toUpperCase()}
+            </span>
+          )}
+        </div>
+      </div>
+      
+      {/* Merchant name */}
+      <h4 className="font-bold text-base text-foreground line-clamp-1 mb-1 text-center">
+        {merchant.restaurant_name}
+      </h4>
+      
+      {/* Rating + Neighborhood row */}
+      <div className="flex items-center justify-center gap-1.5 text-sm text-muted-foreground mb-1.5">
+        {ratingData?.overallAverage && (
+          <>
+            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+            <span className="font-medium text-foreground">{ratingData.overallAverage.toFixed(1)}</span>
+            {merchant.neighborhood && <span className="text-muted-foreground/60">•</span>}
+          </>
+        )}
+        {merchant.neighborhood && (
+          <span className="truncate">{merchant.neighborhood}</span>
         )}
       </div>
       
-      {/* Text content with padding */}
-      <div className="p-3">
-        {/* Merchant name */}
-        <h4 className="font-bold text-base text-foreground line-clamp-1 mb-1 text-center">
-          {merchant.restaurant_name}
-        </h4>
-        
-        {/* Rating + Neighborhood row */}
-        <div className="flex items-center justify-center gap-1.5 text-sm text-muted-foreground mb-1.5">
-          {ratingData?.overallAverage && (
-            <>
-              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-              <span className="font-medium text-foreground">{ratingData.overallAverage.toFixed(1)}</span>
-              {merchant.neighborhood && <span className="text-muted-foreground/60">•</span>}
-            </>
-          )}
-          {merchant.neighborhood && (
-            <span className="truncate">{merchant.neighborhood}</span>
-          )}
+      {/* Happy hour badge */}
+      {todaysHappyHourText !== 'No Happy Hour Today' ? (
+        <div className="flex justify-center mb-1.5">
+          <span className="text-xs font-semibold text-white bg-amber-500/90 px-2.5 py-1 rounded-full shadow-sm inline-flex items-center gap-1 leading-tight truncate max-w-full">
+            🍻 {todaysHappyHourText}
+          </span>
         </div>
-        
-        {/* Happy hour badge */}
-        {todaysHappyHourText !== 'No Happy Hour Today' ? (
-          <div className="flex justify-center mb-1.5">
-            <span className="text-xs font-semibold text-white bg-amber-500/90 px-2.5 py-1 rounded-full shadow-sm inline-flex items-center gap-1 leading-tight truncate max-w-full">
-              🍻 {todaysHappyHourText}
-            </span>
-          </div>
-        ) : (
-          <div className="text-xs text-muted-foreground px-2 py-1 mb-1.5 text-center font-medium">
-            No happy hour today
-          </div>
-        )}
-        
-        {/* Menu type badge */}
-        {menuTypeBadge && (
-          <div className="flex justify-center">
-            <Badge 
-              variant="secondary" 
-              className={`text-xs px-2 py-0.5 font-semibold shadow-sm ${
-                menuTypeBadge.type === 'food_and_drinks' 
-                  ? 'bg-teal-500/90 hover:bg-teal-600 text-white' 
-                  : 'bg-purple-500/90 hover:bg-purple-600 text-white'
-              }`}
-            >
-              {menuTypeBadge.emoji} {menuTypeBadge.label}
-            </Badge>
-          </div>
-        )}
-      </div>
+      ) : (
+        <div className="text-xs text-muted-foreground px-2 py-1 mb-1.5 text-center font-medium">
+          No happy hour today
+        </div>
+      )}
+      
+      {/* Menu type badge */}
+      {menuTypeBadge && (
+        <div className="flex justify-center">
+          <Badge 
+            variant="secondary" 
+            className={`text-xs px-2 py-0.5 font-semibold shadow-sm ${
+              menuTypeBadge.type === 'food_and_drinks' 
+                ? 'bg-teal-500/90 hover:bg-teal-600 text-white' 
+                : 'bg-purple-500/90 hover:bg-purple-600 text-white'
+            }`}
+          >
+            {menuTypeBadge.emoji} {menuTypeBadge.label}
+          </Badge>
+        </div>
+      )}
     </Link>
   );
 };
