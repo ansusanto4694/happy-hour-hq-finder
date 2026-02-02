@@ -28,7 +28,12 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ merchantId, 
   }, []);
   
   const handleBack = () => {
-    navigate('/results');
+    // Use browser history to preserve URL parameters and enable scroll restoration
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/results');
+    }
   };
   
   const handleShare = async () => {
