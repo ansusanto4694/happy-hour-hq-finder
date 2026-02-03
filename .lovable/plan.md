@@ -1,184 +1,157 @@
 
-# Analytics Performance Optimization Plan
+
+# N+1 Query Optimization Plan
 
 ## Summary
-This plan optimizes the analytics system to reduce database load by ~70% while preserving all valuable tracking data. We will remove hover tracking (low-value) and optimize impression tracking with a shared IntersectionObserver pattern.
+
+This plan eliminates N+1 query patterns in the search results flow. The current implementation is already **well-optimized** for the main merchant query, but there are **two optimization opportunities** that provide **pure performance gains with zero functionality loss**.
 
 ---
 
-## What You're Getting
+## Current State Analysis
+
+### What's Already Optimized (No Changes Needed)
+
+The `useMerchants.ts` hook already uses **nested selects** to fetch related data in a single query:
+
+```sql
+SELECT ... FROM Merchant
+  LEFT JOIN merchant_happy_hour
+  LEFT JOIN happy_hour_deals
+  LEFT JOIN merchant_categories -> categories
+  LEFT JOIN merchant_offers
+  LEFT JOIN merchant_reviews -> merchant_review_ratings
+```
+
+This fetches all data for 30+ merchants in **1 database call** - excellent implementation.
+
+### Identified N+1 Patterns
+
+| Issue | Impact | Location |
+|-------|--------|----------|
+| **useFavorites** fetches all favorites on every render | 1 query per page load (acceptable) | `useFavorites.ts` |
+| **useMerchantRating** - individual queries per merchant | N queries if used in lists | `useMerchantRating.ts` |
+| **Location normalization** - edge function calls | 1-4 queries for cache miss | `useMerchants.ts` |
+
+---
+
+## Tradeoffs Analysis
+
+### Pure Optimizations (No Functionality Loss)
+
+1. **Remove `useMerchantRating` from SearchResultCard**
+   - Rating data is already included in the main query via `merchant_reviews.merchant_review_ratings`
+   - The hook exists for the RestaurantProfile page (where it's appropriate)
+   - SearchResultCard already calculates ratings from the nested data
+   - **Result**: Zero additional queries, same functionality
+
+2. **Pre-warm location cache for common searches**
+   - Currently, a cache miss triggers an edge function call
+   - We can pre-populate common locations (NYC neighborhoods, major cities)
+   - **Result**: Fewer edge function invocations, same functionality
+
+### Already Optimized (No Changes Needed)
+
+1. **Favorites**: The `useFavorites` hook fetches once per user session and caches the result. React Query prevents duplicate fetches.
+
+2. **Main merchant query**: Uses efficient nested selects - no N+1 pattern.
+
+---
+
+## What We're NOT Changing
+
+After analyzing the code, I found that the implementation is already well-architected:
+
+- `SearchResultCard` does NOT call `useMerchantRating()` - it calculates ratings locally from pre-fetched data
+- The main query in `useMerchants.ts` is already batched with proper nested selects
+- React Query's caching prevents redundant fetches
+
+---
+
+## Recommended Optimizations
+
+### 1. Location Cache Pre-warming (Optional Enhancement)
+
+**Current behavior**: When a user searches "East Village, NY" for the first time:
+1. Check `location_cache` table (1 query)
+2. If miss, call `normalize-location` edge function (slow)
+
+**Proposed**: Add common locations to the cache proactively via a seed script.
+
+### 2. Code Cleanup: Remove Unused `useMerchantRating` Import Check
+
+Verify that `useMerchantRating` is not being called from within list views. If found, replace with the pre-fetched data pattern already used in `SearchResultCard`.
+
+---
+
+## Implementation Plan
+
+### Phase 1: Audit for Hidden N+1 Patterns
+
+| File | Check |
+|------|-------|
+| `SearchResultCard.tsx` | Confirm no `useMerchantRating` call |
+| `MobileCarouselCard.tsx` | Check for individual rating fetches |
+| `CarouselCard.tsx` | Check for individual rating fetches |
+| `MerchantMapPreviewCard.tsx` | Check for individual rating fetches |
+
+### Phase 2: Fix Any Discovered Issues
+
+If any component uses `useMerchantRating` within a list context:
+- Replace with local calculation from pre-fetched `merchant_reviews` data
+- Pattern already exists in `SearchResultCard` (lines 32-52)
+
+### Phase 3: Location Cache Optimization (Lower Priority)
+
+Seed the `location_cache` table with common NYC neighborhoods and major cities to reduce edge function calls.
+
+---
+
+## Expected Results
 
 | Metric | Before | After |
 |--------|--------|-------|
-| DB calls per 60s | 4 queries | 0-1 queries |
-| Session polling interval | 30-60s | 120s |
-| IntersectionObservers | 1 per card (~50+) | 1 shared |
-| Hover events tracked | 100% | 0% (removed) |
-| Impression accuracy | 100% | 100% (preserved) |
-
----
-
-## Changes Overview
-
-### 1. Remove Hover Tracking (SearchResultCard.tsx)
-Delete the `handleHover` function and remove the hover analytics call. The `onHover` prop for map highlighting will continue to work - only the analytics tracking is removed.
-
-### 2. Create Shared IntersectionObserver Utility
-Build a new utility that manages a single observer for all result cards instead of creating one per card. This reduces memory usage and improves scroll performance.
-
-### 3. Optimize Session Polling (analytics.ts)
-- Increase polling interval from 30-60s to 120s
-- Replace 3 database count queries with local sessionStorage counters
-- Debounce visibility change handlers to prevent rapid-fire updates
-
-### 4. Use Local Counters Instead of DB Queries
-Track page views and events in sessionStorage, eliminating the need to query the database on every session update.
+| Queries per search | 1-4 | 1 |
+| Edge function calls | 1 per new location | 0 for common locations |
+| Code changes | - | Minimal (audit + potential cleanup) |
+| Functionality loss | - | None |
 
 ---
 
 ## Technical Details
 
-### File: src/components/SearchResultCard.tsx
+### Current Rating Calculation in SearchResultCard (Already Optimal)
 
-**Remove hover tracking:**
 ```typescript
-// DELETE this function entirely
-const handleHover = async () => {
-  if (!isMobile && onHover) {
-    await track({
-      eventType: 'hover',
-      eventCategory: 'merchant_interaction',
-      eventAction: 'result_card_hover',
-      merchantId: restaurant.id,
+// Lines 32-52 - calculates from pre-fetched data
+const ratingData = useMemo(() => {
+  const reviews = restaurant.merchant_reviews?.filter((r: any) => r.status === 'published') || [];
+  if (reviews.length === 0) return null;
+  
+  let totalSum = 0;
+  let totalCount = 0;
+  
+  reviews.forEach((review: any) => {
+    review.merchant_review_ratings?.forEach((r: { rating: number }) => {
+      totalSum += r.rating;
+      totalCount += 1;
     });
-    onHover(restaurant.id);
-  }
-};
-
-// REPLACE with simple callback (no analytics)
-const handleHover = () => {
-  if (!isMobile && onHover) {
-    onHover(restaurant.id);
-  }
-};
+  });
+  
+  // ... returns calculated average
+}, [restaurant.merchant_reviews]);
 ```
 
-**Refactor impression tracking to use shared observer:**
-- Remove individual `IntersectionObserver` creation inside each card
-- Cards will register with a shared observer via a new hook
-- The shared observer tracks visibility for all cards with a single instance
-
-### File: src/hooks/useSharedIntersectionObserver.ts (new file)
-
-Create a shared observer manager:
-```text
-+---------------------------------------+
-|   SharedIntersectionObserver          |
-+---------------------------------------+
-| - Single IntersectionObserver         |
-| - Map<element, callback>              |
-| - observe(element, onVisible)         |
-| - unobserve(element)                  |
-+---------------------------------------+
-         |
-         v
-+--------+--------+--------+--------+
-| Card 1 | Card 2 | Card 3 | Card N |
-+--------+--------+--------+--------+
-```
-
-### File: src/utils/analytics.ts
-
-**Increase polling interval:**
-```typescript
-// BEFORE
-const updateInterval = isMobileDevice() ? 30000 : 60000;
-
-// AFTER
-const updateInterval = 120000; // 2 minutes for all devices
-```
-
-**Replace DB queries with local counters:**
-```typescript
-// BEFORE: 3 database queries per update
-const { count: actualPageViews } = await supabase
-  .from('user_events')
-  .select('*', { count: 'exact' })
-  .eq('session_id', sessionId)
-  .eq('event_type', 'page_view');
-
-// AFTER: Local storage lookup (instant)
-const pageViews = parseInt(
-  sessionStorage.getItem('analytics_page_view_count') || '0', 
-  10
-);
-```
-
-**Increment counters in trackEvent:**
-```typescript
-// Add to trackEvent function when event is queued
-if (params.eventType === 'page_view') {
-  const current = parseInt(sessionStorage.getItem('analytics_page_view_count') || '0', 10);
-  sessionStorage.setItem('analytics_page_view_count', String(current + 1));
-}
-const totalEvents = parseInt(sessionStorage.getItem('analytics_total_event_count') || '0', 10);
-sessionStorage.setItem('analytics_total_event_count', String(totalEvents + 1));
-```
-
-**Debounce visibility change handler:**
-```typescript
-// BEFORE: Immediate flush on every tab switch
-document.addEventListener('visibilitychange', () => {
-  if (document.hidden) {
-    flushAndUpdateSession();
-  }
-});
-
-// AFTER: Debounced to prevent rapid-fire updates
-let visibilityDebounceTimer: NodeJS.Timeout | null = null;
-document.addEventListener('visibilitychange', () => {
-  if (document.hidden) {
-    if (visibilityDebounceTimer) clearTimeout(visibilityDebounceTimer);
-    visibilityDebounceTimer = setTimeout(flushAndUpdateSession, 500);
-  } else {
-    lastActivityTime = Date.now();
-  }
-});
-```
+This pattern should be replicated in any other card components if they're making individual rating queries.
 
 ---
 
-## Files to Modify
+## Conclusion
 
-| File | Changes |
-|------|---------|
-| `src/components/SearchResultCard.tsx` | Remove hover analytics, use shared observer |
-| `src/utils/analytics.ts` | Local counters, 120s polling, debounced visibility |
-| `src/hooks/useSharedIntersectionObserver.ts` | New file - shared observer utility |
+The search results flow is **already well-optimized**. The main improvement opportunity is:
 
----
+1. **Audit other card components** to ensure they follow the same pattern as `SearchResultCard`
+2. **Pre-warm location cache** to reduce edge function calls for common searches
 
-## What's Preserved
+Both are pure optimizations with no functionality tradeoffs.
 
-- All impression tracking (optimized, not removed)
-- All click tracking
-- All search/filter tracking  
-- All conversion funnel tracking
-- Session duration and engagement metrics
-- GA4 integration
-- UTM attribution
-
-## What's Removed
-
-- Hover event tracking (`result_card_hover` events)
-- Redundant database queries for counts
-- Individual IntersectionObserver instances
-
----
-
-## Expected Performance Improvement
-
-- **CPU usage**: ~40% reduction during scrolling (single observer vs. 50+)
-- **Database calls**: ~75% reduction (local counters + 120s polling)
-- **Memory**: ~30% reduction (fewer observer instances)
-- **Scroll smoothness**: Noticeable improvement on mobile devices
