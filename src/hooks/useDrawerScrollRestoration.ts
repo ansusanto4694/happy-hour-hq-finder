@@ -166,58 +166,86 @@ export const useDrawerScrollRestoration = (options: UseDrawerScrollRestorationOp
     }
 
     const performRestoration = async () => {
+      console.log('[DrawerScroll] Starting restoration for merchant:', savedId);
+      
       // Wait for drawer to fully open and animate
       await new Promise(resolve => setTimeout(resolve, 500));
       
       if (hasRestoredRef.current) return;
       
+      // Check how many merchant cards are currently rendered
+      const allMerchantCards = document.querySelectorAll('[data-merchant-id]');
+      console.log('[DrawerScroll] Total merchant cards in DOM:', allMerchantCards.length);
+      
       // Wait for the target element to appear (handles infinite scroll)
-      const targetElement = await waitForElement(`[data-merchant-id="${savedId}"]`, 2000);
+      const targetElement = await waitForElement(`[data-merchant-id="${savedId}"]`, 3000);
       
       if (hasRestoredRef.current) return;
       
       if (!targetElement) {
-        console.log('[DrawerScroll] Target element not found after waiting');
+        console.log('[DrawerScroll] Target element NOT FOUND after 3s timeout. Merchant ID:', savedId);
+        console.log('[DrawerScroll] Available merchant IDs:', 
+          Array.from(allMerchantCards).slice(0, 10).map(el => el.getAttribute('data-merchant-id'))
+        );
         hasRestoredRef.current = true;
         return;
       }
+      
+      console.log('[DrawerScroll] Found target element in DOM');
       
       // Wait for element to be fully rendered and painted
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 150));
       
-      // Verify element has dimensions (is actually rendered)
-      let rect = targetElement.getBoundingClientRect();
+      // Get the Card element inside the Link (it has the actual dimensions)
+      const cardElement = targetElement.querySelector('[class*="Card"]') || targetElement.firstElementChild;
+      const elementToMeasure = cardElement || targetElement;
+      
+      let rect = elementToMeasure.getBoundingClientRect();
+      console.log('[DrawerScroll] Initial element rect:', { height: rect.height, top: rect.top, width: rect.width });
+      
       if (rect.height === 0) {
-        console.log('[DrawerScroll] Element found but not rendered yet, waiting...');
-        await new Promise(resolve => setTimeout(resolve, 200));
-        rect = targetElement.getBoundingClientRect();
+        console.log('[DrawerScroll] Element has no height, waiting longer...');
+        await new Promise(resolve => setTimeout(resolve, 300));
+        rect = elementToMeasure.getBoundingClientRect();
+        console.log('[DrawerScroll] After wait, rect:', { height: rect.height, top: rect.top });
       }
-      
-      if (rect.height === 0) {
-        console.log('[DrawerScroll] Element still has no height, falling back to scrollIntoView');
-        targetElement.scrollIntoView({ block: 'center', behavior: 'instant' });
-        hasRestoredRef.current = true;
-        return;
-      }
-      
-      console.log('[DrawerScroll] Found target element with rect:', rect);
       
       // Find the scroll container
       const scrollContainer = findScrollContainer();
+      console.log('[DrawerScroll] Scroll container found:', !!scrollContainer);
       
       if (!scrollContainer) {
-        console.log('[DrawerScroll] Scroll container not found, falling back to scrollIntoView');
+        console.log('[DrawerScroll] No scroll container, using scrollIntoView');
         targetElement.scrollIntoView({ block: 'center', behavior: 'instant' });
         hasRestoredRef.current = true;
         return;
       }
       
-      console.log('[DrawerScroll] Found scroll container:', scrollContainer);
+      // Even if rect.height is 0, try to scroll anyway using the element's offset
+      const containerRect = scrollContainer.getBoundingClientRect();
+      console.log('[DrawerScroll] Container rect:', { height: containerRect.height, top: containerRect.top, scrollTop: scrollContainer.scrollTop });
       
-      // Scroll the element into view within the container
-      scrollElementIntoContainer(scrollContainer, targetElement);
-      hasRestoredRef.current = true;
-      console.log('[DrawerScroll] ✓ Restored scroll to merchant:', savedId);
+      // Use offsetTop if available (works even when element has no height)
+      const htmlElement = targetElement as HTMLElement;
+      if (htmlElement.offsetTop !== undefined) {
+        const scrollTop = htmlElement.offsetTop - (containerRect.height / 2) + 50; // 50px offset for better centering
+        console.log('[DrawerScroll] Using offsetTop:', htmlElement.offsetTop, 'scrolling to:', scrollTop);
+        scrollContainer.scrollTop = Math.max(0, scrollTop);
+        hasRestoredRef.current = true;
+        console.log('[DrawerScroll] ✓ Restored scroll using offsetTop');
+        return;
+      }
+      
+      // Fallback to rect-based calculation
+      if (rect.height > 0) {
+        scrollElementIntoContainer(scrollContainer, elementToMeasure);
+        hasRestoredRef.current = true;
+        console.log('[DrawerScroll] ✓ Restored scroll to merchant:', savedId);
+      } else {
+        console.log('[DrawerScroll] Failed: element still has no dimensions');
+        targetElement.scrollIntoView({ block: 'center', behavior: 'instant' });
+        hasRestoredRef.current = true;
+      }
     };
 
     performRestoration();
