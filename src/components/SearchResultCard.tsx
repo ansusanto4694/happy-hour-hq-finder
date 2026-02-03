@@ -8,6 +8,7 @@ import { getTodaysHappyHour, getAllTodaysHappyHours, getMenuTypeBadge } from '@/
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { getDeviceType } from '@/utils/analytics';
 import { FavoriteButton } from '@/components/FavoriteButton';
+import { observeElement, unobserveElement } from '@/hooks/useSharedIntersectionObserver';
 
 interface SearchResultCardProps {
   restaurant: any;
@@ -51,19 +52,26 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
     };
   }, [restaurant.merchant_reviews]);
 
-  // Check if merchant has active offers that haven't expired
-  const now = new Date();
-  const hasActiveOffers = restaurant.merchant_offers && 
-    restaurant.merchant_offers.some((offer: any) => {
+  // Check if merchant has active offers that haven't expired - memoized
+  const hasActiveOffers = useMemo(() => {
+    const now = new Date();
+    return restaurant.merchant_offers?.some((offer: any) => {
       const endTime = new Date(offer.end_time || '');
       return offer.is_active && endTime > now;
-    });
+    }) ?? false;
+  }, [restaurant.merchant_offers]);
 
-  // Get all happy hours for today
-  const todaysHappyHours = getAllTodaysHappyHours(restaurant.merchant_happy_hour || []);
+  // Get all happy hours for today - memoized
+  const todaysHappyHours = useMemo(
+    () => getAllTodaysHappyHours(restaurant.merchant_happy_hour || []),
+    [restaurant.merchant_happy_hour]
+  );
   
-  // Get menu type badge from happy hour deals
-  const menuTypeBadge = getMenuTypeBadge(restaurant.happy_hour_deals || []);
+  // Get menu type badge from happy hour deals - memoized
+  const menuTypeBadge = useMemo(
+    () => getMenuTypeBadge(restaurant.happy_hour_deals || []),
+    [restaurant.happy_hour_deals]
+  );
 
   // Track card impressions using shared IntersectionObserver
   // OPTIMIZED: Single shared observer instead of one per card
@@ -86,19 +94,17 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
   }, [hasTrackedImpression, restaurant.id, restaurant.restaurant_name, restaurant.merchant_happy_hour, hasActiveOffers, track]);
 
   // Use shared intersection observer for efficient impression tracking
+  // Fixed: cleanup now properly unregisters element on unmount
   useEffect(() => {
     const element = cardRef.current;
     if (!element || hasTrackedImpression) return;
 
-    // Lazy import to avoid circular dependencies
-    import('@/hooks/useSharedIntersectionObserver').then(({ observeElement, unobserveElement }) => {
-      observeElement(element, handleImpression);
-      
-      // Cleanup on unmount
-      return () => {
-        unobserveElement(element);
-      };
-    });
+    observeElement(element, handleImpression);
+
+    // Cleanup on unmount - properly returns from useEffect
+    return () => {
+      unobserveElement(element);
+    };
   }, [hasTrackedImpression, handleImpression]);
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
