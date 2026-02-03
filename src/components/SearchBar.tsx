@@ -621,55 +621,9 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
               className="pl-12 pr-12 py-4 text-sm border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl bg-gray-50"
               autoComplete="off"
             />
-            {/* Locate me button */}
-            <button
-              type="button"
-              aria-label="Use my location"
-              onClick={() => {
-                // Track locate me click (non-blocking)
-                track({
-                  eventType: 'click',
-                  eventCategory: 'search',
-                  eventAction: 'locate_me_clicked',
-                });
-                
-                locate().then((r) => {
-                  if (r?.display) {
-                    // Track GPS success (non-blocking)
-                    track({
-                      eventType: 'interaction',
-                      eventCategory: 'search',
-                      eventAction: 'gps_success',
-                      locationQuery: r.display,
-                    });
-                    
-                    setLocation(r.display);
-                    setShowLocationSuggestions(false);
-                    // Store GPS coordinates for search
-                    if (r.latitude && r.longitude) {
-                      setGpsCoordinates({ lat: r.latitude, lng: r.longitude });
-                    }
-                  } else {
-                    // Track GPS failure (non-blocking)
-                    track({
-                      eventType: 'error',
-                      eventCategory: 'search',
-                      eventAction: 'gps_failed',
-                    });
-                  }
-                });
-              }}
-              className="absolute right-12 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors z-20 w-11 h-11 flex items-center justify-center"
-            >
-              {isLocating ? (
-                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
-              ) : (
-                <LocateFixed className="w-5 h-5" />
-              )}
-            </button>
-            
-            {/* Clear button */}
-            {location && (
+            {/* Right icon: Show locate me when empty, show X when location exists */}
+            {location ? (
+              // Clear button - shown when location has value
               <button
                 onClick={() => {
                   track({
@@ -684,8 +638,52 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                 }}
                 className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors z-20"
                 type="button"
+                aria-label="Clear location"
               >
                 <X className="w-5 h-5" />
+              </button>
+            ) : (
+              // Locate me button - shown when location is empty
+              <button
+                type="button"
+                aria-label="Use my location"
+                onClick={() => {
+                  track({
+                    eventType: 'click',
+                    eventCategory: 'search',
+                    eventAction: 'locate_me_clicked',
+                  });
+                  
+                  locate().then((r) => {
+                    if (r?.display) {
+                      track({
+                        eventType: 'interaction',
+                        eventCategory: 'search',
+                        eventAction: 'gps_success',
+                        locationQuery: r.display,
+                      });
+                      
+                      setLocation(r.display);
+                      setShowLocationSuggestions(false);
+                      if (r.latitude && r.longitude) {
+                        setGpsCoordinates({ lat: r.latitude, lng: r.longitude });
+                      }
+                    } else {
+                      track({
+                        eventType: 'error',
+                        eventCategory: 'search',
+                        eventAction: 'gps_failed',
+                      });
+                    }
+                  });
+                }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors z-20"
+              >
+                {isLocating ? (
+                  <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+                ) : (
+                  <LocateFixed className="w-5 h-5" />
+                )}
               </button>
             )}
             
