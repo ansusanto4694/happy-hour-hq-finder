@@ -14,6 +14,7 @@ import { RadiusOption, getRadiusMiles } from '@/components/RadiusFilter';
 import { AuthButton } from '@/components/AuthButton';
 import { SEOHead } from '@/components/SEOHead';
 import { PageHeader } from '@/components/PageHeader';
+import { useDrawerScrollRestoration } from '@/hooks/useDrawerScrollRestoration';
 
 const Results = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -27,7 +28,9 @@ const Results = () => {
   const showOffersOnly = searchParams.get('offers') === 'true';
   const selectedMenuType = (searchParams.get('menuType') as 'all' | 'food_and_drinks' | 'drinks_only') || 'all';
 
-  const [isListDrawerOpen, setIsListDrawerOpen] = useState(false);
+  // Use drawer scroll restoration hook for persistent drawer state
+  const { scrollRef: drawerScrollRef, isOpen: isListDrawerOpen, setIsOpen: setIsListDrawerOpen } = useDrawerScrollRestoration();
+  
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [showSearchThisAreaDesktop, setShowSearchThisAreaDesktop] = useState(false);
   const [mapBounds, setMapBounds] = useState<{ north: number; south: number; east: number; west: number } | null>(null);
@@ -416,6 +419,7 @@ const Results = () => {
           <MobileListDrawer
             isOpen={isListDrawerOpen}
             onOpenChange={setIsListDrawerOpen}
+            scrollRef={drawerScrollRef}
             merchants={merchants || []}
             isLoading={isLoading}
             error={error}
