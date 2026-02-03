@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -9,6 +8,7 @@ import { useAnalytics } from '@/hooks/useAnalytics';
 import { getDeviceType } from '@/utils/analytics';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { observeElement, unobserveElement } from '@/hooks/useSharedIntersectionObserver';
+import { getOptimizedImageUrl, IMAGE_SIZES } from '@/utils/imageOptimization';
 
 interface SearchResultCardProps {
   restaurant: any;
@@ -71,6 +71,15 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
   const menuTypeBadge = useMemo(
     () => getMenuTypeBadge(restaurant.happy_hour_deals || []),
     [restaurant.happy_hour_deals]
+  );
+  
+  // Optimize logo URL based on display size - mobile 80px, desktop 96px
+  const optimizedLogoUrl = useMemo(
+    () => getOptimizedImageUrl(
+      restaurant.logo_url, 
+      isMobile ? IMAGE_SIZES.searchResultMobile : IMAGE_SIZES.searchResultDesktop
+    ),
+    [restaurant.logo_url, isMobile]
   );
 
   // Track card impressions using shared IntersectionObserver
@@ -179,10 +188,10 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
           <div className="flex items-start gap-3">
             {/* Logo with improved placeholder */}
             <div className="flex-shrink-0">
-              <div className={`w-20 h-20 ${restaurant.logo_url ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100'} border border-border rounded-lg shadow-sm flex items-center justify-center overflow-hidden`}>
-                {restaurant.logo_url ? (
+              <div className={`w-20 h-20 ${optimizedLogoUrl ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100'} border border-border rounded-lg shadow-sm flex items-center justify-center overflow-hidden`}>
+                {optimizedLogoUrl ? (
                   <img 
-                    src={restaurant.logo_url} 
+                    src={optimizedLogoUrl} 
                     alt={`${restaurant.restaurant_name} logo`}
                     className="w-full h-full object-contain"
                     width={80}
@@ -292,10 +301,10 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
           <div className="flex items-start space-x-4">
             {/* Logo with improved placeholder */}
             <div className="flex-shrink-0">
-              <div className={`w-24 h-24 ${restaurant.logo_url ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100'} border border-gray-200 rounded-lg shadow-sm flex items-center justify-center overflow-hidden`}>
-                {restaurant.logo_url ? (
+              <div className={`w-24 h-24 ${optimizedLogoUrl ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100'} border border-gray-200 rounded-lg shadow-sm flex items-center justify-center overflow-hidden`}>
+                {optimizedLogoUrl ? (
                   <img 
-                    src={restaurant.logo_url} 
+                    src={optimizedLogoUrl} 
                     alt={`${restaurant.restaurant_name} logo`}
                     className="w-full h-full object-contain"
                     width={96}

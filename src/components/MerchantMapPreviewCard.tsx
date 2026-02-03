@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
+import { getOptimizedImageUrl, IMAGE_SIZES } from '@/utils/imageOptimization';
 
 interface Restaurant {
   id: number;
@@ -35,6 +36,12 @@ export const MerchantMapPreviewCard: React.FC<MerchantMapPreviewCardProps> = ({
   if (!isVisible || !restaurant) return null;
 
   const merchantUrl = `/restaurant/${restaurant.slug || restaurant.id}`;
+  
+  // Optimize logo URL based on mobile (48px) or desktop (40px) display size
+  const optimizedLogoUrl = getOptimizedImageUrl(
+    restaurant.logo_url, 
+    isMobile ? IMAGE_SIZES.mapPreviewMobile : IMAGE_SIZES.mapPreviewDesktop
+  );
 
   if (isMobile) {
     // Mobile: Fixed position at bottom with click handlers
@@ -51,9 +58,9 @@ export const MerchantMapPreviewCard: React.FC<MerchantMapPreviewCardProps> = ({
             <div className="flex items-center space-x-3 flex-1">
               {/* Merchant logo */}
               <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
-                {restaurant.logo_url ? (
+                {optimizedLogoUrl ? (
                   <img 
-                    src={restaurant.logo_url} 
+                    src={optimizedLogoUrl} 
                     alt={`${restaurant.restaurant_name} logo`}
                     className="w-full h-full object-cover rounded-full"
                   />
@@ -113,9 +120,9 @@ export const MerchantMapPreviewCard: React.FC<MerchantMapPreviewCardProps> = ({
           <div className="flex items-center space-x-3">
             {/* Merchant logo */}
             <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
-              {restaurant.logo_url ? (
+              {optimizedLogoUrl ? (
                 <img 
-                  src={restaurant.logo_url} 
+                  src={optimizedLogoUrl} 
                   alt={`${restaurant.restaurant_name} logo`}
                   className="w-full h-full object-cover rounded-full"
                 />
