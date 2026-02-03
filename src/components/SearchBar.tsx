@@ -366,11 +366,46 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
   const [gpsCoordinates, setGpsCoordinates] = useState<{lat: number; lng: number} | null>(null);
 
   // Robust search handler that always uses explicit parameters to avoid race conditions
-  const handleSearch = (options: { searchTermOverride?: string; locationOverride?: string; usedSuggestion?: boolean } = {}) => {
+  const handleSearch = async (options: { searchTermOverride?: string; locationOverride?: string; usedSuggestion?: boolean } = {}) => {
     // ALWAYS use overrides if provided, otherwise fall back to current state
     const effectiveSearchTerm = options.searchTermOverride ?? searchTerm;
-    const effectiveLocation = options.locationOverride ?? location;
+    let effectiveLocation = options.locationOverride ?? location;
     const usedSuggestion = options.usedSuggestion ?? false;
+    
+    // If no location provided, auto-trigger GPS
+    let autoGpsCoordinates = gpsCoordinates;
+    if (!effectiveLocation && !gpsCoordinates) {
+      console.log('[Search] No location provided, auto-triggering GPS...');
+      track({
+        eventType: 'interaction',
+        eventCategory: 'search',
+        eventAction: 'auto_gps_triggered',
+        searchTerm: effectiveSearchTerm,
+      });
+      
+      const gpsResult = await locate();
+      if (gpsResult?.display) {
+        effectiveLocation = gpsResult.display;
+        setLocation(gpsResult.display);
+        if (gpsResult.latitude && gpsResult.longitude) {
+          autoGpsCoordinates = { lat: gpsResult.latitude, lng: gpsResult.longitude };
+          setGpsCoordinates(autoGpsCoordinates);
+        }
+        track({
+          eventType: 'interaction',
+          eventCategory: 'search',
+          eventAction: 'auto_gps_success',
+          locationQuery: gpsResult.display,
+        });
+      } else {
+        track({
+          eventType: 'error',
+          eventCategory: 'search',
+          eventAction: 'auto_gps_failed',
+        });
+        // Continue without location - will show all results
+      }
+    }
     
     // Debug logging for search flow
     console.log('[Search] handleSearch called:', {
@@ -380,7 +415,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
       usedSuggestion,
       stateSearchTerm: searchTerm,
       stateLocation: location,
-      hasGpsCoordinates: !!gpsCoordinates,
+      hasGpsCoordinates: !!autoGpsCoordinates,
       variant
     });
     
@@ -404,7 +439,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
         locationLength: effectiveLocation.length,
         hasSearchTerm: !!effectiveSearchTerm,
         hasLocation: !!effectiveLocation,
-        useGPS: !!gpsCoordinates,
+        useGPS: !!autoGpsCoordinates,
         variant: variant,
         hadSuggestions: searchSuggestions.length > 0,
         suggestionCount: searchSuggestions.length,
@@ -425,9 +460,9 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
     if (effectiveLocation) params.set('location', effectiveLocation);
     
     // If we have GPS coordinates from locate me, include them
-    if (gpsCoordinates) {
-      params.set('lat', gpsCoordinates.lat.toString());
-      params.set('lng', gpsCoordinates.lng.toString());
+    if (autoGpsCoordinates) {
+      params.set('lat', autoGpsCoordinates.lat.toString());
+      params.set('lng', autoGpsCoordinates.lng.toString());
       params.set('useGPS', 'true');
     }
     
@@ -541,11 +576,10 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                       console.log('[Search] Suggestion clicked (hero variant):', {
                         suggestion,
                         index,
-                        willPassOverride: suggestion.displayValue
+                        fillOnly: true
                       });
+                      // Only fill the input, don't auto-search
                       selectSearchSuggestion(suggestion, index);
-                      // Pass the selected value directly to avoid race condition
-                      handleSearch({ searchTermOverride: suggestion.displayValue, usedSuggestion: true });
                     }}
                   >
                     <span className="text-sm font-medium text-gray-900">
@@ -771,10 +805,10 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
                       console.log('[Search] Suggestion clicked (results variant):', {
                         suggestion,
                         index,
-                        willPassOverride: suggestion.displayValue
+                        fillOnly: true
                       });
+                      // Only fill the input, don't auto-search
                       selectSearchSuggestion(suggestion, index);
-                      handleSearch({ searchTermOverride: suggestion.displayValue, usedSuggestion: true });
                     }}
                   >
                     <span className="text-sm font-medium text-gray-900">
