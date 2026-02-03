@@ -1,250 +1,173 @@
 
 
-# Phase 3: Reduce Unused JavaScript (Smart Delivery)
+# Phase 4: Optimize Cache Lifetimes (Repeat Visitor Speed Boost)
 
 ## The Business Problem
 
-Right now, when someone visits your homepage, their browser downloads code for **features they haven't used yet**:
+When someone visits your site **for the first time**, their browser downloads everything — images, code, fonts. This takes time.
 
-- **Map functionality** (Mapbox) — only needed on the search results page
-- **Charts** (Recharts) — only needed on the analytics dashboard
-- **Date picker** (Calendar) — only needed when booking or filtering
-- **Rich UI components** — dropdown menus, modals, sheets — only needed when interacted with
+When they visit **again**, the browser could remember what it already downloaded. But right now, it's only remembering things for **1 hour**. After that, it downloads everything fresh again.
 
-Think of it like a restaurant sending your entire order to the table before you've even looked at the menu. Instead, we want to bring appetizers first, then the main course when you're ready.
+Think of it like a library. You check out a book, read it, return it. If you want to read it again tomorrow, you have to check it out again — even though you just had it yesterday. What if you could keep books for a month instead?
 
 ---
 
-## What's Currently Happening (Good News!)
+## What's Happening Now
 
-Looking at your codebase, **you already have some smart delivery in place**:
+| Resource | Current "Keep Time" | Browser Behavior |
+|----------|-------------------|------------------|
+| Restaurant logos | 1 hour | After 1 hour, browser downloads logos again |
+| Your app code (JS/CSS) | Controlled by Lovable platform | We can't change this |
+| Google Fonts | Long (30 days) | Already optimized |
+| Mapbox tiles | Controlled by Mapbox | We can't change this |
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Page-level code splitting | Done | Each page (Results, Auth, etc.) loads only when visited |
-| Map & Charts separation | Done | These are in separate "chunks" that load independently |
-| React Query bundling | Done | Data fetching code is separated |
-
-**Your `vite.config.ts` already organizes code into logical groups.** This is excellent foundation work.
-
----
-
-## What Can Still Be Improved
-
-After analyzing your homepage components, here's where we can reduce unused code:
-
-### 1. Carousel Library (Embla) — Opportunity
-
-The carousel uses `embla-carousel-react` which loads ~15-20KB. On desktop, the carousels are visible and needed. On mobile, the carousels are also used in the Hero.
-
-**Current behavior:** Carousel code loads immediately for all visitors.
-
-**Opportunity:** Small — carousel is actually used on homepage for both mobile and desktop, so this is needed.
-
-### 2. Location Suggestions Edge Function — Opportunity
-
-The SearchBar component imports and initializes the `useLocationSuggestions` hook which sets up debouncing, refs, and state — even before the user types anything.
-
-**Current behavior:** All location suggestion logic loads upfront.
-
-**Opportunity:** The hook could be lazy-loaded only when the location input is focused. However, this is a minor optimization (~2-3KB) and could add complexity.
-
-### 3. Sheet Component (Mobile Search) — Opportunity
-
-The `PageHeader` imports `Sheet` from Radix UI for the mobile search drawer, even on desktop where it's never used.
-
-**Current behavior:** Sheet/Drawer UI code loads even when not needed.
-
-**Opportunity:** Load Sheet component only on mobile, or only when search button is clicked. Saves ~10-15KB on desktop.
-
-### 4. Dropdown Menu (Auth Button) — Already Optimized
-
-The `AuthButton` uses `DropdownMenu` but only shows it when a user is logged in. For most homepage visitors (logged out), the dropdown code is unused.
-
-**Current behavior:** Dropdown loads even for logged-out users.
-
-**Opportunity:** Could lazy-load the dropdown menu only when user is authenticated. Saves ~8-10KB for logged-out visitors.
+The **4,983 KB savings** from PageSpeed is mostly about those restaurant logos and some other images. Every repeat visitor within an hour uses cached images — but anyone coming back after an hour re-downloads all ~5MB of logos.
 
 ---
 
-## Recommended Changes (Low-Risk, High-Impact)
+## What We Can Control vs. What We Can't
 
-Based on the analysis, here are the changes that provide the best return with minimal risk:
+| Resource Type | Who Controls Caching | Can We Change? |
+|---------------|---------------------|----------------|
+| **Supabase Storage images** (logos) | You — via upload settings | **Yes** |
+| App JavaScript/CSS | Lovable hosting platform | No |
+| Google Fonts | Google CDN | No (already optimal) |
+| Mapbox map tiles | Mapbox CDN | No |
 
-### Change 1: Lazy Load the Search Sheet on Mobile
-
-**What:** Only load the Sheet/Drawer component when the search button is clicked on mobile.
-
-**Savings:** ~10-15KB of JavaScript for desktop users, faster initial load for mobile until search is tapped.
-
-**Risk:** Very low — user sees a brief loading indicator when tapping search for the first time.
-
-**Trade-off:** None visually. Slight delay (~100-200ms) on first search tap.
-
-### Change 2: Lazy Load Dropdown Menu for Authenticated Users
-
-**What:** The dropdown menu for logged-in users loads only when needed.
-
-**Savings:** ~8-10KB for all logged-out visitors (majority of traffic).
-
-**Risk:** Very low — dropdown loads when user clicks their profile icon.
-
-**Trade-off:** None visually. Logged-in users see a brief delay on first click.
-
-### Change 3: Add Carousel to Manual Chunks
-
-**What:** Move `embla-carousel-react` to its own chunk so it can be loaded after the initial page paint.
-
-**Savings:** ~15-20KB deferred from initial load.
-
-**Risk:** Low — carousel skeleton shows while loading.
-
-**Trade-off:** None visually — you already show skeleton loading states.
+**Good news:** The biggest opportunity (restaurant logos) is something we can fix!
 
 ---
 
-## What We're NOT Changing
+## The Solution: Tell Browsers to Remember Logos Longer
 
-| Component | Why We're Keeping It |
-|-----------|---------------------|
-| Supabase client | Required for auth state check and carousel data |
-| React Query | Required for data fetching on homepage |
-| Core UI components (Button, Card, Input) | Used immediately on page load |
-| Analytics | Already deferred with `requestIdleCallback` |
-| Footer | Simple component, minimal code |
+When merchants upload logos, we tell Supabase Storage how long browsers should keep the file. Currently it's set to **1 hour (3600 seconds)**.
 
----
+We can change this to **30 days (2,592,000 seconds)** — the standard for images that rarely change.
 
-## Trade-offs Summary
-
-| Change | What You Give Up | What You Gain |
-|--------|------------------|---------------|
-| Lazy Sheet | ~100ms delay on first mobile search tap | ~10-15KB less JS for desktop; faster mobile initial load |
-| Lazy Dropdown | ~100ms delay on first profile click | ~8-10KB less JS for logged-out users |
-| Carousel chunking | None (skeleton already shows) | ~15-20KB deferred from initial load |
-
-**Total potential savings: ~30-45KB of JavaScript deferred from initial page load**
-
-This translates to:
-- ~50-100ms faster initial page render
-- Lower "Total Blocking Time" in PageSpeed
-- Better "Time to Interactive" scores
-
----
-
-## Technical Implementation Details
-
-### File Changes Overview
-
-| File | Change Type | Purpose |
-|------|-------------|---------|
-| `vite.config.ts` | Modify | Add carousel to manual chunks |
-| `src/components/PageHeader.tsx` | Modify | Lazy load Sheet component |
-| `src/components/AuthButton.tsx` | Modify | Lazy load DropdownMenu |
-
-### 1. Update vite.config.ts — Add Carousel Chunk
-
-Add `embla-carousel-react` to the manual chunks configuration:
-
-```typescript
-manualChunks: {
-  // ... existing chunks ...
-  // Carousel - loaded on homepage after initial paint
-  'carousel-vendor': ['embla-carousel-react'],
-}
+```text
+BEFORE: "Keep this logo for 1 hour, then download again"
+AFTER:  "Keep this logo for 30 days, then check if it changed"
 ```
 
-### 2. Update PageHeader.tsx — Lazy Load Sheet
+---
 
-Use React's `lazy` and `Suspense` to load the Sheet component only when needed:
+## Trade-offs: What Are We Giving Up?
+
+### The Concern: "What if a merchant changes their logo?"
+
+Currently, if a merchant uploads a new logo, visitors see it within 1 hour maximum.
+
+With 30-day caching, **in theory** a visitor could see an old logo for up to 30 days.
+
+### Why This Isn't Really a Problem
+
+**Your app already solves this.** Here's how:
+
+1. When a merchant uploads a new logo, it gets a **new filename** (with timestamp)
+   - Old: `123-1700000000.png`
+   - New: `123-1700100000.png`
+
+2. The database stores the **new URL**
+
+3. The carousel loads the **new URL** from the database
+
+4. The browser has never seen this new URL before, so it downloads the new logo
+
+**Result:** Logo changes appear instantly because new logos = new URLs.
+
+The 30-day cache only applies to files at the same URL. Since your app creates new URLs for new uploads, there's no conflict.
+
+---
+
+## Summary of Trade-offs
+
+| What You Give Up | What You Gain |
+|------------------|---------------|
+| **Nothing** (because new logos get new URLs) | Repeat visitors don't re-download 5MB of logos |
+| | Faster load times for returning visitors |
+| | Better PageSpeed scores |
+| | Reduced bandwidth costs |
+
+**This is a pure win with zero visual impact.**
+
+---
+
+## Technical Implementation
+
+### File to Change
+
+| File | Change | Why |
+|------|--------|-----|
+| `src/components/restaurant-profile-editor/LogoUpload.tsx` | Change `cacheControl` from `'3600'` to `'2592000'` | 30 days instead of 1 hour |
+
+### The Actual Code Change
 
 ```typescript
-import React, { useState, lazy, Suspense } from 'react';
+// BEFORE (line 62):
+cacheControl: '3600',  // 1 hour
 
-// Lazy load the Sheet component
-const Sheet = lazy(() => import('@/components/ui/sheet').then(m => ({ 
-  default: m.Sheet 
-})));
-const SheetContent = lazy(() => import('@/components/ui/sheet').then(m => ({ 
-  default: m.SheetContent 
-})));
-const SheetHeader = lazy(() => import('@/components/ui/sheet').then(m => ({ 
-  default: m.SheetHeader 
-})));
-const SheetTitle = lazy(() => import('@/components/ui/sheet').then(m => ({ 
-  default: m.SheetTitle 
-})));
-
-// In the component, wrap with Suspense:
-{showSearchBar && isMobile && isSearchOpen && (
-  <Suspense fallback={<div className="fixed inset-0 bg-background/80 animate-pulse" />}>
-    <Sheet open={isSearchOpen} onOpenChange={setIsSearchOpen}>
-      {/* ... existing content ... */}
-    </Sheet>
-  </Suspense>
-)}
+// AFTER:
+cacheControl: '2592000',  // 30 days
 ```
 
-### 3. Update AuthButton.tsx — Lazy Load Dropdown
+That's it — one number change.
 
-Only load the dropdown menu component when the user is authenticated:
+---
 
-```typescript
-import React, { lazy, Suspense } from 'react';
+## Important Note: Existing Logos
 
-// Lazy load dropdown components
-const DropdownMenu = lazy(() => 
-  import('@/components/ui/dropdown-menu').then(m => ({ default: m.DropdownMenu }))
-);
-const DropdownMenuContent = lazy(() => 
-  import('@/components/ui/dropdown-menu').then(m => ({ default: m.DropdownMenuContent }))
-);
-// ... etc for other dropdown parts
+The cache setting is applied **when a logo is uploaded**. This means:
 
-// In the authenticated user return:
-if (user) {
-  return (
-    <Suspense fallback={<Button variant="outline" size="icon"><User className="w-4 h-4" /></Button>}>
-      <DropdownMenu>
-        {/* ... existing content ... */}
-      </DropdownMenu>
-    </Suspense>
-  );
-}
-```
+| Logos | Cache Duration |
+|-------|---------------|
+| **Already uploaded** (601 existing logos) | Stuck at 1 hour until re-uploaded |
+| **New uploads** (after this change) | Will use 30-day caching |
+
+### Options for Existing Logos
+
+| Option | Effort | Result |
+|--------|--------|--------|
+| **A) Do nothing** | None | New uploads benefit immediately; existing logos stay as-is |
+| **B) Re-upload all logos** | High | All logos get 30-day caching |
+
+I recommend **Option A** for now. The performance benefit will grow naturally as merchants update their profiles or as new restaurants are added.
+
+If you want Option B later, we could create an admin tool to batch-process existing logos — but that's a larger effort.
 
 ---
 
 ## Expected Results
 
-| Metric | Current (Estimate) | After (Estimate) |
-|--------|-------------------|------------------|
-| Initial JS bundle | ~350-400KB | ~310-360KB |
-| Time to Interactive | ~4-5s | ~3.5-4.5s |
-| Total Blocking Time | Variable | Reduced ~50-100ms |
-| PageSpeed Score | ~40-50 | ~45-55 |
+| Metric | First Visit | Repeat Visit (Within 30 Days) |
+|--------|-------------|------------------------------|
+| Logo downloads | ~5MB | ~0 (cached) |
+| Homepage load | Current speed | Significantly faster |
+| PageSpeed "cache" warning | Still appears for first visit | Would be resolved for repeat visits |
 
-Note: These are incremental improvements. The biggest wins still come from image optimization (Phase 2), which you've chosen to defer for now.
+**Note:** PageSpeed tests simulate first-time visitors, so you won't see the "cache lifetimes" warning disappear immediately. However, your **real returning users** will experience faster loads.
 
 ---
 
-## Verification After Implementation
+## What This Won't Fix
 
-1. **Test the homepage** — Ensure carousels still load and display correctly
-2. **Test mobile search** — Tap the search icon, verify the sheet opens smoothly
-3. **Test auth flow** — Sign in and verify the dropdown menu works
-4. **Run PageSpeed** — Compare "Reduce unused JavaScript" diagnostic
-5. **Check Network tab** — Verify new chunks are loading on-demand
+This optimization specifically helps **returning visitors**. It doesn't speed up:
+
+- First-time visitors (they still download everything)
+- The PageSpeed test (which simulates first visits)
+
+For first-time visitor speed, the main remaining opportunity is still image optimization (Phase 2), which you've chosen to defer.
 
 ---
 
 ## Summary
 
-| Approach | Risk | Effort | Impact |
-|----------|------|--------|--------|
-| Lazy Sheet | Very Low | Low | ~10-15KB saved |
-| Lazy Dropdown | Very Low | Low | ~8-10KB saved |
-| Carousel chunk | Low | Very Low | ~15-20KB deferred |
-
-**Bottom line:** These changes are "pure wins" with essentially no visual change. Users won't notice any difference except pages loading slightly faster.
+| Aspect | Details |
+|--------|---------|
+| **Change** | Update cache duration from 1 hour to 30 days |
+| **Files modified** | 1 file (LogoUpload.tsx) |
+| **Risk** | None — new logos get new URLs anyway |
+| **Visual changes** | None |
+| **Functionality changes** | None |
+| **Benefit** | ~5MB saved for every returning visitor |
+| **Limitation** | Only affects newly uploaded logos |
 
