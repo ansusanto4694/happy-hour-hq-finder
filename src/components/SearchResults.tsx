@@ -59,13 +59,47 @@ const SearchResultsComponent: React.FC<SearchResultsProps> = ({
   });
 
   // Reset displayed results when merchants change
+  // Also check for scroll restoration target and load enough results to include it
   useEffect(() => {
     if (merchants) {
+      // Check if we need to restore scroll to a specific merchant
+      const savedState = sessionStorage.getItem('drawer-state');
+      let targetMerchantId: number | null = null;
+      
+      if (savedState) {
+        try {
+          const states = JSON.parse(savedState);
+          const locationKey = window.location.pathname + window.location.search;
+          const state = states[locationKey];
+          if (state?.lastClickedMerchantId) {
+            targetMerchantId = state.lastClickedMerchantId;
+          }
+        } catch (e) {
+          console.error('[SearchResults] Failed to parse drawer state:', e);
+        }
+      }
+      
+      // If we have a target merchant, find its index and load enough results
+      if (targetMerchantId && isMobile) {
+        const targetIndex = merchants.findIndex(m => m.id === targetMerchantId);
+        console.log('[SearchResults] Scroll restoration target:', { targetMerchantId, targetIndex });
+        
+        if (targetIndex >= 0) {
+          // Load all results up to and including the target, plus a buffer
+          const resultsNeeded = Math.min(targetIndex + 10, merchants.length);
+          const initialResults = merchants.slice(0, Math.max(RESULTS_PER_PAGE, resultsNeeded));
+          setDisplayedResults(initialResults);
+          setHasMore(initialResults.length < merchants.length);
+          return;
+        }
+      }
+      
+      // Default: load first page
       const initialResults = merchants.slice(0, RESULTS_PER_PAGE);
       setDisplayedResults(initialResults);
       setHasMore(merchants.length > RESULTS_PER_PAGE);
     }
-  }, [merchants]);
+  }, [merchants, isMobile]);
 
   // Load more results when scrolling to bottom (mobile only)
   useEffect(() => {
