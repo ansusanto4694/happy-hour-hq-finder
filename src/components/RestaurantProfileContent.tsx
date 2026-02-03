@@ -1,4 +1,3 @@
-
 import React, { useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAnalytics } from '@/hooks/useAnalytics';
@@ -22,6 +21,7 @@ import { useMerchantRating } from '@/hooks/useMerchantRating';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { getOptimizedImageUrl, IMAGE_SIZES } from '@/utils/imageOptimization';
 
 interface Restaurant {
   id: number;
@@ -68,6 +68,9 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
   // Use slug for URLs when available for SEO
   const merchantUrlId = restaurant.slug || restaurant.id;
   
+  // Optimize logo URL for profile page - larger display size (96px mobile, 80px desktop)
+  const optimizedLogoUrl = getOptimizedImageUrl(restaurant.logo_url, IMAGE_SIZES.profileHeader);
+  
   // Transform the merchant_happy_hour data to include IDs for the editor
   const restaurantWithIds = {
     ...restaurant,
@@ -105,9 +108,9 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
             <div className="flex flex-col items-center text-center space-y-4 relative">
               {/* Centered Logo - 96px */}
               <div className="w-24 h-24 bg-white border-2 border-transparent rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
-                {restaurant.logo_url ? (
+                {optimizedLogoUrl ? (
                   <img 
-                    src={restaurant.logo_url} 
+                    src={optimizedLogoUrl} 
                     alt={`${restaurant.restaurant_name} logo`}
                     className="w-full h-full object-contain"
                   />
@@ -163,9 +166,9 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
                 <div className="flex items-center space-x-4">
                   {/* Restaurant Logo */}
                   <div className="w-20 h-20 bg-white border-2 border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
-                    {restaurant.logo_url ? (
+                    {optimizedLogoUrl ? (
                       <img 
-                        src={restaurant.logo_url} 
+                        src={optimizedLogoUrl} 
                         alt={`${restaurant.restaurant_name} logo`}
                         className="w-full h-full object-contain"
                       />
