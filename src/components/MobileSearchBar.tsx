@@ -2,22 +2,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Search, MapPin, ChevronDown, ChevronUp, X, LocateFixed } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { TimeDropdown } from './TimeDropdown';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { supabase } from '@/integrations/supabase/client';
 import { useLocateMe } from '@/hooks/useLocateMe';
 import { useAnalytics } from '@/hooks/useAnalytics';
-import { locationCache } from '@/utils/locationCache';
-
-interface LocationSuggestion {
-  id: string;
-  place_name: string;
-  center: [number, number];
-  place_type: string[];
-  text: string;
-  location_type: string;
-}
+import { useLocationSuggestions } from '@/hooks/useLocationSuggestions';
 
 interface MobileSearchBarProps {
   onExpandedChange?: (isExpanded: boolean) => void;
@@ -27,201 +16,59 @@ export const MobileSearchBar = ({ onExpandedChange }: MobileSearchBarProps = {})
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { track } = useAnalytics();
-  const [isExpanded, setIsExpanded] = useState(false);
   
-  // Get current values from URL
+  // Core search state
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
   const [location, setLocation] = useState(searchParams.get('location') || searchParams.get('zip') || '');
-  const [startTime, setStartTime] = useState(searchParams.get('startTime') || '');
-  const [endTime, setEndTime] = useState(searchParams.get('endTime') || '');
+  
+  // UI state
+  const [isExpanded, setIsExpanded] = useState(false);
   const [gpsCoordinates, setGpsCoordinates] = useState<{lat: number; lng: number} | null>(null);
   
-  // Location autocomplete state
-  const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
-  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  // Hooks
   const { locate, isLocating } = useLocateMe();
-  
-  // Refs
   const locationInputRef = useRef<HTMLInputElement>(null);
-  const suggestionsRef = useRef<HTMLDivElement>(null);
-  const debounceRef = useRef<NodeJS.Timeout>();
-  const abortControllerRef = useRef<AbortController | null>(null);
-
-  // Fetch location suggestions
-  const fetchLocationSuggestions = async (query: string) => {
-    if (query.length < 2) {
-      setLocationSuggestions([]);
-      setShowSuggestions(false);
-      return;
-    }
-
-    // Check cache first
-    const cachedSuggestions = locationCache.get(query);
-    if (cachedSuggestions) {
-      setLocationSuggestions(cachedSuggestions);
-      setShowSuggestions(true);
-      setSelectedSuggestionIndex(-1);
-      setIsLoadingSuggestions(false);
-      return;
-    }
-
-    // Cancel previous request if still pending
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-
-    // Create new AbortController for this request
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-
-    setIsLoadingSuggestions(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('location-suggestions', {
-        body: { query }
+  
+  // Location suggestions via shared hook
+  const {
+    suggestions: locationSuggestions,
+    isLoading: isLoadingSuggestions,
+    showSuggestions,
+    selectedIndex: selectedSuggestionIndex,
+    fetchSuggestions,
+    selectSuggestion: selectLocationSuggestion,
+    handleKeyDown: handleLocationKeyDownBase,
+    clearSuggestions,
+    hideSuggestions,
+    suggestionsRef,
+    cleanup,
+  } = useLocationSuggestions({
+    debounceMs: 400, // Slightly higher for mobile
+    onSelect: (suggestion) => {
+      console.log('[MobileSearch] Location suggestion selected:', {
+        suggestion,
+        previousLocation: location,
+        totalSuggestions: locationSuggestions.length
       });
-
-      // Check if this request was aborted
-      if (controller.signal.aborted) {
-        return;
-      }
-
-      if (error) throw error;
-
-      const suggestions = data.suggestions || [];
-      
-      // Cache the results
-      locationCache.set(query, suggestions);
-      
-      setLocationSuggestions(suggestions);
-      setShowSuggestions(true);
-      setSelectedSuggestionIndex(-1);
-      
-      // Track suggestions displayed
-      track({
-        eventType: 'interaction',
-        eventCategory: 'search',
-        eventAction: 'location_suggestions_displayed',
-        eventLabel: query,
-        metadata: { suggestionCount: suggestions.length }
-      });
-    } catch (error: any) {
-      // Check if aborted before handling error
-      if (controller.signal.aborted) {
-        return;
-      }
-      console.error('Error fetching location suggestions:', error);
-      setLocationSuggestions([]);
-      setShowSuggestions(false);
-    } finally {
-      if (!controller.signal.aborted) {
-        setIsLoadingSuggestions(false);
-      }
-      if (abortControllerRef.current === controller) {
-        abortControllerRef.current = null;
-      }
+      setLocation(suggestion.place_name);
+      setGpsCoordinates(null); // Clear GPS when selecting a suggestion
+      locationInputRef.current?.focus();
     }
-  };
+  });
 
-  // Handle location input change with debounce
+  // Handle location input change
   const handleLocationChange = (value: string) => {
     setLocation(value);
-    // Clear GPS coordinates when manually editing location
-    setGpsCoordinates(null);
-    
-    // Clear existing debounce
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
-    
-    // Debounce the API call
-    debounceRef.current = setTimeout(() => {
-      fetchLocationSuggestions(value);
-    }, 300);
+    setGpsCoordinates(null); // Clear GPS coordinates when manually editing
+    fetchSuggestions(value);
   };
 
-  // Handle suggestion selection
-  const selectSuggestion = (suggestion: LocationSuggestion) => {
-    console.log('[MobileSearch] Location suggestion selected:', {
-      suggestion,
-      previousLocation: location,
-      totalSuggestions: locationSuggestions.length
-    });
-    
-    setLocation(suggestion.place_name);
-    setShowSuggestions(false);
-    setSelectedSuggestionIndex(-1);
-    // Clear GPS coordinates when selecting a suggestion (this is not GPS location)
-    setGpsCoordinates(null);
-    locationInputRef.current?.focus();
-    
-    // Track suggestion selection
-    track({
-      eventType: 'click',
-      eventCategory: 'search',
-      eventAction: 'location_suggestion_selected',
-      eventLabel: suggestion.place_name,
-      metadata: { locationType: suggestion.location_type }
-    });
-  };
-
-  // Handle keyboard navigation
+  // Wrap keyboard handler to include search trigger
   const handleLocationKeyDown = (e: React.KeyboardEvent) => {
-    if (!showSuggestions || locationSuggestions.length === 0) {
-      if (e.key === 'Enter') {
-        console.log('[MobileSearch] Enter pressed (no suggestions visible):', { searchTerm, location });
-        handleSearch();
-      }
-      return;
-    }
-
-    switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault();
-        setSelectedSuggestionIndex(prev => 
-          prev < locationSuggestions.length - 1 ? prev + 1 : 0
-        );
-        // Track keyboard navigation
-        track({
-          eventType: 'interaction',
-          eventCategory: 'search',
-          eventAction: 'keyboard_navigation',
-          eventLabel: 'arrow_down'
-        });
-        break;
-      case 'ArrowUp':
-        e.preventDefault();
-        setSelectedSuggestionIndex(prev => 
-          prev > 0 ? prev - 1 : locationSuggestions.length - 1
-        );
-        // Track keyboard navigation
-        track({
-          eventType: 'interaction',
-          eventCategory: 'search',
-          eventAction: 'keyboard_navigation',
-          eventLabel: 'arrow_up'
-        });
-        break;
-      case 'Enter':
-        e.preventDefault();
-        if (selectedSuggestionIndex >= 0) {
-          const selectedSuggestion = locationSuggestions[selectedSuggestionIndex];
-          console.log('[MobileSearch] Enter pressed with suggestion selected:', {
-            selectedSuggestionIndex,
-            selectedSuggestion
-          });
-          selectSuggestion(selectedSuggestion);
-        } else {
-          console.log('[MobileSearch] Enter pressed (no suggestion highlighted):', { searchTerm, location });
-          handleSearch();
-        }
-        break;
-      case 'Escape':
-        setShowSuggestions(false);
-        setSelectedSuggestionIndex(-1);
-        break;
-    }
+    handleLocationKeyDownBase(e, () => {
+      console.log('[MobileSearch] Enter pressed (no suggestions visible):', { searchTerm, location });
+      handleSearch();
+    });
   };
 
   // Close suggestions when clicking outside
@@ -232,22 +79,18 @@ export const MobileSearchBar = ({ onExpandedChange }: MobileSearchBarProps = {})
         !suggestionsRef.current.contains(event.target as Node) &&
         !locationInputRef.current?.contains(event.target as Node)
       ) {
-        setShowSuggestions(false);
-        setSelectedSuggestionIndex(-1);
+        hideSuggestions();
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
+      cleanup();
     };
-  }, []);
+  }, [hideSuggestions, cleanup]);
 
   const handleSearch = () => {
-    // Debug logging for search flow
     console.log('[MobileSearch] handleSearch called:', {
       searchTerm,
       location,
@@ -295,7 +138,6 @@ export const MobileSearchBar = ({ onExpandedChange }: MobileSearchBarProps = {})
     
     const targetUrl = `/results?${params.toString()}`;
     
-    // Debug logging before navigation
     console.log('[MobileSearch] Navigating to:', {
       targetUrl,
       params: Object.fromEntries(params.entries()),
@@ -311,6 +153,37 @@ export const MobileSearchBar = ({ onExpandedChange }: MobileSearchBarProps = {})
       console.log('[MobileSearch] Enter key pressed in search input:', { searchTerm });
       handleSearch();
     }
+  };
+
+  const handleLocateMe = async () => {
+    track({
+      eventType: 'click',
+      eventCategory: 'search',
+      eventAction: 'locate_me_clicked',
+      eventLabel: 'mobile_search_drawer'
+    });
+    
+    const r = await locate();
+    if (r?.display) {
+      setLocation(r.display);
+      hideSuggestions();
+      if (r.latitude && r.longitude) {
+        setGpsCoordinates({ lat: r.latitude, lng: r.longitude });
+      }
+      
+      track({
+        eventType: 'interaction',
+        eventCategory: 'search',
+        eventAction: 'gps_location_obtained',
+        metadata: { source: 'locate_me_button' }
+      });
+    }
+  };
+
+  const handleClearLocation = () => {
+    setLocation('');
+    clearSuggestions();
+    setGpsCoordinates(null);
   };
 
   const hasFilters = location;
@@ -354,7 +227,6 @@ export const MobileSearchBar = ({ onExpandedChange }: MobileSearchBarProps = {})
           <Collapsible open={isExpanded} onOpenChange={(open) => {
             setIsExpanded(open);
             onExpandedChange?.(open);
-            // Track drawer state changes
             track({
               eventType: 'interaction',
               eventCategory: 'search',
@@ -429,33 +301,7 @@ export const MobileSearchBar = ({ onExpandedChange }: MobileSearchBarProps = {})
                       <button
                         type="button"
                         aria-label="Use my location"
-                        onClick={async () => {
-                          // Track locate me click
-                          track({
-                            eventType: 'click',
-                            eventCategory: 'search',
-                            eventAction: 'locate_me_clicked',
-                            eventLabel: 'mobile_search_drawer'
-                          });
-                          
-                          const r = await locate();
-                          if (r?.display) {
-                            setLocation(r.display);
-                            setShowSuggestions(false);
-                            // Store GPS coordinates for search
-                            if (r.latitude && r.longitude) {
-                              setGpsCoordinates({ lat: r.latitude, lng: r.longitude });
-                            }
-                            
-                            // Track successful GPS location
-                            track({
-                              eventType: 'interaction',
-                              eventCategory: 'search',
-                              eventAction: 'gps_location_obtained',
-                              metadata: { source: 'locate_me_button' }
-                            });
-                          }
-                        }}
+                        onClick={handleLocateMe}
                         className="absolute right-10 text-gray-500 hover:text-gray-700 transition-colors z-20 w-11 h-12 flex items-center justify-center"
                       >
                         {isLocating ? (
@@ -468,12 +314,7 @@ export const MobileSearchBar = ({ onExpandedChange }: MobileSearchBarProps = {})
                       {/* Clear button */}
                       {location && (
                         <button
-                          onClick={() => {
-                            setLocation('');
-                            setShowSuggestions(false);
-                            setLocationSuggestions([]);
-                            setGpsCoordinates(null);
-                          }}
+                          onClick={handleClearLocation}
                           className="absolute right-3 text-gray-400 hover:text-gray-600 transition-colors z-20 w-11 h-12 flex items-center justify-center"
                           type="button"
                         >
@@ -500,7 +341,7 @@ export const MobileSearchBar = ({ onExpandedChange }: MobileSearchBarProps = {})
                               className={`px-4 py-3 cursor-pointer border-b border-gray-100 last:border-b-0 hover:bg-gray-50 ${
                                 index === selectedSuggestionIndex ? 'bg-blue-50 border-blue-200' : ''
                               }`}
-                              onClick={() => selectSuggestion(suggestion)}
+                              onClick={() => selectLocationSuggestion(suggestion)}
                             >
                               <div className="flex items-start">
                                 <div className="flex-1">
