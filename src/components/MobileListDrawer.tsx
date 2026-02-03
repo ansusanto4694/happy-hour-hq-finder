@@ -77,7 +77,7 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
 
   return (
     <Drawer open={isOpen} onOpenChange={onOpenChange}>
-      <DrawerContent className="max-h-[85vh] flex flex-col">
+      <DrawerContent className="max-h-[85vh] flex flex-col overflow-hidden">
         <DrawerHeader className="pb-4 flex-shrink-0">
           <div className="flex items-center justify-center mb-2">
             <GripHorizontal className="h-6 w-6 text-gray-400" />
@@ -106,7 +106,8 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
         
         <div 
           ref={scrollRef} 
-          className="px-4 pb-4 overflow-y-auto flex-1 min-h-0"
+          className="px-4 pb-4 overflow-y-auto flex-1"
+          style={{ minHeight: 0 }}
         >
           <SearchResults 
             merchants={merchants}
