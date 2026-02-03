@@ -1,158 +1,279 @@
 
 
-# N+1 Query Optimization Plan
+# Map Component Performance Optimization Plan
 
 ## Summary
 
-This plan eliminates N+1 query patterns in the search results flow. The current implementation is already **well-optimized** for the main merchant query, but there are **two optimization opportunities** that provide **pure performance gains with zero functionality loss**.
+This plan optimizes the map component to reduce re-renders, eliminate callback-induced memo failures, and improve interaction smoothness. Most optimizations are **pure performance gains with zero functionality loss**.
 
 ---
 
-## Current State Analysis
+## Problems Identified
 
-### What's Already Optimized (No Changes Needed)
+| Issue | Impact | Severity |
+|-------|--------|----------|
+| **Broken memoization** - callback functions recreated on every parent render | Map re-renders constantly | HIGH |
+| **Duplicate analytics tracking** - `handleMoveEnd` + `MapInteractionTracker` both track map moves | Redundant events, wasted processing | MEDIUM |
+| **Marker re-renders** - All markers re-render when any restaurant changes | Janky panning/zooming | MEDIUM |
+| **Multiple useEffect hooks** - Running on every restaurant list change | Unnecessary processing | LOW |
 
-The `useMerchants.ts` hook already uses **nested selects** to fetch related data in a single query:
+---
 
-```sql
-SELECT ... FROM Merchant
-  LEFT JOIN merchant_happy_hour
-  LEFT JOIN happy_hour_deals
-  LEFT JOIN merchant_categories -> categories
-  LEFT JOIN merchant_offers
-  LEFT JOIN merchant_reviews -> merchant_review_ratings
+## Optimization Strategy
+
+### Tradeoffs Analysis
+
+| Optimization | Functionality Loss | Performance Gain |
+|--------------|-------------------|------------------|
+| Fix callback memoization | None | HIGH |
+| Remove duplicate analytics | None (keeping sampled tracking) | MEDIUM |
+| Memoize marker components | None | MEDIUM |
+| Consolidate useEffects | None | LOW |
+
+**All optimizations are pure performance gains with no functionality loss.**
+
+---
+
+## Changes Overview
+
+### 1. Fix Broken Memoization in Results.tsx
+
+**Problem:** The `React.memo` comparison in `ResultsMap.tsx` checks function reference equality for `onMapMove`, `onSearchThisArea`, and `onViewStateChange`. These callbacks are recreated on every render in Results.tsx, causing the memo to always fail.
+
+```typescript
+// Current - recreated on every render
+const handleMapMove = (bounds) => { ... };
+const handleSearchThisArea = async () => { ... };
+const handleViewStateChange = (newViewState) => { ... };
 ```
 
-This fetches all data for 30+ merchants in **1 database call** - excellent implementation.
+**Solution:** Wrap all three callbacks with `useCallback` and stable dependencies:
 
-### Identified N+1 Patterns
+```typescript
+// Fixed - stable references
+const handleMapMove = useCallback((bounds) => {
+  setMapBounds(bounds);
+  // ... rest of logic
+}, [isMobile, isUsingMapSearch, searchedBounds, hasMapMoved]);
 
-| Issue | Impact | Location |
-|-------|--------|----------|
-| **useFavorites** fetches all favorites on every render | 1 query per page load (acceptable) | `useFavorites.ts` |
-| **useMerchantRating** - individual queries per merchant | N queries if used in lists | `useMerchantRating.ts` |
-| **Location normalization** - edge function calls | 1-4 queries for cache miss | `useMerchants.ts` |
+const handleSearchThisArea = useCallback(async () => {
+  // ... tracking and state updates
+}, [mapBounds, merchants?.length, track]);
+
+const handleViewStateChange = useCallback((newViewState) => {
+  setMapViewState(newViewState);
+}, []);
+```
+
+### 2. Remove Duplicate Analytics in ResultsMap.tsx
+
+**Problem:** Both `handleMoveEnd` and `MapInteractionTracker` fire analytics on map move:
+
+- `handleMoveEnd` (line 197-218): Tracks `map_moved` on every move
+- `MapInteractionTracker`: Tracks `map_pan` with sampling and throttling
+
+**Solution:** Remove analytics from `handleMoveEnd` since `MapInteractionTracker` already handles it with better throttling (3s) and sampling (30%). Keep the bounds notification logic.
+
+```typescript
+// BEFORE
+const handleMoveEnd = useCallback(() => {
+  track({
+    eventType: 'interaction',
+    eventCategory: 'map_interaction',
+    eventAction: 'map_moved',   // DUPLICATE - remove this
+    metadata: { isMobile },
+  });
+
+  if (mapRef.current && onMapMove) {
+    // ... bounds notification - KEEP THIS
+  }
+}, [onMapMove, track, isMobile]);
+
+// AFTER
+const handleMoveEnd = useCallback(() => {
+  // Analytics handled by MapInteractionTracker with throttling/sampling
+  if (mapRef.current && onMapMove) {
+    const map = mapRef.current.getMap();
+    const bounds = map.getBounds();
+    
+    onMapMove({
+      north: bounds.getNorth(),
+      south: bounds.getSouth(),
+      east: bounds.getEast(),
+      west: bounds.getWest()
+    });
+  }
+}, [onMapMove]);
+```
+
+### 3. Memoize Marker Component
+
+**Problem:** All markers re-render whenever the `restaurants` array changes, even if individual restaurant data hasn't changed.
+
+**Solution:** Extract marker rendering to a memoized component:
+
+```typescript
+// New memoized component
+const RestaurantMarker = React.memo(({ 
+  restaurant, 
+  isHovered, 
+  isSelected,
+  onClick,
+  onMouseEnter,
+  onMouseLeave 
+}) => (
+  <Marker
+    longitude={restaurant.longitude!}
+    latitude={restaurant.latitude!}
+    anchor="bottom"
+    style={{ zIndex: isHovered ? 1000 : 1 }}
+  >
+    <div 
+      className={`rounded-full flex items-center justify-center ... ${
+        isHovered ? 'bg-bright-blue w-9 h-9 scale-110' : 'bg-red-500 w-6 h-6'
+      }`}
+      onClick={onClick}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
+      <div className="w-2 h-2 bg-white rounded-full"></div>
+    </div>
+  </Marker>
+), (prev, next) => (
+  prev.restaurant.id === next.restaurant.id &&
+  prev.isHovered === next.isHovered &&
+  prev.isSelected === next.isSelected
+));
+```
+
+### 4. Simplify Memo Comparison
+
+**Problem:** Current memo comparison checks function references which will always fail when parent re-renders.
+
+**Solution:** After fixing callbacks with `useCallback`, the existing memo comparison will work correctly. But we can also simplify by removing callback comparisons entirely (they don't affect visual output):
+
+```typescript
+// Simplified comparison - only check data that affects visual output
+export const ResultsMap = React.memo(ResultsMapComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.restaurants === nextProps.restaurants &&
+    prevProps.showSearchThisArea === nextProps.showSearchThisArea &&
+    prevProps.isUsingMapSearch === nextProps.isUsingMapSearch &&
+    prevProps.viewState === nextProps.viewState &&
+    prevProps.isMobile === nextProps.isMobile &&
+    prevProps.hoveredRestaurantId === nextProps.hoveredRestaurantId &&
+    prevProps.searchLocation === nextProps.searchLocation
+    // Removed: onMapMove, onSearchThisArea, onViewStateChange
+    // These don't affect visual output, and with useCallback they'll be stable anyway
+  );
+});
+```
 
 ---
 
-## Tradeoffs Analysis
+## Files to Modify
 
-### Pure Optimizations (No Functionality Loss)
-
-1. **Remove `useMerchantRating` from SearchResultCard**
-   - Rating data is already included in the main query via `merchant_reviews.merchant_review_ratings`
-   - The hook exists for the RestaurantProfile page (where it's appropriate)
-   - SearchResultCard already calculates ratings from the nested data
-   - **Result**: Zero additional queries, same functionality
-
-2. **Pre-warm location cache for common searches**
-   - Currently, a cache miss triggers an edge function call
-   - We can pre-populate common locations (NYC neighborhoods, major cities)
-   - **Result**: Fewer edge function invocations, same functionality
-
-### Already Optimized (No Changes Needed)
-
-1. **Favorites**: The `useFavorites` hook fetches once per user session and caches the result. React Query prevents duplicate fetches.
-
-2. **Main merchant query**: Uses efficient nested selects - no N+1 pattern.
+| File | Changes |
+|------|---------|
+| `src/pages/Results.tsx` | Wrap `handleMapMove`, `handleSearchThisArea`, `handleViewStateChange` with `useCallback` |
+| `src/components/ResultsMap.tsx` | Remove duplicate analytics, extract memoized marker component, simplify memo comparison |
 
 ---
 
-## What We're NOT Changing
+## Implementation Details
 
-After analyzing the code, I found that the implementation is already well-architected:
+### Results.tsx - Stabilize Callbacks
 
-- `SearchResultCard` does NOT call `useMerchantRating()` - it calculates ratings locally from pre-fetched data
-- The main query in `useMerchants.ts` is already batched with proper nested selects
-- React Query's caching prevents redundant fetches
+```typescript
+// Line ~206 - Wrap handleMapMove
+const handleMapMove = useCallback((bounds: { north: number; south: number; east: number; west: number }) => {
+  setMapBounds(bounds);
+  
+  // Show "search this area" button logic
+  if (isMobile) {
+    if (isUsingMapSearch && searchedBounds) {
+      const boundsChanged = /* ... */;
+      if (boundsChanged) setShowSearchThisArea(true);
+    } else if (!hasMapMoved) {
+      setHasMapMoved(true);
+      setShowSearchThisArea(true);
+    }
+  } else {
+    // Desktop logic
+    if (isUsingMapSearch && searchedBounds) {
+      const boundsChanged = /* ... */;
+      if (boundsChanged) setShowSearchThisAreaDesktop(true);
+    } else if (!hasMapMoved) {
+      setHasMapMoved(true);
+      setShowSearchThisAreaDesktop(true);
+    }
+  }
+}, [isMobile, isUsingMapSearch, searchedBounds, hasMapMoved]);
+
+// Line ~252 - Wrap handleSearchThisArea
+const handleSearchThisArea = useCallback(async () => {
+  await track({ /* ... */ });
+  setSearchedBounds(mapBounds);
+  setIsUsingMapSearch(true);
+  setShowSearchThisArea(false);
+  setShowSearchThisAreaDesktop(false);
+}, [mapBounds, merchants?.length, track]);
+
+// Line ~270 - Wrap handleViewStateChange
+const handleViewStateChange = useCallback((newViewState: { longitude: number; latitude: number; zoom: number }) => {
+  setMapViewState(newViewState);
+}, []);
+```
+
+### ResultsMap.tsx - Remove Duplicate Analytics
+
+```typescript
+// Line 197-218 - Simplified handleMoveEnd
+const handleMoveEnd = useCallback(() => {
+  // Analytics removed - handled by MapInteractionTracker with throttling/sampling
+  if (mapRef.current && onMapMove) {
+    const map = mapRef.current.getMap();
+    const bounds = map.getBounds();
+    
+    onMapMove({
+      north: bounds.getNorth(),
+      south: bounds.getSouth(),
+      east: bounds.getEast(),
+      west: bounds.getWest()
+    });
+  }
+}, [onMapMove]); // Removed track, isMobile dependencies
+```
 
 ---
 
-## Recommended Optimizations
-
-### 1. Location Cache Pre-warming (Optional Enhancement)
-
-**Current behavior**: When a user searches "East Village, NY" for the first time:
-1. Check `location_cache` table (1 query)
-2. If miss, call `normalize-location` edge function (slow)
-
-**Proposed**: Add common locations to the cache proactively via a seed script.
-
-### 2. Code Cleanup: Remove Unused `useMerchantRating` Import Check
-
-Verify that `useMerchantRating` is not being called from within list views. If found, replace with the pre-fetched data pattern already used in `SearchResultCard`.
-
----
-
-## Implementation Plan
-
-### Phase 1: Audit for Hidden N+1 Patterns ✅ COMPLETED
-
-| File | Check | Status |
-|------|-------|--------|
-| `SearchResultCard.tsx` | Confirm no `useMerchantRating` call | ✅ Already optimal |
-| `MobileCarouselCard.tsx` | Check for individual rating fetches | ✅ Fixed |
-| `CarouselCard.tsx` | Check for individual rating fetches | ✅ Fixed |
-| `MerchantMapPreviewCard.tsx` | Check for individual rating fetches | ✅ No rating display |
-
-### Phase 2: Fix Any Discovered Issues ✅ COMPLETED
-
-Changes made:
-1. **useHomepageCarousels.ts**: Added `merchant_reviews` with nested `merchant_review_ratings` to the query
-2. **MobileCarouselCard.tsx**: Replaced `useMerchantRating` hook with local `useMemo` calculation
-3. **CarouselCard.tsx**: Replaced `useMerchantRating` hook with local `useMemo` calculation
-
-### Phase 3: Location Cache Optimization (Lower Priority)
-
-Seed the `location_cache` table with common NYC neighborhoods and major cities to reduce edge function calls.
-
----
-
-## Expected Results
+## Expected Performance Improvements
 
 | Metric | Before | After |
 |--------|--------|-------|
-| Queries per search | 1-4 | 1 |
-| Edge function calls | 1 per new location | 0 for common locations |
-| Code changes | - | Minimal (audit + potential cleanup) |
-| Functionality loss | - | None |
+| Map re-renders per filter change | Every render | Only when data changes |
+| Analytics events per map pan | 2 (duplicate) | 1 (sampled/throttled) |
+| Marker re-renders per list update | All N markers | Only changed markers |
+| Callback stability | New refs every render | Stable refs with useCallback |
 
 ---
 
-## Technical Details
+## What's Preserved
 
-### Current Rating Calculation in SearchResultCard (Already Optimal)
+- All map functionality (pan, zoom, markers, hover, click)
+- Search this area feature
+- Map/list hover synchronization
+- Analytics tracking (via MapInteractionTracker with sampling)
+- Mobile and desktop layouts
 
-```typescript
-// Lines 32-52 - calculates from pre-fetched data
-const ratingData = useMemo(() => {
-  const reviews = restaurant.merchant_reviews?.filter((r: any) => r.status === 'published') || [];
-  if (reviews.length === 0) return null;
-  
-  let totalSum = 0;
-  let totalCount = 0;
-  
-  reviews.forEach((review: any) => {
-    review.merchant_review_ratings?.forEach((r: { rating: number }) => {
-      totalSum += r.rating;
-      totalCount += 1;
-    });
-  });
-  
-  // ... returns calculated average
-}, [restaurant.merchant_reviews]);
-```
+## What's Removed
 
-This pattern should be replicated in any other card components if they're making individual rating queries.
+- Duplicate `map_moved` analytics event (keeping the throttled/sampled one)
+- Unnecessary re-renders from unstable callback references
 
 ---
 
-## Conclusion
+## Bundle Size Note
 
-The search results flow is **already well-optimized**. The main improvement opportunity is:
-
-1. **Audit other card components** to ensure they follow the same pattern as `SearchResultCard`
-2. **Pre-warm location cache** to reduce edge function calls for common searches
-
-Both are pure optimizations with no functionality tradeoffs.
+The Mapbox GL JS bundle (~500KB) is already lazy-loaded via `LazyResultsMap.tsx`. No further bundle optimization is needed for the map component itself - it only loads when the Results page is visited.
 
