@@ -182,7 +182,25 @@ export const useDrawerScrollRestoration = (options: UseDrawerScrollRestorationOp
         return;
       }
       
-      console.log('[DrawerScroll] Found target element:', targetElement);
+      // Wait for element to be fully rendered and painted
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Verify element has dimensions (is actually rendered)
+      let rect = targetElement.getBoundingClientRect();
+      if (rect.height === 0) {
+        console.log('[DrawerScroll] Element found but not rendered yet, waiting...');
+        await new Promise(resolve => setTimeout(resolve, 200));
+        rect = targetElement.getBoundingClientRect();
+      }
+      
+      if (rect.height === 0) {
+        console.log('[DrawerScroll] Element still has no height, falling back to scrollIntoView');
+        targetElement.scrollIntoView({ block: 'center', behavior: 'instant' });
+        hasRestoredRef.current = true;
+        return;
+      }
+      
+      console.log('[DrawerScroll] Found target element with rect:', rect);
       
       // Find the scroll container
       const scrollContainer = findScrollContainer();
