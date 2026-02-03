@@ -1,5 +1,5 @@
 
-import React, { useRef, useState, useEffect, useMemo } from 'react';
+import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -65,34 +65,41 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
   // Get menu type badge from happy hour deals
   const menuTypeBadge = getMenuTypeBadge(restaurant.happy_hour_deals || []);
 
-  // Track card impressions using Intersection Observer
+  // Track card impressions using shared IntersectionObserver
+  // OPTIMIZED: Single shared observer instead of one per card
+  const handleImpression = useCallback(() => {
+    if (!hasTrackedImpression) {
+      track({
+        eventType: 'impression',
+        eventCategory: 'merchant_interaction',
+        eventAction: 'result_card_impression',
+        merchantId: restaurant.id,
+        metadata: {
+          deviceType: getDeviceType(),
+          hasActiveOffers,
+          merchantName: restaurant.restaurant_name,
+          todaysHappyHour: getTodaysHappyHour(restaurant.merchant_happy_hour || [])
+        },
+      });
+      setHasTrackedImpression(true);
+    }
+  }, [hasTrackedImpression, restaurant.id, restaurant.restaurant_name, restaurant.merchant_happy_hour, hasActiveOffers, track]);
+
+  // Use shared intersection observer for efficient impression tracking
   useEffect(() => {
-    if (!cardRef.current || hasTrackedImpression) return;
-    
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !hasTrackedImpression) {
-          track({
-            eventType: 'impression',
-            eventCategory: 'merchant_interaction',
-            eventAction: 'result_card_impression',
-            merchantId: restaurant.id,
-            metadata: {
-              deviceType: getDeviceType(),
-              hasActiveOffers,
-              merchantName: restaurant.restaurant_name,
-              todaysHappyHour: getTodaysHappyHour(restaurant.merchant_happy_hour || [])
-            },
-          });
-          setHasTrackedImpression(true);
-        }
-      },
-      { threshold: 0.5 }
-    );
-    
-    observer.observe(cardRef.current);
-    return () => observer.disconnect();
-  }, [hasTrackedImpression, restaurant, hasActiveOffers, track]);
+    const element = cardRef.current;
+    if (!element || hasTrackedImpression) return;
+
+    // Lazy import to avoid circular dependencies
+    import('@/hooks/useSharedIntersectionObserver').then(({ observeElement, unobserveElement }) => {
+      observeElement(element, handleImpression);
+      
+      // Cleanup on unmount
+      return () => {
+        unobserveElement(element);
+      };
+    });
+  }, [hasTrackedImpression, handleImpression]);
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     // Allow native behavior for right-click, middle-click, ctrl+click, cmd+click
@@ -131,14 +138,9 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
   // Build the merchant URL
   const merchantUrl = `/restaurant/${restaurant.slug || restaurant.id}`;
 
-  const handleHover = async () => {
+  // Simple hover handler - analytics tracking removed for performance
+  const handleHover = () => {
     if (!isMobile && onHover) {
-      await track({
-        eventType: 'hover',
-        eventCategory: 'merchant_interaction',
-        eventAction: 'result_card_hover',
-        merchantId: restaurant.id,
-      });
       onHover(restaurant.id);
     }
   };
