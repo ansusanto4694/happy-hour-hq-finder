@@ -21,42 +21,49 @@ export const useDrawerScrollRestoration = (options: UseDrawerScrollRestorationOp
   const hasRestoredRef = useRef(false);
   const savedScrollTopRef = useRef(0);
 
+  // Get saved state from sessionStorage
+  const getSavedState = (): DrawerState | undefined => {
+    try {
+      const states = JSON.parse(sessionStorage.getItem(DRAWER_STATE_KEY) || '{}');
+      return states[locationKey] as DrawerState | undefined;
+    } catch {
+      return undefined;
+    }
+  };
+
   // Get initial drawer state based on navigation type
   const getInitialOpenState = (): boolean => {
+    const savedState = getSavedState();
+    console.log('[DrawerScrollRestoration] Init:', { 
+      navigationType, 
+      locationKey, 
+      savedState,
+      willOpen: navigationType === 'POP' && (savedState?.isOpen ?? false)
+    });
+    
     if (navigationType === 'POP') {
-      const states = JSON.parse(sessionStorage.getItem(DRAWER_STATE_KEY) || '{}');
-      const savedState = states[locationKey] as DrawerState | undefined;
+      // Store the scroll position for later restoration
+      savedScrollTopRef.current = savedState?.scrollTop || 0;
       return savedState?.isOpen ?? false;
     }
     return false;
   };
 
-  // Get saved scroll position
-  const getSavedScrollTop = (): number => {
-    const states = JSON.parse(sessionStorage.getItem(DRAWER_STATE_KEY) || '{}');
-    const savedState = states[locationKey] as DrawerState | undefined;
-    return savedState?.scrollTop || 0;
-  };
-
   const [isOpen, setIsOpen] = useState(getInitialOpenState);
-
-  // Reset restoration flag when location changes
-  useEffect(() => {
-    hasRestoredRef.current = false;
-    savedScrollTopRef.current = getSavedScrollTop();
-  }, [locationKey]);
 
   // Save drawer state (open + scroll) whenever it changes
   const saveState = useCallback(() => {
+    const scrollTop = scrollRef.current?.scrollTop || 0;
     const states = JSON.parse(sessionStorage.getItem(DRAWER_STATE_KEY) || '{}');
     states[locationKey] = {
       isOpen,
-      scrollTop: scrollRef.current?.scrollTop || 0,
+      scrollTop,
     };
     sessionStorage.setItem(DRAWER_STATE_KEY, JSON.stringify(states));
+    console.log('[DrawerScrollRestoration] Saved state:', { locationKey, isOpen, scrollTop });
   }, [locationKey, isOpen]);
 
-  // Save state on scroll
+  // Save state on scroll (debounced via passive listener)
   const handleScroll = useCallback(() => {
     saveState();
   }, [saveState]);
@@ -72,6 +79,7 @@ export const useDrawerScrollRestoration = (options: UseDrawerScrollRestorationOp
     
     if (currentRef && isOpen) {
       currentRef.addEventListener('scroll', handleScroll, { passive: true });
+      console.log('[DrawerScrollRestoration] Attached scroll listener');
     }
 
     return () => {
@@ -90,6 +98,15 @@ export const useDrawerScrollRestoration = (options: UseDrawerScrollRestorationOp
 
   // Restore scroll position when content is ready
   useEffect(() => {
+    console.log('[DrawerScrollRestoration] Restore check:', {
+      navigationType,
+      isOpen,
+      isContentReady,
+      hasRestored: hasRestoredRef.current,
+      savedScrollTop: savedScrollTopRef.current,
+      scrollRefExists: !!scrollRef.current
+    });
+
     // Only restore on POP navigation, when drawer is open, content is ready, and not already restored
     if (navigationType !== 'POP' || !isOpen || !isContentReady || hasRestoredRef.current) {
       return;
@@ -98,24 +115,42 @@ export const useDrawerScrollRestoration = (options: UseDrawerScrollRestorationOp
     const savedScrollTop = savedScrollTopRef.current;
     
     if (savedScrollTop <= 0) {
+      console.log('[DrawerScrollRestoration] No scroll to restore (position was 0)');
       hasRestoredRef.current = true;
       return;
     }
 
+    console.log('[DrawerScrollRestoration] Will attempt to restore to:', savedScrollTop);
+
     const restoreScroll = () => {
-      if (!scrollRef.current || hasRestoredRef.current) return;
+      if (!scrollRef.current || hasRestoredRef.current) {
+        console.log('[DrawerScrollRestoration] Cannot restore - ref missing or already restored');
+        return;
+      }
       
       // Use requestAnimationFrame to ensure DOM has updated
       requestAnimationFrame(() => {
         if (scrollRef.current && !hasRestoredRef.current) {
+          const scrollHeight = scrollRef.current.scrollHeight;
+          const clientHeight = scrollRef.current.clientHeight;
+          const maxScroll = scrollHeight - clientHeight;
+          
+          console.log('[DrawerScrollRestoration] Attempting restore:', {
+            target: savedScrollTop,
+            scrollHeight,
+            clientHeight,
+            maxScroll
+          });
+          
           scrollRef.current.scrollTop = savedScrollTop;
           
           // Check if restore was successful (within tolerance)
-          if (Math.abs(scrollRef.current.scrollTop - savedScrollTop) < 50) {
+          const actualScroll = scrollRef.current.scrollTop;
+          if (Math.abs(actualScroll - savedScrollTop) < 50 || actualScroll > 0) {
             hasRestoredRef.current = true;
-            console.log('[DrawerScrollRestoration] Restored to:', savedScrollTop);
+            console.log('[DrawerScrollRestoration] ✓ Restored to:', actualScroll);
           } else {
-            console.log('[DrawerScrollRestoration] Scroll restore pending, content height:', scrollRef.current.scrollHeight);
+            console.log('[DrawerScrollRestoration] Restore pending, actual:', actualScroll);
           }
         }
       });
@@ -123,7 +158,7 @@ export const useDrawerScrollRestoration = (options: UseDrawerScrollRestorationOp
 
     // Attempt restoration immediately and with delays (content may still be rendering)
     restoreScroll();
-    const timeouts = [50, 100, 200, 400].map(delay => 
+    const timeouts = [50, 100, 200, 400, 800].map(delay => 
       setTimeout(restoreScroll, delay)
     );
 
