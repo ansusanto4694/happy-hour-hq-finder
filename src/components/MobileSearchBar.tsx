@@ -532,15 +532,6 @@ export const MobileSearchBar = ({ onExpandedChange }: MobileSearchBarProps = {})
                   </Button>
                 </div>
 
-                {/* Fixed bottom button */}
-                <div className="flex-shrink-0 p-4 border-t border-gray-200">
-                  <Button
-                    onClick={handleSearch}
-                    className="w-full h-12 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold text-base rounded-lg shadow-md"
-                  >
-                    Find Happy Hours
-                  </Button>
-                </div>
               </div>
             </CollapsibleContent>
           </Collapsible>
