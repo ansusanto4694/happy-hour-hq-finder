@@ -72,16 +72,27 @@ export const useDrawerScrollRestoration = (options: UseDrawerScrollRestorationOp
 
   // Save scroll position when user clicks a merchant (before navigating away)
   const setLastClickedId = useCallback((id: number) => {
+    // Try multiple selectors to find the scroll container
     const scrollContainer = findScrollContainer();
     const scrollTop = scrollContainer?.scrollTop || 0;
     
-    console.log('[DrawerScroll] Saving state before navigation:', { id, scrollTop });
+    console.log('[DrawerScroll] ===== SAVING STATE =====');
+    console.log('[DrawerScroll] Merchant ID:', id);
+    console.log('[DrawerScroll] Scroll container found:', !!scrollContainer);
+    console.log('[DrawerScroll] Scroll container element:', scrollContainer?.className);
+    console.log('[DrawerScroll] Current scrollTop:', scrollTop);
+    console.log('[DrawerScroll] Location key:', locationKey);
+    
     saveState({ 
       isOpen: true, 
       scrollTop,
       lastClickedMerchantId: id 
     });
-  }, [saveState]);
+    
+    // Verify it was saved
+    const verifyState = getSavedState();
+    console.log('[DrawerScroll] Verified saved state:', verifyState);
+  }, [saveState, locationKey]);
 
   // Save drawer open/close state and capture scroll container reference
   useEffect(() => {
