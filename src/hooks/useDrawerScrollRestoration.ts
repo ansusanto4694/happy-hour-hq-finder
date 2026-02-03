@@ -54,6 +54,22 @@ const findScrollContainer = (): Element | null => {
   return null;
 };
 
+// Calculate element's offset relative to a specific container
+const getOffsetRelativeToContainer = (element: HTMLElement, container: Element): number => {
+  let offset = 0;
+  let current: HTMLElement | null = element;
+  
+  while (current && current !== container) {
+    offset += current.offsetTop;
+    current = current.offsetParent as HTMLElement | null;
+    
+    // Safety check to prevent infinite loop
+    if (!current || current === document.body) break;
+  }
+  
+  return offset;
+};
+
 // Scroll element into view within a specific container
 const scrollElementIntoContainer = (container: Element, element: Element) => {
   const containerRect = container.getBoundingClientRect();
@@ -221,31 +237,25 @@ export const useDrawerScrollRestoration = (options: UseDrawerScrollRestorationOp
         return;
       }
       
-      // Even if rect.height is 0, try to scroll anyway using the element's offset
+      // Calculate the element's offset relative to the scroll container
       const containerRect = scrollContainer.getBoundingClientRect();
-      console.log('[DrawerScroll] Container rect:', { height: containerRect.height, top: containerRect.top, scrollTop: scrollContainer.scrollTop });
-      
-      // Use offsetTop if available (works even when element has no height)
       const htmlElement = targetElement as HTMLElement;
-      if (htmlElement.offsetTop !== undefined) {
-        const scrollTop = htmlElement.offsetTop - (containerRect.height / 2) + 50; // 50px offset for better centering
-        console.log('[DrawerScroll] Using offsetTop:', htmlElement.offsetTop, 'scrolling to:', scrollTop);
-        scrollContainer.scrollTop = Math.max(0, scrollTop);
-        hasRestoredRef.current = true;
-        console.log('[DrawerScroll] ✓ Restored scroll using offsetTop');
-        return;
-      }
       
-      // Fallback to rect-based calculation
-      if (rect.height > 0) {
-        scrollElementIntoContainer(scrollContainer, elementToMeasure);
-        hasRestoredRef.current = true;
-        console.log('[DrawerScroll] ✓ Restored scroll to merchant:', savedId);
-      } else {
-        console.log('[DrawerScroll] Failed: element still has no dimensions');
-        targetElement.scrollIntoView({ block: 'center', behavior: 'instant' });
-        hasRestoredRef.current = true;
-      }
+      // Calculate offset by walking up the DOM tree
+      const elementOffset = getOffsetRelativeToContainer(htmlElement, scrollContainer);
+      console.log('[DrawerScroll] Element offset relative to container:', elementOffset);
+      console.log('[DrawerScroll] Container rect:', { height: containerRect.height, scrollTop: scrollContainer.scrollTop });
+      
+      // Center the element in the container
+      // Use an estimated element height if rect.height is 0
+      const estimatedHeight = rect.height > 0 ? rect.height : 150; // Estimate card height
+      const centeredScrollTop = elementOffset - (containerRect.height / 2) + (estimatedHeight / 2);
+      
+      console.log('[DrawerScroll] Calculated scroll position:', { elementOffset, centeredScrollTop });
+      
+      scrollContainer.scrollTop = Math.max(0, centeredScrollTop);
+      hasRestoredRef.current = true;
+      console.log('[DrawerScroll] ✓ Restored scroll, final scrollTop:', scrollContainer.scrollTop);
     };
 
     performRestoration();
