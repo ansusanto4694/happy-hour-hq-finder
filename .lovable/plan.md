@@ -1,98 +1,96 @@
 
-# Fix: Preserve Search Context When Navigating Back from Restaurant Profile
+# Fix: Drawer Scroll Restoration Not Working
 
-## Problem Summary
-When users navigate from the Results page to a Restaurant Profile and then tap the back button in the header, they lose their search context (location, filters, scroll position). The app shows "ALL locations across the US" instead of their previous search results.
+## Problem
+When navigating back from `/merchant` to `/results`, the drawer opens correctly but the scroll position resets to the top. The user expects to return to the exact same scroll position (e.g., where "Blend (Williamsburg)" was visible).
 
 ## Root Cause
-The back button in the mobile RestaurantHeader uses `navigate('/results')` which navigates to the Results page **without any URL parameters**. This causes the Results page to load fresh with no search context.
+The current implementation has a timing issue:
 
-## Solution Overview
-Replace the programmatic `navigate('/results')` with `navigate(-1)` which uses the browser's history stack to return to the **exact previous page** including all URL parameters and enabling scroll restoration.
+1. The Vaul drawer uses a **Portal** - when closed, the drawer content is completely unmounted from the DOM
+2. When navigating back, the drawer opens but the scroll container is freshly created
+3. The scroll restoration attempts run at fixed delays (0-800ms), but the **merchant data loads asynchronously** via React Query
+4. Until the merchant list renders, the scrollable container has no height - setting `scrollTop` has no effect on an empty/short container
+
+## Solution
+Wait for the actual content (merchants) to be rendered before attempting scroll restoration. We need to:
+
+1. Add merchants data as a dependency for scroll restoration timing
+2. Wait for `isLoading` to be false before restoring scroll
+3. Add additional restoration attempts after content renders
+4. Use `requestAnimationFrame` to ensure DOM updates are complete
 
 ---
 
 ## Implementation Steps
 
-### Step 1: Update RestaurantHeader Back Button
-**File:** `src/components/RestaurantHeader.tsx`
+### Step 1: Update useDrawerScrollRestoration hook
+Pass the loading state and trigger restoration only after content is ready.
 
-Change the `handleBack` function from:
-```typescript
-const handleBack = () => {
-  navigate('/results');
-};
-```
+**File:** `src/hooks/useDrawerScrollRestoration.ts`
 
-To:
-```typescript
-const handleBack = () => {
-  // Use browser history to return to the exact previous page
-  // This preserves URL parameters (search, location, filters) and enables scroll restoration
-  navigate(-1);
-};
-```
+Changes:
+- Accept optional `isContentReady` parameter
+- Only attempt scroll restoration when content is ready (not loading)
+- Reset the `hasRestoredRef` on location change (not just on mount)
+- Add longer delay attempts to handle slow content loading
 
-This single change ensures:
-- All URL parameters (location, categories, radius, offers filter, etc.) are preserved
-- The scroll restoration hook will properly restore the scroll position (since `navigationType` will be `'POP'`)
-- Map view state is preserved (since the Results page reads from URL params)
+### Step 2: Update MobileListDrawer to expose loading state
+Pass the loading state through to enable content-aware restoration.
 
-### Step 2: Add Fallback for Direct Navigation
-For cases where users land directly on a restaurant page (no history), add a fallback:
+**File:** `src/components/MobileListDrawer.tsx`
 
-```typescript
-const handleBack = () => {
-  // Check if there's history to go back to
-  if (window.history.length > 1) {
-    navigate(-1);
-  } else {
-    // Fallback: navigate to results (rare edge case)
-    navigate('/results');
-  }
-};
-```
+Changes:
+- No changes needed - `isLoading` is already available
 
----
+### Step 3: Update Results.tsx to pass loading state to the hook
+Connect the merchant loading state to the scroll restoration hook.
 
-## How This Fixes the Issue
+**File:** `src/pages/Results.tsx`
 
-| Before | After |
-|--------|-------|
-| User at `/results?location=Williamsburg%2C%20New%20York` | Same |
-| Clicks "Action Burger" | Same |
-| Now at `/restaurant/action-burger` | Same |
-| Clicks back button | Same |
-| Navigates to `/results` (no params) | Navigates back in history to `/results?location=Williamsburg%2C%20New%20York` |
-| Shows "ALL locations across the US" | Shows Williamsburg, New York results |
-| Scroll at top | Scroll restored to previous position |
+Changes:
+- Pass `!isLoading && merchants?.length > 0` to the hook to indicate content is ready
 
 ---
 
 ## Technical Details
 
-**Why `navigate(-1)` works:**
-- React Router's `navigate(-1)` is equivalent to `window.history.back()`
-- It returns to the previous entry in the browser history stack
-- The previous entry contains the full URL with all query parameters
-- The existing `useScrollRestoration` hook detects `navigationType === 'POP'` and restores scroll position
+The key insight is that scroll restoration must wait for:
+1. The drawer to be open (`isOpen === true`)
+2. Navigation type to be POP (`navigationType === 'POP'`)
+3. Content to be loaded (`!isLoading && merchants exist`)
+4. DOM to be updated (use `requestAnimationFrame`)
 
-**Why the current implementation fails:**
-- `navigate('/results')` creates a new history entry (PUSH navigation)
-- URL parameters from the previous Results page visit are not carried over
-- Scroll restoration sees it as a new page, not a back navigation
+Current code:
+```typescript
+// Attempts restoration at fixed times, regardless of content loading
+const delays = [0, 50, 100, 200, 400, 800];
+```
+
+Fixed code:
+```typescript
+// Only attempt restoration when content is actually ready
+useEffect(() => {
+  if (navigationType === 'POP' && isOpen && isContentReady && !hasRestoredRef.current) {
+    // Content is loaded, now we can restore scroll
+    requestAnimationFrame(() => {
+      if (scrollRef.current && savedScrollTop > 0) {
+        scrollRef.current.scrollTop = savedScrollTop;
+      }
+    });
+  }
+}, [isContentReady, isOpen, navigationType]);
+```
 
 ---
 
-## Files Changed
-1. `src/components/RestaurantHeader.tsx` - Update `handleBack` function (1 line change)
+## Files to Change
+1. `src/hooks/useDrawerScrollRestoration.ts` - Add content-ready awareness
+2. `src/pages/Results.tsx` - Pass loading state to the hook
 
-## Testing Checklist
-After implementation, verify:
-1. Search for "Williamsburg, New York" on mobile
-2. Click on a restaurant (e.g., Action Burger)
-3. Tap the back arrow in the header
-4. Confirm the search location shows "Williamsburg, New York" (not all locations)
-5. Confirm the same results appear
-6. Confirm scroll position is restored (if you scrolled down in the list)
-7. Confirm map view is preserved
+## Testing Steps
+1. Search for "Williamsburg, New York"
+2. Open the drawer and scroll down to find "Blend (Williamsburg)"
+3. Tap on Blend to go to the merchant page
+4. Tap the back button in the header
+5. Verify: Drawer is open AND scroll position shows Blend (not at top)
