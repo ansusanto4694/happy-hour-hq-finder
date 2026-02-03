@@ -144,6 +144,15 @@ export const useDrawerScrollRestoration = (options: UseDrawerScrollRestorationOp
 
   // Restore scroll position by scrolling to the last clicked item
   useEffect(() => {
+    // Always log conditions for debugging - this helps identify why restoration fails
+    console.log('[DrawerScroll] Effect check:', { 
+      navigationType, 
+      isOpen, 
+      isContentReady, 
+      hasRestored: hasRestoredRef.current,
+      savedId: lastClickedIdRef.current 
+    });
+    
     if (navigationType !== 'POP' || !isOpen || !isContentReady || hasRestoredRef.current) {
       return;
     }
@@ -194,10 +203,8 @@ export const useDrawerScrollRestoration = (options: UseDrawerScrollRestorationOp
     };
 
     performRestoration();
-
-    return () => {
-      hasRestoredRef.current = true;
-    };
+    
+    // NO cleanup function - we only mark hasRestoredRef.current = true after successful scroll
   }, [isOpen, isContentReady, navigationType]);
 
   // Wrapper to update isOpen with state saving
