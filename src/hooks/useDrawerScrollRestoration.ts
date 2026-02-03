@@ -83,26 +83,21 @@ export const useDrawerScrollRestoration = (options: UseDrawerScrollRestorationOp
     });
   }, [saveState]);
 
-  // Save drawer open/close state
+  // Save drawer open/close state and capture scroll container reference
   useEffect(() => {
     saveState({ isOpen });
+    
+    // Capture scroll container after drawer opens
+    if (isOpen) {
+      const timer = setTimeout(() => {
+        const scrollContainer = findScrollContainer();
+        if (scrollContainer) {
+          scrollContainerRef.current = scrollContainer;
+        }
+      }, 500);
+      return () => clearTimeout(timer);
+    }
   }, [isOpen, saveState]);
-
-  // Capture scroll position periodically while drawer is open
-  useEffect(() => {
-    if (!isOpen) return;
-    
-    const captureScrollPosition = () => {
-      const scrollContainer = findScrollContainer();
-      if (scrollContainer) {
-        scrollContainerRef.current = scrollContainer;
-      }
-    };
-    
-    // Capture after drawer animation completes
-    const timer = setTimeout(captureScrollPosition, 500);
-    return () => clearTimeout(timer);
-  }, [isOpen]);
 
   // Restore scroll position on back navigation
   useEffect(() => {
