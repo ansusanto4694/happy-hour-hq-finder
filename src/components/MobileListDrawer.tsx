@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { SearchResults } from '@/components/SearchResults';
 import { MobileFilterDrawer } from '@/components/MobileFilterDrawer';
 import { RadiusOption } from '@/components/RadiusFilter';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useDrawerScrollRestoration } from '@/hooks/useDrawerScrollRestoration';
 import {
   Drawer,
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
-  DrawerTrigger,
 } from '@/components/ui/drawer';
 import { GripHorizontal } from 'lucide-react';
 
@@ -60,6 +60,7 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
   onMenuTypeChange,
 }) => {
   const { track } = useAnalytics();
+  const scrollRef = useDrawerScrollRestoration();
 
   useEffect(() => {
     if (isOpen) {
@@ -103,7 +104,7 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
           </div>
         </DrawerHeader>
         
-        <div className="px-4 pb-4 overflow-auto">
+        <div ref={scrollRef} className="px-4 pb-4 overflow-auto">
           <SearchResults 
             merchants={merchants}
             isLoading={isLoading}
