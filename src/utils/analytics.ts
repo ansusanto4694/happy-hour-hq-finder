@@ -939,6 +939,17 @@ export const initializeSession = async (forceReinitialize: boolean = false) => {
     sessionInitialized = true;
     sessionStorage.setItem(sessionInitKey, 'true');
     
+    // Cache is_bot status in sessionStorage to avoid DB query in updateSessionActivity
+    sessionStorage.setItem('analytics_is_bot', botDetection.isBot.toString());
+    
+    // Initialize local counters for optimized session updates
+    if (!sessionStorage.getItem('analytics_page_view_count')) {
+      sessionStorage.setItem('analytics_page_view_count', '0');
+    }
+    if (!sessionStorage.getItem('analytics_total_event_count')) {
+      sessionStorage.setItem('analytics_total_event_count', '0');
+    }
+    
     // FIX: Store session start time in sessionStorage for persistence across page refreshes
     sessionStartTime = Date.now();
     sessionStorage.setItem('analytics_session_start_time', sessionStartTime.toString());
@@ -960,6 +971,7 @@ export const initializeSession = async (forceReinitialize: boolean = false) => {
 };
 
 // Update session activity with engagement metrics
+// OPTIMIZED: Uses local sessionStorage counters instead of DB queries (reduces 3 DB calls per update)
 // DEFENSIVE: Wrapped in try-catch to prevent RLS or network errors from crashing the app
 export const updateSessionActivity = async () => {
   try {
@@ -975,59 +987,24 @@ export const updateSessionActivity = async () => {
     
     const sessionDuration = Math.floor((now - sessionStartTime) / 1000);
     
-    // Get actual event counts from user_events table for accurate engagement metrics
-    const { data: sessionData, error: sessionError } = await supabase
-      .from('user_sessions')
-      .select('is_bot')
-      .eq('session_id', sessionId)
-      .maybeSingle();
+    // OPTIMIZED: Use local sessionStorage counters instead of DB queries
+    // Page views are incremented in trackPageView, events in trackEvent
+    const pageViews = parseInt(sessionStorage.getItem('analytics_page_view_count') || '0', 10);
+    const totalEvents = parseInt(sessionStorage.getItem('analytics_total_event_count') || '0', 10);
     
-    if (sessionError) {
-      console.warn('[Analytics] Session read failed (non-blocking):', sessionError.message);
-      return;
-    }
-    
-    if (!sessionData) {
-      console.warn('[Analytics] Session not found during activity update, will be created on next event flush');
-      return;
-    }
-    
-    // Query actual page view count from user_events
-    const { count: actualPageViews, error: pageViewError } = await supabase
-      .from('user_events')
-      .select('*', { count: 'exact', head: true })
-      .eq('session_id', sessionId)
-      .eq('event_type', 'page_view');
-    
-    if (pageViewError) {
-      console.warn('[Analytics] Page view count failed (non-blocking):', pageViewError.message);
-      return;
-    }
-    
-    // Query actual total event count from user_events
-    const { count: actualTotalEvents, error: totalEventsError } = await supabase
-      .from('user_events')
-      .select('*', { count: 'exact', head: true })
-      .eq('session_id', sessionId);
-    
-    if (totalEventsError) {
-      console.warn('[Analytics] Total events count failed (non-blocking):', totalEventsError.message);
-      return;
-    }
-    
-    const pageViews = actualPageViews || 0;
-    const totalEvents = actualTotalEvents || 0;
-    const isBot = sessionData.is_bot || false;
+    // Get is_bot from sessionStorage (cached during session init) to avoid DB query
+    const cachedIsBot = sessionStorage.getItem('analytics_is_bot') === 'true';
     
     const isBounce = isBounceSession(pageViews, sessionDuration);
-    const isEngaged = isEngagedSession(pageViews, sessionDuration, isBounce, isBot);
+    const isEngaged = isEngagedSession(pageViews, sessionDuration, isBounce, cachedIsBot);
     const engagementScore = calculateEngagementScore(pageViews, sessionDuration, totalEvents);
     
-    console.log('[Analytics] Updating session activity:', {
+    console.log('[Analytics] Updating session activity (optimized):', {
       sessionId,
       sessionDuration,
       currentPath,
       pageViews,
+      totalEvents,
       isEngaged,
       engagementScore,
       isBounce
@@ -1179,6 +1156,10 @@ export const trackEvent = async (params: TrackEventParams) => {
       is_mobile: isMobileDevice(),
     });
   }
+  
+  // Increment total event counter in sessionStorage for local metrics
+  const currentEventCount = parseInt(sessionStorage.getItem('analytics_total_event_count') || '0', 10);
+  sessionStorage.setItem('analytics_total_event_count', String(currentEventCount + 1));
   
   // Add to queue
   eventQueue.push(event);
@@ -1357,11 +1338,17 @@ const flushAndUpdateSession = async () => {
     .eq('session_id', sessionId);
 };
 
+// Debounce timer for visibility changes to prevent rapid-fire updates
+let visibilityDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
 // Mobile-friendly cleanup: Use Page Visibility API + pagehide (more reliable than beforeunload on mobile)
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
-    // User switched tabs or minimized browser - flush immediately
-    flushAndUpdateSession();
+    // User switched tabs or minimized browser - debounce to prevent rapid-fire updates
+    if (visibilityDebounceTimer) clearTimeout(visibilityDebounceTimer);
+    visibilityDebounceTimer = setTimeout(() => {
+      flushAndUpdateSession();
+    }, 500);
   } else {
     // User returned - update last activity
     lastActivityTime = Date.now();
@@ -1378,10 +1365,10 @@ window.addEventListener('beforeunload', () => {
   flushAndUpdateSession();
 });
 
-// Periodically update session - more frequent on mobile (30s mobile, 60s desktop)
-const updateInterval = isMobileDevice() ? 30000 : 60000;
+// Periodically update session - unified 120s interval (reduced from 30-60s to minimize DB load)
+const updateInterval = 120000; // 2 minutes for all devices
 setInterval(() => {
-  const inactivityThreshold = isMobileDevice() ? 60000 : 120000; // 1 min mobile, 2 min desktop
+  const inactivityThreshold = 180000; // 3 minutes inactivity threshold
   if (lastActivityTime && Date.now() - lastActivityTime < inactivityThreshold) {
     updateSessionActivity();
   }
