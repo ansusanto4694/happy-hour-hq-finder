@@ -344,10 +344,11 @@ export const MobileSearchBar = ({ onExpandedChange }: MobileSearchBarProps = {})
           {/* Search button - visible in collapsed state */}
           <Button 
             onClick={handleSearch}
-            size="sm"
-            className="px-4 h-12 min-w-[44px] rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-medium shadow-sm"
+            size="icon"
+            className="h-12 w-12 min-w-[44px] rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-sm"
+            aria-label="Search"
           >
-            Go
+            <Search className="w-5 h-5" />
           </Button>
           
           <Collapsible open={isExpanded} onOpenChange={(open) => {
