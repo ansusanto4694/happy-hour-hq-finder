@@ -18,15 +18,11 @@ export const useDrawerScrollRestoration = (options: UseDrawerScrollRestorationOp
   const navigationType = useNavigationType();
   const locationKey = location.pathname + location.search;
   
-  // Use state to track the scroll element so we can react to it being attached
-  const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null);
+  // Store ref to the actual scrollable element (could be our div or Vaul's internal)
+  const scrollElementRef = useRef<HTMLDivElement | null>(null);
   const hasRestoredRef = useRef(false);
   const savedScrollTopRef = useRef(0);
-
-  // Callback ref that updates state when element is attached/detached
-  const scrollRef = useCallback((node: HTMLDivElement | null) => {
-    setScrollElement(node);
-  }, []);
+  const scrollListenerAttachedRef = useRef(false);
 
   // Get saved state from sessionStorage
   const getSavedState = (): DrawerState | undefined => {
@@ -41,15 +37,12 @@ export const useDrawerScrollRestoration = (options: UseDrawerScrollRestorationOp
   // Get initial drawer state based on navigation type
   const getInitialOpenState = (): boolean => {
     const savedState = getSavedState();
-    console.log('[DrawerScrollRestoration] Init:', { 
+    console.log('[DrawerScroll] Init:', { 
       navigationType, 
-      locationKey, 
       savedState,
-      willOpen: navigationType === 'POP' && (savedState?.isOpen ?? false)
     });
     
     if (navigationType === 'POP') {
-      // Store the scroll position for later restoration
       savedScrollTopRef.current = savedState?.scrollTop || 0;
       return savedState?.isOpen ?? false;
     }
@@ -58,123 +51,175 @@ export const useDrawerScrollRestoration = (options: UseDrawerScrollRestorationOp
 
   const [isOpen, setIsOpen] = useState(getInitialOpenState);
 
-  // Save drawer state (open + scroll) whenever it changes
-  const saveState = useCallback(() => {
-    const scrollTop = scrollElement?.scrollTop || 0;
+  // Find the actual scrollable element within the drawer
+  const findScrollableElement = useCallback((): HTMLElement | null => {
+    // Look for Vaul drawer content - it renders in a portal
+    const drawerContent = document.querySelector('[data-vaul-drawer-content]');
+    if (drawerContent) {
+      // The drawer content itself is scrollable, or find the first scrollable child
+      const scrollable = drawerContent.querySelector('[data-scroll-container]') as HTMLElement;
+      if (scrollable) return scrollable;
+      
+      // If no marked container, check if content itself is scrollable
+      if (drawerContent.scrollHeight > drawerContent.clientHeight) {
+        return drawerContent as HTMLElement;
+      }
+      
+      // Find first element with overflow-y: auto/scroll that has scrollable content
+      const allChildren = drawerContent.querySelectorAll('*');
+      for (const child of allChildren) {
+        const el = child as HTMLElement;
+        const style = window.getComputedStyle(el);
+        if ((style.overflowY === 'auto' || style.overflowY === 'scroll') && 
+            el.scrollHeight > el.clientHeight) {
+          return el;
+        }
+      }
+    }
+    return null;
+  }, []);
+
+  // Save current scroll position
+  const saveScrollPosition = useCallback(() => {
+    const element = findScrollableElement();
+    const scrollTop = element?.scrollTop || 0;
+    
     const states = JSON.parse(sessionStorage.getItem(DRAWER_STATE_KEY) || '{}');
     states[locationKey] = {
       isOpen,
       scrollTop,
     };
     sessionStorage.setItem(DRAWER_STATE_KEY, JSON.stringify(states));
-    console.log('[DrawerScrollRestoration] Saved state:', { locationKey, isOpen, scrollTop });
-  }, [locationKey, isOpen, scrollElement]);
+    console.log('[DrawerScroll] Saved:', { scrollTop, isOpen });
+  }, [locationKey, isOpen, findScrollableElement]);
 
-  // Save state on scroll
+  // Handle scroll events
   const handleScroll = useCallback(() => {
-    saveState();
-  }, [saveState]);
+    saveScrollPosition();
+  }, [saveScrollPosition]);
+
+  // Attach scroll listener to the actual scrollable element
+  useEffect(() => {
+    if (!isOpen) {
+      scrollListenerAttachedRef.current = false;
+      return;
+    }
+
+    // Wait for drawer to render
+    const attachListener = () => {
+      const scrollable = findScrollableElement();
+      if (scrollable && !scrollListenerAttachedRef.current) {
+        console.log('[DrawerScroll] Attaching listener to:', scrollable.className);
+        scrollable.addEventListener('scroll', handleScroll, { passive: true });
+        scrollElementRef.current = scrollable as HTMLDivElement;
+        scrollListenerAttachedRef.current = true;
+        
+        return () => {
+          scrollable.removeEventListener('scroll', handleScroll);
+          scrollListenerAttachedRef.current = false;
+        };
+      }
+    };
+
+    // Try immediately, then with delays for portal rendering
+    const cleanup1 = attachListener();
+    const timeoutId = setTimeout(() => {
+      if (!scrollListenerAttachedRef.current) {
+        attachListener();
+      }
+    }, 100);
+
+    return () => {
+      cleanup1?.();
+      clearTimeout(timeoutId);
+      if (scrollElementRef.current) {
+        scrollElementRef.current.removeEventListener('scroll', handleScroll);
+      }
+      scrollListenerAttachedRef.current = false;
+    };
+  }, [isOpen, findScrollableElement, handleScroll]);
 
   // Save state when drawer opens/closes
   useEffect(() => {
-    saveState();
-  }, [isOpen, saveState]);
-
-  // Attach scroll listener when element is available
-  useEffect(() => {
-    if (scrollElement && isOpen) {
-      scrollElement.addEventListener('scroll', handleScroll, { passive: true });
-      console.log('[DrawerScrollRestoration] Attached scroll listener to element');
-      
-      return () => {
-        scrollElement.removeEventListener('scroll', handleScroll);
-      };
+    if (isOpen) {
+      // Delay to ensure drawer is rendered
+      const timeoutId = setTimeout(saveScrollPosition, 50);
+      return () => clearTimeout(timeoutId);
     }
-  }, [scrollElement, isOpen, handleScroll]);
+  }, [isOpen, saveScrollPosition]);
 
-  // Save state before navigating away (on unmount)
+  // Save state before navigating away
   useEffect(() => {
+    const handleBeforeUnload = () => saveScrollPosition();
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
     return () => {
-      saveState();
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      saveScrollPosition();
     };
-  }, [saveState]);
+  }, [saveScrollPosition]);
 
-  // Restore scroll position when element is ready and content is loaded
+  // Restore scroll position
   useEffect(() => {
-    console.log('[DrawerScrollRestoration] Restore check:', {
-      navigationType,
-      isOpen,
-      isContentReady,
-      hasRestored: hasRestoredRef.current,
-      savedScrollTop: savedScrollTopRef.current,
-      scrollElementExists: !!scrollElement,
-      scrollHeight: scrollElement?.scrollHeight,
-    });
-
-    // Only restore on POP navigation, when drawer is open, content is ready, element exists, and not already restored
-    if (navigationType !== 'POP' || !isOpen || !isContentReady || !scrollElement || hasRestoredRef.current) {
+    if (navigationType !== 'POP' || !isOpen || !isContentReady || hasRestoredRef.current) {
       return;
     }
 
     const savedScrollTop = savedScrollTopRef.current;
+    console.log('[DrawerScroll] Restore check:', { savedScrollTop, isContentReady });
     
     if (savedScrollTop <= 0) {
-      console.log('[DrawerScrollRestoration] No scroll to restore (position was 0)');
       hasRestoredRef.current = true;
       return;
     }
 
-    console.log('[DrawerScrollRestoration] Will attempt to restore to:', savedScrollTop);
-
-    const restoreScroll = () => {
-      if (!scrollElement || hasRestoredRef.current) {
+    const attemptRestore = () => {
+      if (hasRestoredRef.current) return;
+      
+      const scrollable = findScrollableElement();
+      if (!scrollable) {
+        console.log('[DrawerScroll] No scrollable element found');
         return;
       }
       
-      const scrollHeight = scrollElement.scrollHeight;
-      const clientHeight = scrollElement.clientHeight;
-      const maxScroll = scrollHeight - clientHeight;
-      
-      console.log('[DrawerScrollRestoration] Attempting restore:', {
-        target: savedScrollTop,
-        scrollHeight,
-        clientHeight,
-        maxScroll
+      const maxScroll = scrollable.scrollHeight - scrollable.clientHeight;
+      console.log('[DrawerScroll] Attempting restore:', { 
+        target: savedScrollTop, 
+        maxScroll,
+        scrollHeight: scrollable.scrollHeight,
+        clientHeight: scrollable.clientHeight
       });
       
-      // Only try to restore if the content is tall enough
       if (maxScroll > 0) {
-        scrollElement.scrollTop = savedScrollTop;
+        scrollable.scrollTop = Math.min(savedScrollTop, maxScroll);
         
-        // Check if restore was successful (within tolerance or any scroll happened)
-        const actualScroll = scrollElement.scrollTop;
-        if (actualScroll > 0 || Math.abs(actualScroll - savedScrollTop) < 50) {
-          hasRestoredRef.current = true;
-          console.log('[DrawerScrollRestoration] ✓ Restored to:', actualScroll);
-        } else {
-          console.log('[DrawerScrollRestoration] Restore pending, actual:', actualScroll);
-        }
+        // Verify restoration
+        requestAnimationFrame(() => {
+          const actual = scrollable.scrollTop;
+          if (actual > 0) {
+            hasRestoredRef.current = true;
+            console.log('[DrawerScroll] ✓ Restored to:', actual);
+          }
+        });
       }
     };
 
-    // Use requestAnimationFrame to ensure DOM is ready, then try multiple times
-    requestAnimationFrame(() => {
-      restoreScroll();
-    });
-    
-    // Additional attempts for async content
-    const timeouts = [50, 100, 200, 400].map(delay => 
-      setTimeout(() => {
-        requestAnimationFrame(restoreScroll);
-      }, delay)
+    // Multiple attempts with increasing delays
+    const attempts = [0, 50, 100, 200, 400, 800];
+    const timeouts = attempts.map(delay => 
+      setTimeout(() => requestAnimationFrame(attemptRestore), delay)
     );
 
-    return () => {
-      timeouts.forEach(clearTimeout);
-    };
-  }, [scrollElement, isContentReady, isOpen, navigationType]);
+    return () => timeouts.forEach(clearTimeout);
+  }, [isOpen, isContentReady, navigationType, findScrollableElement]);
 
-  // Custom setter that also saves state
+  // Callback ref for backwards compatibility (marks the target container)
+  const scrollRef = useCallback((node: HTMLDivElement | null) => {
+    if (node) {
+      node.setAttribute('data-scroll-container', 'true');
+    }
+  }, []);
+
   const setIsOpenWithSave = useCallback((open: boolean | ((prev: boolean) => boolean)) => {
     setIsOpen(prev => {
       const newValue = typeof open === 'function' ? open(prev) : open;
