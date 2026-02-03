@@ -14,7 +14,6 @@ import { GripHorizontal } from 'lucide-react';
 interface MobileListDrawerProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  scrollRef?: React.Ref<HTMLDivElement>;
   merchants: any[];
   isLoading: boolean;
   error: any;
@@ -40,7 +39,6 @@ interface MobileListDrawerProps {
 export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
   isOpen,
   onOpenChange,
-  scrollRef,
   merchants,
   isLoading,
   error,
@@ -107,7 +105,7 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
         </DrawerHeader>
         
         <div 
-          ref={scrollRef} 
+          data-vaul-drawer-scroll="true"
           className="px-4 pb-4 overflow-y-auto flex-1"
           style={{ minHeight: 0 }}
         >
