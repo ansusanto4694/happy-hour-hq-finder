@@ -1,96 +1,95 @@
 
-# Fix: Drawer Scroll Restoration Not Working
+# Fix: Drawer Scroll Position Not Being Captured
 
-## Problem
-When navigating back from `/merchant` to `/results`, the drawer opens correctly but the scroll position resets to the top. The user expects to return to the exact same scroll position (e.g., where "Blend (Williamsburg)" was visible).
+## Problem Identified
+After analyzing the console logs, I found the root cause:
 
-## Root Cause
-The current implementation has a timing issue:
+**The scroll position is always being saved as `0` because we're listening to the wrong element.**
 
-1. The Vaul drawer uses a **Portal** - when closed, the drawer content is completely unmounted from the DOM
-2. When navigating back, the drawer opens but the scroll container is freshly created
-3. The scroll restoration attempts run at fixed delays (0-800ms), but the **merchant data loads asynchronously** via React Query
-4. Until the merchant list renders, the scrollable container has no height - setting `scrollTop` has no effect on an empty/short container
+The logs show:
+- `scrollTop: 0` - Always 0, even when scrolling down
+- `scrollHeight: 174` - Very small height (should be thousands of pixels for a merchant list)
+
+**Why this happens:** The Vaul drawer library manages scrolling internally on the `DrawerContent` element. Our `scrollRef` is attached to an inner `div`, but that div isn't actually scrolling - the Vaul drawer's content wrapper is handling the scroll events.
 
 ## Solution
-Wait for the actual content (merchants) to be rendered before attempting scroll restoration. We need to:
+We need to make our inner `div` the actual scroll container instead of letting Vaul handle it. This requires:
 
-1. Add merchants data as a dependency for scroll restoration timing
-2. Wait for `isLoading` to be false before restoring scroll
-3. Add additional restoration attempts after content renders
-4. Use `requestAnimationFrame` to ensure DOM updates are complete
-
----
-
-## Implementation Steps
-
-### Step 1: Update useDrawerScrollRestoration hook
-Pass the loading state and trigger restoration only after content is ready.
-
-**File:** `src/hooks/useDrawerScrollRestoration.ts`
-
-Changes:
-- Accept optional `isContentReady` parameter
-- Only attempt scroll restoration when content is ready (not loading)
-- Reset the `hasRestoredRef` on location change (not just on mount)
-- Add longer delay attempts to handle slow content loading
-
-### Step 2: Update MobileListDrawer to expose loading state
-Pass the loading state through to enable content-aware restoration.
-
-**File:** `src/components/MobileListDrawer.tsx`
-
-Changes:
-- No changes needed - `isLoading` is already available
-
-### Step 3: Update Results.tsx to pass loading state to the hook
-Connect the merchant loading state to the scroll restoration hook.
-
-**File:** `src/pages/Results.tsx`
-
-Changes:
-- Pass `!isLoading && merchants?.length > 0` to the hook to indicate content is ready
-
----
-
-## Technical Details
-
-The key insight is that scroll restoration must wait for:
-1. The drawer to be open (`isOpen === true`)
-2. Navigation type to be POP (`navigationType === 'POP'`)
-3. Content to be loaded (`!isLoading && merchants exist`)
-4. DOM to be updated (use `requestAnimationFrame`)
-
-Current code:
-```typescript
-// Attempts restoration at fixed times, regardless of content loading
-const delays = [0, 50, 100, 200, 400, 800];
-```
-
-Fixed code:
-```typescript
-// Only attempt restoration when content is actually ready
-useEffect(() => {
-  if (navigationType === 'POP' && isOpen && isContentReady && !hasRestoredRef.current) {
-    // Content is loaded, now we can restore scroll
-    requestAnimationFrame(() => {
-      if (scrollRef.current && savedScrollTop > 0) {
-        scrollRef.current.scrollTop = savedScrollTop;
-      }
-    });
-  }
-}, [isContentReady, isOpen, navigationType]);
-```
-
----
+1. **Modify DrawerContent styles** - Add `overflow-hidden` to prevent Vaul from scrolling
+2. **Make inner div the scroll container** - Ensure it fills available space and handles overflow
+3. **Add proper height constraints** - The inner div needs explicit height constraints to become scrollable
 
 ## Files to Change
-1. `src/hooks/useDrawerScrollRestoration.ts` - Add content-ready awareness
-2. `src/pages/Results.tsx` - Pass loading state to the hook
+
+### 1. `src/components/MobileListDrawer.tsx`
+- Change `DrawerContent` to have `overflow-hidden` (prevents Vaul scroll)
+- Ensure the scrollable div has proper height constraints with `flex-1 min-h-0 overflow-y-auto`
+- Add a wrapper structure that properly contains the scroll
+
+### 2. `src/hooks/useDrawerScrollRestoration.ts`  
+- Add more debug logging to verify scroll events are now being captured correctly
+- No major logic changes needed - just ensure the ref attaches properly
+
+## Implementation Details
+
+```
+Current structure (broken):
+┌─────────────────────────────────┐
+│ DrawerContent (scrolling here)  │ ← Vaul handles scroll
+│ ┌─────────────────────────────┐ │
+│ │ div with scrollRef          │ │ ← Our ref, but NOT scrolling
+│ │ (overflow-y-auto)           │ │
+│ │ ┌─────────────────────────┐ │ │
+│ │ │ SearchResults           │ │ │
+│ │ └─────────────────────────┘ │ │
+│ └─────────────────────────────┘ │
+└─────────────────────────────────┘
+
+Fixed structure:
+┌─────────────────────────────────┐
+│ DrawerContent (overflow-hidden) │ ← Block Vaul scrolling
+│ ┌─────────────────────────────┐ │
+│ │ div with scrollRef          │ │ ← Our ref IS the scroller
+│ │ (overflow-y-auto + height)  │ │
+│ │ ┌─────────────────────────┐ │ │
+│ │ │ SearchResults           │ │ │
+│ │ └─────────────────────────┘ │ │
+│ └─────────────────────────────┘ │
+└─────────────────────────────────┘
+```
+
+The key insight is that for a child div to be scrollable:
+1. It must have a **constrained height** (not auto-growing)
+2. It must have `overflow-y: auto` or `scroll`
+3. Its content must exceed its height
+
+Currently, the parent DrawerContent is handling overflow, so our div never gets a chance to scroll.
+
+## Technical Changes
+
+**MobileListDrawer.tsx:**
+```tsx
+<DrawerContent className="max-h-[85vh] flex flex-col overflow-hidden">
+  <DrawerHeader className="flex-shrink-0">
+    {/* Header content */}
+  </DrawerHeader>
+  
+  {/* This div MUST be the scroll container */}
+  <div 
+    ref={scrollRef} 
+    className="flex-1 overflow-y-auto px-4 pb-4"
+    style={{ minHeight: 0 }}  // Critical for flex scrolling
+  >
+    <SearchResults ... />
+  </div>
+</DrawerContent>
+```
 
 ## Testing Steps
-1. Search for "Williamsburg, New York"
-2. Open the drawer and scroll down to find "Blend (Williamsburg)"
-3. Tap on Blend to go to the merchant page
-4. Tap the back button in the header
-5. Verify: Drawer is open AND scroll position shows Blend (not at top)
+After implementation:
+1. Search for "Williamsburg, Brooklyn"
+2. Open the drawer
+3. Scroll down in the drawer - check console for `[DrawerScrollRestoration] Saved state:` with `scrollTop > 0`
+4. Tap on a merchant to navigate to their page
+5. Hit back button
+6. Verify drawer opens at the same scroll position
