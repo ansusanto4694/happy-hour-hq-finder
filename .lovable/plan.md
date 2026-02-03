@@ -1,142 +1,155 @@
 
+# Phase 1: Speed Up Your Homepage (Zero Visual Changes)
 
-# Plan: Optimize Mobile Search Bar Performance
+## What We're Fixing
 
-## The Problem Explained Simply
-
-Think of the Mobile Search Bar like a busy restaurant kitchen. Right now, every time someone types a letter in the location field, the kitchen (your app) has to:
-
-1. Remember lots of different things (13+ pieces of information)
-2. Send a request to a server asking "what locations match this?"
-3. Update the screen based on the response
-4. Re-cook the entire dish every time any ingredient changes
-
-This is like having a chef restart the entire meal from scratch every time a customer adds salt. It works, but it's inefficient and can make the app feel sluggish, especially on slower phones.
-
-**The main issues:**
-
-1. **Too many things to track** - The component manages 13+ separate pieces of information, and changing any one of them causes the entire screen to refresh
-2. **Duplicated work** - The same location-fetching code exists in both the Mobile Search Bar and the Desktop Search Bar (two separate files doing identical work)
-3. **Server calls on every keystroke** - Even with a small delay (300ms), fast typers still trigger many server requests
+Right now, visitors to SipMunchYap on mobile wait **17.5 seconds** before seeing the full page. This plan makes two "behind the scenes" changes that will speed things up without changing how anything looks.
 
 ---
 
-## What We'll Improve (3 Changes)
+## The Two Changes
 
-### 1. Create a Reusable "Location Suggestions" Helper
+### Change 1: Stop the Font from Blocking the Page
 
-**What it does:** Instead of having the same location-fetching code written twice (once for mobile, once for desktop), we'll create a single shared "helper" that both can use.
+**The Problem:**  
+When someone visits your site, the browser currently says: "I won't show anything until I download the Poppins font." On slow mobile connections, this adds extra seconds of blank screen.
 
-**Business analogy:** Instead of having two cashiers who each built their own calculator, we give them both the same reliable calculator from the supply closet.
+**The Solution:**  
+We'll tell the browser: "Show the page immediately. Swap in the fancy font when it arrives."
 
-**Benefits:**
-- Fixes bugs once, fixes them everywhere
-- Less code to maintain
-- Easier to add improvements later (like smarter caching)
-
----
-
-### 2. Combine Related Information Together
-
-**What it does:** Instead of tracking 13+ separate pieces of information, we'll group related items together. For example, all the location-related data (suggestions list, loading state, selected item) will be managed as one unit.
-
-**Business analogy:** Instead of having 13 separate sticky notes on your desk, you organize them into 3 labeled folders: "Search Terms," "Location Info," and "Time Filters."
-
-**Benefits:**
-- Fewer screen refreshes when information changes
-- The app only updates the parts that actually changed
-- Smoother scrolling and typing experience
+**What You'll Notice:** Nothing. The page will just appear faster.
 
 ---
 
-### 3. Smarter Server Request Management
+### Change 2: Tell the Browser What's Most Important
 
-**What it does:** We'll improve how location requests are handled by:
-- Canceling old requests when a new one starts (already partially done)
-- Increasing the delay slightly for mobile (from 300ms to 400ms) since mobile typing is slower
-- Adding a minimum character requirement before searching (already done - 2 chars)
+**The Problem:**  
+Right now, the browser treats all images equally. Your SipMunchYap logo competes with restaurant logos that users haven't scrolled to yet.
 
-**Business analogy:** Instead of the chef starting 5 different versions of a dish as the customer keeps changing their order, the chef waits until the customer finishes talking before cooking.
+**The Solution:**  
+We'll add invisible "priority tags" to tell the browser:
+- "Load the main logo first — it's the most important"
+- "These restaurant images can wait until the user scrolls down"
 
-**Benefits:**
-- Fewer unnecessary server calls
-- Saved bandwidth for users on mobile data
-- Faster response when suggestions do appear
+**What You'll Notice:** Nothing. Same images, same layout, just smarter loading order.
 
 ---
 
-## Trade-offs and Decisions
+## Files We'll Update
 
-| Decision | What We Gain | What We Give Up |
-|----------|--------------|-----------------|
-| Create shared hook | Less duplicated code, consistent behavior | A few extra lines of code initially |
-| Group state together | Fewer re-renders, smoother experience | Slightly more complex internal logic (invisible to users) |
-| Increase debounce to 400ms | Fewer server calls, better for slow connections | Suggestions appear 100ms later (barely noticeable) |
-
-**Overall verdict:** These are all "free upgrades" - users get a smoother experience with no visible downsides. The 100ms delay increase is so small that users won't notice, but it significantly reduces unnecessary work.
+| File | What We're Changing | Why |
+|------|---------------------|-----|
+| `index.html` | Make font loading non-blocking | Stop the blank screen wait |
+| `Hero.tsx` | Add priority tag to main logo | Load your logo first on mobile |
+| `PageHeader.tsx` | Add priority tag to header logo | Load your logo first on desktop |
+| `CarouselCard.tsx` | Add image dimensions | Help browser plan the layout |
 
 ---
 
-## Technical Implementation Details
+## Expected Speed Improvement
 
-### Files to Create
+| Metric | Before | After (Estimate) |
+|--------|--------|------------------|
+| First content appears | 4.2 seconds | ~3.0 seconds |
+| Page fully loaded | 17.5 seconds | ~14-15 seconds |
 
-| File | Purpose |
-|------|---------|
-| `src/hooks/useLocationSuggestions.ts` | New shared helper for location autocomplete logic |
+Phase 2 (image optimization) will tackle the bigger improvement to that 17.5 second number.
 
-### Files to Modify
+---
 
-| File | Change |
-|------|--------|
-| `src/components/MobileSearchBar.tsx` | Replace inline location logic with the new shared helper, group related state |
-| `src/components/SearchBar.tsx` | Replace inline location logic with the new shared helper |
+## Technical Details
 
-### What the New Helper Provides
+### index.html Changes
 
-The new `useLocationSuggestions` hook will encapsulate:
-
-- Location suggestions list
-- Loading state
-- Selected suggestion index
-- Show/hide suggestions flag
-- Functions: fetch suggestions, select a suggestion, handle keyboard navigation, clear suggestions
-
-### State Grouping Strategy
-
-Before (13+ separate pieces):
-```text
-searchTerm, location, startTime, endTime, gpsCoordinates,
-locationSuggestions, showSuggestions, selectedSuggestionIndex,
-isLoadingSuggestions, isExpanded, (various refs)
+Current font loading (blocking):
+```html
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
 ```
 
-After (logically grouped):
-```text
-Search State: { term, suggestions state via hook }
-Location State: { via useLocationSuggestions hook }
-Time State: { start, end }
-UI State: { isExpanded, gpsCoordinates }
+New font loading (non-blocking):
+```html
+<link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"></noscript>
 ```
 
-This reduces the number of independent state updates that can trigger re-renders.
+This pattern:
+1. Starts downloading the font immediately (preload)
+2. Doesn't block the page from rendering
+3. Switches to a proper stylesheet once loaded
+4. Has a fallback for users without JavaScript
 
----
+### Hero.tsx Changes
 
-## Expected Improvements
+Current logo (no priority):
+```jsx
+<img 
+  src="/lovable-uploads/f30134b8-b54d-491a-b6bc-fc7a20199dd2.png" 
+  alt="SipMunchYap Logo" 
+  className="h-16 sm:h-20 md:h-32 w-auto"
+/>
+```
 
-| Metric | Before | After |
-|--------|--------|-------|
-| Server requests while typing | 3-5 per search | 1-2 per search |
-| Code duplication | ~150 lines duplicated | 0 (shared hook) |
-| State variables in component | 13+ | 6-8 |
-| Re-renders per keystroke | 2-3 | 1 |
+Updated logo (with priority):
+```jsx
+<img 
+  src="/lovable-uploads/f30134b8-b54d-491a-b6bc-fc7a20199dd2.png" 
+  alt="SipMunchYap Logo" 
+  className="h-16 sm:h-20 md:h-32 w-auto"
+  fetchPriority="high"
+  loading="eager"
+  width={128}
+  height={128}
+/>
+```
+
+### PageHeader.tsx Changes
+
+Same approach — add priority tags to the header logo:
+```jsx
+<img 
+  src="/lovable-uploads/f30134b8-b54d-491a-b6bc-fc7a20199dd2.png" 
+  alt="SipMunchYap Logo" 
+  className="h-16 md:h-24 lg:h-32 w-auto cursor-pointer"
+  onClick={handleLogoClick}
+  fetchPriority="high"
+  loading="eager"
+  width={128}
+  height={128}
+/>
+```
+
+### CarouselCard.tsx Changes
+
+Add explicit dimensions to restaurant logo images:
+```jsx
+<img
+  src={merchant.logo_url}
+  alt={`${merchant.restaurant_name} logo`}
+  className="w-full h-full object-contain"
+  width={96}
+  height={96}
+  loading="lazy"
+/>
+```
+
+Note: `MobileCarouselCard.tsx` already has dimensions and lazy loading — no changes needed there.
 
 ---
 
 ## Summary
 
-This optimization consolidates duplicated code into a reusable helper and groups related information together. The result is a smoother mobile search experience with fewer unnecessary server calls and screen updates.
+| Change | Visual Impact | Speed Impact |
+|--------|---------------|--------------|
+| Non-blocking fonts | None | ~0.5-1 second faster |
+| Logo priority tags | None | ~1-2 seconds faster |
+| Image dimensions | None | Prevents layout jumping |
 
-**No functionality changes** - users will search exactly the same way, but the experience will feel snappier, especially on slower devices or connections.
+**Total estimated improvement:** 1.5-3 seconds faster initial load
 
+---
+
+## Next Steps After This
+
+Once Phase 1 is complete and published, we should:
+1. Run another PageSpeed test to measure the improvement
+2. Move to Phase 2 (image optimization) for the bigger LCP improvement
