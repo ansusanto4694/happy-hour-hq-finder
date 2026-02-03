@@ -5,6 +5,7 @@ const DRAWER_STATE_KEY = 'drawer-state';
 
 interface DrawerState {
   isOpen: boolean;
+  scrollTop: number;
   lastClickedMerchantId: number | null;
 }
 
@@ -12,87 +13,18 @@ interface UseDrawerScrollRestorationOptions {
   isContentReady?: boolean;
 }
 
-// Wait for an element to appear in the DOM using MutationObserver
-const waitForElement = (selector: string, timeout: number = 2000): Promise<Element | null> => {
-  return new Promise((resolve) => {
-    const element = document.querySelector(selector);
-    if (element) {
-      resolve(element);
-      return;
-    }
-    
-    const observer = new MutationObserver(() => {
-      const el = document.querySelector(selector);
-      if (el) {
-        observer.disconnect();
-        resolve(el);
-      }
-    });
-    
-    observer.observe(document.body, { childList: true, subtree: true });
-    
-    setTimeout(() => {
-      observer.disconnect();
-      resolve(null);
-    }, timeout);
-  });
-};
-
 // Find the scroll container within the drawer
-const findScrollContainer = (): Element | null => {
-  // First try our custom data attribute
+const findScrollContainer = (): HTMLElement | null => {
   const customScroll = document.querySelector('[data-vaul-drawer-scroll="true"]');
-  if (customScroll) return customScroll;
+  if (customScroll) return customScroll as HTMLElement;
   
-  // Fallback to finding the overflow-y-auto inside drawer content
   const drawerContent = document.querySelector('[data-vaul-drawer]');
   if (drawerContent) {
     const scrollable = drawerContent.querySelector('.overflow-y-auto');
-    if (scrollable) return scrollable;
+    if (scrollable) return scrollable as HTMLElement;
   }
   
   return null;
-};
-
-// Calculate element's offset relative to a specific container
-const getOffsetRelativeToContainer = (element: HTMLElement, container: Element): number => {
-  let offset = 0;
-  let current: HTMLElement | null = element;
-  
-  while (current && current !== container) {
-    offset += current.offsetTop;
-    current = current.offsetParent as HTMLElement | null;
-    
-    // Safety check to prevent infinite loop
-    if (!current || current === document.body) break;
-  }
-  
-  return offset;
-};
-
-// Scroll element into view within a specific container
-const scrollElementIntoContainer = (container: Element, element: Element) => {
-  const containerRect = container.getBoundingClientRect();
-  const elementRect = element.getBoundingClientRect();
-  
-  // Calculate where the element is relative to the container's current scroll
-  const elementOffsetFromContainerTop = elementRect.top - containerRect.top;
-  const currentScrollTop = container.scrollTop;
-  
-  // Calculate the absolute offset of the element from the top of scrollable content
-  const absoluteElementOffset = currentScrollTop + elementOffsetFromContainerTop;
-  
-  // Center the element in the container
-  const centeredScrollTop = absoluteElementOffset - (containerRect.height / 2) + (elementRect.height / 2);
-  
-  container.scrollTop = Math.max(0, centeredScrollTop);
-  
-  console.log('[DrawerScroll] Scrolled container:', {
-    containerRect: { height: containerRect.height, top: containerRect.top },
-    elementRect: { height: elementRect.height, top: elementRect.top },
-    scrollTop: container.scrollTop,
-    centeredScrollTop
-  });
 };
 
 export const useDrawerScrollRestoration = (options: UseDrawerScrollRestorationOptions = {}) => {
@@ -102,7 +34,7 @@ export const useDrawerScrollRestoration = (options: UseDrawerScrollRestorationOp
   const locationKey = location.pathname + location.search;
   
   const hasRestoredRef = useRef(false);
-  const lastClickedIdRef = useRef<number | null>(null);
+  const scrollContainerRef = useRef<HTMLElement | null>(null);
 
   // Get saved state from sessionStorage
   const getSavedState = (): DrawerState | undefined => {
@@ -115,12 +47,11 @@ export const useDrawerScrollRestoration = (options: UseDrawerScrollRestorationOp
   };
 
   // Save state to sessionStorage
-  const saveState = useCallback((state: DrawerState) => {
+  const saveState = useCallback((state: Partial<DrawerState>) => {
     try {
       const states = JSON.parse(sessionStorage.getItem(DRAWER_STATE_KEY) || '{}');
-      states[locationKey] = state;
+      states[locationKey] = { ...states[locationKey], ...state };
       sessionStorage.setItem(DRAWER_STATE_KEY, JSON.stringify(states));
-      console.log('[DrawerScroll] Saved state:', state);
     } catch (e) {
       console.error('[DrawerScroll] Failed to save state:', e);
     }
@@ -129,13 +60,9 @@ export const useDrawerScrollRestoration = (options: UseDrawerScrollRestorationOp
   // Get initial drawer state based on navigation type
   const getInitialOpenState = (): boolean => {
     const savedState = getSavedState();
-    console.log('[DrawerScroll] Init:', { 
-      navigationType, 
-      savedState,
-    });
+    console.log('[DrawerScroll] Init:', { navigationType, savedState });
     
     if (navigationType === 'POP' && savedState?.isOpen) {
-      lastClickedIdRef.current = savedState.lastClickedMerchantId;
       return true;
     }
     return false;
@@ -143,124 +70,108 @@ export const useDrawerScrollRestoration = (options: UseDrawerScrollRestorationOp
 
   const [isOpen, setIsOpen] = useState(getInitialOpenState);
 
-  // Track which merchant was clicked before navigation
+  // Save scroll position when user clicks a merchant (before navigating away)
   const setLastClickedId = useCallback((id: number) => {
-    lastClickedIdRef.current = id;
-    saveState({ isOpen: true, lastClickedMerchantId: id });
-    console.log('[DrawerScroll] Saved clicked merchant:', id);
+    const scrollContainer = findScrollContainer();
+    const scrollTop = scrollContainer?.scrollTop || 0;
+    
+    console.log('[DrawerScroll] Saving state before navigation:', { id, scrollTop });
+    saveState({ 
+      isOpen: true, 
+      scrollTop,
+      lastClickedMerchantId: id 
+    });
   }, [saveState]);
 
   // Save drawer open/close state
   useEffect(() => {
-    saveState({ 
-      isOpen, 
-      lastClickedMerchantId: lastClickedIdRef.current 
-    });
+    saveState({ isOpen });
   }, [isOpen, saveState]);
 
-  // Restore scroll position by scrolling to the last clicked item
+  // Capture scroll position periodically while drawer is open
   useEffect(() => {
-    // Always log conditions for debugging - this helps identify why restoration fails
-    console.log('[DrawerScroll] Effect check:', { 
+    if (!isOpen) return;
+    
+    const captureScrollPosition = () => {
+      const scrollContainer = findScrollContainer();
+      if (scrollContainer) {
+        scrollContainerRef.current = scrollContainer;
+      }
+    };
+    
+    // Capture after drawer animation completes
+    const timer = setTimeout(captureScrollPosition, 500);
+    return () => clearTimeout(timer);
+  }, [isOpen]);
+
+  // Restore scroll position on back navigation
+  useEffect(() => {
+    console.log('[DrawerScroll] Restore effect:', { 
       navigationType, 
       isOpen, 
       isContentReady, 
-      hasRestored: hasRestoredRef.current,
-      savedId: lastClickedIdRef.current 
+      hasRestored: hasRestoredRef.current 
     });
     
     if (navigationType !== 'POP' || !isOpen || !isContentReady || hasRestoredRef.current) {
       return;
     }
 
-    const savedId = lastClickedIdRef.current;
-    console.log('[DrawerScroll] Attempting restore for merchant:', savedId);
+    const savedState = getSavedState();
+    const savedScrollTop = savedState?.scrollTop || 0;
     
-    if (!savedId) {
+    console.log('[DrawerScroll] Attempting to restore scrollTop:', savedScrollTop);
+    
+    if (savedScrollTop === 0) {
       hasRestoredRef.current = true;
       return;
     }
 
     const performRestoration = async () => {
-      console.log('[DrawerScroll] Starting restoration for merchant:', savedId);
-      
-      // Wait for drawer to fully open and animate
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Wait for drawer to fully open and content to render
+      await new Promise(resolve => setTimeout(resolve, 600));
       
       if (hasRestoredRef.current) return;
       
-      // Check how many merchant cards are currently rendered
-      const allMerchantCards = document.querySelectorAll('[data-merchant-id]');
-      console.log('[DrawerScroll] Total merchant cards in DOM:', allMerchantCards.length);
-      
-      // Wait for the target element to appear (handles infinite scroll)
-      const targetElement = await waitForElement(`[data-merchant-id="${savedId}"]`, 3000);
-      
-      if (hasRestoredRef.current) return;
-      
-      if (!targetElement) {
-        console.log('[DrawerScroll] Target element NOT FOUND after 3s timeout. Merchant ID:', savedId);
-        console.log('[DrawerScroll] Available merchant IDs:', 
-          Array.from(allMerchantCards).slice(0, 10).map(el => el.getAttribute('data-merchant-id'))
-        );
-        hasRestoredRef.current = true;
-        return;
-      }
-      
-      console.log('[DrawerScroll] Found target element in DOM');
-      
-      // Wait for element to be fully rendered and painted
-      await new Promise(resolve => setTimeout(resolve, 150));
-      
-      // Get the Card element inside the Link (it has the actual dimensions)
-      const cardElement = targetElement.querySelector('[class*="Card"]') || targetElement.firstElementChild;
-      const elementToMeasure = cardElement || targetElement;
-      
-      let rect = elementToMeasure.getBoundingClientRect();
-      console.log('[DrawerScroll] Initial element rect:', { height: rect.height, top: rect.top, width: rect.width });
-      
-      if (rect.height === 0) {
-        console.log('[DrawerScroll] Element has no height, waiting longer...');
-        await new Promise(resolve => setTimeout(resolve, 300));
-        rect = elementToMeasure.getBoundingClientRect();
-        console.log('[DrawerScroll] After wait, rect:', { height: rect.height, top: rect.top });
-      }
-      
-      // Find the scroll container
       const scrollContainer = findScrollContainer();
-      console.log('[DrawerScroll] Scroll container found:', !!scrollContainer);
+      console.log('[DrawerScroll] Found scroll container:', !!scrollContainer);
       
       if (!scrollContainer) {
-        console.log('[DrawerScroll] No scroll container, using scrollIntoView');
-        targetElement.scrollIntoView({ block: 'center', behavior: 'instant' });
+        console.log('[DrawerScroll] No scroll container found');
         hasRestoredRef.current = true;
         return;
       }
       
-      // Calculate the element's offset relative to the scroll container
-      const containerRect = scrollContainer.getBoundingClientRect();
-      const htmlElement = targetElement as HTMLElement;
+      // Check if content is tall enough to scroll
+      const scrollHeight = scrollContainer.scrollHeight;
+      const clientHeight = scrollContainer.clientHeight;
+      console.log('[DrawerScroll] Container dimensions:', { scrollHeight, clientHeight, savedScrollTop });
       
-      // Calculate offset by walking up the DOM tree
-      const elementOffset = getOffsetRelativeToContainer(htmlElement, scrollContainer);
-      console.log('[DrawerScroll] Element offset relative to container:', elementOffset);
-      console.log('[DrawerScroll] Container rect:', { height: containerRect.height, scrollTop: scrollContainer.scrollTop });
+      if (scrollHeight <= clientHeight) {
+        console.log('[DrawerScroll] Content not tall enough to scroll, waiting for more content...');
+        // Wait for more content to load
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
       
-      // Center the element in the container
-      // Use an estimated element height if rect.height is 0
-      const estimatedHeight = rect.height > 0 ? rect.height : 150; // Estimate card height
-      const centeredScrollTop = elementOffset - (containerRect.height / 2) + (estimatedHeight / 2);
+      // Try to restore scroll position
+      scrollContainer.scrollTop = savedScrollTop;
       
-      console.log('[DrawerScroll] Calculated scroll position:', { elementOffset, centeredScrollTop });
+      // Verify it worked
+      const actualScrollTop = scrollContainer.scrollTop;
+      console.log('[DrawerScroll] ✓ Restored scroll:', { requested: savedScrollTop, actual: actualScrollTop });
       
-      scrollContainer.scrollTop = Math.max(0, centeredScrollTop);
+      // If scroll didn't work (content not tall enough), try again after a delay
+      if (actualScrollTop < savedScrollTop * 0.5) {
+        console.log('[DrawerScroll] Scroll position not fully restored, retrying...');
+        await new Promise(resolve => setTimeout(resolve, 500));
+        scrollContainer.scrollTop = savedScrollTop;
+        console.log('[DrawerScroll] Retry result:', scrollContainer.scrollTop);
+      }
+      
       hasRestoredRef.current = true;
-      console.log('[DrawerScroll] ✓ Restored scroll, final scrollTop:', scrollContainer.scrollTop);
     };
 
     performRestoration();
-    
-    // NO cleanup function - we only mark hasRestoredRef.current = true after successful scroll
   }, [isOpen, isContentReady, navigationType]);
 
   // Wrapper to update isOpen with state saving
