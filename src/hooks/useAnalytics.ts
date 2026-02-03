@@ -14,23 +14,36 @@ import {
 // Global flag to ensure session initialization happens only once per app load
 let globalSessionInitialized = false;
 
+// Helper to defer initialization until after first paint
+const deferExecution = (callback: () => void) => {
+  if ('requestIdleCallback' in window) {
+    (window as Window & { requestIdleCallback: (cb: () => void) => void }).requestIdleCallback(callback);
+  } else {
+    setTimeout(callback, 100);
+  }
+};
+
 export const useAnalytics = () => {
   const sessionInitializedRef = useRef(false);
 
-  // Initialize session only once per app load
+  // Initialize session only once per app load, deferred for better Core Web Vitals
   useEffect(() => {
     if (!globalSessionInitialized && !sessionInitializedRef.current) {
       sessionInitializedRef.current = true;
       globalSessionInitialized = true;
-      initializeSession();
       
-      // Verify GA4 setup on initialization
-      verifyGA4Setup();
-      
-      // Enable debug mode in development
-      if (import.meta.env.DEV) {
-        enableGA4Debug();
-      }
+      // Defer analytics initialization to not block first paint
+      deferExecution(() => {
+        initializeSession();
+        
+        // Verify GA4 setup on initialization
+        verifyGA4Setup();
+        
+        // Enable debug mode in development
+        if (import.meta.env.DEV) {
+          enableGA4Debug();
+        }
+      });
     }
   }, []);
 

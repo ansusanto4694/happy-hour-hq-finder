@@ -113,9 +113,18 @@ const URLSanitizer = () => {
   return null;
 };
 
-// Initialize performance monitoring once
+// Initialize performance monitoring after first paint (deferred for better FCP/LCP)
 if (typeof window !== 'undefined') {
-  initPerformanceMonitoring();
+  const deferInit = () => {
+    initPerformanceMonitoring();
+  };
+  
+  // Use requestIdleCallback if available, otherwise defer with setTimeout
+  if ('requestIdleCallback' in window) {
+    (window as Window & { requestIdleCallback: (cb: () => void) => void }).requestIdleCallback(deferInit);
+  } else {
+    setTimeout(deferInit, 100);
+  }
 }
 
 const App = () => (

@@ -58,6 +58,13 @@
     <link rel="dns-prefetch" href="https://gohcqazhofdhkghfxfok.supabase.co" />
     <link rel="preconnect" href="https://gohcqazhofdhkghfxfok.supabase.co" crossorigin />
     
+    <!-- DNS prefetch for Mapbox (deferred, but start DNS resolution early) -->
+    <link rel="dns-prefetch" href="https://api.mapbox.com" />
+    <link rel="preconnect" href="https://api.mapbox.com" crossorigin />
+    
+    <!-- Preload main entry module for faster startup -->
+    <link rel="modulepreload" href="/src/main.tsx" />
+    
     <!-- Preload critical font weights to reduce CLS -->
     <link rel="preload" href="https://fonts.gstatic.com/s/poppins/v21/pxiEyp8kv8JHgFVrJJfecg.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="https://fonts.gstatic.com/s/poppins/v21/pxiByp8kv8JHgFVrLEj6Z1xlFQ.woff2" as="font" type="font/woff2" crossorigin />
