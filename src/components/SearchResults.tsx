@@ -27,6 +27,7 @@ interface SearchResultsProps {
   location?: string;
   isMobile?: boolean;
   onRestaurantHover?: (restaurantId: number | null) => void;
+  onMerchantNavigate?: (merchantId: number) => void;
 }
 
 const RESULTS_PER_PAGE = 30;
@@ -39,7 +40,8 @@ const SearchResultsComponent: React.FC<SearchResultsProps> = ({
   endTime, 
   location,
   isMobile = false,
-  onRestaurantHover
+  onRestaurantHover,
+  onMerchantNavigate
 }) => {
   const [displayedResults, setDisplayedResults] = useState<any[]>([]);
   const [hasMore, setHasMore] = useState(true);
@@ -206,6 +208,7 @@ const SearchResultsComponent: React.FC<SearchResultsProps> = ({
             restaurant={restaurant}
             isMobile={isMobile}
             onHover={onRestaurantHover}
+            onNavigate={onMerchantNavigate}
           />
         ))}
       </div>
@@ -260,6 +263,7 @@ export const SearchResults = React.memo(SearchResultsComponent, (prevProps, next
     prevProps.endTime === nextProps.endTime &&
     prevProps.location === nextProps.location &&
     prevProps.isMobile === nextProps.isMobile &&
-    prevProps.onRestaurantHover === nextProps.onRestaurantHover
+    prevProps.onRestaurantHover === nextProps.onRestaurantHover &&
+    prevProps.onMerchantNavigate === nextProps.onMerchantNavigate
   );
 });
