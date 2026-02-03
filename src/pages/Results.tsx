@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { SearchBar } from '@/components/SearchBar';
 import { useAnalytics } from '@/hooks/useAnalytics';
@@ -202,8 +202,8 @@ const Results = () => {
     navigate('/');
   };
 
-  // Handle map bounds change to potentially filter results
-  const handleMapMove = (bounds: { north: number; south: number; east: number; west: number }) => {
+  // Handle map bounds change to potentially filter results - memoized for stable reference
+  const handleMapMove = useCallback((bounds: { north: number; south: number; east: number; west: number }) => {
     setMapBounds(bounds);
     
     // Show "search this area" button whenever the map moves, regardless of distance
@@ -246,10 +246,10 @@ const Results = () => {
         setShowSearchThisAreaDesktop(true);
       }
     }
-  };
+  }, [isMobile, isUsingMapSearch, searchedBounds, hasMapMoved]);
 
-  // Handle search this area button click
-  const handleSearchThisArea = async () => {
+  // Handle search this area button click - memoized for stable reference
+  const handleSearchThisArea = useCallback(async () => {
     await track({
       eventType: 'click',
       eventCategory: 'map_interaction',
@@ -260,17 +260,16 @@ const Results = () => {
       },
     });
 
-    setSearchedBounds(mapBounds); // Save the current bounds for searching
-    setIsUsingMapSearch(true); // Enable map search mode
-    setShowSearchThisArea(false); // Hide the mobile button
-    setShowSearchThisAreaDesktop(false); // Hide the desktop button
-    console.log('Searching this area with bounds:', mapBounds);
-  };
+    setSearchedBounds(mapBounds);
+    setIsUsingMapSearch(true);
+    setShowSearchThisArea(false);
+    setShowSearchThisAreaDesktop(false);
+  }, [mapBounds, merchants?.length, track]);
 
-  // Handle map view state changes to persist across view toggles
-  const handleViewStateChange = (newViewState: { longitude: number; latitude: number; zoom: number }) => {
+  // Handle map view state changes to persist across view toggles - memoized for stable reference
+  const handleViewStateChange = useCallback((newViewState: { longitude: number; latitude: number; zoom: number }) => {
     setMapViewState(newViewState);
-  };
+  }, []);
 
   const seoTitle = carouselName 
     ? `${carouselName} - Featured Restaurants | SipMunchYap`
