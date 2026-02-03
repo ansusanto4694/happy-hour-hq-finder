@@ -1,14 +1,16 @@
 
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import Map, { Marker, NavigationControl } from 'react-map-gl';
+import Map, { NavigationControl } from 'react-map-gl';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { MerchantMapPreviewCard } from '@/components/MerchantMapPreviewCard';
 import { MapInteractionTracker } from '@/components/MapInteractionTracker';
+import { RestaurantMarker } from '@/components/map/RestaurantMarker';
+import { UserLocationMarker } from '@/components/map/UserLocationMarker';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserLocation } from '@/hooks/useUserLocation';
-import { Map as MapIcon, MapPin } from 'lucide-react';
+import { Map as MapIcon } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { getDeviceType } from '@/utils/analytics';
 import type { LngLatBoundsLike } from 'mapbox-gl';
@@ -194,16 +196,8 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
   }, [externalViewState]);
 
   // Handle map move events to update search results
+  // Analytics removed - handled by MapInteractionTracker with throttling/sampling
   const handleMoveEnd = useCallback(() => {
-    track({
-      eventType: 'interaction',
-      eventCategory: 'map_interaction',
-      eventAction: 'map_moved',
-      metadata: {
-        isMobile
-      },
-    });
-
     if (mapRef.current && onMapMove) {
       const map = mapRef.current.getMap();
       const bounds = map.getBounds();
@@ -215,7 +209,7 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
         west: bounds.getWest()
       });
     }
-  }, [onMapMove, track, isMobile]);
+  }, [onMapMove]);
 
   // Mobile full-screen map
   if (isMobile) {
@@ -243,48 +237,29 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
           
           {/* User Location Marker */}
           {userLocation && (
-            <Marker
+            <UserLocationMarker
               longitude={userLocation.longitude}
               latitude={userLocation.latitude}
-              anchor="center"
-            >
-              <div className="relative">
-                {/* Outer pulse ring */}
-                <div className="absolute inset-0 bg-blue-500 rounded-full w-8 h-8 opacity-30 animate-ping"></div>
-                {/* Inner blue dot */}
-                <div className="bg-blue-500 rounded-full w-4 h-4 border-2 border-white shadow-lg relative z-10 flex items-center justify-center">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                </div>
-              </div>
-            </Marker>
+            />
           )}
           
           {/* Restaurant Markers - Only show if coordinates exist */}
           {restaurants
             .filter(restaurant => restaurant.latitude && restaurant.longitude)
             .map((restaurant) => (
-              <Marker
+              <RestaurantMarker
                 key={restaurant.id}
-                longitude={restaurant.longitude!}
-                latitude={restaurant.latitude!}
-                anchor="bottom"
-              >
-                  <div 
-                    className={`rounded-full flex items-center justify-center shadow-lg border-2 border-white cursor-pointer transition-all duration-200 ${
-                      selectedRestaurant?.id === restaurant.id 
-                        ? 'bg-blue-500 w-8 h-8 shadow-xl' 
-                        : 'bg-red-500 w-6 h-6 active:bg-red-600'
-                    }`}
-                  title={restaurant.restaurant_name}
-                  onClick={() => handleRestaurantClick(restaurant)}
-                  onTouchStart={(event) => handleMarkerHover(restaurant, event as any)}
-                  onTouchEnd={handleMarkerLeave}
-                >
-                  <div className={`bg-white rounded-full ${
-                    selectedRestaurant?.id === restaurant.id ? 'w-3 h-3' : 'w-2 h-2'
-                  }`}></div>
-                </div>
-              </Marker>
+                restaurant={{
+                  id: restaurant.id,
+                  restaurant_name: restaurant.restaurant_name,
+                  longitude: restaurant.longitude!,
+                  latitude: restaurant.latitude!,
+                }}
+                isHovered={false}
+                isSelected={selectedRestaurant?.id === restaurant.id}
+                isMobile={true}
+                onClick={() => handleRestaurantClick(restaurant)}
+              />
             ))}
         </Map>
         
@@ -349,49 +324,31 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
             
             {/* User Location Marker */}
             {userLocation && (
-              <Marker
+              <UserLocationMarker
                 longitude={userLocation.longitude}
                 latitude={userLocation.latitude}
-                anchor="center"
-              >
-                <div className="relative">
-                  {/* Outer pulse ring */}
-                  <div className="absolute inset-0 bg-blue-500 rounded-full w-8 h-8 opacity-30 animate-ping"></div>
-                  {/* Inner blue dot */}
-                  <div className="bg-blue-500 rounded-full w-4 h-4 border-2 border-white shadow-lg relative z-10 flex items-center justify-center">
-                    <div className="w-2 h-2 bg-white rounded-full"></div>
-                  </div>
-                </div>
-              </Marker>
+              />
             )}
             
             {/* Restaurant Markers - Only show if coordinates exist */}
             {restaurants
               .filter(restaurant => restaurant.latitude && restaurant.longitude)
               .map((restaurant) => (
-                <Marker
+                <RestaurantMarker
                   key={restaurant.id}
-                  longitude={restaurant.longitude!}
-                  latitude={restaurant.latitude!}
-                  anchor="bottom"
-                  style={{
-                    zIndex: hoveredRestaurantId === restaurant.id ? 1000 : 1
+                  restaurant={{
+                    id: restaurant.id,
+                    restaurant_name: restaurant.restaurant_name,
+                    longitude: restaurant.longitude!,
+                    latitude: restaurant.latitude!,
                   }}
-                >
-                   <div 
-                    className={`rounded-full flex items-center justify-center shadow-lg border-2 border-white cursor-pointer transition-all duration-300 ${
-                      hoveredRestaurantId === restaurant.id 
-                        ? 'bg-bright-blue hover:bg-bright-blue/80 w-9 h-9 scale-110' 
-                        : 'bg-red-500 hover:bg-red-600 w-6 h-6 scale-100'
-                    }`}
-                    title={restaurant.restaurant_name}
-                    onClick={() => handleRestaurantClick(restaurant)}
-                    onMouseEnter={(event) => handleMarkerHover(restaurant, event)}
-                    onMouseLeave={handleMarkerLeave}
-                  >
-                    <div className="w-2 h-2 bg-white rounded-full"></div>
-                  </div>
-                </Marker>
+                  isHovered={hoveredRestaurantId === restaurant.id}
+                  isSelected={selectedRestaurant?.id === restaurant.id}
+                  isMobile={false}
+                  onClick={() => handleRestaurantClick(restaurant)}
+                  onMouseEnter={(event) => handleMarkerHover(restaurant, event)}
+                  onMouseLeave={handleMarkerLeave}
+                />
               ))}
           </Map>
         </div>
@@ -422,6 +379,8 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
 };
 
 // Memoize to prevent unnecessary re-renders
+// Only compare data props that affect visual output - callback comparisons removed
+// since they're now stable with useCallback in Results.tsx
 export const ResultsMap = React.memo(ResultsMapComponent, (prevProps, nextProps) => {
   return (
     prevProps.restaurants === nextProps.restaurants &&
@@ -430,9 +389,6 @@ export const ResultsMap = React.memo(ResultsMapComponent, (prevProps, nextProps)
     prevProps.viewState === nextProps.viewState &&
     prevProps.isMobile === nextProps.isMobile &&
     prevProps.hoveredRestaurantId === nextProps.hoveredRestaurantId &&
-    prevProps.searchLocation === nextProps.searchLocation &&
-    prevProps.onMapMove === nextProps.onMapMove &&
-    prevProps.onSearchThisArea === nextProps.onSearchThisArea &&
-    prevProps.onViewStateChange === nextProps.onViewStateChange
+    prevProps.searchLocation === nextProps.searchLocation
   );
 });
