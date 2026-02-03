@@ -1,11 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Star } from 'lucide-react';
 import { getTodaysHappyHour, getMenuTypeBadge } from "@/utils/timeUtils";
 import { useAnalytics } from "@/hooks/useAnalytics";
-import { useMerchantRating } from "@/hooks/useMerchantRating";
 
 interface CarouselCardProps {
   merchant: {
@@ -23,13 +22,43 @@ interface CarouselCardProps {
       active: boolean;
       menu_type: 'food_and_drinks' | 'drinks_only' | null;
     }>;
+    merchant_reviews?: Array<{
+      id: string;
+      status: string;
+      merchant_review_ratings?: Array<{
+        rating: number;
+      }>;
+    }>;
   };
   onClick?: (merchantId: string) => void;
 }
 
 export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick }) => {
   const { track, trackFunnel } = useAnalytics();
-  const { data: ratingData } = useMerchantRating(merchant.id);
+  
+  // Calculate rating locally from pre-fetched data (avoids N+1 query)
+  const ratingData = useMemo(() => {
+    const reviews = merchant.merchant_reviews?.filter((r) => r.status === 'published') || [];
+    if (reviews.length === 0) return null;
+    
+    let totalSum = 0;
+    let totalCount = 0;
+    
+    reviews.forEach((review) => {
+      review.merchant_review_ratings?.forEach((r) => {
+        totalSum += r.rating;
+        totalCount += 1;
+      });
+    });
+    
+    if (totalCount === 0) return null;
+    
+    return {
+      overallAverage: totalSum / totalCount,
+      reviewCount: reviews.length
+    };
+  }, [merchant.merchant_reviews]);
+
   const todaysHappyHour = merchant.merchant_happy_hour ? getTodaysHappyHour(merchant.merchant_happy_hour) : 'No Happy Hour Today';
   const menuTypeBadge = getMenuTypeBadge(merchant.happy_hour_deals || []);
   
