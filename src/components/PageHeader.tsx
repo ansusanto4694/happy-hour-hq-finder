@@ -1,11 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { AuthButton } from '@/components/AuthButton';
 import { SearchBar } from '@/components/SearchBar';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
+
+// Lazy load Sheet components - only needed on mobile when search is opened
+const LazySheet = lazy(() => import('@/components/ui/sheet').then(m => ({ default: m.Sheet })));
+const LazySheetContent = lazy(() => import('@/components/ui/sheet').then(m => ({ default: m.SheetContent })));
+const LazySheetHeader = lazy(() => import('@/components/ui/sheet').then(m => ({ default: m.SheetHeader })));
+const LazySheetTitle = lazy(() => import('@/components/ui/sheet').then(m => ({ default: m.SheetTitle })));
 
 interface PageHeaderProps {
   showSearchBar?: boolean;
@@ -108,16 +113,18 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
         </div>
       </div>
 
-      {/* Mobile Search Sheet */}
-      {showSearchBar && isMobile && (
-        <Sheet open={isSearchOpen} onOpenChange={setIsSearchOpen}>
-          <SheetContent side="top" className="h-auto max-h-[90vh] overflow-y-auto">
-            <SheetHeader className="mb-6">
-              <SheetTitle>Search Happy Hours</SheetTitle>
-            </SheetHeader>
-            <SearchBar variant={searchBarVariant} />
-          </SheetContent>
-        </Sheet>
+      {/* Mobile Search Sheet - Lazy loaded */}
+      {showSearchBar && isMobile && isSearchOpen && (
+        <Suspense fallback={<div className="fixed inset-0 z-50 bg-background/80 animate-pulse" />}>
+          <LazySheet open={isSearchOpen} onOpenChange={setIsSearchOpen}>
+            <LazySheetContent side="top" className="h-auto max-h-[90vh] overflow-y-auto">
+              <LazySheetHeader className="mb-6">
+                <LazySheetTitle>Search Happy Hours</LazySheetTitle>
+              </LazySheetHeader>
+              <SearchBar variant={searchBarVariant} />
+            </LazySheetContent>
+          </LazySheet>
+        </Suspense>
       )}
     </>
   );

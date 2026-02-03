@@ -1,10 +1,15 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { User, LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useAnalytics } from '@/hooks/useAnalytics';
+
+// Lazy load dropdown components - only needed for authenticated users
+const LazyDropdownMenu = lazy(() => import('@/components/ui/dropdown-menu').then(m => ({ default: m.DropdownMenu })));
+const LazyDropdownMenuTrigger = lazy(() => import('@/components/ui/dropdown-menu').then(m => ({ default: m.DropdownMenuTrigger })));
+const LazyDropdownMenuContent = lazy(() => import('@/components/ui/dropdown-menu').then(m => ({ default: m.DropdownMenuContent })));
+const LazyDropdownMenuItem = lazy(() => import('@/components/ui/dropdown-menu').then(m => ({ default: m.DropdownMenuItem })));
 
 export const AuthButton: React.FC = () => {
   const { user, profile, signOut, loading } = useAuth();
@@ -43,23 +48,26 @@ export const AuthButton: React.FC = () => {
     );
   }
 
+  // Authenticated user - lazy load the dropdown menu
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon">
-          <User className="w-4 h-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => navigate('/account')}>
-          <User className="w-4 h-4 mr-2" />
-          My Account
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleSignOut} className="text-red-600">
-          <LogOut className="w-4 h-4 mr-2" />
-          Sign Out
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Suspense fallback={<Button variant="outline" size="icon"><User className="w-4 h-4" /></Button>}>
+      <LazyDropdownMenu>
+        <LazyDropdownMenuTrigger asChild>
+          <Button variant="outline" size="icon">
+            <User className="w-4 h-4" />
+          </Button>
+        </LazyDropdownMenuTrigger>
+        <LazyDropdownMenuContent align="end">
+          <LazyDropdownMenuItem onClick={() => navigate('/account')}>
+            <User className="w-4 h-4 mr-2" />
+            My Account
+          </LazyDropdownMenuItem>
+          <LazyDropdownMenuItem onClick={handleSignOut} className="text-red-600">
+            <LogOut className="w-4 h-4 mr-2" />
+            Sign Out
+          </LazyDropdownMenuItem>
+        </LazyDropdownMenuContent>
+      </LazyDropdownMenu>
+    </Suspense>
   );
 };
