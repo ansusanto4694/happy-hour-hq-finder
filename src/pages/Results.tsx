@@ -161,7 +161,7 @@ const Results = () => {
   // Use drawer scroll restoration hook for persistent drawer state
   // Pass content ready state so scroll restoration waits for merchants to render
   const isContentReady = !isLoading && (merchants?.length ?? 0) > 0;
-  const { scrollRef: drawerScrollRef, isOpen: isListDrawerOpen, setIsOpen: setIsListDrawerOpen } = useDrawerScrollRestoration({ isContentReady });
+  const { scrollRef: drawerScrollRef, isOpen: isListDrawerOpen, setIsOpen: setIsListDrawerOpen, setLastClickedId } = useDrawerScrollRestoration({ isContentReady });
   useEffect(() => {
     track({
       eventType: 'page_view',
@@ -437,6 +437,7 @@ const Results = () => {
             selectedDays={selectedDays}
             onDaysChange={handleDaysChange}
             onStartTimeChange={handleStartTimeChange}
+            onMerchantNavigate={setLastClickedId}
             onEndTimeChange={handleEndTimeChange}
             selectedMenuType={selectedMenuType}
             onMenuTypeChange={setSelectedMenuType}

@@ -14,13 +14,15 @@ interface SearchResultCardProps {
   onClick?: (restaurantId: number, slug?: string | null) => void;
   isMobile?: boolean;
   onHover?: (restaurantId: number | null) => void;
+  onNavigate?: (merchantId: number) => void;
 }
 
 const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({ 
   restaurant, 
   onClick,
   isMobile = false,
-  onHover
+  onHover,
+  onNavigate
 }) => {
   const { track, trackFunnel } = useAnalytics();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -98,6 +100,9 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
       return; // Let browser handle it natively
     }
     
+    // Save merchant ID for scroll restoration before navigation
+    onNavigate?.(restaurant.id);
+    
     // Track analytics (don't prevent default - let link work normally)
     track({
       eventType: 'click',
@@ -150,6 +155,7 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
           onHover(null);
         }
       }}
+      data-merchant-id={restaurant.id}
     >
       <Card
         ref={cardRef}
@@ -398,6 +404,7 @@ export const SearchResultCard = React.memo(SearchResultCardComponent, (prevProps
     prevProps.isMobile === nextProps.isMobile &&
     prevProps.onClick === nextProps.onClick &&
     prevProps.onHover === nextProps.onHover &&
+    prevProps.onNavigate === nextProps.onNavigate &&
     JSON.stringify(prevProps.restaurant.merchant_offers) === JSON.stringify(nextProps.restaurant.merchant_offers) &&
     JSON.stringify(prevProps.restaurant.merchant_categories) === JSON.stringify(nextProps.restaurant.merchant_categories) &&
     JSON.stringify(prevProps.restaurant.merchant_happy_hour) === JSON.stringify(nextProps.restaurant.merchant_happy_hour) &&

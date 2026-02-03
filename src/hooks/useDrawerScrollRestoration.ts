@@ -5,7 +5,7 @@ const DRAWER_STATE_KEY = 'drawer-state';
 
 interface DrawerState {
   isOpen: boolean;
-  scrollTop: number;
+  lastClickedMerchantId: number | null;
 }
 
 interface UseDrawerScrollRestorationOptions {
@@ -18,11 +18,8 @@ export const useDrawerScrollRestoration = (options: UseDrawerScrollRestorationOp
   const navigationType = useNavigationType();
   const locationKey = location.pathname + location.search;
   
-  // Store ref to the actual scrollable element (could be our div or Vaul's internal)
-  const scrollElementRef = useRef<HTMLDivElement | null>(null);
   const hasRestoredRef = useRef(false);
-  const savedScrollTopRef = useRef(0);
-  const scrollListenerAttachedRef = useRef(false);
+  const lastClickedIdRef = useRef<number | null>(null);
 
   // Get saved state from sessionStorage
   const getSavedState = (): DrawerState | undefined => {
@@ -34,6 +31,18 @@ export const useDrawerScrollRestoration = (options: UseDrawerScrollRestorationOp
     }
   };
 
+  // Save state to sessionStorage
+  const saveState = useCallback((state: DrawerState) => {
+    try {
+      const states = JSON.parse(sessionStorage.getItem(DRAWER_STATE_KEY) || '{}');
+      states[locationKey] = state;
+      sessionStorage.setItem(DRAWER_STATE_KEY, JSON.stringify(states));
+      console.log('[DrawerScroll] Saved state:', state);
+    } catch (e) {
+      console.error('[DrawerScroll] Failed to save state:', e);
+    }
+  }, [locationKey]);
+
   // Get initial drawer state based on navigation type
   const getInitialOpenState = (): boolean => {
     const savedState = getSavedState();
@@ -42,184 +51,69 @@ export const useDrawerScrollRestoration = (options: UseDrawerScrollRestorationOp
       savedState,
     });
     
-    if (navigationType === 'POP') {
-      savedScrollTopRef.current = savedState?.scrollTop || 0;
-      return savedState?.isOpen ?? false;
+    if (navigationType === 'POP' && savedState?.isOpen) {
+      lastClickedIdRef.current = savedState.lastClickedMerchantId;
+      return true;
     }
     return false;
   };
 
   const [isOpen, setIsOpen] = useState(getInitialOpenState);
 
-  // Find the actual scrollable element within the drawer
-  const findScrollableElement = useCallback((): HTMLElement | null => {
-    // Look for Vaul drawer content - it renders in a portal
-    const drawerContent = document.querySelector('[data-vaul-drawer-content]');
-    if (drawerContent) {
-      // The drawer content itself is scrollable, or find the first scrollable child
-      const scrollable = drawerContent.querySelector('[data-scroll-container]') as HTMLElement;
-      if (scrollable) return scrollable;
-      
-      // If no marked container, check if content itself is scrollable
-      if (drawerContent.scrollHeight > drawerContent.clientHeight) {
-        return drawerContent as HTMLElement;
-      }
-      
-      // Find first element with overflow-y: auto/scroll that has scrollable content
-      const allChildren = drawerContent.querySelectorAll('*');
-      for (const child of allChildren) {
-        const el = child as HTMLElement;
-        const style = window.getComputedStyle(el);
-        if ((style.overflowY === 'auto' || style.overflowY === 'scroll') && 
-            el.scrollHeight > el.clientHeight) {
-          return el;
-        }
-      }
-    }
-    return null;
-  }, []);
+  // Track which merchant was clicked before navigation
+  const setLastClickedId = useCallback((id: number) => {
+    lastClickedIdRef.current = id;
+    saveState({ isOpen: true, lastClickedMerchantId: id });
+    console.log('[DrawerScroll] Saved clicked merchant:', id);
+  }, [saveState]);
 
-  // Save current scroll position
-  const saveScrollPosition = useCallback(() => {
-    const element = findScrollableElement();
-    const scrollTop = element?.scrollTop || 0;
-    
-    const states = JSON.parse(sessionStorage.getItem(DRAWER_STATE_KEY) || '{}');
-    states[locationKey] = {
-      isOpen,
-      scrollTop,
-    };
-    sessionStorage.setItem(DRAWER_STATE_KEY, JSON.stringify(states));
-    console.log('[DrawerScroll] Saved:', { scrollTop, isOpen });
-  }, [locationKey, isOpen, findScrollableElement]);
-
-  // Handle scroll events
-  const handleScroll = useCallback(() => {
-    saveScrollPosition();
-  }, [saveScrollPosition]);
-
-  // Attach scroll listener to the actual scrollable element
+  // Save drawer open/close state
   useEffect(() => {
-    if (!isOpen) {
-      scrollListenerAttachedRef.current = false;
-      return;
-    }
+    saveState({ 
+      isOpen, 
+      lastClickedMerchantId: lastClickedIdRef.current 
+    });
+  }, [isOpen, saveState]);
 
-    // Wait for drawer to render
-    const attachListener = () => {
-      const scrollable = findScrollableElement();
-      if (scrollable && !scrollListenerAttachedRef.current) {
-        console.log('[DrawerScroll] Attaching listener to:', scrollable.className);
-        scrollable.addEventListener('scroll', handleScroll, { passive: true });
-        scrollElementRef.current = scrollable as HTMLDivElement;
-        scrollListenerAttachedRef.current = true;
-        
-        return () => {
-          scrollable.removeEventListener('scroll', handleScroll);
-          scrollListenerAttachedRef.current = false;
-        };
-      }
-    };
-
-    // Try immediately, then with delays for portal rendering
-    const cleanup1 = attachListener();
-    const timeoutId = setTimeout(() => {
-      if (!scrollListenerAttachedRef.current) {
-        attachListener();
-      }
-    }, 100);
-
-    return () => {
-      cleanup1?.();
-      clearTimeout(timeoutId);
-      if (scrollElementRef.current) {
-        scrollElementRef.current.removeEventListener('scroll', handleScroll);
-      }
-      scrollListenerAttachedRef.current = false;
-    };
-  }, [isOpen, findScrollableElement, handleScroll]);
-
-  // Save state when drawer opens/closes
-  useEffect(() => {
-    if (isOpen) {
-      // Delay to ensure drawer is rendered
-      const timeoutId = setTimeout(saveScrollPosition, 50);
-      return () => clearTimeout(timeoutId);
-    }
-  }, [isOpen, saveScrollPosition]);
-
-  // Save state before navigating away
-  useEffect(() => {
-    const handleBeforeUnload = () => saveScrollPosition();
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      saveScrollPosition();
-    };
-  }, [saveScrollPosition]);
-
-  // Restore scroll position
+  // Restore scroll position by scrolling to the last clicked item
   useEffect(() => {
     if (navigationType !== 'POP' || !isOpen || !isContentReady || hasRestoredRef.current) {
       return;
     }
 
-    const savedScrollTop = savedScrollTopRef.current;
-    console.log('[DrawerScroll] Restore check:', { savedScrollTop, isContentReady });
+    const savedId = lastClickedIdRef.current;
+    console.log('[DrawerScroll] Attempting restore for merchant:', savedId);
     
-    if (savedScrollTop <= 0) {
+    if (!savedId) {
       hasRestoredRef.current = true;
       return;
     }
 
-    const attemptRestore = () => {
-      if (hasRestoredRef.current) return;
-      
-      const scrollable = findScrollableElement();
-      if (!scrollable) {
-        console.log('[DrawerScroll] No scrollable element found');
-        return;
-      }
-      
-      const maxScroll = scrollable.scrollHeight - scrollable.clientHeight;
-      console.log('[DrawerScroll] Attempting restore:', { 
-        target: savedScrollTop, 
-        maxScroll,
-        scrollHeight: scrollable.scrollHeight,
-        clientHeight: scrollable.clientHeight
-      });
-      
-      if (maxScroll > 0) {
-        scrollable.scrollTop = Math.min(savedScrollTop, maxScroll);
+    // Multiple attempts with increasing delays to ensure content is rendered
+    const attemptRestore = (delay: number) => {
+      setTimeout(() => {
+        if (hasRestoredRef.current) return;
         
-        // Verify restoration
-        requestAnimationFrame(() => {
-          const actual = scrollable.scrollTop;
-          if (actual > 0) {
-            hasRestoredRef.current = true;
-            console.log('[DrawerScroll] ✓ Restored to:', actual);
-          }
-        });
-      }
+        const element = document.querySelector(`[data-merchant-id="${savedId}"]`);
+        console.log('[DrawerScroll] Found element:', !!element, 'after', delay, 'ms');
+        
+        if (element) {
+          element.scrollIntoView({ block: 'center', behavior: 'instant' });
+          hasRestoredRef.current = true;
+          console.log('[DrawerScroll] ✓ Scrolled to merchant:', savedId);
+        }
+      }, delay);
     };
 
-    // Multiple attempts with increasing delays
-    const attempts = [0, 50, 100, 200, 400, 800];
-    const timeouts = attempts.map(delay => 
-      setTimeout(() => requestAnimationFrame(attemptRestore), delay)
-    );
+    // Try multiple times with increasing delays
+    [100, 200, 400, 600, 800].forEach(attemptRestore);
 
-    return () => timeouts.forEach(clearTimeout);
-  }, [isOpen, isContentReady, navigationType, findScrollableElement]);
+    return () => {
+      hasRestoredRef.current = true;
+    };
+  }, [isOpen, isContentReady, navigationType]);
 
-  // Callback ref for backwards compatibility (marks the target container)
-  const scrollRef = useCallback((node: HTMLDivElement | null) => {
-    if (node) {
-      node.setAttribute('data-scroll-container', 'true');
-    }
-  }, []);
-
+  // Wrapper to update isOpen with state saving
   const setIsOpenWithSave = useCallback((open: boolean | ((prev: boolean) => boolean)) => {
     setIsOpen(prev => {
       const newValue = typeof open === 'function' ? open(prev) : open;
@@ -227,9 +121,15 @@ export const useDrawerScrollRestoration = (options: UseDrawerScrollRestorationOp
     });
   }, []);
 
+  // Dummy scrollRef for backwards compatibility (no longer used for scrolling)
+  const scrollRef = useCallback((_node: HTMLDivElement | null) => {
+    // No-op - kept for API compatibility
+  }, []);
+
   return { 
     scrollRef, 
     isOpen, 
-    setIsOpen: setIsOpenWithSave 
+    setIsOpen: setIsOpenWithSave,
+    setLastClickedId
   };
 };

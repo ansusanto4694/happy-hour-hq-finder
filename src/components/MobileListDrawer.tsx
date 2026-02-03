@@ -34,6 +34,7 @@ interface MobileListDrawerProps {
   onEndTimeChange: (time: string) => void;
   selectedMenuType: 'all' | 'food_and_drinks' | 'drinks_only';
   onMenuTypeChange: (menuType: 'all' | 'food_and_drinks' | 'drinks_only') => void;
+  onMerchantNavigate?: (merchantId: number) => void;
 }
 
 export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
@@ -59,6 +60,7 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
   onEndTimeChange,
   selectedMenuType,
   onMenuTypeChange,
+  onMerchantNavigate,
 }) => {
   const { track } = useAnalytics();
 
@@ -117,6 +119,7 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
             endTime={endTime}
             location={location}
             isMobile={true}
+            onMerchantNavigate={onMerchantNavigate}
           />
         </div>
       </DrawerContent>
