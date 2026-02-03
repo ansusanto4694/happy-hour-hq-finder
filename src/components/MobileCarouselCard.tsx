@@ -4,7 +4,6 @@ import { Badge } from '@/components/ui/badge';
 import { Star } from 'lucide-react';
 import { getTodaysHappyHour, getMenuTypeBadge } from '@/utils/timeUtils';
 import { useAnalytics } from '@/hooks/useAnalytics';
-import { getOptimizedImageUrl, LOGO_SIZES } from '@/utils/imageOptimization';
 
 interface MobileCarouselCardProps {
   merchant: {
@@ -107,7 +106,7 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
         <div className={`w-20 h-20 ${merchant.logo_url ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100'} border border-border rounded-lg flex items-center justify-center overflow-hidden`}>
           {merchant.logo_url ? (
             <img 
-              src={getOptimizedImageUrl(merchant.logo_url, LOGO_SIZES.mobileCarousel) || merchant.logo_url} 
+              src={merchant.logo_url} 
               alt={`${merchant.restaurant_name} logo`}
               className="w-full h-full object-contain p-1.5"
               width={80}

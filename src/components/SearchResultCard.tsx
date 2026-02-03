@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,7 +9,6 @@ import { useAnalytics } from '@/hooks/useAnalytics';
 import { getDeviceType } from '@/utils/analytics';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { observeElement, unobserveElement } from '@/hooks/useSharedIntersectionObserver';
-import { getOptimizedImageUrl, LOGO_SIZES } from '@/utils/imageOptimization';
 
 interface SearchResultCardProps {
   restaurant: any;
@@ -182,7 +182,7 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
               <div className={`w-20 h-20 ${restaurant.logo_url ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100'} border border-border rounded-lg shadow-sm flex items-center justify-center overflow-hidden`}>
                 {restaurant.logo_url ? (
                   <img 
-                    src={getOptimizedImageUrl(restaurant.logo_url, LOGO_SIZES.searchResultMobile) || restaurant.logo_url} 
+                    src={restaurant.logo_url} 
                     alt={`${restaurant.restaurant_name} logo`}
                     className="w-full h-full object-contain"
                     width={80}
@@ -295,7 +295,7 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
               <div className={`w-24 h-24 ${restaurant.logo_url ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100'} border border-gray-200 rounded-lg shadow-sm flex items-center justify-center overflow-hidden`}>
                 {restaurant.logo_url ? (
                   <img 
-                    src={getOptimizedImageUrl(restaurant.logo_url, LOGO_SIZES.searchResultDesktop) || restaurant.logo_url} 
+                    src={restaurant.logo_url} 
                     alt={`${restaurant.restaurant_name} logo`}
                     className="w-full h-full object-contain"
                     width={96}

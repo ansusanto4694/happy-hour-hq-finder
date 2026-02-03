@@ -1,177 +1,155 @@
 
+# Phase 1: Speed Up Your Homepage (Zero Visual Changes)
 
-# Phase 2: Shrink the Image Delivery (Zero Visual Changes)
+## What We're Fixing
 
-## The Business Problem
-
-When someone visits your homepage, their phone downloads **5.3 MB of restaurant logos**. That's like downloading a small app just to see your homepage. On a typical mobile connection, this takes 10+ seconds.
-
-Here's the thing: those logos are displayed at **80-96 pixels** (about the size of a thumbnail), but the original files are often **1000+ pixels** wide. You're delivering high-resolution images to be shown in tiny boxes — like sending a billboard-sized poster to be displayed on a business card.
+Right now, visitors to SipMunchYap on mobile wait **17.5 seconds** before seeing the full page. This plan makes two "behind the scenes" changes that will speed things up without changing how anything looks.
 
 ---
 
-## The Solution: Automatic Shrinking
+## The Two Changes
 
-Supabase (your database provider) has a built-in feature that can automatically shrink images when they're requested. Instead of sending a 500KB logo, it sends a 15KB version that looks exactly the same at the size it's displayed.
+### Change 1: Stop the Font from Blocking the Page
 
-**Think of it like this:** When you stream a video on Netflix, they don't send you the 4K version if you're watching on your phone — they send a smaller version that looks perfect on your screen. We're doing the same thing for your restaurant logos.
+**The Problem:**  
+When someone visits your site, the browser currently says: "I won't show anything until I download the Poppins font." On slow mobile connections, this adds extra seconds of blank screen.
 
----
+**The Solution:**  
+We'll tell the browser: "Show the page immediately. Swap in the fancy font when it arrives."
 
-## What Changes and What Stays the Same
-
-| What | Changes? | Details |
-|------|----------|---------|
-| How logos look | No | Same crisp quality at every size |
-| Homepage layout | No | Everything stays exactly where it is |
-| Restaurant profile pages | No | Logos still display the same way |
-| Admin upload process | No | Merchants can still upload the same way |
-| Download speed | Yes (faster!) | ~5.3 MB becomes ~200-400 KB |
-| Page load time | Yes (faster!) | LCP target of ~4 seconds |
+**What You'll Notice:** Nothing. The page will just appear faster.
 
 ---
 
-## Trade-offs Analysis
+### Change 2: Tell the Browser What's Most Important
 
-### What You're Giving Up: Nothing
+**The Problem:**  
+Right now, the browser treats all images equally. Your SipMunchYap logo competes with restaurant logos that users haven't scrolled to yet.
 
-This is a **pure win** scenario. Here's why:
+**The Solution:**  
+We'll add invisible "priority tags" to tell the browser:
+- "Load the main logo first — it's the most important"
+- "These restaurant images can wait until the user scrolls down"
 
-- **No quality loss**: The images are resized to match exactly how they're displayed. A 96x96 display gets a 96x96 image — pixel-perfect match
-- **No design changes**: Every logo stays in the same position, same size, same styling
-- **No functionality changes**: Everything works exactly as before
-- **No database changes**: Your stored images remain full-resolution originals
-- **No upload changes**: Merchants continue uploading normally
-
-### What You're Gaining
-
-- **~90% reduction in image data** transferred to visitors
-- **7-10 second improvement** in page load time (estimated)
-- **Better SEO scores** — Google rewards faster sites
-- **Lower bounce rates** — visitors on slow connections won't leave while waiting
-- **Reduced bandwidth costs** — you're serving much smaller files
-
----
-
-## How It Works (The Simple Version)
-
-**Before:** 
-```
-Phone asks for logo.png → Supabase sends the full 500KB file → Phone shrinks it to fit
-```
-
-**After:**
-```
-Phone asks for logo.png?width=96 → Supabase shrinks it first → Sends tiny 15KB file → Perfect fit
-```
-
-The magic happens in the URL. By adding `?width=96` to the image request, Supabase automatically:
-1. Resizes the image to 96 pixels wide
-2. Converts it to WebP format (a modern, smaller format)
-3. Caches the result so it's instant next time
+**What You'll Notice:** Nothing. Same images, same layout, just smarter loading order.
 
 ---
 
 ## Files We'll Update
 
-| File | What We're Doing | User Impact |
-|------|------------------|-------------|
-| Create new helper function | Centralized image URL builder | None |
-| MobileCarouselCard.tsx | Use optimized logo URLs | None — same look |
-| CarouselCard.tsx | Use optimized logo URLs | None — same look |
-| SearchResultCard.tsx | Use optimized logo URLs | None — same look |
-| MerchantMapPreviewCard.tsx | Use optimized logo URLs | None — same look |
-| RestaurantHeader.tsx | Use optimized logo URLs | None — same look |
+| File | What We're Changing | Why |
+|------|---------------------|-----|
+| `index.html` | Make font loading non-blocking | Stop the blank screen wait |
+| `Hero.tsx` | Add priority tag to main logo | Load your logo first on mobile |
+| `PageHeader.tsx` | Add priority tag to header logo | Load your logo first on desktop |
+| `CarouselCard.tsx` | Add image dimensions | Help browser plan the layout |
 
 ---
 
-## Expected Results
+## Expected Speed Improvement
 
 | Metric | Before | After (Estimate) |
 |--------|--------|------------------|
-| Image payload | ~5.3 MB | ~200-400 KB |
-| LCP (page load) | 12.3 seconds | ~3-4 seconds |
-| PageSpeed mobile score | Likely 30-50 | Likely 70-90 |
+| First content appears | 4.2 seconds | ~3.0 seconds |
+| Page fully loaded | 17.5 seconds | ~14-15 seconds |
+
+Phase 2 (image optimization) will tackle the bigger improvement to that 17.5 second number.
 
 ---
 
-## Important Prerequisite
+## Technical Details
 
-Supabase's image transformation feature requires the **Pro Plan** (or higher). Based on your current setup, you appear to be on a paid plan already, but we should verify this is enabled before implementing.
+### index.html Changes
 
-If image transformation isn't enabled, the optimized URLs will simply return the original images (no errors, just no savings). We can test this after implementation.
-
----
-
-## Technical Implementation Details
-
-### New Utility Function (src/utils/imageOptimization.ts)
-
-We'll create a helper function that converts any Supabase logo URL into an optimized version:
-
-```typescript
-/**
- * Transforms a Supabase Storage URL to use image transformation
- * Returns WebP format at specified dimensions for ~90% size reduction
- */
-export function getOptimizedImageUrl(
-  originalUrl: string | null | undefined,
-  options: { width: number; height?: number; quality?: number }
-): string | null {
-  if (!originalUrl) return null;
-  
-  // Only transform Supabase storage URLs
-  if (!originalUrl.includes('supabase.co/storage/v1/object/public/')) {
-    return originalUrl;
-  }
-  
-  // Convert /object/public/ to /render/image/public/ for transformation
-  const transformUrl = originalUrl.replace(
-    '/storage/v1/object/public/',
-    '/storage/v1/render/image/public/'
-  );
-  
-  // Add transformation parameters
-  const params = new URLSearchParams();
-  params.set('width', options.width.toString());
-  if (options.height) params.set('height', options.height.toString());
-  params.set('quality', (options.quality || 80).toString());
-  
-  return `${transformUrl}?${params.toString()}`;
-}
+Current font loading (blocking):
+```html
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
 ```
 
-### Component Updates
+New font loading (non-blocking):
+```html
+<link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"></noscript>
+```
 
-Each component will use the helper with dimensions matching their display size:
+This pattern:
+1. Starts downloading the font immediately (preload)
+2. Doesn't block the page from rendering
+3. Switches to a proper stylesheet once loaded
+4. Has a fallback for users without JavaScript
 
-- **MobileCarouselCard**: 80x80 (currently displays at 80px)
-- **CarouselCard**: 96x96 (currently displays at 96px)  
-- **SearchResultCard mobile**: 80x80 (currently displays at 80px)
-- **SearchResultCard desktop**: 96x96 (currently displays at 96px)
-- **MerchantMapPreviewCard**: 48x48 (displays smaller)
-- **RestaurantHeader**: 160x160 (displays larger on profile page)
+### Hero.tsx Changes
+
+Current logo (no priority):
+```jsx
+<img 
+  src="/lovable-uploads/f30134b8-b54d-491a-b6bc-fc7a20199dd2.png" 
+  alt="SipMunchYap Logo" 
+  className="h-16 sm:h-20 md:h-32 w-auto"
+/>
+```
+
+Updated logo (with priority):
+```jsx
+<img 
+  src="/lovable-uploads/f30134b8-b54d-491a-b6bc-fc7a20199dd2.png" 
+  alt="SipMunchYap Logo" 
+  className="h-16 sm:h-20 md:h-32 w-auto"
+  fetchPriority="high"
+  loading="eager"
+  width={128}
+  height={128}
+/>
+```
+
+### PageHeader.tsx Changes
+
+Same approach — add priority tags to the header logo:
+```jsx
+<img 
+  src="/lovable-uploads/f30134b8-b54d-491a-b6bc-fc7a20199dd2.png" 
+  alt="SipMunchYap Logo" 
+  className="h-16 md:h-24 lg:h-32 w-auto cursor-pointer"
+  onClick={handleLogoClick}
+  fetchPriority="high"
+  loading="eager"
+  width={128}
+  height={128}
+/>
+```
+
+### CarouselCard.tsx Changes
+
+Add explicit dimensions to restaurant logo images:
+```jsx
+<img
+  src={merchant.logo_url}
+  alt={`${merchant.restaurant_name} logo`}
+  className="w-full h-full object-contain"
+  width={96}
+  height={96}
+  loading="lazy"
+/>
+```
+
+Note: `MobileCarouselCard.tsx` already has dimensions and lazy loading — no changes needed there.
 
 ---
 
 ## Summary
 
-| Change | What It Does | Trade-off |
-|--------|--------------|-----------|
-| Smart image URLs | Request correctly-sized images | None — pure improvement |
-| WebP conversion | Modern, smaller format | Automatic — no work needed |
-| Caching | Faster repeat visits | Built into Supabase |
+| Change | Visual Impact | Speed Impact |
+|--------|---------------|--------------|
+| Non-blocking fonts | None | ~0.5-1 second faster |
+| Logo priority tags | None | ~1-2 seconds faster |
+| Image dimensions | None | Prevents layout jumping |
 
-**Bottom line:** Your visitors download ~95% less image data. Your logos look exactly the same. Your site loads 7-10 seconds faster on mobile.
+**Total estimated improvement:** 1.5-3 seconds faster initial load
 
 ---
 
-## Verification After Implementation
+## Next Steps After This
 
-After publishing, we should:
-1. Run a new PageSpeed Insights test
-2. Compare the "Total Blocking Time" and "LCP" metrics
-3. Check the network waterfall to confirm image sizes dropped
-
-If image transformation isn't enabled on your Supabase plan, we'll see the same large file sizes — in that case, we'd need to explore alternative approaches (like pre-generating thumbnail versions).
-
+Once Phase 1 is complete and published, we should:
+1. Run another PageSpeed test to measure the improvement
+2. Move to Phase 2 (image optimization) for the bigger LCP improvement
