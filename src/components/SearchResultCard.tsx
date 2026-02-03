@@ -28,7 +28,7 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
   const cardRef = useRef<HTMLDivElement>(null);
   const [hasTrackedImpression, setHasTrackedImpression] = useState(false);
 
-  // Calculate aggregate rating from reviews
+  // Calculate aggregate rating from reviews - memoized to avoid recalculation
   const ratingData = useMemo(() => {
     const reviews = restaurant.merchant_reviews?.filter((r: any) => r.status === 'published') || [];
     if (reviews.length === 0) return null;
@@ -396,20 +396,33 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
   );
 };
 
+// Helper to generate a lightweight fingerprint for nested data comparison
+// This replaces expensive JSON.stringify with fast numeric/string checks
+const getDataFingerprint = (restaurant: any): string => {
+  const offersCount = restaurant.merchant_offers?.length || 0;
+  const offersActive = restaurant.merchant_offers?.filter((o: any) => o.is_active).length || 0;
+  const categoriesCount = restaurant.merchant_categories?.length || 0;
+  const happyHourCount = restaurant.merchant_happy_hour?.length || 0;
+  const reviewsCount = restaurant.merchant_reviews?.length || 0;
+  const publishedReviewsCount = restaurant.merchant_reviews?.filter((r: any) => r.status === 'published').length || 0;
+  
+  return `${offersCount}-${offersActive}-${categoriesCount}-${happyHourCount}-${reviewsCount}-${publishedReviewsCount}`;
+};
+
 // Memoize to prevent unnecessary re-renders when restaurant data hasn't changed
+// Uses fingerprint comparison instead of expensive JSON.stringify
 export const SearchResultCard = React.memo(SearchResultCardComponent, (prevProps, nextProps) => {
-  // Deep comparison for restaurant object since it contains nested data
-  return (
-    prevProps.restaurant.id === nextProps.restaurant.id &&
-    prevProps.restaurant.restaurant_name === nextProps.restaurant.restaurant_name &&
-    prevProps.restaurant.logo_url === nextProps.restaurant.logo_url &&
-    prevProps.isMobile === nextProps.isMobile &&
-    prevProps.onClick === nextProps.onClick &&
-    prevProps.onHover === nextProps.onHover &&
-    prevProps.onNavigate === nextProps.onNavigate &&
-    JSON.stringify(prevProps.restaurant.merchant_offers) === JSON.stringify(nextProps.restaurant.merchant_offers) &&
-    JSON.stringify(prevProps.restaurant.merchant_categories) === JSON.stringify(nextProps.restaurant.merchant_categories) &&
-    JSON.stringify(prevProps.restaurant.merchant_happy_hour) === JSON.stringify(nextProps.restaurant.merchant_happy_hour) &&
-    JSON.stringify(prevProps.restaurant.merchant_reviews) === JSON.stringify(nextProps.restaurant.merchant_reviews)
-  );
+  // Quick checks for primitive values first (fast path)
+  if (prevProps.restaurant.id !== nextProps.restaurant.id) return false;
+  if (prevProps.restaurant.restaurant_name !== nextProps.restaurant.restaurant_name) return false;
+  if (prevProps.restaurant.logo_url !== nextProps.restaurant.logo_url) return false;
+  if (prevProps.restaurant.neighborhood !== nextProps.restaurant.neighborhood) return false;
+  if (prevProps.isMobile !== nextProps.isMobile) return false;
+  
+  // Fingerprint comparison for nested data - much faster than JSON.stringify
+  // This captures changes in counts and active status without serializing entire objects
+  const prevFingerprint = getDataFingerprint(prevProps.restaurant);
+  const nextFingerprint = getDataFingerprint(nextProps.restaurant);
+  
+  return prevFingerprint === nextFingerprint;
 });
