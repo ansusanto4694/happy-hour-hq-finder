@@ -1,4 +1,4 @@
-import React, { useEffect, RefObject } from 'react';
+import React, { useEffect } from 'react';
 import { SearchResults } from '@/components/SearchResults';
 import { MobileFilterDrawer } from '@/components/MobileFilterDrawer';
 import { RadiusOption } from '@/components/RadiusFilter';
@@ -14,7 +14,7 @@ import { GripHorizontal } from 'lucide-react';
 interface MobileListDrawerProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  scrollRef?: RefObject<HTMLDivElement>;
+  scrollRef?: React.Ref<HTMLDivElement>;
   merchants: any[];
   isLoading: boolean;
   error: any;
@@ -77,8 +77,8 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
 
   return (
     <Drawer open={isOpen} onOpenChange={onOpenChange}>
-      <DrawerContent className="max-h-[85vh]">
-        <DrawerHeader className="pb-4">
+      <DrawerContent className="max-h-[85vh] flex flex-col">
+        <DrawerHeader className="pb-4 flex-shrink-0">
           <div className="flex items-center justify-center mb-2">
             <GripHorizontal className="h-6 w-6 text-gray-400" />
           </div>
@@ -104,7 +104,10 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
           </div>
         </DrawerHeader>
         
-        <div ref={scrollRef} className="px-4 pb-4 overflow-auto">
+        <div 
+          ref={scrollRef} 
+          className="px-4 pb-4 overflow-y-auto flex-1 min-h-0"
+        >
           <SearchResults 
             merchants={merchants}
             isLoading={isLoading}
