@@ -35,6 +35,13 @@ export type HomepageCarousel = {
         active: boolean;
         menu_type: 'food_and_drinks' | 'drinks_only' | null;
       }>;
+      merchant_reviews?: Array<{
+        id: string;
+        status: string;
+        merchant_review_ratings?: Array<{
+          rating: number;
+        }>;
+      }>;
     };
   }>;
 };
@@ -80,6 +87,13 @@ export const useHomepageCarousels = () => {
                 id,
                 active,
                 menu_type
+              ),
+              merchant_reviews!left (
+                id,
+                status,
+                merchant_review_ratings (
+                  rating
+                )
               )
             )
           )

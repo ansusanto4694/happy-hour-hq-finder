@@ -86,20 +86,21 @@ Verify that `useMerchantRating` is not being called from within list views. If f
 
 ## Implementation Plan
 
-### Phase 1: Audit for Hidden N+1 Patterns
+### Phase 1: Audit for Hidden N+1 Patterns ✅ COMPLETED
 
-| File | Check |
-|------|-------|
-| `SearchResultCard.tsx` | Confirm no `useMerchantRating` call |
-| `MobileCarouselCard.tsx` | Check for individual rating fetches |
-| `CarouselCard.tsx` | Check for individual rating fetches |
-| `MerchantMapPreviewCard.tsx` | Check for individual rating fetches |
+| File | Check | Status |
+|------|-------|--------|
+| `SearchResultCard.tsx` | Confirm no `useMerchantRating` call | ✅ Already optimal |
+| `MobileCarouselCard.tsx` | Check for individual rating fetches | ✅ Fixed |
+| `CarouselCard.tsx` | Check for individual rating fetches | ✅ Fixed |
+| `MerchantMapPreviewCard.tsx` | Check for individual rating fetches | ✅ No rating display |
 
-### Phase 2: Fix Any Discovered Issues
+### Phase 2: Fix Any Discovered Issues ✅ COMPLETED
 
-If any component uses `useMerchantRating` within a list context:
-- Replace with local calculation from pre-fetched `merchant_reviews` data
-- Pattern already exists in `SearchResultCard` (lines 32-52)
+Changes made:
+1. **useHomepageCarousels.ts**: Added `merchant_reviews` with nested `merchant_review_ratings` to the query
+2. **MobileCarouselCard.tsx**: Replaced `useMerchantRating` hook with local `useMemo` calculation
+3. **CarouselCard.tsx**: Replaced `useMerchantRating` hook with local `useMemo` calculation
 
 ### Phase 3: Location Cache Optimization (Lower Priority)
 
