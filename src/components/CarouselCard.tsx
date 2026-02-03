@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Star } from 'lucide-react';
 import { getTodaysHappyHour, getMenuTypeBadge } from "@/utils/timeUtils";
 import { useAnalytics } from "@/hooks/useAnalytics";
+import { getOptimizedImageUrl, LOGO_SIZES } from '@/utils/imageOptimization';
 
 interface CarouselCardProps {
   merchant: {
@@ -103,7 +104,7 @@ export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick })
         <div className="flex-shrink-0 w-24 h-24 bg-white border border-border rounded-lg flex items-center justify-center overflow-hidden">
           {merchant.logo_url ? (
             <img
-              src={merchant.logo_url}
+              src={getOptimizedImageUrl(merchant.logo_url, LOGO_SIZES.desktopCarousel) || merchant.logo_url}
               alt={`${merchant.restaurant_name} logo`}
               className="w-full h-full object-contain"
               width={96}
