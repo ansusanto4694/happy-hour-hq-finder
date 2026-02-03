@@ -1,279 +1,140 @@
 
 
-# Map Component Performance Optimization Plan - COMPLETED
+# Plan: Improve Initial Page Load Speed (Core Web Vitals)
+
+## The Problem Explained Simply
+
+When someone visits your website, their browser needs to download and process a lot of "stuff" before they can see the page. Think of it like unpacking a moving truck - the more boxes you have to unpack before you can sit on your couch, the longer you wait.
+
+Right now, your site's "First Contentful Paint" (FCP) and "Largest Contentful Paint" (LCP) scores are around **22 seconds** in testing. While this is likely inflated by the development environment, there are real improvements we can make.
+
+**What these terms mean:**
+- **FCP (First Contentful Paint)**: How long until a visitor sees *something* on screen
+- **LCP (Largest Contentful Paint)**: How long until the main content (like your hero section) is visible
+
+---
+
+## What's Already Working Well
+
+Before we discuss improvements, here's what's already optimized:
+
+1. **Page-level code splitting** - Each page only loads when needed
+2. **Lazy-loaded map** - The heavy Mapbox component only loads when the results page is viewed  
+3. **Lazy image loading** - Restaurant logos load as you scroll
+
+---
+
+## What We'll Improve (3 Changes)
+
+### 1. Smart Bundle Splitting in Vite Configuration
+
+**The Problem:** All your third-party libraries (like Supabase, React Query, date formatting, etc.) are currently bundled together. This means even for a simple page, the browser downloads everything.
+
+**The Solution:** Configure Vite to automatically separate large libraries into their own "chunks" that can be:
+- Cached independently (so repeat visitors load faster)
+- Loaded in parallel (multiple smaller downloads are often faster than one big one)
+- Deferred for non-critical libraries
+
+**Tradeoffs:** None. This is pure optimization with no downsides.
+
+---
+
+### 2. Critical Resource Preloading
+
+**The Problem:** The browser discovers resources (like your main JavaScript file, CSS, and Supabase connection) as it reads the HTML, causing a waterfall of sequential downloads.
+
+**The Solution:** Add "preload" hints in the HTML `<head>` that tell the browser "start downloading these important things immediately" before it even knows it needs them.
+
+We'll preload:
+- The main entry JavaScript module
+- DNS prefetch for the map service (Mapbox)
+- Critical API connection (Supabase is already prefetched - good!)
+
+**Tradeoffs:** None. This is a browser optimization hint.
+
+---
+
+### 3. Defer Non-Critical Initialization
+
+**The Problem:** Some systems start working immediately when the page loads, even though they're not needed for the first paint:
+- Session analytics initialization makes database calls
+- Performance monitoring sets up multiple observers
+- Google Analytics configuration runs synchronously
+
+**The Solution:** Delay these initializations until *after* the first paint using `requestIdleCallback` (or a timeout fallback). The user sees the page faster, and the background systems start once the main content is visible.
+
+**Tradeoffs:** 
+- Analytics events in the first ~100-200ms might be slightly delayed
+- This is acceptable because users don't notice, and the page feels faster
+
+---
+
+## Technical Implementation Details
+
+### File Changes
+
+```text
+Files to Modify:
++------------------+----------------------------------------+
+| File             | Change Description                     |
++------------------+----------------------------------------+
+| vite.config.ts   | Add build configuration with manual    |
+|                  | chunk splitting for large libraries    |
++------------------+----------------------------------------+
+| index.html       | Add modulepreload for entry script     |
+|                  | Add preconnect for Mapbox API          |
++------------------+----------------------------------------+
+| src/App.tsx      | Wrap performance monitoring init in    |
+|                  | requestIdleCallback for deferral       |
++------------------+----------------------------------------+
+| src/hooks/       | Defer session initialization until     |
+| useAnalytics.ts  | after first paint                      |
++------------------+----------------------------------------+
+```
+
+### Vite Manual Chunks Configuration
+
+We'll split these libraries into separate cached chunks:
+- **react-vendor**: React + React DOM + React Router
+- **query-vendor**: TanStack Query (React Query)
+- **supabase-vendor**: Supabase client
+- **ui-vendor**: Radix UI components
+- **map-vendor**: Mapbox GL
+- **date-vendor**: date-fns
+- **charts-vendor**: Recharts
+
+### Deferred Initialization Pattern
+
+```text
+Current Flow:
+Page loads -> Everything runs immediately -> User sees content
+
+New Flow:
+Page loads -> Critical rendering only -> User sees content -> Background systems start
+```
+
+---
+
+## Expected Improvements
+
+| Metric | Current (estimated) | Expected After |
+|--------|---------------------|----------------|
+| FCP | 2-4 seconds (prod) | 1-1.5 seconds |
+| LCP | 3-5 seconds (prod) | 1.5-2.5 seconds |
+| Cache efficiency | Low | High (vendor chunks cached separately) |
+| Repeat visit speed | Same as first | Significantly faster |
+
+*Note: The 22-second measurements were from the development preview. Production numbers will be much better, and these optimizations will make them even faster.*
+
+---
 
 ## Summary
 
-This plan optimizes the map component to reduce re-renders, eliminate callback-induced memo failures, and improve interaction smoothness. Most optimizations are **pure performance gains with zero functionality loss**.
+This optimization plan focuses on three strategies:
 
----
+1. **Split the delivery** - Separate third-party code into cacheable chunks
+2. **Start downloads sooner** - Tell the browser what's important upfront
+3. **Defer background work** - Analytics and monitoring wait until users see content
 
-## Problems Identified
-
-| Issue | Impact | Severity |
-|-------|--------|----------|
-| **Broken memoization** - callback functions recreated on every parent render | Map re-renders constantly | HIGH |
-| **Duplicate analytics tracking** - `handleMoveEnd` + `MapInteractionTracker` both track map moves | Redundant events, wasted processing | MEDIUM |
-| **Marker re-renders** - All markers re-render when any restaurant changes | Janky panning/zooming | MEDIUM |
-| **Multiple useEffect hooks** - Running on every restaurant list change | Unnecessary processing | LOW |
-
----
-
-## Optimization Strategy
-
-### Tradeoffs Analysis
-
-| Optimization | Functionality Loss | Performance Gain |
-|--------------|-------------------|------------------|
-| Fix callback memoization | None | HIGH |
-| Remove duplicate analytics | None (keeping sampled tracking) | MEDIUM |
-| Memoize marker components | None | MEDIUM |
-| Consolidate useEffects | None | LOW |
-
-**All optimizations are pure performance gains with no functionality loss.**
-
----
-
-## Changes Overview
-
-### 1. Fix Broken Memoization in Results.tsx
-
-**Problem:** The `React.memo` comparison in `ResultsMap.tsx` checks function reference equality for `onMapMove`, `onSearchThisArea`, and `onViewStateChange`. These callbacks are recreated on every render in Results.tsx, causing the memo to always fail.
-
-```typescript
-// Current - recreated on every render
-const handleMapMove = (bounds) => { ... };
-const handleSearchThisArea = async () => { ... };
-const handleViewStateChange = (newViewState) => { ... };
-```
-
-**Solution:** Wrap all three callbacks with `useCallback` and stable dependencies:
-
-```typescript
-// Fixed - stable references
-const handleMapMove = useCallback((bounds) => {
-  setMapBounds(bounds);
-  // ... rest of logic
-}, [isMobile, isUsingMapSearch, searchedBounds, hasMapMoved]);
-
-const handleSearchThisArea = useCallback(async () => {
-  // ... tracking and state updates
-}, [mapBounds, merchants?.length, track]);
-
-const handleViewStateChange = useCallback((newViewState) => {
-  setMapViewState(newViewState);
-}, []);
-```
-
-### 2. Remove Duplicate Analytics in ResultsMap.tsx
-
-**Problem:** Both `handleMoveEnd` and `MapInteractionTracker` fire analytics on map move:
-
-- `handleMoveEnd` (line 197-218): Tracks `map_moved` on every move
-- `MapInteractionTracker`: Tracks `map_pan` with sampling and throttling
-
-**Solution:** Remove analytics from `handleMoveEnd` since `MapInteractionTracker` already handles it with better throttling (3s) and sampling (30%). Keep the bounds notification logic.
-
-```typescript
-// BEFORE
-const handleMoveEnd = useCallback(() => {
-  track({
-    eventType: 'interaction',
-    eventCategory: 'map_interaction',
-    eventAction: 'map_moved',   // DUPLICATE - remove this
-    metadata: { isMobile },
-  });
-
-  if (mapRef.current && onMapMove) {
-    // ... bounds notification - KEEP THIS
-  }
-}, [onMapMove, track, isMobile]);
-
-// AFTER
-const handleMoveEnd = useCallback(() => {
-  // Analytics handled by MapInteractionTracker with throttling/sampling
-  if (mapRef.current && onMapMove) {
-    const map = mapRef.current.getMap();
-    const bounds = map.getBounds();
-    
-    onMapMove({
-      north: bounds.getNorth(),
-      south: bounds.getSouth(),
-      east: bounds.getEast(),
-      west: bounds.getWest()
-    });
-  }
-}, [onMapMove]);
-```
-
-### 3. Memoize Marker Component
-
-**Problem:** All markers re-render whenever the `restaurants` array changes, even if individual restaurant data hasn't changed.
-
-**Solution:** Extract marker rendering to a memoized component:
-
-```typescript
-// New memoized component
-const RestaurantMarker = React.memo(({ 
-  restaurant, 
-  isHovered, 
-  isSelected,
-  onClick,
-  onMouseEnter,
-  onMouseLeave 
-}) => (
-  <Marker
-    longitude={restaurant.longitude!}
-    latitude={restaurant.latitude!}
-    anchor="bottom"
-    style={{ zIndex: isHovered ? 1000 : 1 }}
-  >
-    <div 
-      className={`rounded-full flex items-center justify-center ... ${
-        isHovered ? 'bg-bright-blue w-9 h-9 scale-110' : 'bg-red-500 w-6 h-6'
-      }`}
-      onClick={onClick}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-    >
-      <div className="w-2 h-2 bg-white rounded-full"></div>
-    </div>
-  </Marker>
-), (prev, next) => (
-  prev.restaurant.id === next.restaurant.id &&
-  prev.isHovered === next.isHovered &&
-  prev.isSelected === next.isSelected
-));
-```
-
-### 4. Simplify Memo Comparison
-
-**Problem:** Current memo comparison checks function references which will always fail when parent re-renders.
-
-**Solution:** After fixing callbacks with `useCallback`, the existing memo comparison will work correctly. But we can also simplify by removing callback comparisons entirely (they don't affect visual output):
-
-```typescript
-// Simplified comparison - only check data that affects visual output
-export const ResultsMap = React.memo(ResultsMapComponent, (prevProps, nextProps) => {
-  return (
-    prevProps.restaurants === nextProps.restaurants &&
-    prevProps.showSearchThisArea === nextProps.showSearchThisArea &&
-    prevProps.isUsingMapSearch === nextProps.isUsingMapSearch &&
-    prevProps.viewState === nextProps.viewState &&
-    prevProps.isMobile === nextProps.isMobile &&
-    prevProps.hoveredRestaurantId === nextProps.hoveredRestaurantId &&
-    prevProps.searchLocation === nextProps.searchLocation
-    // Removed: onMapMove, onSearchThisArea, onViewStateChange
-    // These don't affect visual output, and with useCallback they'll be stable anyway
-  );
-});
-```
-
----
-
-## Files to Modify
-
-| File | Changes |
-|------|---------|
-| `src/pages/Results.tsx` | Wrap `handleMapMove`, `handleSearchThisArea`, `handleViewStateChange` with `useCallback` |
-| `src/components/ResultsMap.tsx` | Remove duplicate analytics, extract memoized marker component, simplify memo comparison |
-
----
-
-## Implementation Details
-
-### Results.tsx - Stabilize Callbacks
-
-```typescript
-// Line ~206 - Wrap handleMapMove
-const handleMapMove = useCallback((bounds: { north: number; south: number; east: number; west: number }) => {
-  setMapBounds(bounds);
-  
-  // Show "search this area" button logic
-  if (isMobile) {
-    if (isUsingMapSearch && searchedBounds) {
-      const boundsChanged = /* ... */;
-      if (boundsChanged) setShowSearchThisArea(true);
-    } else if (!hasMapMoved) {
-      setHasMapMoved(true);
-      setShowSearchThisArea(true);
-    }
-  } else {
-    // Desktop logic
-    if (isUsingMapSearch && searchedBounds) {
-      const boundsChanged = /* ... */;
-      if (boundsChanged) setShowSearchThisAreaDesktop(true);
-    } else if (!hasMapMoved) {
-      setHasMapMoved(true);
-      setShowSearchThisAreaDesktop(true);
-    }
-  }
-}, [isMobile, isUsingMapSearch, searchedBounds, hasMapMoved]);
-
-// Line ~252 - Wrap handleSearchThisArea
-const handleSearchThisArea = useCallback(async () => {
-  await track({ /* ... */ });
-  setSearchedBounds(mapBounds);
-  setIsUsingMapSearch(true);
-  setShowSearchThisArea(false);
-  setShowSearchThisAreaDesktop(false);
-}, [mapBounds, merchants?.length, track]);
-
-// Line ~270 - Wrap handleViewStateChange
-const handleViewStateChange = useCallback((newViewState: { longitude: number; latitude: number; zoom: number }) => {
-  setMapViewState(newViewState);
-}, []);
-```
-
-### ResultsMap.tsx - Remove Duplicate Analytics
-
-```typescript
-// Line 197-218 - Simplified handleMoveEnd
-const handleMoveEnd = useCallback(() => {
-  // Analytics removed - handled by MapInteractionTracker with throttling/sampling
-  if (mapRef.current && onMapMove) {
-    const map = mapRef.current.getMap();
-    const bounds = map.getBounds();
-    
-    onMapMove({
-      north: bounds.getNorth(),
-      south: bounds.getSouth(),
-      east: bounds.getEast(),
-      west: bounds.getWest()
-    });
-  }
-}, [onMapMove]); // Removed track, isMobile dependencies
-```
-
----
-
-## Expected Performance Improvements
-
-| Metric | Before | After |
-|--------|--------|-------|
-| Map re-renders per filter change | Every render | Only when data changes |
-| Analytics events per map pan | 2 (duplicate) | 1 (sampled/throttled) |
-| Marker re-renders per list update | All N markers | Only changed markers |
-| Callback stability | New refs every render | Stable refs with useCallback |
-
----
-
-## What's Preserved
-
-- All map functionality (pan, zoom, markers, hover, click)
-- Search this area feature
-- Map/list hover synchronization
-- Analytics tracking (via MapInteractionTracker with sampling)
-- Mobile and desktop layouts
-
-## What's Removed
-
-- Duplicate `map_moved` analytics event (keeping the throttled/sampled one)
-- Unnecessary re-renders from unstable callback references
-
----
-
-## Bundle Size Note
-
-The Mapbox GL JS bundle (~500KB) is already lazy-loaded via `LazyResultsMap.tsx`. No further bundle optimization is needed for the map component itself - it only loads when the Results page is visited.
+All changes are pure improvements with no functionality loss or meaningful tradeoffs.
 
