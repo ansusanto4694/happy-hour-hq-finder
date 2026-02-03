@@ -45,6 +45,8 @@ export default defineConfig(({ mode }) => ({
           'date-vendor': ['date-fns'],
           // Charts - only loaded on analytics page
           'charts-vendor': ['recharts'],
+          // Carousel - loaded after initial paint
+          'carousel-vendor': ['embla-carousel-react'],
         },
       },
     },
