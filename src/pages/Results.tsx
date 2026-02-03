@@ -28,9 +28,7 @@ const Results = () => {
   const showOffersOnly = searchParams.get('offers') === 'true';
   const selectedMenuType = (searchParams.get('menuType') as 'all' | 'food_and_drinks' | 'drinks_only') || 'all';
 
-  // Use drawer scroll restoration hook for persistent drawer state
-  const { scrollRef: drawerScrollRef, isOpen: isListDrawerOpen, setIsOpen: setIsListDrawerOpen } = useDrawerScrollRestoration();
-  
+  // Drawer state will be initialized after merchants query - placeholder for now
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [showSearchThisAreaDesktop, setShowSearchThisAreaDesktop] = useState(false);
   const [mapBounds, setMapBounds] = useState<{ north: number; south: number; east: number; west: number } | null>(null);
@@ -160,7 +158,10 @@ const Results = () => {
     selectedMenuType // Menu type filter
   );
 
-  // Track results page view with full context
+  // Use drawer scroll restoration hook for persistent drawer state
+  // Pass content ready state so scroll restoration waits for merchants to render
+  const isContentReady = !isLoading && (merchants?.length ?? 0) > 0;
+  const { scrollRef: drawerScrollRef, isOpen: isListDrawerOpen, setIsOpen: setIsListDrawerOpen } = useDrawerScrollRestoration({ isContentReady });
   useEffect(() => {
     track({
       eventType: 'page_view',
