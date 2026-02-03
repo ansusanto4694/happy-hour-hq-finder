@@ -43,6 +43,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
   const { suggestions: searchSuggestions } = useSearchSuggestions({ query: searchTerm, maxResults: 7 });
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
   const [selectedSearchIndex, setSelectedSearchIndex] = useState(-1);
+  const justSelectedSuggestionRef = useRef(false);
   
   // Refs
   const locationInputRef = useRef<HTMLInputElement>(null);
@@ -198,10 +199,12 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
       },
     });
     
+    // Set flag to prevent useEffect from re-opening dropdown
+    justSelectedSuggestionRef.current = true;
     setSearchTerm(suggestion.displayValue);
     setShowSearchSuggestions(false);
     setSelectedSearchIndex(-1);
-    searchInputRef.current?.focus();
+    // Don't focus input - let dropdown close cleanly
   };
   
   // Handle search term keyboard navigation
@@ -346,6 +349,12 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
   
   // Show search suggestions when there are matches
   useEffect(() => {
+    // Skip if user just selected a suggestion (prevents re-opening)
+    if (justSelectedSuggestionRef.current) {
+      justSelectedSuggestionRef.current = false;
+      return;
+    }
+    
     if (searchTerm.length >= 2 && searchSuggestions.length > 0) {
       setShowSearchSuggestions(true);
       
