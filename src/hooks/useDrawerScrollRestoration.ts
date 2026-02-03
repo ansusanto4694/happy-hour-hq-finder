@@ -8,13 +8,18 @@ interface DrawerState {
   scrollTop: number;
 }
 
-export const useDrawerScrollRestoration = () => {
+interface UseDrawerScrollRestorationOptions {
+  isContentReady?: boolean;
+}
+
+export const useDrawerScrollRestoration = (options: UseDrawerScrollRestorationOptions = {}) => {
+  const { isContentReady = true } = options;
   const location = useLocation();
   const navigationType = useNavigationType();
   const scrollRef = useRef<HTMLDivElement>(null);
   const locationKey = location.pathname + location.search;
   const hasRestoredRef = useRef(false);
-  const restoreAttempts = useRef<NodeJS.Timeout[]>([]);
+  const savedScrollTopRef = useRef(0);
 
   // Get initial drawer state based on navigation type
   const getInitialOpenState = (): boolean => {
@@ -26,7 +31,20 @@ export const useDrawerScrollRestoration = () => {
     return false;
   };
 
+  // Get saved scroll position
+  const getSavedScrollTop = (): number => {
+    const states = JSON.parse(sessionStorage.getItem(DRAWER_STATE_KEY) || '{}');
+    const savedState = states[locationKey] as DrawerState | undefined;
+    return savedState?.scrollTop || 0;
+  };
+
   const [isOpen, setIsOpen] = useState(getInitialOpenState);
+
+  // Reset restoration flag when location changes
+  useEffect(() => {
+    hasRestoredRef.current = false;
+    savedScrollTopRef.current = getSavedScrollTop();
+  }, [locationKey]);
 
   // Save drawer state (open + scroll) whenever it changes
   const saveState = useCallback(() => {
@@ -70,44 +88,49 @@ export const useDrawerScrollRestoration = () => {
     };
   }, [saveState]);
 
-  // Restore scroll position on POP navigation when drawer opens
+  // Restore scroll position when content is ready
   useEffect(() => {
-    // Clear pending attempts
-    restoreAttempts.current.forEach(clearTimeout);
-    restoreAttempts.current = [];
+    // Only restore on POP navigation, when drawer is open, content is ready, and not already restored
+    if (navigationType !== 'POP' || !isOpen || !isContentReady || hasRestoredRef.current) {
+      return;
+    }
 
-    if (navigationType === 'POP' && isOpen && !hasRestoredRef.current) {
-      const states = JSON.parse(sessionStorage.getItem(DRAWER_STATE_KEY) || '{}');
-      const savedState = states[locationKey] as DrawerState | undefined;
-      const savedScrollTop = savedState?.scrollTop || 0;
+    const savedScrollTop = savedScrollTopRef.current;
+    
+    if (savedScrollTop <= 0) {
+      hasRestoredRef.current = true;
+      return;
+    }
 
-      if (savedScrollTop > 0) {
-        const restoreScroll = () => {
-          if (hasRestoredRef.current || !scrollRef.current) return;
-          
+    const restoreScroll = () => {
+      if (!scrollRef.current || hasRestoredRef.current) return;
+      
+      // Use requestAnimationFrame to ensure DOM has updated
+      requestAnimationFrame(() => {
+        if (scrollRef.current && !hasRestoredRef.current) {
           scrollRef.current.scrollTop = savedScrollTop;
           
-          // Check if restore was successful
+          // Check if restore was successful (within tolerance)
           if (Math.abs(scrollRef.current.scrollTop - savedScrollTop) < 50) {
             hasRestoredRef.current = true;
             console.log('[DrawerScrollRestoration] Restored to:', savedScrollTop);
+          } else {
+            console.log('[DrawerScrollRestoration] Scroll restore pending, content height:', scrollRef.current.scrollHeight);
           }
-        };
+        }
+      });
+    };
 
-        // Attempt restoration at multiple intervals (content may load async)
-        const delays = [0, 50, 100, 200, 400, 800];
-        delays.forEach(delay => {
-          const timeout = setTimeout(restoreScroll, delay);
-          restoreAttempts.current.push(timeout);
-        });
-      }
-    }
+    // Attempt restoration immediately and with delays (content may still be rendering)
+    restoreScroll();
+    const timeouts = [50, 100, 200, 400].map(delay => 
+      setTimeout(restoreScroll, delay)
+    );
 
     return () => {
-      restoreAttempts.current.forEach(clearTimeout);
-      restoreAttempts.current = [];
+      timeouts.forEach(clearTimeout);
     };
-  }, [locationKey, navigationType, isOpen]);
+  }, [isContentReady, isOpen, navigationType]);
 
   // Custom setter that also saves state
   const setIsOpenWithSave = useCallback((open: boolean | ((prev: boolean) => boolean)) => {
