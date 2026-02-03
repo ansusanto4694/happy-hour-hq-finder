@@ -112,13 +112,6 @@ export const useDrawerScrollRestoration = (options: UseDrawerScrollRestorationOp
 
   // Restore scroll position on back navigation
   useEffect(() => {
-    console.log('[DrawerScroll] Restore effect:', { 
-      navigationType, 
-      isOpen, 
-      isContentReady, 
-      hasRestored: hasRestoredRef.current 
-    });
-    
     if (navigationType !== 'POP' || !isOpen || !isContentReady || hasRestoredRef.current) {
       return;
     }
@@ -126,58 +119,65 @@ export const useDrawerScrollRestoration = (options: UseDrawerScrollRestorationOp
     const savedState = getSavedState();
     const savedScrollTop = savedState?.scrollTop || 0;
     
-    console.log('[DrawerScroll] Attempting to restore scrollTop:', savedScrollTop);
-    
     if (savedScrollTop === 0) {
       hasRestoredRef.current = true;
       return;
     }
 
-    const performRestoration = async () => {
-      // Wait for drawer to fully open and content to render
-      await new Promise(resolve => setTimeout(resolve, 600));
-      
-      if (hasRestoredRef.current) return;
-      
+    // Use a fast restoration approach with multiple attempts
+    const restoreScroll = () => {
       const scrollContainer = findScrollContainer();
-      console.log('[DrawerScroll] Found scroll container:', !!scrollContainer);
+      if (!scrollContainer) return false;
       
-      if (!scrollContainer) {
-        console.log('[DrawerScroll] No scroll container found');
+      // Check if content is tall enough
+      if (scrollContainer.scrollHeight <= scrollContainer.clientHeight) {
+        return false; // Content not ready yet
+      }
+      
+      scrollContainer.scrollTop = savedScrollTop;
+      return scrollContainer.scrollTop > 0;
+    };
+
+    // Attempt 1: Immediate (content might already be ready)
+    if (restoreScroll()) {
+      hasRestoredRef.current = true;
+      console.log('[DrawerScroll] ✓ Restored immediately');
+      return;
+    }
+
+    // Attempt 2: Next animation frame (after browser paint)
+    let rafId = requestAnimationFrame(() => {
+      if (hasRestoredRef.current) return;
+      if (restoreScroll()) {
         hasRestoredRef.current = true;
+        console.log('[DrawerScroll] ✓ Restored on RAF');
         return;
       }
       
-      // Check if content is tall enough to scroll
-      const scrollHeight = scrollContainer.scrollHeight;
-      const clientHeight = scrollContainer.clientHeight;
-      console.log('[DrawerScroll] Container dimensions:', { scrollHeight, clientHeight, savedScrollTop });
+      // Attempt 3: Short delay for content to render
+      const timer1 = setTimeout(() => {
+        if (hasRestoredRef.current) return;
+        if (restoreScroll()) {
+          hasRestoredRef.current = true;
+          console.log('[DrawerScroll] ✓ Restored after 100ms');
+          return;
+        }
+        
+        // Attempt 4: Longer delay if infinite scroll needs time
+        const timer2 = setTimeout(() => {
+          if (hasRestoredRef.current) return;
+          restoreScroll();
+          hasRestoredRef.current = true;
+          console.log('[DrawerScroll] ✓ Restored after 400ms');
+        }, 300);
+        
+        return () => clearTimeout(timer2);
+      }, 100);
       
-      if (scrollHeight <= clientHeight) {
-        console.log('[DrawerScroll] Content not tall enough to scroll, waiting for more content...');
-        // Wait for more content to load
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
-      
-      // Try to restore scroll position
-      scrollContainer.scrollTop = savedScrollTop;
-      
-      // Verify it worked
-      const actualScrollTop = scrollContainer.scrollTop;
-      console.log('[DrawerScroll] ✓ Restored scroll:', { requested: savedScrollTop, actual: actualScrollTop });
-      
-      // If scroll didn't work (content not tall enough), try again after a delay
-      if (actualScrollTop < savedScrollTop * 0.5) {
-        console.log('[DrawerScroll] Scroll position not fully restored, retrying...');
-        await new Promise(resolve => setTimeout(resolve, 500));
-        scrollContainer.scrollTop = savedScrollTop;
-        console.log('[DrawerScroll] Retry result:', scrollContainer.scrollTop);
-      }
-      
-      hasRestoredRef.current = true;
-    };
+      return () => clearTimeout(timer1);
+    });
 
-    performRestoration();
+    return () => cancelAnimationFrame(rafId);
   }, [isOpen, isContentReady, navigationType]);
 
   // Wrapper to update isOpen with state saving
