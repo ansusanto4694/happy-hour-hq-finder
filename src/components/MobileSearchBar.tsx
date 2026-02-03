@@ -521,6 +521,15 @@ export const MobileSearchBar = ({ onExpandedChange }: MobileSearchBarProps = {})
                       )}
                     </div>
                   </div>
+                  
+                  {/* Search button in expanded state */}
+                  <Button
+                    onClick={handleSearch}
+                    className="w-full h-12 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold text-base rounded-lg shadow-md"
+                  >
+                    <Search className="w-5 h-5 mr-2" />
+                    Search
+                  </Button>
                 </div>
 
                 {/* Fixed bottom button */}
