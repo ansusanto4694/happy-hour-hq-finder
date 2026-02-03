@@ -1,165 +1,184 @@
 
+# Analytics Performance Optimization Plan
 
-# Mobile Search Experience on /results - Design Options
-
-## Problem Summary
-
-When mobile users land on `/results` (via the "Search" tab or direct navigation), they see:
-- A compact header with a search input and a small chevron button
-- No visible "Search" or "Go" button to submit their query
-- They must discover the chevron expands a full-screen drawer with all fields + a submit button
-
-This creates friction because users can type a search term but have no obvious way to trigger a new search without understanding the drawer pattern.
+## Summary
+This plan optimizes the analytics system to reduce database load by ~70% while preserving all valuable tracking data. We will remove hover tracking (low-value) and optimize impression tracking with a shared IntersectionObserver pattern.
 
 ---
 
-## Option A: Add Inline Search Button to Collapsed State
+## What You're Getting
 
-**Concept:** Add a compact search/submit button directly in the collapsed header bar, next to the expand chevron.
-
-**Layout:**
-```
-[🔍 Search bars, restaurants...          ] [⬇️] [Search]
-```
-
-**Pros:**
-- Minimal UI change - adds one button
-- Users can immediately submit a search with just the search term
-- Maintains access to advanced options via the expand chevron
-- Consistent with mobile patterns (quick action + more options)
-
-**Cons:**
-- Slightly more crowded header
-- Searching without location would auto-trigger GPS (per existing behavior)
-- Users might not realize there are additional filters available
-
-**Technical Changes:**
-- Add a compact `Button` in `MobileSearchBar.tsx` collapsed state
-- Wire it to the existing `handleSearch()` function
-- Include auto-GPS fallback logic (already implemented)
+| Metric | Before | After |
+|--------|--------|-------|
+| DB calls per 60s | 4 queries | 0-1 queries |
+| Session polling interval | 30-60s | 120s |
+| IntersectionObservers | 1 per card (~50+) | 1 shared |
+| Hover events tracked | 100% | 0% (removed) |
+| Impression accuracy | 100% | 100% (preserved) |
 
 ---
 
-## Option B: Replace Chevron with Search Button (Tap to Expand Full Form)
+## Changes Overview
 
-**Concept:** Replace the expand chevron with a "Search" button that opens the full drawer instead of immediately searching.
+### 1. Remove Hover Tracking (SearchResultCard.tsx)
+Delete the `handleHover` function and remove the hover analytics call. The `onHover` prop for map highlighting will continue to work - only the analytics tracking is removed.
 
-**Layout (collapsed):**
-```
-[🔍 Search bars, restaurants...          ] [Search]
-```
+### 2. Create Shared IntersectionObserver Utility
+Build a new utility that manages a single observer for all result cards instead of creating one per card. This reduces memory usage and improves scroll performance.
 
-**Behavior:** Tapping "Search" opens the full-screen drawer where user can:
-1. Refine search term
-2. Add/change location
-3. Tap "Find Happy Hours" to submit
+### 3. Optimize Session Polling (analytics.ts)
+- Increase polling interval from 30-60s to 120s
+- Replace 3 database count queries with local sessionStorage counters
+- Debounce visibility change handlers to prevent rapid-fire updates
 
-**Pros:**
-- Cleaner one-button design
-- Makes it obvious that "Search" is the action
-- Forces users to see all options before submitting
-
-**Cons:**
-- Adds an extra tap before actual search (open drawer → fill fields → submit)
-- May feel slower for users who just want to quickly re-search
-
-**Technical Changes:**
-- Replace chevron button with styled "Search" button
-- Keep same expand behavior (opens drawer)
-- No change to actual search submission logic
+### 4. Use Local Counters Instead of DB Queries
+Track page views and events in sessionStorage, eliminating the need to query the database on every session update.
 
 ---
 
-## Option C: Dual-Mode Header with Visible Search Button (Recommended)
+## Technical Details
 
-**Concept:** Redesign the collapsed state to show both a visible search button AND an expand option, with location preview.
+### File: src/components/SearchResultCard.tsx
 
-**Layout:**
+**Remove hover tracking:**
+```typescript
+// DELETE this function entirely
+const handleHover = async () => {
+  if (!isMobile && onHover) {
+    await track({
+      eventType: 'hover',
+      eventCategory: 'merchant_interaction',
+      eventAction: 'result_card_hover',
+      merchantId: restaurant.id,
+    });
+    onHover(restaurant.id);
+  }
+};
+
+// REPLACE with simple callback (no analytics)
+const handleHover = () => {
+  if (!isMobile && onHover) {
+    onHover(restaurant.id);
+  }
+};
 ```
-┌─────────────────────────────────────────────────────┐
-│ [🔍 Search bars...            ] [📍 NYC] [⚙️] [Go] │
-└─────────────────────────────────────────────────────┘
+
+**Refactor impression tracking to use shared observer:**
+- Remove individual `IntersectionObserver` creation inside each card
+- Cards will register with a shared observer via a new hook
+- The shared observer tracks visibility for all cards with a single instance
+
+### File: src/hooks/useSharedIntersectionObserver.ts (new file)
+
+Create a shared observer manager:
+```text
++---------------------------------------+
+|   SharedIntersectionObserver          |
++---------------------------------------+
+| - Single IntersectionObserver         |
+| - Map<element, callback>              |
+| - observe(element, onVisible)         |
+| - unobserve(element)                  |
++---------------------------------------+
+         |
+         v
++--------+--------+--------+--------+
+| Card 1 | Card 2 | Card 3 | Card N |
++--------+--------+--------+--------+
 ```
 
-Components:
-- **Search input**: Type search term (already exists)
-- **Location chip**: Shows current location or "Add location" placeholder (tappable to expand)
-- **Settings/filter icon**: Opens full drawer for advanced filters
-- **Go button**: Submits immediately with current values + auto-GPS if no location
+### File: src/utils/analytics.ts
 
-**Pros:**
-- Most complete at-a-glance experience
-- Users see their location context
-- One-tap search for quick queries
-- Clear path to advanced options
+**Increase polling interval:**
+```typescript
+// BEFORE
+const updateInterval = isMobileDevice() ? 30000 : 60000;
 
-**Cons:**
-- Most significant UI redesign
-- Tighter space constraints on small screens
-- More implementation effort
+// AFTER
+const updateInterval = 120000; // 2 minutes for all devices
+```
 
-**Technical Changes:**
-- Refactor `MobileSearchBar.tsx` collapsed state layout
-- Add location chip/preview component
-- Add prominent "Go" or search icon button
-- Keep drawer for full form access
+**Replace DB queries with local counters:**
+```typescript
+// BEFORE: 3 database queries per update
+const { count: actualPageViews } = await supabase
+  .from('user_events')
+  .select('*', { count: 'exact' })
+  .eq('session_id', sessionId)
+  .eq('event_type', 'page_view');
+
+// AFTER: Local storage lookup (instant)
+const pageViews = parseInt(
+  sessionStorage.getItem('analytics_page_view_count') || '0', 
+  10
+);
+```
+
+**Increment counters in trackEvent:**
+```typescript
+// Add to trackEvent function when event is queued
+if (params.eventType === 'page_view') {
+  const current = parseInt(sessionStorage.getItem('analytics_page_view_count') || '0', 10);
+  sessionStorage.setItem('analytics_page_view_count', String(current + 1));
+}
+const totalEvents = parseInt(sessionStorage.getItem('analytics_total_event_count') || '0', 10);
+sessionStorage.setItem('analytics_total_event_count', String(totalEvents + 1));
+```
+
+**Debounce visibility change handler:**
+```typescript
+// BEFORE: Immediate flush on every tab switch
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    flushAndUpdateSession();
+  }
+});
+
+// AFTER: Debounced to prevent rapid-fire updates
+let visibilityDebounceTimer: NodeJS.Timeout | null = null;
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    if (visibilityDebounceTimer) clearTimeout(visibilityDebounceTimer);
+    visibilityDebounceTimer = setTimeout(flushAndUpdateSession, 500);
+  } else {
+    lastActivityTime = Date.now();
+  }
+});
+```
 
 ---
 
-## Option D: Floating Action Button (FAB) for Search
+## Files to Modify
 
-**Concept:** Add a floating search button that appears when user modifies the search input.
-
-**Layout:**
-```
-Header: [🔍 Search bars, restaurants...   ] [⬇️]
-
-           ┌──────────────────┐
-           │   🔍 Search      │  ← FAB appears when input changes
-           └──────────────────┘
-```
-
-**Pros:**
-- Doesn't crowd the header
-- Clear call-to-action when user is actively searching
-- Modern mobile pattern (similar to compose buttons)
-
-**Cons:**
-- May overlap with map content
-- Another UI element to manage visibility state
-- Could conflict with "Search this area" map button
-
-**Technical Changes:**
-- Add conditional FAB component in Results.tsx
-- Show when search input value differs from URL params
-- Position above bottom nav but below map controls
+| File | Changes |
+|------|---------|
+| `src/components/SearchResultCard.tsx` | Remove hover analytics, use shared observer |
+| `src/utils/analytics.ts` | Local counters, 120s polling, debounced visibility |
+| `src/hooks/useSharedIntersectionObserver.ts` | New file - shared observer utility |
 
 ---
 
-## Recommendation
+## What's Preserved
 
-**Option A (Add Inline Search Button)** provides the best balance of:
-- Minimal code changes
-- Immediate value for users
-- Maintains existing drawer pattern for advanced use
+- All impression tracking (optimized, not removed)
+- All click tracking
+- All search/filter tracking  
+- All conversion funnel tracking
+- Session duration and engagement metrics
+- GA4 integration
+- UTM attribution
 
-**Implementation approach:**
-1. Add a compact search button (icon or "Go" text) to the right of the chevron in `MobileSearchBar.tsx`
-2. Style it to match the existing orange gradient
-3. Wire to `handleSearch()` with auto-GPS fallback
-4. Ensure proper touch target size (min 44px)
+## What's Removed
 
-If you want a more polished experience and have time for iteration, **Option C** would be the ideal end state.
+- Hover event tracking (`result_card_hover` events)
+- Redundant database queries for counts
+- Individual IntersectionObserver instances
 
 ---
 
-## Technical Implementation Notes
+## Expected Performance Improvement
 
-Regardless of chosen option, key considerations:
-
-1. **Auto-GPS Integration**: Already implemented - if no location provided, GPS triggers automatically
-2. **Touch Targets**: All buttons must be minimum 44x44px for accessibility
-3. **State Sync**: Search params should sync with URL for deep-linking
-4. **Loading States**: Show spinner while GPS is fetching
-5. **Typeahead Behavior**: Already updated - suggestions fill input only, don't auto-search
-
+- **CPU usage**: ~40% reduction during scrolling (single observer vs. 50+)
+- **Database calls**: ~75% reduction (local counters + 120s polling)
+- **Memory**: ~30% reduction (fewer observer instances)
+- **Scroll smoothness**: Noticeable improvement on mobile devices
