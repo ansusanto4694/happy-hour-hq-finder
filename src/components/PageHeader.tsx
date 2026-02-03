@@ -57,6 +57,10 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
               alt="SipMunchYap Logo" 
               className="h-16 md:h-24 lg:h-32 w-auto cursor-pointer"
               onClick={handleLogoClick}
+              fetchPriority="high"
+              loading="eager"
+              width={128}
+              height={128}
             />
           )}
           

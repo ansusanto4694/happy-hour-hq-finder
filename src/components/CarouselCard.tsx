@@ -106,6 +106,9 @@ export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick })
               src={merchant.logo_url}
               alt={`${merchant.restaurant_name} logo`}
               className="w-full h-full object-contain"
+              width={96}
+              height={96}
+              loading="lazy"
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
