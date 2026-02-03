@@ -4,7 +4,6 @@ import { Badge } from '@/components/ui/badge';
 import { Star } from 'lucide-react';
 import { getTodaysHappyHour, getMenuTypeBadge } from '@/utils/timeUtils';
 import { useAnalytics } from '@/hooks/useAnalytics';
-import { getOptimizedImageUrl, IMAGE_SIZES } from '@/utils/imageOptimization';
 
 interface MobileCarouselCardProps {
   merchant: {
@@ -65,9 +64,6 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
   const todaysHappyHourText = getTodaysHappyHour(merchant.merchant_happy_hour || []);
   const menuTypeBadge = getMenuTypeBadge(merchant.happy_hour_deals || []);
 
-  // Optimize logo URL for 80px display size (~90% smaller file)
-  const optimizedLogoUrl = getOptimizedImageUrl(merchant.logo_url, IMAGE_SIZES.mobileCarousel);
-
   // Build the merchant URL
   const merchantUrl = `/restaurant/${merchant.slug || merchant.id}`;
 
@@ -107,10 +103,10 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
     >
       {/* Logo - compact centered */}
       <div className="flex justify-center mb-2">
-        <div className={`w-20 h-20 ${optimizedLogoUrl ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100'} border border-border rounded-lg flex items-center justify-center overflow-hidden`}>
-          {optimizedLogoUrl ? (
+        <div className={`w-20 h-20 ${merchant.logo_url ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100'} border border-border rounded-lg flex items-center justify-center overflow-hidden`}>
+          {merchant.logo_url ? (
             <img 
-              src={optimizedLogoUrl} 
+              src={merchant.logo_url} 
               alt={`${merchant.restaurant_name} logo`}
               className="w-full h-full object-contain p-1.5"
               width={80}

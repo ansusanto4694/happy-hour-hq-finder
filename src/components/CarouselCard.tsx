@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Star } from 'lucide-react';
 import { getTodaysHappyHour, getMenuTypeBadge } from "@/utils/timeUtils";
 import { useAnalytics } from "@/hooks/useAnalytics";
-import { getOptimizedImageUrl, IMAGE_SIZES } from '@/utils/imageOptimization';
 
 interface CarouselCardProps {
   merchant: {
@@ -63,9 +62,6 @@ export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick })
   const todaysHappyHour = merchant.merchant_happy_hour ? getTodaysHappyHour(merchant.merchant_happy_hour) : 'No Happy Hour Today';
   const menuTypeBadge = getMenuTypeBadge(merchant.happy_hour_deals || []);
   
-  // Optimize logo URL for 96px display size (~90% smaller file)
-  const optimizedLogoUrl = getOptimizedImageUrl(merchant.logo_url, IMAGE_SIZES.desktopCarousel);
-  
   // Build the merchant URL
   const merchantUrl = `/restaurant/${merchant.slug || merchant.id}`;
   
@@ -105,9 +101,9 @@ export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick })
       <CardContent className="p-4 h-full flex items-center space-x-4">
         {/* Logo */}
         <div className="flex-shrink-0 w-24 h-24 bg-white border border-border rounded-lg flex items-center justify-center overflow-hidden">
-          {optimizedLogoUrl ? (
+          {merchant.logo_url ? (
             <img
-              src={optimizedLogoUrl}
+              src={merchant.logo_url}
               alt={`${merchant.restaurant_name} logo`}
               className="w-full h-full object-contain"
               width={96}
