@@ -1,7 +1,12 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { useLocation, useNavigationType } from 'react-router-dom';
 
-const DRAWER_SCROLL_KEY = 'drawer-scroll-positions';
+const DRAWER_STATE_KEY = 'drawer-state';
+
+interface DrawerState {
+  isOpen: boolean;
+  scrollTop: number;
+}
 
 export const useDrawerScrollRestoration = () => {
   const location = useLocation();
@@ -11,55 +16,81 @@ export const useDrawerScrollRestoration = () => {
   const hasRestoredRef = useRef(false);
   const restoreAttempts = useRef<NodeJS.Timeout[]>([]);
 
-  // Save scroll position on scroll
-  const handleScroll = useCallback(() => {
-    if (scrollRef.current) {
-      const positions = JSON.parse(sessionStorage.getItem(DRAWER_SCROLL_KEY) || '{}');
-      positions[locationKey] = scrollRef.current.scrollTop;
-      sessionStorage.setItem(DRAWER_SCROLL_KEY, JSON.stringify(positions));
+  // Get initial drawer state based on navigation type
+  const getInitialOpenState = (): boolean => {
+    if (navigationType === 'POP') {
+      const states = JSON.parse(sessionStorage.getItem(DRAWER_STATE_KEY) || '{}');
+      const savedState = states[locationKey] as DrawerState | undefined;
+      return savedState?.isOpen ?? false;
     }
-  }, [locationKey]);
+    return false;
+  };
 
-  // Save position before navigating away
+  const [isOpen, setIsOpen] = useState(getInitialOpenState);
+
+  // Save drawer state (open + scroll) whenever it changes
+  const saveState = useCallback(() => {
+    const states = JSON.parse(sessionStorage.getItem(DRAWER_STATE_KEY) || '{}');
+    states[locationKey] = {
+      isOpen,
+      scrollTop: scrollRef.current?.scrollTop || 0,
+    };
+    sessionStorage.setItem(DRAWER_STATE_KEY, JSON.stringify(states));
+  }, [locationKey, isOpen]);
+
+  // Save state on scroll
+  const handleScroll = useCallback(() => {
+    saveState();
+  }, [saveState]);
+
+  // Save state when drawer opens/closes
+  useEffect(() => {
+    saveState();
+  }, [isOpen, saveState]);
+
+  // Attach scroll listener to save position
   useEffect(() => {
     const currentRef = scrollRef.current;
     
-    if (currentRef) {
+    if (currentRef && isOpen) {
       currentRef.addEventListener('scroll', handleScroll, { passive: true });
     }
 
     return () => {
       if (currentRef) {
         currentRef.removeEventListener('scroll', handleScroll);
-        // Save final position before unmount
-        const positions = JSON.parse(sessionStorage.getItem(DRAWER_SCROLL_KEY) || '{}');
-        positions[locationKey] = currentRef.scrollTop;
-        sessionStorage.setItem(DRAWER_SCROLL_KEY, JSON.stringify(positions));
       }
     };
-  }, [locationKey, handleScroll]);
+  }, [isOpen, handleScroll]);
 
-  // Restore scroll position on POP navigation
+  // Save state before navigating away (on unmount)
+  useEffect(() => {
+    return () => {
+      saveState();
+    };
+  }, [saveState]);
+
+  // Restore scroll position on POP navigation when drawer opens
   useEffect(() => {
     // Clear pending attempts
     restoreAttempts.current.forEach(clearTimeout);
     restoreAttempts.current = [];
-    hasRestoredRef.current = false;
 
-    if (navigationType === 'POP') {
-      const positions = JSON.parse(sessionStorage.getItem(DRAWER_SCROLL_KEY) || '{}');
-      const savedPosition = positions[locationKey];
+    if (navigationType === 'POP' && isOpen && !hasRestoredRef.current) {
+      const states = JSON.parse(sessionStorage.getItem(DRAWER_STATE_KEY) || '{}');
+      const savedState = states[locationKey] as DrawerState | undefined;
+      const savedScrollTop = savedState?.scrollTop || 0;
 
-      if (savedPosition !== undefined && savedPosition > 0) {
+      if (savedScrollTop > 0) {
         const restoreScroll = () => {
           if (hasRestoredRef.current || !scrollRef.current) return;
           
-          scrollRef.current.scrollTop = savedPosition;
+          scrollRef.current.scrollTop = savedScrollTop;
           
           // Check if restore was successful
-          if (Math.abs(scrollRef.current.scrollTop - savedPosition) < 50) {
+          if (Math.abs(scrollRef.current.scrollTop - savedScrollTop) < 50) {
             hasRestoredRef.current = true;
-            console.log('[DrawerScrollRestoration] Restored to:', savedPosition);
+            console.log('[DrawerScrollRestoration] Restored to:', savedScrollTop);
           }
         };
 
@@ -76,7 +107,19 @@ export const useDrawerScrollRestoration = () => {
       restoreAttempts.current.forEach(clearTimeout);
       restoreAttempts.current = [];
     };
-  }, [locationKey, navigationType]);
+  }, [locationKey, navigationType, isOpen]);
 
-  return scrollRef;
+  // Custom setter that also saves state
+  const setIsOpenWithSave = useCallback((open: boolean | ((prev: boolean) => boolean)) => {
+    setIsOpen(prev => {
+      const newValue = typeof open === 'function' ? open(prev) : open;
+      return newValue;
+    });
+  }, []);
+
+  return { 
+    scrollRef, 
+    isOpen, 
+    setIsOpen: setIsOpenWithSave 
+  };
 };
