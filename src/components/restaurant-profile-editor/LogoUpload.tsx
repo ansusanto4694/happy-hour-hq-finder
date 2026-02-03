@@ -59,7 +59,7 @@ export const LogoUpload: React.FC<LogoUploadProps> = ({
       const { error: uploadError } = await supabase.storage
         .from('restaurant-logos')
         .upload(filePath, file, {
-          cacheControl: '3600',
+          cacheControl: '2592000', // 30 days for optimal repeat visitor performance
           upsert: true
         });
 
