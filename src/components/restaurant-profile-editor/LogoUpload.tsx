@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { compressLogoImage } from '@/utils/imageCompression';
 
 interface LogoUploadProps {
   restaurantId: number;
@@ -50,17 +51,20 @@ export const LogoUpload: React.FC<LogoUploadProps> = ({
     setIsUploading(true);
 
     try {
-      // Generate unique filename
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${restaurantId}-${Date.now()}.${fileExt}`;
+      // Compress image before upload
+      const { blob: compressedBlob, extension } = await compressLogoImage(file);
+      
+      // Generate unique filename with compressed extension
+      const fileName = `${restaurantId}-${Date.now()}.${extension}`;
       const filePath = `${fileName}`;
 
-      // Upload file to Supabase Storage
+      // Upload compressed file to Supabase Storage
       const { error: uploadError } = await supabase.storage
         .from('restaurant-logos')
-        .upload(filePath, file, {
+        .upload(filePath, compressedBlob, {
           cacheControl: '2592000', // 30 days for optimal repeat visitor performance
-          upsert: true
+          upsert: true,
+          contentType: extension === 'webp' ? 'image/webp' : 'image/jpeg'
         });
 
       if (uploadError) {
