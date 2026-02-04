@@ -10,6 +10,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { trackPageView } from "@/utils/analytics";
 import { initPerformanceMonitoring } from "@/utils/performanceMonitoring";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { AdminRoute } from "@/components/AdminRoute";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { ScrollRestoration } from "@/hooks/useScrollRestoration";
 import { Loader2 } from "lucide-react";
@@ -152,7 +153,7 @@ const App = () => (
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
-                <Route path="/analytics" element={<Analytics />} />
+                <Route path="/analytics" element={<AdminRoute><Analytics /></AdminRoute>} />
                 <Route path="/favorites" element={<Favorites />} />
                 <Route path="/account" element={<Account />} />
                 <Route path="/happy-hour/:citySlug" element={<LocationLanding />} />
