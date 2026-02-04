@@ -1,50 +1,154 @@
 
 
-# Plan: Optimize Initial Image Loading on Mobile
+# Plan: Compress Images on Upload (Option B)
 
-## What We're Doing
+## What We're Building
 
-Making your homepage load faster on mobile by being smarter about when restaurant logos are loaded. Instead of loading all logos at once (even ones you can't see yet), we'll only load logos that are visible or about to become visible.
-
----
-
-## Current Situation
-
-Right now, when a visitor opens your homepage on their phone:
-
-| What Happens | Impact |
-|--------------|--------|
-| All carousel logos start loading immediately | ~3-4MB of data downloaded upfront |
-| Browser already has `loading="lazy"` on images | Good start, but not optimized enough |
-| All merchants in all carousels load at once | More data than needed for initial view |
-
-The `loading="lazy"` attribute is already present, which is good. However, the browser's built-in lazy loading isn't always aggressive enough - it often preloads images that are slightly off-screen "just in case."
+A client-side image compression system that automatically shrinks and optimizes logo images **before** they are uploaded to Supabase Storage. This happens in the browser, requires no additional server costs, and is invisible to the person uploading.
 
 ---
 
-## What We're Going to Improve
+## Current State
 
-### 1. Add Lower Priority to Carousel Images
-
-Tell the browser explicitly that these images are not urgent - focus on more important things first (like text and layout), then load logos when there's bandwidth available.
-
-**What this means for visitors:** The page structure appears faster, and logos fill in smoothly as they scroll.
-
----
-
-### 2. Add Asynchronous Image Decoding
-
-Allow the browser to decode (process) images in the background without freezing the page. This prevents the "janky" feeling when multiple images load at once.
-
-**What this means for visitors:** Smoother scrolling while logos are loading.
+| Aspect | Current Behavior |
+|--------|------------------|
+| Upload location | `LogoUpload.tsx` component |
+| Storage bucket | `restaurant-logos` |
+| Size limit | 5MB maximum |
+| Compression | None - original file uploaded as-is |
+| Existing logos | 601 merchants have logos already uploaded |
 
 ---
 
-### 3. Limit Visible Carousel Items on Initial Load (Mobile Only)
+## Proposed Solution: Client-Side Compression
 
-On mobile, we currently show all merchants in a horizontally scrollable carousel. We'll optimize this to prioritize the first few visible items while the rest load in the background.
+### How It Works
 
-**What this means for visitors:** The first 2-3 logos they actually see load instantly; the rest load as they swipe.
+```text
+┌─────────────────────────────────────────────────────────────────────┐
+│                         USER UPLOADS IMAGE                          │
+└─────────────────────────────────────────────────────────────────────┘
+                                   │
+                                   ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  STEP 1: Load image into browser memory                             │
+│  (Using Canvas API - built into all modern browsers)                │
+└─────────────────────────────────────────────────────────────────────┘
+                                   │
+                                   ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  STEP 2: Resize to maximum 512x512 pixels                           │
+│  (Larger than any display size on your site - future-proof)         │
+└─────────────────────────────────────────────────────────────────────┘
+                                   │
+                                   ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  STEP 3: Convert to WebP format at 85% quality                      │
+│  (WebP is ~30% smaller than JPEG/PNG at same quality)               │
+└─────────────────────────────────────────────────────────────────────┘
+                                   │
+                                   ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  STEP 4: Upload compressed image to Supabase Storage                │
+│  (Same bucket, same process - just smaller file)                    │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Why Client-Side Compression?
+
+| Approach | Cost | Speed | Complexity |
+|----------|------|-------|------------|
+| **Client-side (recommended)** | Free | Fast - compression happens in browser | Low |
+| Edge function compression | Free | Slower - upload full file, process on server | Medium |
+| Supabase Pro image transforms | Paid | Fast | Low |
+
+Client-side is the best fit because:
+- **No additional costs** - uses browser's built-in Canvas API
+- **Faster uploads** - smaller file travels over the network
+- **Works offline** - processing happens locally
+- **No server changes** - just modifies the upload component
+
+---
+
+## What Will Change
+
+### For Users Uploading Logos
+
+| Before | After |
+|--------|-------|
+| Upload 2MB photo | Upload same 2MB photo |
+| Wait for upload | Slight processing pause (~1 second) |
+| 2MB stored | ~30-80KB stored (after compression) |
+| Same visual quality | Same visual quality |
+
+The experience is nearly identical - just faster uploads and smaller files.
+
+### File Sizes (Expected)
+
+| Original Size | After Compression |
+|---------------|-------------------|
+| 500KB - 1MB | ~20-40KB |
+| 1MB - 2MB | ~30-60KB |
+| 2MB - 5MB | ~40-80KB |
+
+---
+
+## Handling Existing 601 Logos
+
+You have **601 existing logos** that were uploaded without compression. There are two options:
+
+### Option A: Leave Existing Logos (Recommended Start)
+
+| Pros | Cons |
+|------|------|
+| No risk of breaking anything | Existing logos remain oversized |
+| Immediate benefit for new uploads | Full optimization takes time |
+| Simple implementation | |
+
+**Gradual improvement:** As merchants update their profiles, their logos will be re-uploaded with compression automatically.
+
+### Option B: One-Time Backfill Script
+
+Create an admin-only tool that:
+1. Downloads each existing logo
+2. Compresses it client-side
+3. Re-uploads with new filename
+4. Updates database reference
+
+| Pros | Cons |
+|------|------|
+| All logos optimized immediately | More complex to build |
+| Maximum performance benefit | Risk of something going wrong |
+| | Requires admin to run it |
+
+**Recommendation:** Start with Option A (new uploads only), and we can add the backfill tool later if desired.
+
+---
+
+## Technical Implementation
+
+### New Utility File: `src/utils/imageCompression.ts`
+
+A reusable image compression utility that:
+- Takes any image File as input
+- Resizes to maximum dimensions (512x512 for logos)
+- Converts to WebP format for best compression
+- Falls back to JPEG if WebP not supported
+- Returns a compressed Blob ready for upload
+
+### Modified File: `LogoUpload.tsx`
+
+Update the upload flow to:
+1. Call compression utility before upload
+2. Use compressed blob instead of original file
+3. Save with `.webp` extension
+4. No other changes to UI or behavior
+
+### Modified File: `useReview.ts` (Optional)
+
+Apply same compression to review media uploads for consistency.
 
 ---
 
@@ -52,45 +156,35 @@ On mobile, we currently show all merchants in a horizontally scrollable carousel
 
 | Aspect | Status |
 |--------|--------|
-| Visual design | Identical - logos appear in the same places, same sizes |
-| How uploads work | Unchanged - merchants upload exactly as before |
-| Desktop experience | Unchanged - desktop already performs well |
-| Mobile layout | Unchanged - same carousel, same scrolling behavior |
+| Upload UI | Identical - same drag/drop, same buttons |
+| Supported formats | Same - JPEG, PNG, WebP, GIF accepted |
+| File size limit | Same 5MB limit (though files will be much smaller) |
+| Storage bucket | Same `restaurant-logos` bucket |
+| Display logic | Unchanged - same components, same sizes |
+| Desktop experience | Unchanged |
+| Mobile layout | Unchanged |
 
 ---
 
-## Expected Improvement
+## Expected Performance Impact
 
-| Metric | Before | After (Estimated) |
-|--------|--------|-------------------|
-| Initial image requests | All logos at once | Only visible logos first |
-| Time to interactive | Delayed by image loading | Faster response |
-| Largest Contentful Paint | ~4.7 seconds | ~3-4 seconds |
-| Mobile PageSpeed | 64 | 70-75 (estimated) |
-
-This is a modest but meaningful improvement. The bigger wins will come from Option B (compress on upload) when we implement that later.
-
----
-
-## Technical Details
-
-**Files to modify:**
-
-1. **MobileCarouselCard.tsx** - Add `fetchpriority="low"` and `decoding="async"` to logo images
-2. **CarouselCard.tsx** - Add the same optimizations for consistency (even though desktop is less affected)
-3. **SearchResultCard.tsx** - Apply the same pattern to search result logos
-4. **MobileCarousel.tsx** - Optionally limit initial render to first N items, with the rest loading as user scrolls
-
-**New utility (optional):** Create a small helper to standardize image loading attributes across all logo images, making future optimizations easier to apply.
+| Metric | Current | After (New Uploads) | After (All Logos) |
+|--------|---------|---------------------|-------------------|
+| Average logo size | ~200-400KB | ~30-60KB | ~30-60KB |
+| Homepage image payload | ~3-4MB | Gradual decrease | ~0.3-0.5MB |
+| Mobile PageSpeed | 64-70 | 72-78 | 82-90 |
+| LCP | ~4.7s | ~3.5s | ~2s |
 
 ---
 
 ## Summary
 
-This optimization teaches the browser to be smarter about loading images:
-- Load what's visible first
-- Process images in the background
-- Don't block the page while waiting for logos
+- **What:** Automatic image compression before upload
+- **Where:** Browser-side, in the LogoUpload component
+- **Cost:** Free (uses built-in browser APIs)
+- **Impact:** 80-90% file size reduction for new uploads
+- **User experience:** Nearly invisible - same workflow, faster uploads
+- **Existing logos:** Optimized gradually as merchants update, or via optional backfill tool later
 
-It's a "quick win" that improves mobile performance without changing anything about how your site looks or works.
+This sets you up for permanently optimized images going forward, with the option to clean up existing logos whenever you're ready.
 
