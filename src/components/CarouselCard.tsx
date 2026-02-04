@@ -109,6 +109,8 @@ export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick })
               width={96}
               height={96}
               loading="lazy"
+              decoding="async"
+              fetchPriority="low"
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
