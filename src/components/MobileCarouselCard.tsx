@@ -112,6 +112,8 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
               width={80}
               height={80}
               loading="lazy"
+              decoding="async"
+              fetchPriority="low"
             />
           ) : (
             <span className="text-muted-foreground font-bold text-2xl">

@@ -188,6 +188,8 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
                     width={80}
                     height={80}
                     loading="lazy"
+                    decoding="async"
+                    fetchPriority="low"
                   />
                 ) : (
                   <Store className="w-8 h-8 text-orange-400" strokeWidth={1.5} />
@@ -301,6 +303,8 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
                     width={96}
                     height={96}
                     loading="lazy"
+                    decoding="async"
+                    fetchPriority="low"
                   />
                 ) : (
                   <Store className="w-10 h-10 text-orange-400" strokeWidth={1.5} />
