@@ -43,6 +43,8 @@ export default defineConfig(({ mode }) => ({
           'map-vendor': ['mapbox-gl', 'react-map-gl'],
           // Date utilities - used throughout
           'date-vendor': ['date-fns'],
+          // Date picker - only loaded on analytics page
+          'datepicker-vendor': ['react-day-picker'],
           // Charts - only loaded on analytics page
           'charts-vendor': ['recharts'],
           // Carousel - loaded after initial paint

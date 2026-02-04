@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -8,11 +8,20 @@ import { SessionMetricsCard } from '@/components/analytics/SessionMetricsCard';
 import { TrafficSourcesChart } from '@/components/analytics/TrafficSourcesChart';
 import { DeviceBreakdownChart } from '@/components/analytics/DeviceBreakdownChart';
 import { SEOHead } from '@/components/SEOHead';
-import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+
+// Lazy load Calendar component - only needed on this page
+const Calendar = lazy(() => 
+  import('@/components/ui/calendar').then(m => ({ default: m.Calendar }))
+);
+
+// Loading fallback for calendar
+const CalendarSkeleton = () => (
+  <div className="h-[280px] w-[280px] animate-pulse bg-muted rounded-md" />
+);
 
 export default function Analytics() {
   const [startDate, setStartDate] = useState<Date>(() => {
@@ -72,14 +81,16 @@ export default function Analytics() {
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={startDate}
-                        onSelect={(date) => date && setStartDate(date)}
-                        disabled={(date) => date > endDate || date > new Date()}
-                        initialFocus
-                        className={cn("p-3 pointer-events-auto")}
-                      />
+                      <Suspense fallback={<CalendarSkeleton />}>
+                        <Calendar
+                          mode="single"
+                          selected={startDate}
+                          onSelect={(date) => date && setStartDate(date)}
+                          disabled={(date) => date > endDate || date > new Date()}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </Suspense>
                     </PopoverContent>
                   </Popover>
                   <span className="text-muted-foreground">to</span>
@@ -97,14 +108,16 @@ export default function Analytics() {
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={endDate}
-                        onSelect={(date) => date && setEndDate(date)}
-                        disabled={(date) => date < startDate || date > new Date()}
-                        initialFocus
-                        className={cn("p-3 pointer-events-auto")}
-                      />
+                      <Suspense fallback={<CalendarSkeleton />}>
+                        <Calendar
+                          mode="single"
+                          selected={endDate}
+                          onSelect={(date) => date && setEndDate(date)}
+                          disabled={(date) => date < startDate || date > new Date()}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </Suspense>
                     </PopoverContent>
                   </Popover>
                 </div>
