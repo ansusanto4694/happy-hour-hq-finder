@@ -22,6 +22,8 @@ interface MerchantMapPreviewCardProps {
   isMobile?: boolean;
   onNavigate?: () => void;
   onClose?: () => void;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 }
 
 export const MerchantMapPreviewCard: React.FC<MerchantMapPreviewCardProps> = ({
@@ -31,6 +33,8 @@ export const MerchantMapPreviewCard: React.FC<MerchantMapPreviewCardProps> = ({
   isMobile = false,
   onNavigate,
   onClose,
+  onMouseEnter,
+  onMouseLeave,
 }) => {
   if (!isVisible || !restaurant) return null;
 
@@ -105,6 +109,8 @@ export const MerchantMapPreviewCard: React.FC<MerchantMapPreviewCardProps> = ({
         left: position.x + 10, 
         top: position.y - 60,
       }}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
     >
       <Card 
         className="shadow-lg border bg-white min-w-[200px] animate-scale-in hover:shadow-xl transition-shadow cursor-pointer"
