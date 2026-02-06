@@ -27,12 +27,15 @@ export const useRestaurantMutations = (restaurantId: number) => {
 
   const updateRestaurantMutation = useMutation({
     mutationFn: async (updates: FormData) => {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('Merchant')
         .update(updates)
-        .eq('id', restaurantId);
+        .eq('id', restaurantId)
+        .select('slug')
+        .single();
       
       if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       // Invalidate all restaurant queries to handle both ID and slug-based queries

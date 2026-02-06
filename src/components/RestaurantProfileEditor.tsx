@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Edit } from 'lucide-react';
@@ -33,6 +34,7 @@ interface RestaurantProfileEditorProps {
 }
 
 export const RestaurantProfileEditor: React.FC<RestaurantProfileEditorProps> = ({ restaurant }) => {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(restaurant.logo_url || null);
   const { updateRestaurantMutation, updateHappyHoursMutation } = useRestaurantMutations(restaurant.id);
@@ -60,10 +62,21 @@ export const RestaurantProfileEditor: React.FC<RestaurantProfileEditorProps> = (
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Track which slug-affecting fields changed
+    const slugFieldsChanged = 
+      formData.restaurant_name !== restaurant.restaurant_name ||
+      formData.city !== restaurant.city;
+    
     try {
-      await updateRestaurantMutation.mutateAsync(formData);
+      const result = await updateRestaurantMutation.mutateAsync(formData);
       await updateHappyHoursMutation.mutateAsync(happyHours);
       setIsOpen(false);
+      
+      // If name or city changed, the database trigger regenerated the slug —
+      // redirect to the new URL so the user doesn't land on a stale page
+      if (slugFieldsChanged && result?.slug) {
+        navigate(`/restaurant/${result.slug}`, { replace: true });
+      }
     } catch (error) {
       console.error('Error saving changes:', error);
     }
