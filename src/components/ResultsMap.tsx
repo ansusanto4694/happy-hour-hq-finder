@@ -65,6 +65,7 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
   const [mapLoaded, setMapLoaded] = useState(false);
 
   const mapRef = useRef<any>(null);
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
   const isMobile = mobileOverride ?? useIsMobile();
   const { userLocation } = useUserLocation();
@@ -110,26 +111,56 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
 
   // Handle marker hover (desktop only)
   const handleMarkerHover = useCallback((restaurant: Restaurant, event: React.MouseEvent) => {
-    if (isMobile) return; // Skip hover on mobile
+    if (isMobile) return;
     
-    // Get the map container's bounding rect for relative positioning
+    // Cancel any pending hide timeout
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+    
     const mapContainer = event.currentTarget.closest('.map-container');
     if (mapContainer) {
       const rect = mapContainer.getBoundingClientRect();
-      const position = { 
+      setMousePosition({ 
         x: event.clientX - rect.left, 
         y: event.clientY - rect.top 
-      };
-      setMousePosition(position);
+      });
     }
     setHoveredRestaurant(restaurant);
   }, [isMobile]);
 
-  // Handle marker leave (desktop only)
+  // Handle marker leave (desktop only) - debounced to prevent flicker
   const handleMarkerLeave = useCallback(() => {
-    if (isMobile) return; // Skip hover on mobile
-    setHoveredRestaurant(null);
+    if (isMobile) return;
+    hoverTimeoutRef.current = setTimeout(() => {
+      setHoveredRestaurant(null);
+    }, 150);
   }, [isMobile]);
+
+  // Keep preview card visible when mouse enters it
+  const handlePreviewCardEnter = useCallback(() => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+  }, []);
+
+  // Start hide timeout when mouse leaves preview card
+  const handlePreviewCardLeave = useCallback(() => {
+    hoverTimeoutRef.current = setTimeout(() => {
+      setHoveredRestaurant(null);
+    }, 150);
+  }, []);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Update map to fit all restaurant markers (only when not manually searching)
   useEffect(() => {
@@ -360,11 +391,13 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
           isVisible={!!hoveredRestaurant}
           isMobile={isMobile}
           onNavigate={() => {
-            if (selectedRestaurant) {
-              navigate(`/restaurant/${selectedRestaurant.slug || selectedRestaurant.id}`);
+            if (hoveredRestaurant) {
+              navigate(`/restaurant/${hoveredRestaurant.slug || hoveredRestaurant.id}`);
             }
           }}
           onClose={() => setSelectedRestaurant(null)}
+          onMouseEnter={handlePreviewCardEnter}
+          onMouseLeave={handlePreviewCardLeave}
         />
         
         {/* Show info about restaurants without coordinates */}
