@@ -173,7 +173,7 @@ const RestaurantProfile = () => {
   const isNumericId = id ? /^\d+$/.test(id) : false;
 
   
-  const { data: restaurant, isLoading, isFetching, error } = useQuery({
+  const { data: restaurant, isLoading, isFetching, error, dataUpdatedAt } = useQuery({
     queryKey: ['restaurant', id],
     queryFn: async () => {
       if (!id) throw new Error('Restaurant identifier is required');
@@ -226,13 +226,17 @@ const RestaurantProfile = () => {
     placeholderData: keepPreviousData, // Keep previous data during refetch to prevent flash
   });
   
-  // 301 redirect from numeric ID to slug URL
+  // 301 redirect from numeric ID to slug URL — only after fresh data confirmed
+  // We track the mount time and only redirect once dataUpdatedAt is after mount,
+  // preventing stale cached slugs from triggering an incorrect redirect.
+  const mountedAt = useMemo(() => Date.now(), []);
+  
   useEffect(() => {
-    if (isNumericId && restaurant?.slug) {
-      // Replace current URL with slug URL (acts as 301 for SEO)
+    if (isNumericId && restaurant?.slug && !isFetching && dataUpdatedAt >= mountedAt) {
+      // Data is confirmed fresh from the database — safe to redirect
       navigate(`/restaurant/${restaurant.slug}`, { replace: true });
     }
-  }, [isNumericId, restaurant?.slug, navigate]);
+  }, [isNumericId, restaurant?.slug, navigate, isFetching, dataUpdatedAt, mountedAt]);
   
   // Track funnel step after we have the restaurant data
   useEffect(() => {
