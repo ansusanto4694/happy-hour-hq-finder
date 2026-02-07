@@ -1,86 +1,60 @@
 
 
-# Phase 1B (Revised): Clean Up Mobile Search Result Cards
+## Fix: Bottom Navigation Always Tappable Over the Results Drawer
 
-## Summary of Changes
+**The problem in plain terms:** When you pull up the results list on `/results`, the drawer covers the entire screen -- including the Home, Search, Favorites, and Account buttons at the bottom. Even though those buttons look like they should be on top, the drawer is actually blocking your taps from reaching them.
 
-A balanced cleanup that removes visual clutter while keeping the information that helps users decide which merchant to tap. Every change is mobile-only -- the desktop layout stays exactly as it is today.
+**Why previous fixes didn't work:** Raising the navigation bar's priority (z-index) alone doesn't solve it because the drawer library applies a visual effect (`shouldScaleBackground`) that fundamentally changes how the browser decides what's "on top." It traps the navigation bar behind the drawer no matter how high we set its priority.
 
-## What Changes
+**The fix (two small changes):**
 
-### 1. Remove the left border accent
-The thick left border on every card (which appears dark gray instead of orange) gets removed. Cards will have a clean, flat edge like you'd see on Google Maps or Yelp listings.
+1. **Disable the background scaling effect on the results drawer** -- This is a one-line change in `MobileListDrawer.tsx`. It removes the visual trick that traps the navigation bar. The drawer will still slide up and work exactly the same; you just won't see a subtle background zoom effect (which most users never notice anyway).
 
-### 2. Happy hour time: only show it when relevant
-- If the merchant has a happy hour today, show the time (e.g., "4:00 PM - 7:00 PM")
-- If there's more than one happy hour today, show the first time plus "+1 more"
-- If there's no happy hour today, show nothing -- the row simply won't appear, saving vertical space for merchants that don't have one today
+2. **Remove the dark overlay behind the drawer** -- The drawer currently puts a dark semi-transparent layer over the entire screen (including over the nav bar). We'll remove this overlay specifically for the results drawer since the drawer sits on top of a map and doesn't need a dimming effect. This ensures nothing blocks your taps on the navigation buttons.
 
-### 3. Menu type badge: keep it, but tone it down
-This is the key balance point. The menu type badge ("Food & Drinks" or "Drinks Only") stays because it helps users like you who specifically want food deals. But instead of being a separate brightly-colored pill, it gets placed right next to the happy hour time as a subtle companion badge. The visual treatment:
+**What stays the same:**
+- The drawer still slides up and down as before
+- Scrolling through the merchant list works identically
+- The bottom padding we already added keeps merchant cards from hiding behind the nav bar
+- All other drawers/modals in the app are unaffected
 
-- **Food & Drinks**: Keeps a distinct color (teal) so it stands out as a "bonus" -- this merchant has food deals, not just drinks
-- **Drinks Only**: Uses a softer color (muted purple/gray) since this is the default expectation for happy hours
+---
 
-The result: when a user scans the list, "Food & Drinks" pops as a differentiator, while "Drinks Only" fades into the background. The information is there if you look for it, but it doesn't scream at you.
+### Technical Details
 
-### 4. Remove emojis from all badges
-No more party popper, beer mugs, or plate emojis. The badge colors and text already communicate what they are. This immediately reduces the "noisy carnival" feel.
+**File 1: `src/components/MobileListDrawer.tsx`**
+- Add `shouldScaleBackground={false}` to the `Drawer` component on line 79
+- Change: `<Drawer open={isOpen} onOpenChange={onOpenChange}>` becomes `<Drawer open={isOpen} onOpenChange={onOpenChange} shouldScaleBackground={false}>`
 
-### 5. Category badges: keep current logic
-The existing behavior stays: show up to 2 category badges, plus a "+N" overflow indicator. No changes here.
+**File 2: `src/components/MobileListDrawer.tsx`**
+- Pass a custom className to `DrawerContent` to remove the overlay
+- Change: `<DrawerContent className="max-h-[85vh] flex flex-col overflow-hidden">` becomes `<DrawerContent className="max-h-[85vh] flex flex-col overflow-hidden" overlayClassName="pointer-events-none bg-transparent">`
 
-### 6. Offer badge: keep it but remove emoji
-The green "Offer" badge stays (it's valuable signal) but drops the party popper emoji. It becomes a clean green pill that says "Offer".
+Since `DrawerContent` doesn't currently support an `overlayClassName` prop, we'll instead customize the overlay directly:
 
-## Before vs. After (what a card looks like)
+**File 2 (revised): `src/components/ui/drawer.tsx`**
+- Make the `DrawerOverlay` accept an optional prop to disable pointer events
+- Update `DrawerContent` to accept an optional `overlayProps` or simply allow passing overlay className
 
-**Before (current):**
-```
-[Logo]  Merchant Name                    [heart]
-        East Village  ★ 4.2
-        [🎉 Offer] [🍻 4:00 PM - 7:00 PM] [🍽️ Food & Drinks]
-        [Japanese] [Sushi] [+1]
-```
-Five colored badges, three emojis, left border accent.
+**Simpler approach -- just two changes:**
 
-**After (revised):**
-```
-[Logo]  Merchant Name                    [heart]
-        East Village  ★ 4.2
-        [Offer] [4:00 PM - 7:00 PM] [Food & Drinks]
-        [Japanese] [Sushi] [+1]
-```
-Same information, no emojis, no left border. Cleaner but still visually actionable.
+**File 1: `src/components/MobileListDrawer.tsx` (line 79)**
+- Add `shouldScaleBackground={false}` and `modal={false}` to the Drawer
+- `modal={false}` tells the drawer library not to trap focus or block interactions outside the drawer
+- This is the key fix: it allows taps on the nav bar to go through
 
-**When there's no happy hour today:**
-```
-[Logo]  Merchant Name                    [heart]
-        East Village  ★ 4.2
-        [Offer]
-        [Japanese] [Sushi]
-```
-The happy hour row items simply aren't shown, making the card shorter and signaling "nothing happening today" without needing to say it.
+**File 2: `src/components/MobileListDrawer.tsx` (line 80)**  
+- Add a custom overlay style to `DrawerContent` -- we won't need to change the shared drawer component at all since `modal={false}` removes the overlay behavior
 
-## Technical Details
+**Final implementation -- exactly two lines change in one file:**
 
-**File changed:** `src/components/SearchResultCard.tsx` (mobile section only, lines ~168-290)
+`src/components/MobileListDrawer.tsx`:
+1. Line 79: `<Drawer open={isOpen} onOpenChange={onOpenChange} shouldScaleBackground={false} modal={false}>`
+2. No other files need to change
 
-**Specific edits:**
-
-1. **Line 172**: Remove `border-l-4 border-l-primary/40` from the mobile Card className
-
-2. **Lines 228-234**: Change the Offer badge from `🎉 Offer` to just `Offer` (remove emoji, keep green styling)
-
-3. **Lines 236-251**: Update happy hour badge logic:
-   - Keep the amber-colored badge but remove the beer emoji
-   - Remove the entire `else` branch that renders "No HH Today" -- when `todaysHappyHours.length === 0`, render nothing
-
-4. **Lines 252-263**: Keep the menu type badge but remove the emoji prefix -- change `{menuTypeBadge.emoji} {menuTypeBadge.label}` to just `{menuTypeBadge.label}`. Keep the existing color differentiation (teal for food & drinks, purple for drinks only)
-
-**No changes to:**
-- Desktop layout (lines 292+)
-- Category badge logic (lines 267-289)
-- Logo, name, location, rating, or favorite button
-- Any data fetching, analytics tracking, or memoization logic
+Setting `modal={false}` means:
+- The drawer no longer blocks interactions with the rest of the page
+- Users can tap Home, Search, Favorites, Account while the drawer is open
+- The drawer still opens, closes, and scrolls normally
+- `shouldScaleBackground={false}` prevents the stacking context issue
 
