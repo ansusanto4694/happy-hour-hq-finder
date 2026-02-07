@@ -76,7 +76,7 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
   }, [isOpen, merchants, track]);
 
   return (
-    <Drawer open={isOpen} onOpenChange={onOpenChange}>
+    <Drawer open={isOpen} onOpenChange={onOpenChange} shouldScaleBackground={false} modal={false}>
       <DrawerContent className="max-h-[85vh] flex flex-col overflow-hidden">
         <DrawerHeader className="pb-4 flex-shrink-0">
           <div className="flex items-center justify-center mb-2">
