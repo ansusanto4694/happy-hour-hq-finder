@@ -1,58 +1,86 @@
 
 
-## Fix: Visiting `/restaurant/641` Redirects to the Old (Wrong) Name
+# Phase 1B (Revised): Clean Up Mobile Search Result Cards
 
-### What's Happening
+## Summary of Changes
 
-Your app has a **caching system** that saves restaurant data in your browser's local storage for up to 24 hours to make pages load faster. Here's the chain of events:
+A balanced cleanup that removes visual clutter while keeping the information that helps users decide which merchant to tap. Every change is mobile-only -- the desktop layout stays exactly as it is today.
 
-1. Before the rename, you (or someone) visited `/restaurant/641`
-2. The app saved the restaurant data -- including the old slug `peak-restaurant-hudson-yards-new-york` -- in your browser's cache
-3. You renamed the restaurant to "Quin Bar" -- the database correctly updated the slug to `quin-bar-hudson-yards-new-york`
-4. Now when you visit `/restaurant/641` again, the app finds the **cached (outdated) data** first, sees the old slug, and immediately redirects you to `/restaurant/peak-restaurant-hudson-yards-new-york`
-5. That old slug no longer exists in the database, so the page shows "Restaurant not found"
+## What Changes
 
-**The database is fine** -- the slug is correct (`quin-bar-hudson-yards-new-york`). The problem is the app trusts its local cache too much when deciding where to redirect.
+### 1. Remove the left border accent
+The thick left border on every card (which appears dark gray instead of orange) gets removed. Cards will have a clean, flat edge like you'd see on Google Maps or Yelp listings.
 
-### The Fix (Two Parts)
+### 2. Happy hour time: only show it when relevant
+- If the merchant has a happy hour today, show the time (e.g., "4:00 PM - 7:00 PM")
+- If there's more than one happy hour today, show the first time plus "+1 more"
+- If there's no happy hour today, show nothing -- the row simply won't appear, saving vertical space for merchants that don't have one today
 
-**Part 1: Don't redirect using stale cached data**
+### 3. Menu type badge: keep it, but tone it down
+This is the key balance point. The menu type badge ("Food & Drinks" or "Drinks Only") stays because it helps users like you who specifically want food deals. But instead of being a separate brightly-colored pill, it gets placed right next to the happy hour time as a subtle companion badge. The visual treatment:
 
-When someone visits a numeric ID URL like `/restaurant/641`, the redirect to the slug URL should only happen after we've confirmed the data is fresh from the database -- not from a 24-hour-old cache.
+- **Food & Drinks**: Keeps a distinct color (teal) so it stands out as a "bonus" -- this merchant has food deals, not just drinks
+- **Drinks Only**: Uses a softer color (muted purple/gray) since this is the default expectation for happy hours
 
-The app already tracks whether data is "fresh" or "from cache" internally. We just need to check that flag before redirecting.
+The result: when a user scans the list, "Food & Drinks" pops as a differentiator, while "Drinks Only" fades into the background. The information is there if you look for it, but it doesn't scream at you.
 
-**Part 2: After renaming, redirect the editor to the new URL**
+### 4. Remove emojis from all badges
+No more party popper, beer mugs, or plate emojis. The badge colors and text already communicate what they are. This immediately reduces the "noisy carnival" feel.
 
-This is the previously discussed fix. When an admin renames a restaurant, the editor should automatically navigate to the new URL so they never land on a stale page.
+### 5. Category badges: keep current logic
+The existing behavior stays: show up to 2 category badges, plus a "+N" overflow indicator. No changes here.
 
-### What Changes
+### 6. Offer badge: keep it but remove emoji
+The green "Offer" badge stays (it's valuable signal) but drops the party popper emoji. It becomes a clean green pill that says "Offer".
 
-| What | Change |
-|------|--------|
-| Visiting `/restaurant/641` | Will wait for fresh database data before redirecting to the slug URL -- no more redirecting to stale cached slugs |
-| Renaming a restaurant | After saving, the app redirects you to the new correct URL automatically |
-| Cache behavior | Still caches for performance, but won't blindly trust cached data for redirect decisions |
-| Everything else | Unchanged -- mobile, search results, map, etc. all work the same |
+## Before vs. After (what a card looks like)
 
-### Technical Details
+**Before (current):**
+```
+[Logo]  Merchant Name                    [heart]
+        East Village  ★ 4.2
+        [🎉 Offer] [🍻 4:00 PM - 7:00 PM] [🍽️ Food & Drinks]
+        [Japanese] [Sushi] [+1]
+```
+Five colored badges, three emojis, left border accent.
 
-**File 1: `src/pages/RestaurantProfile.tsx`**
+**After (revised):**
+```
+[Logo]  Merchant Name                    [heart]
+        East Village  ★ 4.2
+        [Offer] [4:00 PM - 7:00 PM] [Food & Drinks]
+        [Japanese] [Sushi] [+1]
+```
+Same information, no emojis, no left border. Cleaner but still visually actionable.
 
-- Add `isStale` and `dataUpdatedAt` from the `useQuery` return value to determine if current data is from the cache or a fresh fetch
-- Modify the redirect `useEffect` (line 230) to only redirect when the data is confirmed fresh (not stale). This means:
-  - `isStale === false` or we compare `dataUpdatedAt` to ensure it was fetched after the component mounted
-  - This prevents the race condition where cached data triggers a redirect before the real database response arrives
-- Alternative simpler approach: use `isFetching` -- only redirect when `!isFetching` (meaning the network request has completed and we have the final, fresh result)
+**When there's no happy hour today:**
+```
+[Logo]  Merchant Name                    [heart]
+        East Village  ★ 4.2
+        [Offer]
+        [Japanese] [Sushi]
+```
+The happy hour row items simply aren't shown, making the card shorter and signaling "nothing happening today" without needing to say it.
 
-**File 2: `src/components/restaurant-profile-editor/useRestaurantMutations.ts`**
+## Technical Details
 
-- Modify `updateRestaurantMutation` to use `.select('slug').single()` so it returns the new slug after the update
-- Return the mutation result (including new slug) from the mutation function
+**File changed:** `src/components/SearchResultCard.tsx` (mobile section only, lines ~168-290)
 
-**File 3: `src/components/RestaurantProfileEditor.tsx`**
+**Specific edits:**
 
-- Import `useNavigate` from react-router-dom
-- After a successful save in `handleSubmit`, check if name/city/neighborhood changed
-- If so, read the new slug from the mutation result and call `navigate('/restaurant/${newSlug}', { replace: true })` to redirect to the correct URL
+1. **Line 172**: Remove `border-l-4 border-l-primary/40` from the mobile Card className
+
+2. **Lines 228-234**: Change the Offer badge from `🎉 Offer` to just `Offer` (remove emoji, keep green styling)
+
+3. **Lines 236-251**: Update happy hour badge logic:
+   - Keep the amber-colored badge but remove the beer emoji
+   - Remove the entire `else` branch that renders "No HH Today" -- when `todaysHappyHours.length === 0`, render nothing
+
+4. **Lines 252-263**: Keep the menu type badge but remove the emoji prefix -- change `{menuTypeBadge.emoji} {menuTypeBadge.label}` to just `{menuTypeBadge.label}`. Keep the existing color differentiation (teal for food & drinks, purple for drinks only)
+
+**No changes to:**
+- Desktop layout (lines 292+)
+- Category badge logic (lines 267-289)
+- Logo, name, location, rating, or favorite button
+- Any data fetching, analytics tracking, or memoization logic
 
