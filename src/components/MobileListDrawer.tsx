@@ -9,7 +9,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
-import { MapPin, Clock } from 'lucide-react';
+import { GripHorizontal } from 'lucide-react';
 
 interface MobileListDrawerProps {
   isOpen: boolean;
@@ -34,20 +34,7 @@ interface MobileListDrawerProps {
   selectedMenuType: 'all' | 'food_and_drinks' | 'drinks_only';
   onMenuTypeChange: (menuType: 'all' | 'food_and_drinks' | 'drinks_only') => void;
   onMerchantNavigate?: (merchantId: number) => void;
-  carouselName?: string;
 }
-
-const formatTime = (time?: string) => {
-  if (!time) return '';
-  if (time.toUpperCase().includes('AM') || time.toUpperCase().includes('PM')) {
-    return time;
-  }
-  const [hours, minutes] = time.split(':');
-  const hour = parseInt(hours);
-  const ampm = hour >= 12 ? 'PM' : 'AM';
-  const displayHour = hour % 12 || 12;
-  return `${displayHour}:${minutes} ${ampm}`;
-};
 
 export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
   isOpen,
@@ -72,7 +59,6 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
   selectedMenuType,
   onMenuTypeChange,
   onMerchantNavigate,
-  carouselName,
 }) => {
   const { track } = useAnalytics();
 
@@ -89,49 +75,15 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
     }
   }, [isOpen, merchants, track]);
 
-  // Build contextual title
-  const headerTitle = carouselName
-    ? carouselName
-    : location
-      ? `Happy Hours in ${location}`
-      : 'Happy Hours Near You';
-
-  const hasTimeFilter = !!(startTime && endTime);
-  const resultCount = merchants?.length || 0;
-
   return (
     <Drawer open={isOpen} onOpenChange={onOpenChange} shouldScaleBackground={false} modal={false}>
       <DrawerContent className="max-h-[85vh] flex flex-col overflow-hidden">
-        <DrawerHeader className="pb-3 pt-1 flex-shrink-0 border-b border-border">
-          {/* Drag handle */}
-          <div className="flex items-center justify-center py-1">
-            <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+        <DrawerHeader className="pb-4 flex-shrink-0">
+          <div className="flex items-center justify-center mb-2">
+            <GripHorizontal className="h-6 w-6 text-gray-400" />
           </div>
-
-          {/* Title row */}
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex-1 min-w-0">
-              <DrawerTitle className="text-base font-semibold text-foreground truncate">
-                {headerTitle}
-              </DrawerTitle>
-              <div className="flex items-center gap-3 mt-1">
-                <span className="text-xs text-muted-foreground font-medium">
-                  {resultCount} {resultCount === 1 ? 'result' : 'results'}
-                </span>
-                {location && !carouselName && (
-                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <MapPin className="h-3 w-3 flex-shrink-0" />
-                    <span className="truncate max-w-[120px]">{location}</span>
-                  </span>
-                )}
-                {hasTimeFilter && (
-                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Clock className="h-3 w-3 flex-shrink-0" />
-                    {formatTime(startTime)}–{formatTime(endTime)}
-                  </span>
-                )}
-              </div>
-            </div>
+          <div className="flex items-center justify-between">
+            <DrawerTitle>Results ({merchants?.length || 0})</DrawerTitle>
             <MobileFilterDrawer
               selectedCategories={selectedCategories}
               onCategoryChange={onCategoryChange}
