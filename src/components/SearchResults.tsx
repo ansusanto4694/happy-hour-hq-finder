@@ -223,17 +223,19 @@ const SearchResultsComponent: React.FC<SearchResultsProps> = ({
 
   return (
     <div className="space-y-4">
-      <SearchResultsHeader 
-        resultsCount={totalResults}
-        startTime={startTime}
-        endTime={endTime}
-        location={location}
-        currentPage={isMobile ? 1 : validatedPage}
-        totalPages={isMobile ? 1 : totalPages}
-        resultsPerPage={RESULTS_PER_PAGE}
-        searchTerm={searchTerm}
-        isMobile={isMobile}
-      />
+      {!isMobile && (
+        <SearchResultsHeader 
+          resultsCount={totalResults}
+          startTime={startTime}
+          endTime={endTime}
+          location={location}
+          currentPage={validatedPage}
+          totalPages={totalPages}
+          resultsPerPage={RESULTS_PER_PAGE}
+          searchTerm={searchTerm}
+          isMobile={false}
+        />
+      )}
       
       <div className="space-y-3">
         {resultsToShow.map((restaurant) => (
