@@ -169,7 +169,7 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
         ref={cardRef}
         className={`${
           isMobile 
-            ? 'min-h-[140px] active:scale-[0.98] active:bg-muted/50 transition-all duration-150 cursor-pointer touch-manipulation border-l-4 border-l-primary/40' 
+            ? 'min-h-[140px] active:scale-[0.98] active:bg-muted/50 transition-all duration-150 cursor-pointer touch-manipulation' 
             : 'hover:shadow-lg hover:scale-[1.02] hover:border-l-4 hover:border-l-primary/60 transition-all duration-300 cursor-pointer group'
         }`}
       >
@@ -230,23 +230,16 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
                     variant="default" 
                     className="text-xs px-2 py-1 font-semibold bg-emerald-600 text-white shadow-sm"
                   >
-                    🎉 Offer
+                    Offer
                   </Badge>
                 )}
-                {todaysHappyHours.length > 0 ? (
+                {todaysHappyHours.length > 0 && (
                   <Badge 
                     variant="secondary" 
                     className="text-xs px-2 py-1 font-semibold bg-amber-500/90 text-white shadow-sm"
                   >
-                    🍻 {todaysHappyHours[0].start} - {todaysHappyHours[0].end}
+                    {todaysHappyHours[0].start} - {todaysHappyHours[0].end}
                     {todaysHappyHours.length > 1 && ` +${todaysHappyHours.length - 1}`}
-                  </Badge>
-                ) : (
-                  <Badge 
-                    variant="outline" 
-                    className="text-xs px-2 py-1 font-medium text-muted-foreground border-muted-foreground/30"
-                  >
-                    No HH Today
                   </Badge>
                 )}
                 {menuTypeBadge && (
@@ -258,7 +251,7 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
                         : 'bg-purple-500/90 text-white'
                     }`}
                   >
-                    {menuTypeBadge.emoji} {menuTypeBadge.label}
+                    {menuTypeBadge.label}
                   </Badge>
                 )}
               </div>
