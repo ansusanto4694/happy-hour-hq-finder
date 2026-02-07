@@ -1,7 +1,7 @@
 import { useAuth } from '@/hooks/useAuth';
 import { useFavorites } from '@/hooks/useFavorites';
-import { Navigate, Link } from 'react-router-dom';
-import { Heart, MapPin } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Heart, MapPin, LogIn } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FavoriteButton } from '@/components/FavoriteButton';
@@ -14,11 +14,10 @@ export default function Favorites() {
   const { user } = useAuth();
   const { favorites, isLoading } = useFavorites(user?.id);
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
 
-  // Redirect to auth if not logged in
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
+  // Guest state: show a sign-in prompt instead of redirecting
+  const isGuest = !user;
 
   return (
     <>
@@ -31,18 +30,38 @@ export default function Favorites() {
         <div className="absolute inset-0 bg-black/10"></div>
         <div className="relative z-10">
           {!isMobile && <PageHeader showSearchBar={true} searchBarVariant="results" />}
-          <div className={`container mx-auto px-4 max-w-6xl ${isMobile ? 'py-8' : 'pt-40 pb-8'}`}>
+          <div className={`container mx-auto px-4 max-w-6xl ${isMobile ? 'py-8 pb-24' : 'pt-40 pb-8'}`}>
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-foreground mb-2 flex items-center gap-3">
               <Heart className="h-8 w-8 text-red-500 fill-current" />
               My Favorites
             </h1>
-            <p className="text-muted-foreground">
-              {favorites.length} saved restaurant{favorites.length !== 1 ? 's' : ''}
-            </p>
+            {!isGuest && (
+              <p className="text-muted-foreground">
+                {favorites.length} saved restaurant{favorites.length !== 1 ? 's' : ''}
+              </p>
+            )}
           </div>
 
-          {isLoading ? (
+          {isGuest ? (
+            <Card className="p-12 text-center">
+              <LogIn className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+              <h2 className="text-2xl font-semibold text-foreground mb-2">
+                Sign in to see your favorites
+              </h2>
+              <p className="text-muted-foreground mb-6">
+                Create a free account to save your favorite happy hour spots and access them anytime.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button onClick={() => navigate('/auth?returnTo=/favorites')}>
+                  Sign In
+                </Button>
+                <Button variant="outline" asChild>
+                  <Link to="/">Browse Happy Hours</Link>
+                </Button>
+              </div>
+            </Card>
+          ) : isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => (
                 <Card key={i} className="animate-pulse">

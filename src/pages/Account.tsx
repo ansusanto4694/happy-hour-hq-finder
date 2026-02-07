@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -9,20 +9,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ProfileForm } from '@/components/account/ProfileForm';
 import { MyReviews } from '@/components/account/MyReviews';
-import { User, Heart, Star } from 'lucide-react';
+import { User, Heart, Star, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Account = () => {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate('/auth');
-    }
-  }, [user, loading, navigate]);
+  // Guest state: show sign-in prompt instead of redirecting
+  const isGuest = !loading && !user;
 
   if (loading) {
     return (
@@ -32,7 +31,46 @@ const Account = () => {
     );
   }
 
-  if (!user || !profile) {
+  if (isGuest) {
+    return (
+      <div className="relative min-h-screen bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500">
+        <div className="absolute inset-0 bg-black/10"></div>
+        <div className="relative z-10">
+          <SEOHead
+            title="My Account - SipMunchYap"
+            description="Sign in to manage your SipMunchYap account."
+            noIndex
+          />
+          {!isMobile && <PageHeader showSearchBar={true} searchBarVariant="results" />}
+          <div className={`max-w-5xl mx-auto px-4 ${isMobile ? 'py-8 pb-24' : 'pt-40 pb-8'}`}>
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold mb-2 text-white">My Account</h1>
+            </div>
+            <Card className="p-12 text-center">
+              <LogIn className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+              <h2 className="text-2xl font-semibold text-foreground mb-2">
+                Sign in to access your account
+              </h2>
+              <p className="text-muted-foreground mb-6">
+                Create a free account to manage your profile, write reviews, and save your favorite spots.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button onClick={() => navigate('/auth?returnTo=/account')}>
+                  Sign In
+                </Button>
+                <Button variant="outline" asChild>
+                  <Link to="/">Browse Happy Hours</Link>
+                </Button>
+              </div>
+            </Card>
+          </div>
+          <Footer />
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile) {
     return null;
   }
 
@@ -41,11 +79,20 @@ const Account = () => {
     year: 'numeric'
   });
 
+  return <AuthenticatedAccount user={user!} profile={profile} memberSince={memberSince} isMobile={isMobile} />;
+};
+
+// Extracted to its own component so hooks (useQuery) aren't called conditionally
+const AuthenticatedAccount = ({ user, profile, memberSince, isMobile }: {
+  user: { id: string };
+  profile: { first_name: string; created_at: string };
+  memberSince: string;
+  isMobile: boolean;
+}) => {
   // Fetch draft count for badge
   const { data: draftCount } = useQuery({
-    queryKey: ['draft-count', user?.id],
+    queryKey: ['draft-count', user.id],
     queryFn: async () => {
-      if (!user) return 0;
       const { count, error } = await supabase
         .from('merchant_reviews')
         .select('*', { count: 'exact', head: true })
@@ -55,7 +102,6 @@ const Account = () => {
       if (error) return 0;
       return count || 0;
     },
-    enabled: !!user,
   });
 
   return (
@@ -74,7 +120,7 @@ const Account = () => {
         
         <PageHeader showSearchBar={true} searchBarVariant="results" />
         
-        <div className="max-w-5xl mx-auto px-4 py-8 pt-40">
+        <div className={`max-w-5xl mx-auto px-4 ${isMobile ? 'py-8 pb-24' : 'pt-40 pb-8'}`}>
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2 text-white">
