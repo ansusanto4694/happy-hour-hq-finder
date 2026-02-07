@@ -439,6 +439,7 @@ const Results = () => {
             onEndTimeChange={handleEndTimeChange}
             selectedMenuType={selectedMenuType}
             onMenuTypeChange={setSelectedMenuType}
+            carouselName={carouselName}
           />
         </div>
       )}
