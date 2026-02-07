@@ -83,12 +83,7 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
             <GripHorizontal className="h-6 w-6 text-gray-400" />
           </div>
           <div className="flex items-center justify-between">
-            <DrawerTitle>
-              {location 
-                ? `Happy Hours in ${location} (${merchants?.length || 0})`
-                : `All Happy Hours (${merchants?.length || 0})`
-              }
-            </DrawerTitle>
+            <DrawerTitle>Results ({merchants?.length || 0})</DrawerTitle>
             <MobileFilterDrawer
               selectedCategories={selectedCategories}
               onCategoryChange={onCategoryChange}
@@ -111,7 +106,7 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
         
         <div 
           data-vaul-drawer-scroll="true"
-          className="px-4 pb-24 overflow-y-auto flex-1"
+          className="px-4 pb-4 overflow-y-auto flex-1"
           style={{ minHeight: 0 }}
         >
           <SearchResults 
