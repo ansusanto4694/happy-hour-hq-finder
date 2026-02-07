@@ -41,6 +41,10 @@ const Auth = () => {
   const navigate = useNavigate();
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
+  // Read returnTo from URL params for post-auth redirect
+  const searchParams = new URLSearchParams(window.location.search);
+  const returnTo = searchParams.get('returnTo');
+
   // Track auth funnel entry
   useEffect(() => {
     trackFunnel({
@@ -97,9 +101,9 @@ const Auth = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (user) {
-      navigate('/');
+      navigate(returnTo || '/');
     }
-  }, [user, navigate]);
+  }, [user, navigate, returnTo]);
   
   // Track field focus
   const handleFieldFocus = (fieldName: string) => {
@@ -156,7 +160,7 @@ const Auth = () => {
         funnelStep: 'signin_success',
         stepOrder: 3,
       });
-      navigate('/');
+      navigate(returnTo || '/');
     } else {
       // Track signin failure
       track({

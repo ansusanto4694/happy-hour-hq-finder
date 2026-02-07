@@ -37,7 +37,9 @@ export const AuthRequiredModal = ({
       merchantId,
     });
     
-    navigate('/auth');
+    // Pass current path as returnTo so user comes back after auth
+    const returnTo = window.location.pathname;
+    navigate(`/auth?returnTo=${encodeURIComponent(returnTo)}`);
     onOpenChange(false);
   };
 
