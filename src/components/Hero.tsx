@@ -75,11 +75,15 @@ const Hero = () => {
         </div>
         
         <SearchBar />
+      </div>
         
-        {/* Recently viewed merchants */}
+      {/* Recently viewed merchants */}
+      <div className="px-4 mt-6">
         <RecentlyViewedCarousel />
+      </div>
         
-        {/* Mobile carousels */}
+      {/* Mobile carousels */}
+      <div className="px-4">
         <MobileCarousels />
       </div>
     </div>
