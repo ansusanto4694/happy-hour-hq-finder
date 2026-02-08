@@ -1,111 +1,133 @@
 
 
-## "Happening Now" Quick Filter
+## "Happening Today" Quick Filter
 
 ### What It Does
-A prominent toggle that instantly filters results to only show merchants whose happy hour is active right now -- based on the current day of the week and time of day.
+A companion button to "Happening Now" that filters results to show all merchants with happy hours scheduled for today -- regardless of whether they're currently active. Perfect for planning ahead during the day.
 
-### User Experience
+### How the Two Buttons Work Together
 
-**Desktop (filter sidebar on /results):**
-- At the very top of the filter panel, above Categories and all other filters, there is a large, eye-catching "Happening Now" toggle button
-- It uses a distinct visual style -- a gradient pill (orange-to-amber, matching the existing day-of-week selected style) with a clock/zap icon and the text "Happening Now"
-- When OFF: it looks like a muted outline button, clearly tappable
-- When ON: it fills with the orange gradient, glows slightly, and a small pulsing dot appears next to the text to convey "live" status
-- The Day of the Week and Happy Hour Time sections remain fully interactive at all times
-- If the user toggles "Happening Now" ON and then touches any day button or changes a start/end time, "Happening Now" automatically turns OFF -- no confirmation needed, no jarring layout shift
-- This feels natural: "I was looking at what's live, but now I want to plan for Friday evening" -- the toggle simply deactivates as the manual controls take over
-- The "Clear All" button also clears "Happening Now"
+```text
++-----------------------------+-----------------------------+
+|     [clock] Happening Now   |  [calendar] Happening Today |
++-----------------------------+-----------------------------+
+```
 
-**Mobile (filter drawer):**
-- Same toggle appears at the top of the filter drawer content, before Categories
-- Same auto-off behavior when day/time controls are touched
-- Same visual treatment (gradient pill with pulsing dot when active)
+- They sit side-by-side in a row at the top of the filter panel
+- They are **mutually exclusive** -- tapping one turns off the other
+- Both auto-deactivate when the user manually touches day or time filters
+- "Clear All" clears both
 
-### How It Feels Step-by-Step
+### Behavior Comparison
 
-1. User opens /results and sees "Happening Now" at the top of the filters, styled as a clear call-to-action
-2. They tap it -- the button lights up with the orange gradient and a pulsing dot
-3. The results list instantly updates to show only places with active happy hours right now
-4. They scroll through results, then decide to check Friday deals instead
-5. They tap "Fri" in the Days section -- "Happening Now" silently turns off, the button returns to its muted state, and results update to show Friday happy hours
-6. If they want to go back to "live" results, they just tap "Happening Now" again -- it clears their manual day/time selections and re-applies the current moment filter
+| | Happening Now | Happening Today |
+|---|---|---|
+| Day filter | Today only | Today only |
+| Time filter | Current time (point-in-time) | None (all hours) |
+| Results | Only active-right-now happy hours | All happy hours scheduled today |
+| Icon | Clock | Calendar |
+| Active color | Orange-to-amber gradient | Blue-to-indigo gradient |
+| Pulsing dot | Green (live indicator) | None (not "live") |
+
+### User Flow
+
+1. User opens /results and sees two buttons at the top of the filters: "Happening Now" and "Happening Today"
+2. They tap "Happening Today" -- it lights up with a blue gradient
+3. Results show all merchants that have any happy hour on today's day of the week (e.g., all Wednesday happy hours)
+4. They tap "Happening Now" instead -- "Happening Today" turns off, "Happening Now" lights up with the orange gradient and pulsing dot, results narrow to only currently-active happy hours
+5. They tap a day button (e.g., "Fri") -- both quick filters turn off, results update for Friday
+6. "Clear All" resets everything including both quick filters
 
 ### What Stays the Same
-- All existing filter logic (categories, distance, menu type, offers)
-- The filter sidebar layout and scrolling behavior
+- All existing filter logic
+- The "Happening Now" button behavior and styling
 - Mobile filter drawer structure
-- URL parameter persistence for other filters
+- URL parameter persistence
 
 ---
 
 ### Technical Details
 
-**Approach: Client-side filtering (fastest possible)**
+**Approach: Same client-side pattern as "Happening Now"**
 
-The `merchant_happy_hour` data (day_of_week, happy_hour_start, happy_hour_end) is already fetched in the main `useMerchants` query. "Happening Now" will simply set the day and time filters to the current values, meaning zero additional network calls.
+"Happening Today" sets the day filter to today but leaves time filters empty, so `useMerchants` returns all merchants with happy hours on that day. No changes to the data-fetching layer.
 
 **Files to modify:**
 
-1. **`src/pages/Results.tsx`** (~15 lines changed)
-   - Add `happeningNow` URL param state (boolean, persisted like other filters)
-   - When `happeningNow` is true, compute the current day-of-week (0-6, matching the DB schema) and current time, then pass those as the `selectedDays` and `startTime`/`endTime` to `useMerchants` instead of the manual values
-   - When `handleDaysChange` or `handleStartTimeChange`/`handleEndTimeChange` are called AND `happeningNow` is true, auto-set `happeningNow` to false before applying the manual change
-   - Pass `happeningNow` and `onHappeningNowChange` to `UnifiedFilterBar` and `MobileFilterDrawerV2`
-   - Include `happeningNow` in the "Clear All" reset logic
+1. **`src/pages/Results.tsx`** (~20 lines changed)
+   - Add `happeningToday` URL param state (boolean), similar to `happeningNow`
+   - Add `setHappeningToday` function that clears `happeningNow`, manual days, and manual times when activated
+   - Update `setHappeningNow` to also clear `happeningToday` when activated (mutual exclusivity)
+   - Update `handleDaysChange`, `handleStartTimeChange`, `handleEndTimeChange` to also auto-off `happeningToday`
+   - Update `effectiveDays`: if `happeningToday` is true, set to current day (same mapping as `happeningNow`)
+   - Update `effectiveStartTime`/`effectiveEndTime`: if `happeningToday` is true, leave as empty strings (no time filter)
+   - Pass `happeningToday` and `onHappeningTodayChange` to `UnifiedFilterBar` and `MobileListDrawer`
+   - Pass `happeningToday` to `SearchResults`
+   - Include `happeningToday` in the clear-all reset
 
-2. **`src/components/UnifiedFilterBar.tsx`** (~30 lines changed)
-   - Add `happeningNow` and `onHappeningNowChange` to the props interface
-   - Add the "Happening Now" toggle button at the top of CardContent, before all other filter sections
-   - Visual: a full-width button with clock icon, gradient when active, pulsing dot indicator
-   - When day buttons are clicked or time dropdowns are changed inside UnifiedFilterBar, call `onHappeningNowChange(false)` before applying the change
-   - Include `happeningNow` in the `hasAnyFilters` check
-   - Include `happeningNow` in the `clearAllFilters` function
+2. **`src/components/UnifiedFilterBar.tsx`** (~25 lines changed)
+   - Add `happeningToday` and `onHappeningTodayChange` props
+   - Replace the single full-width button with a two-button row layout using `grid grid-cols-2 gap-2`
+   - Add "Happening Today" button with calendar icon and blue-to-indigo gradient when active
+   - When day or time controls are manually changed, also call `onHappeningTodayChange(false)`
+   - Include `happeningToday` in `hasAnyFilters` and `clearAllFilters`
 
-3. **`src/components/MobileFilterDrawerV2.tsx`** (~5 lines changed)
-   - Pass through `happeningNow` and `onHappeningNowChange` props to `UnifiedFilterBar`
+3. **`src/components/MobileFilterDrawerV2.tsx`** (~2 lines changed)
+   - Pass through `happeningToday` and `onHappeningTodayChange` props
+
+4. **`src/components/MobileListDrawer.tsx`** (~4 lines changed)
+   - Accept and pass through `happeningToday` and `onHappeningTodayChange` props
+   - Pass `happeningToday` to `SearchResults`
+
+5. **`src/components/SearchResults.tsx`** (~2 lines changed)
+   - Accept and pass `happeningToday` to `SearchResultsHeader`
+
+6. **`src/components/SearchResultsHeader.tsx`** (~10 lines changed)
+   - Add `happeningToday` prop
+   - Add a third display branch: when `happeningToday` is true, show "Happening Today" label with a calendar icon (no pulsing dot, since it's not "live")
+   - Display order: Happening Now > Happening Today > manual time range
 
 **Filtering logic (in Results.tsx):**
 
 ```text
-if happeningNow is true:
-  currentDay = new Date().getDay()  -- convert to 0=Mon...6=Sun format
-  currentTime = format current time as HH:MM string
-  pass [currentDay] as selectedDays
-  pass currentTime as both startTime and endTime to useMerchants
-else:
-  use manual day/time filter values as today
+effectiveDays:
+  if happeningNow -> [currentDay]
+  else if happeningToday -> [currentDay]
+  else -> selectedDays (manual)
+
+effectiveStartTime / effectiveEndTime:
+  if happeningNow -> currentTime / currentTime
+  if happeningToday -> "" / "" (no time filter = show all hours today)
+  else -> manual startTime / endTime
 ```
 
-This reuses the existing time/day filtering in `useMerchants` (lines 269-305) with no changes needed to the data-fetching layer.
-
-**Auto-off behavior (in Results.tsx):**
+**Mutual exclusivity (in Results.tsx):**
 
 ```text
-handleDaysChange(days):
-  if happeningNow: set happeningNow = false
-  update days URL param as normal
+setHappeningNow(true):
+  set happeningNow = true
+  set happeningToday = false  // NEW
+  clear days, startTime, endTime
 
-handleStartTimeChange(time):
-  if happeningNow: set happeningNow = false  
-  update startTime URL param as normal
+setHappeningToday(true):
+  set happeningToday = true
+  set happeningNow = false   // NEW
+  clear days, startTime, endTime
 
-handleEndTimeChange(time):
-  if happeningNow: set happeningNow = false
-  update endTime URL param as normal
+setHappeningToday(false):
+  just remove happeningToday param
 ```
 
-**Visual styling for the toggle (in UnifiedFilterBar.tsx):**
+**Visual styling for the two-button row (in UnifiedFilterBar.tsx):**
 
 ```text
-When OFF:
-  - Outline style, muted text, clock icon
-  - "Happening Now" label
+Layout: grid grid-cols-2 gap-2
 
-When ON:
-  - Orange-to-amber gradient background (bg-gradient-to-r from-orange-500 to-amber-500)
-  - White text, clock icon
-  - Small pulsing green dot (animate-pulse) to indicate "live"
-  - "Happening Now" label
+"Happening Now" (left):
+  OFF: outline, muted, clock icon
+  ON: orange-to-amber gradient, white text, pulsing green dot
+
+"Happening Today" (right):
+  OFF: outline, muted, calendar icon
+  ON: blue-to-indigo gradient (from-blue-500 to-indigo-500), white text, no pulsing dot
 ```
-
