@@ -26,4 +26,4 @@ Disallow: /account
 Disallow: /write-review
 Crawl-delay: 1
 
-Sitemap: https://gohcqazhofdhkghfxfok.supabase.co/functions/v1/generate-sitemap
+Sitemap: https://sipmunchyap.com/sitemap.xml
