@@ -1,133 +1,63 @@
 
 
-## "Happening Today" Quick Filter
+## Enrich Mobile Map Preview Card Content
 
-### What It Does
-A companion button to "Happening Now" that filters results to show all merchants with happy hours scheduled for today -- regardless of whether they're currently active. Perfect for planning ahead during the day.
+### What Changes
 
-### How the Two Buttons Work Together
+Replace the address-focused content in the mobile map preview card with discovery-oriented information that helps users decide whether to tap "View Restaurant":
+
+**Current (address-focused):**
+- Line 1: Merchant Name
+- Line 2: Street Address
+- Line 3: City, State
+
+**New (discovery-focused):**
+- Line 1: Merchant Name (bold, prominent)
+- Line 2: Deal type badge -- "Food & Drinks" (teal) or "Drinks Only" (purple), plus today's happy hour time as a secondary badge
+- Line 3: Category tags -- compact outline badges (e.g., "Sushi", "Mexican", "Sports Bar")
+
+### Visual Design
+
+The card will feel more like a rich mini-preview of the SearchResultCard, giving users a "taste" of what they'll find:
 
 ```text
-+-----------------------------+-----------------------------+
-|     [clock] Happening Now   |  [calendar] Happening Today |
-+-----------------------------+-----------------------------+
++----------------------------------------------+
+|  [Logo]   Merchant Name                   [X] |
+|           [Food & Drinks] [4-7 PM]            |
+|           Sushi  Mexican  +1                  |
+|                                               |
+|         [  View Restaurant  ]                 |
++----------------------------------------------+
 ```
 
-- They sit side-by-side in a row at the top of the filter panel
-- They are **mutually exclusive** -- tapping one turns off the other
-- Both auto-deactivate when the user manually touches day or time filters
-- "Clear All" clears both
-
-### Behavior Comparison
-
-| | Happening Now | Happening Today |
-|---|---|---|
-| Day filter | Today only | Today only |
-| Time filter | Current time (point-in-time) | None (all hours) |
-| Results | Only active-right-now happy hours | All happy hours scheduled today |
-| Icon | Clock | Calendar |
-| Active color | Orange-to-amber gradient | Blue-to-indigo gradient |
-| Pulsing dot | Green (live indicator) | None (not "live") |
-
-### User Flow
-
-1. User opens /results and sees two buttons at the top of the filters: "Happening Now" and "Happening Today"
-2. They tap "Happening Today" -- it lights up with a blue gradient
-3. Results show all merchants that have any happy hour on today's day of the week (e.g., all Wednesday happy hours)
-4. They tap "Happening Now" instead -- "Happening Today" turns off, "Happening Now" lights up with the orange gradient and pulsing dot, results narrow to only currently-active happy hours
-5. They tap a day button (e.g., "Fri") -- both quick filters turn off, results update for Friday
-6. "Clear All" resets everything including both quick filters
-
-### What Stays the Same
-- All existing filter logic
-- The "Happening Now" button behavior and styling
-- Mobile filter drawer structure
-- URL parameter persistence
-
----
+- Deal type badges use the same teal/purple color coding from the search result cards
+- Happy hour time badge uses the amber color from search cards
+- Category badges use subtle outline style, matching the card pattern
+- If no deals exist, that line gracefully falls back to the neighborhood name so the line is never empty
+- Categories are capped at 2 visible + a "+N" overflow badge to prevent wrapping
 
 ### Technical Details
 
-**Approach: Same client-side pattern as "Happening Now"**
-
-"Happening Today" sets the day filter to today but leaves time filters empty, so `useMerchants` returns all merchants with happy hours on that day. No changes to the data-fetching layer.
+**Data flow fix:** The `Restaurant` interface in both `ResultsMap.tsx` and `MerchantMapPreviewCard.tsx` currently omits the deal/category data. The full merchant objects from `useMerchants` already contain `merchant_happy_hour`, `happy_hour_deals`, `merchant_categories`, and `merchant_offers` -- we just need to widen the interface and pass them through.
 
 **Files to modify:**
 
-1. **`src/pages/Results.tsx`** (~20 lines changed)
-   - Add `happeningToday` URL param state (boolean), similar to `happeningNow`
-   - Add `setHappeningToday` function that clears `happeningNow`, manual days, and manual times when activated
-   - Update `setHappeningNow` to also clear `happeningToday` when activated (mutual exclusivity)
-   - Update `handleDaysChange`, `handleStartTimeChange`, `handleEndTimeChange` to also auto-off `happeningToday`
-   - Update `effectiveDays`: if `happeningToday` is true, set to current day (same mapping as `happeningNow`)
-   - Update `effectiveStartTime`/`effectiveEndTime`: if `happeningToday` is true, leave as empty strings (no time filter)
-   - Pass `happeningToday` and `onHappeningTodayChange` to `UnifiedFilterBar` and `MobileListDrawer`
-   - Pass `happeningToday` to `SearchResults`
-   - Include `happeningToday` in the clear-all reset
+1. **`src/components/ResultsMap.tsx`** (~5 lines)
+   - Expand the `Restaurant` interface to include optional fields: `merchant_happy_hour`, `happy_hour_deals`, `merchant_categories`, `merchant_offers`, `neighborhood`
+   - No other logic changes needed -- the restaurant objects passed in already carry this data
 
-2. **`src/components/UnifiedFilterBar.tsx`** (~25 lines changed)
-   - Add `happeningToday` and `onHappeningTodayChange` props
-   - Replace the single full-width button with a two-button row layout using `grid grid-cols-2 gap-2`
-   - Add "Happening Today" button with calendar icon and blue-to-indigo gradient when active
-   - When day or time controls are manually changed, also call `onHappeningTodayChange(false)`
-   - Include `happeningToday` in `hasAnyFilters` and `clearAllFilters`
+2. **`src/components/MerchantMapPreviewCard.tsx`** (~40 lines)
+   - Expand the `Restaurant` interface to match (add same optional fields)
+   - Import `Badge` component, `getMenuTypeBadge`, and `getAllTodaysHappyHours` utilities
+   - Replace mobile Line 2 (street address) with a badges row:
+     - Menu type badge (teal for Food & Drinks, purple for Drinks Only) using `getMenuTypeBadge()`
+     - Today's happy hour time badge (amber) using `getAllTodaysHappyHours()`
+     - If neither exists, fall back to neighborhood/city name
+   - Replace mobile Line 3 (city, state) with category tags:
+     - Show up to 2 category names as outline badges from `merchant_categories`
+     - Show "+N" overflow badge if more than 2
+     - If no categories, omit the line entirely (no empty space)
+   - Desktop card remains unchanged (it's a simple hover tooltip and works fine as-is)
 
-3. **`src/components/MobileFilterDrawerV2.tsx`** (~2 lines changed)
-   - Pass through `happeningToday` and `onHappeningTodayChange` props
+**No new dependencies.** All utilities (`getMenuTypeBadge`, `getAllTodaysHappyHours`) and components (`Badge`) already exist and are used by `SearchResultCard.tsx`.
 
-4. **`src/components/MobileListDrawer.tsx`** (~4 lines changed)
-   - Accept and pass through `happeningToday` and `onHappeningTodayChange` props
-   - Pass `happeningToday` to `SearchResults`
-
-5. **`src/components/SearchResults.tsx`** (~2 lines changed)
-   - Accept and pass `happeningToday` to `SearchResultsHeader`
-
-6. **`src/components/SearchResultsHeader.tsx`** (~10 lines changed)
-   - Add `happeningToday` prop
-   - Add a third display branch: when `happeningToday` is true, show "Happening Today" label with a calendar icon (no pulsing dot, since it's not "live")
-   - Display order: Happening Now > Happening Today > manual time range
-
-**Filtering logic (in Results.tsx):**
-
-```text
-effectiveDays:
-  if happeningNow -> [currentDay]
-  else if happeningToday -> [currentDay]
-  else -> selectedDays (manual)
-
-effectiveStartTime / effectiveEndTime:
-  if happeningNow -> currentTime / currentTime
-  if happeningToday -> "" / "" (no time filter = show all hours today)
-  else -> manual startTime / endTime
-```
-
-**Mutual exclusivity (in Results.tsx):**
-
-```text
-setHappeningNow(true):
-  set happeningNow = true
-  set happeningToday = false  // NEW
-  clear days, startTime, endTime
-
-setHappeningToday(true):
-  set happeningToday = true
-  set happeningNow = false   // NEW
-  clear days, startTime, endTime
-
-setHappeningToday(false):
-  just remove happeningToday param
-```
-
-**Visual styling for the two-button row (in UnifiedFilterBar.tsx):**
-
-```text
-Layout: grid grid-cols-2 gap-2
-
-"Happening Now" (left):
-  OFF: outline, muted, clock icon
-  ON: orange-to-amber gradient, white text, pulsing green dot
-
-"Happening Today" (right):
-  OFF: outline, muted, calendar icon
-  ON: blue-to-indigo gradient (from-blue-500 to-indigo-500), white text, no pulsing dot
-```
