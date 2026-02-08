@@ -36,6 +36,8 @@ interface MobileListDrawerProps {
   onMerchantNavigate?: (merchantId: number) => void;
   happeningNow?: boolean;
   onHappeningNowChange?: (value: boolean) => void;
+  happeningToday?: boolean;
+  onHappeningTodayChange?: (value: boolean) => void;
 }
 
 export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
@@ -63,6 +65,8 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
   onMerchantNavigate,
   happeningNow,
   onHappeningNowChange,
+  happeningToday,
+  onHappeningTodayChange,
 }) => {
   const { track } = useAnalytics();
 
@@ -106,6 +110,8 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
               onMenuTypeChange={onMenuTypeChange}
               happeningNow={happeningNow}
               onHappeningNowChange={onHappeningNowChange}
+              happeningToday={happeningToday}
+              onHappeningTodayChange={onHappeningTodayChange}
             />
           </div>
         </DrawerHeader>
@@ -125,6 +131,7 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
             isMobile={true}
             onMerchantNavigate={onMerchantNavigate}
             happeningNow={happeningNow}
+            happeningToday={happeningToday}
           />
         </div>
       </DrawerContent>

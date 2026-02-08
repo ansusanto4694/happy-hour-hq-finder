@@ -101,11 +101,13 @@ const Results = () => {
     return daysParam ? daysParam.split(',').map(Number) : [];
   })();
   const happeningNow = searchParams.get('happeningNow') === 'true';
+  const happeningToday = searchParams.get('happeningToday') === 'true';
 
   const setHappeningNow = (value: boolean) => {
     const newParams = new URLSearchParams(searchParams);
     if (value) {
       newParams.set('happeningNow', 'true');
+      newParams.delete('happeningToday'); // Mutual exclusivity
       // Clear manual day/time selections when enabling
       newParams.delete('days');
       newParams.delete('startTime');
@@ -116,10 +118,26 @@ const Results = () => {
     setSearchParams(newParams, { replace: true });
   };
 
-  // Handle day change with URL update (auto-off happeningNow)
+  const setHappeningToday = (value: boolean) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (value) {
+      newParams.set('happeningToday', 'true');
+      newParams.delete('happeningNow'); // Mutual exclusivity
+      // Clear manual day/time selections when enabling
+      newParams.delete('days');
+      newParams.delete('startTime');
+      newParams.delete('endTime');
+    } else {
+      newParams.delete('happeningToday');
+    }
+    setSearchParams(newParams, { replace: true });
+  };
+
+  // Handle day change with URL update (auto-off happeningNow/happeningToday)
   const handleDaysChange = (days: number[]) => {
     const newSearchParams = new URLSearchParams(searchParams);
     if (happeningNow) newSearchParams.delete('happeningNow');
+    if (happeningToday) newSearchParams.delete('happeningToday');
     if (days.length > 0) {
       newSearchParams.set('days', days.join(','));
     } else {
@@ -128,10 +146,11 @@ const Results = () => {
     setSearchParams(newSearchParams, { replace: true });
   };
 
-  // Handle time changes with URL update (auto-off happeningNow)
+  // Handle time changes with URL update (auto-off happeningNow/happeningToday)
   const handleStartTimeChange = (time: string) => {
     const newSearchParams = new URLSearchParams(searchParams);
     if (happeningNow) newSearchParams.delete('happeningNow');
+    if (happeningToday) newSearchParams.delete('happeningToday');
     if (time) {
       newSearchParams.set('startTime', time);
     } else {
@@ -143,6 +162,7 @@ const Results = () => {
   const handleEndTimeChange = (time: string) => {
     const newSearchParams = new URLSearchParams(searchParams);
     if (happeningNow) newSearchParams.delete('happeningNow');
+    if (happeningToday) newSearchParams.delete('happeningToday');
     if (time) {
       newSearchParams.set('endTime', time);
     } else {
@@ -156,9 +176,9 @@ const Results = () => {
   // Use selected radius for both GPS and location-based searches
   const radiusMiles = getRadiusMiles(selectedRadius);
 
-  // Compute effective day/time values based on happeningNow toggle
+  // Compute effective day/time values based on happeningNow/happeningToday toggles
   const effectiveDays = (() => {
-    if (!happeningNow) return selectedDays;
+    if (!happeningNow && !happeningToday) return selectedDays;
     // JS getDay(): Sun=0, Mon=1...Sat=6 → DB schema: Mon=0, Tue=1...Sun=6
     const jsDay = new Date().getDay();
     return [jsDay === 0 ? 6 : jsDay - 1];
@@ -166,10 +186,14 @@ const Results = () => {
 
   const effectiveStartTime = happeningNow
     ? new Date().toTimeString().slice(0, 5) // "HH:MM"
-    : startTime;
+    : happeningToday
+      ? '' // No time filter for "Happening Today"
+      : startTime;
   const effectiveEndTime = happeningNow
     ? new Date().toTimeString().slice(0, 5)
-    : endTime;
+    : happeningToday
+      ? '' // No time filter for "Happening Today"
+      : endTime;
 
   // Time values directly from URL params
   const currentStartTime = effectiveStartTime;
@@ -470,6 +494,8 @@ const Results = () => {
             onMenuTypeChange={setSelectedMenuType}
             happeningNow={happeningNow}
             onHappeningNowChange={setHappeningNow}
+            happeningToday={happeningToday}
+            onHappeningTodayChange={setHappeningToday}
           />
         </div>
       )}
@@ -501,6 +527,8 @@ const Results = () => {
                 onMenuTypeChange={setSelectedMenuType}
                 happeningNow={happeningNow}
                 onHappeningNowChange={setHappeningNow}
+                happeningToday={happeningToday}
+                onHappeningTodayChange={setHappeningToday}
               />
               </div>
             </div>
@@ -517,6 +545,7 @@ const Results = () => {
               location={location}
               onRestaurantHover={setHoveredRestaurantId}
               happeningNow={happeningNow}
+              happeningToday={happeningToday}
             />
               </div>
               <div className="lg:col-span-1">
@@ -562,6 +591,8 @@ const Results = () => {
                   onMenuTypeChange={setSelectedMenuType}
                   happeningNow={happeningNow}
                   onHappeningNowChange={setHappeningNow}
+                  happeningToday={happeningToday}
+                  onHappeningTodayChange={setHappeningToday}
                 />
             </div>
           </div>
@@ -577,6 +608,7 @@ const Results = () => {
               location={location}
               onRestaurantHover={setHoveredRestaurantId}
               happeningNow={happeningNow}
+              happeningToday={happeningToday}
             />
           </div>
 

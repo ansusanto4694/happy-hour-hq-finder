@@ -29,6 +29,7 @@ interface SearchResultsProps {
   onRestaurantHover?: (restaurantId: number | null) => void;
   onMerchantNavigate?: (merchantId: number) => void;
   happeningNow?: boolean;
+  happeningToday?: boolean;
 }
 
 const RESULTS_PER_PAGE = 30;
@@ -43,7 +44,8 @@ const SearchResultsComponent: React.FC<SearchResultsProps> = ({
   isMobile = false,
   onRestaurantHover,
   onMerchantNavigate,
-  happeningNow = false
+  happeningNow = false,
+  happeningToday = false
 }) => {
   const [displayedResults, setDisplayedResults] = useState<any[]>([]);
   const [hasMore, setHasMore] = useState(true);
@@ -236,6 +238,7 @@ const SearchResultsComponent: React.FC<SearchResultsProps> = ({
         searchTerm={searchTerm}
         isMobile={isMobile}
         happeningNow={happeningNow}
+        happeningToday={happeningToday}
       />
       
       <div className="space-y-3">
@@ -301,6 +304,8 @@ export const SearchResults = React.memo(SearchResultsComponent, (prevProps, next
     prevProps.location === nextProps.location &&
     prevProps.isMobile === nextProps.isMobile &&
     prevProps.onRestaurantHover === nextProps.onRestaurantHover &&
-    prevProps.onMerchantNavigate === nextProps.onMerchantNavigate
+    prevProps.onMerchantNavigate === nextProps.onMerchantNavigate &&
+    prevProps.happeningNow === nextProps.happeningNow &&
+    prevProps.happeningToday === nextProps.happeningToday
   );
 });

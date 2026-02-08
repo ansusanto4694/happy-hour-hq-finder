@@ -34,6 +34,8 @@ interface MobileFilterDrawerV2Props {
   onMenuTypeChange: (menuType: 'all' | 'food_and_drinks' | 'drinks_only') => void;
   happeningNow?: boolean;
   onHappeningNowChange?: (value: boolean) => void;
+  happeningToday?: boolean;
+  onHappeningTodayChange?: (value: boolean) => void;
 }
 
 export const MobileFilterDrawerV2: React.FC<MobileFilterDrawerV2Props> = ({
@@ -56,6 +58,8 @@ export const MobileFilterDrawerV2: React.FC<MobileFilterDrawerV2Props> = ({
   onMenuTypeChange,
   happeningNow,
   onHappeningNowChange,
+  happeningToday,
+  onHappeningTodayChange,
 }) => {
   const { track } = useAnalytics();
 
@@ -177,6 +181,8 @@ export const MobileFilterDrawerV2: React.FC<MobileFilterDrawerV2Props> = ({
             onMenuTypeChange={onMenuTypeChange}
             happeningNow={happeningNow}
             onHappeningNowChange={onHappeningNowChange}
+            happeningToday={happeningToday}
+            onHappeningTodayChange={onHappeningTodayChange}
           />
         </div>
       </DrawerContent>
