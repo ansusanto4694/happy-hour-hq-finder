@@ -1,45 +1,43 @@
 
 
-## Fix: Back Button Requires Double-Tap on Mobile
+## Fix: Back Button Requires Double-Tap on Mobile (Take 2)
 
-### Root Cause
+### Why Previous Fixes Failed
 
-The issue is **not** with event propagation or decorative overlays (the previous fixes addressed the wrong layer). The actual culprit is the **Radix Toast Viewport** -- an invisible element that sits on top of the header and intercepts the first tap.
+The ToastViewport overlay theory was wrong. The user's screenshot proves the button IS receiving the tap (it shows the active/highlight state). The click handler IS firing. The problem is that React Router's `navigate(-1)` is not reliably completing the navigation on the first call on mobile.
 
-Here's what's happening:
-
-In `src/components/ui/toast.tsx`, the `ToastViewport` is rendered with these classes:
-
-```
-fixed top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4
-```
-
-This creates an invisible, always-present element that:
-- Is positioned at **fixed top-0** (same area as the sticky header)
-- Has **z-[100]** (higher than the header's **z-50**, so it sits ON TOP)
-- Is **w-full** (spans the entire screen width)
-- Has **p-4** (16px padding on all sides, giving it a 32px height even when empty)
-
-Even when there are **zero active toasts**, this empty container is still a DOM element with real dimensions (full width x 32px tall) sitting invisibly over the top of the screen at a higher z-index than the header.
-
-When the user taps the back button:
-1. The touch lands on the invisible ToastViewport (z-100) instead of the button (z-50)
-2. The button may show a brief highlight/active state, but the click event is consumed by the empty viewport
-3. No navigation happens
-4. On the second tap, browser behavior or slight position difference allows the event through
-
-This also explains why the **browser's native back button works fine** -- it doesn't rely on tapping the UI.
+This is a known quirk with React Router v6's `navigate(-1)` on mobile browsers -- the programmatic navigation can be silently swallowed during certain render cycles, especially when combined with `keepPreviousData` query options and scroll restoration effects that trigger re-renders.
 
 ### The Fix
 
-Add `pointer-events-none` to the `ToastViewport` so it never blocks interactions when empty. The individual toast items already have `pointer-events-auto` in their styling (in the `toastVariants` definition), so actual toast notifications will remain fully interactive and dismissible.
+Replace `navigate(-1)` with `window.history.back()` -- the browser's native back navigation. The user already confirmed that the browser's native back button works every time. This approach:
 
-**File: `src/components/ui/toast.tsx`** (1 line changed)
+- Uses the exact same mechanism as the browser back button (which works)
+- Bypasses React Router's internal scheduling that can conflict with mobile touch handling
+- Is simpler and more reliable for "go back" behavior
 
-Add `pointer-events-none` to the `ToastViewport` className. This way:
-- Empty viewport = passes all taps through to the header below
-- Active toasts = each toast has its own `pointer-events-auto` so they still work
+**File: `src/components/RestaurantHeader.tsx`** (2 lines changed)
 
-### Previous Fixes (Can Be Cleaned Up)
+Change the `handleBack` function:
 
-The earlier fixes (`e.stopPropagation()` in handleBack, `pointer-events-none` on decorative overlays) were targeting the wrong cause. They are harmless but unnecessary -- they can optionally be removed to keep the code clean, though leaving them is also fine.
+```typescript
+const handleBack = (e: React.MouseEvent) => {
+  e.preventDefault();
+  e.stopPropagation();
+  if (window.history.length > 1) {
+    window.history.back();    // was: navigate(-1)
+  } else {
+    navigate('/results');
+  }
+};
+```
+
+- `window.history.back()` triggers the same behavior as the browser back button
+- `e.preventDefault()` added to ensure no default button behavior interferes
+- The `navigate('/results')` fallback is kept for the edge case where there's no history (direct URL entry)
+- The `navigate` import and hook can stay since it's still used for the fallback case
+
+### Cleanup (Optional)
+
+The `pointer-events-none` added to `ToastViewport` in the previous fix is harmless and actually a good defensive practice, so it can stay. Same for the `pointer-events-none` on decorative overlays.
+
