@@ -7,6 +7,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { Footer } from '@/components/Footer';
 import { PageHeader } from '@/components/PageHeader';
+import { RecentlyViewedCarousel } from '@/components/RecentlyViewedCarousel';
 import { Link } from 'react-router-dom';
 
 const Index = () => {
@@ -77,7 +78,10 @@ const Index = () => {
           </div>
         </div>
         
-        {/* Carousels */}
+        {/* Recently Viewed + Carousels */}
+        <div className="w-full px-6 lg:px-8 xl:px-12">
+          <RecentlyViewedCarousel />
+        </div>
         <HomepageCarousels />
         <Footer />
       </div>

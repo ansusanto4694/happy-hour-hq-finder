@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { SearchBar } from './SearchBar';
 import { AuthButton } from './AuthButton';
 import { MobileCarousels } from './MobileCarousels';
+import { RecentlyViewedCarousel } from './RecentlyViewedCarousel';
 import { useAnalytics } from '@/hooks/useAnalytics';
 
 const Hero = () => {
@@ -74,6 +75,9 @@ const Hero = () => {
         </div>
         
         <SearchBar />
+        
+        {/* Recently viewed merchants */}
+        <RecentlyViewedCarousel />
         
         {/* Mobile carousels */}
         <MobileCarousels />

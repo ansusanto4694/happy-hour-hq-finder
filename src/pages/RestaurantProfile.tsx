@@ -13,6 +13,7 @@ import { Footer } from '@/components/Footer';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileCTABar } from '@/components/MobileCTABar';
+import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 
 // Restaurant profile page with enhanced analytics tracking
 
@@ -168,6 +169,7 @@ const RestaurantProfile = () => {
   const { track } = useAnalytics();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { addRecentlyViewed } = useRecentlyViewed();
   
   // Determine if the param is a numeric ID or a slug
   const isNumericId = id ? /^\d+$/.test(id) : false;
@@ -238,12 +240,13 @@ const RestaurantProfile = () => {
     }
   }, [isNumericId, restaurant?.slug, navigate, isFetching, dataUpdatedAt, mountedAt]);
   
-  // Track funnel step after we have the restaurant data
+  // Track funnel step and save to recently viewed after we have the restaurant data
   useEffect(() => {
     if (restaurant?.id) {
       trackFunnelStep({ funnelStep: 'profile_viewed', merchantId: restaurant.id, stepOrder: 5 });
+      addRecentlyViewed(restaurant);
     }
-  }, [restaurant?.id]);
+  }, [restaurant?.id, addRecentlyViewed]);
 
   // Track scroll depth
   useEffect(() => {
