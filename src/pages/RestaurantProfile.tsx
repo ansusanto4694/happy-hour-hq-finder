@@ -310,7 +310,7 @@ const RestaurantProfile = () => {
 
   return (
     <div className={`min-h-screen relative bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500 ${isMobile ? 'pb-32' : ''}`}>
-      <div className="absolute inset-0 bg-black/10"></div>
+      <div className="absolute inset-0 bg-black/10 pointer-events-none"></div>
       <div className="relative z-10">
         <SEOHead
           title={`${restaurant.restaurant_name} - Happy Hour in ${restaurant.city}, ${restaurant.state}`}
