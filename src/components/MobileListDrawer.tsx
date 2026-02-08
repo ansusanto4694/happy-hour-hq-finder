@@ -34,6 +34,8 @@ interface MobileListDrawerProps {
   selectedMenuType: 'all' | 'food_and_drinks' | 'drinks_only';
   onMenuTypeChange: (menuType: 'all' | 'food_and_drinks' | 'drinks_only') => void;
   onMerchantNavigate?: (merchantId: number) => void;
+  happeningNow?: boolean;
+  onHappeningNowChange?: (value: boolean) => void;
 }
 
 export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
@@ -59,6 +61,8 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
   selectedMenuType,
   onMenuTypeChange,
   onMerchantNavigate,
+  happeningNow,
+  onHappeningNowChange,
 }) => {
   const { track } = useAnalytics();
 
@@ -100,6 +104,8 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
               onEndTimeChange={onEndTimeChange}
               selectedMenuType={selectedMenuType}
               onMenuTypeChange={onMenuTypeChange}
+              happeningNow={happeningNow}
+              onHappeningNowChange={onHappeningNowChange}
             />
           </div>
         </DrawerHeader>

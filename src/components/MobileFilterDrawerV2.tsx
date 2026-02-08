@@ -32,6 +32,8 @@ interface MobileFilterDrawerV2Props {
   onEndTimeChange: (time: string) => void;
   selectedMenuType: 'all' | 'food_and_drinks' | 'drinks_only';
   onMenuTypeChange: (menuType: 'all' | 'food_and_drinks' | 'drinks_only') => void;
+  happeningNow?: boolean;
+  onHappeningNowChange?: (value: boolean) => void;
 }
 
 export const MobileFilterDrawerV2: React.FC<MobileFilterDrawerV2Props> = ({
@@ -52,6 +54,8 @@ export const MobileFilterDrawerV2: React.FC<MobileFilterDrawerV2Props> = ({
   onEndTimeChange,
   selectedMenuType,
   onMenuTypeChange,
+  happeningNow,
+  onHappeningNowChange,
 }) => {
   const { track } = useAnalytics();
 
@@ -68,7 +72,8 @@ export const MobileFilterDrawerV2: React.FC<MobileFilterDrawerV2Props> = ({
             radius: selectedRadius,
             offers_only: showOffersOnly,
             days: selectedDays.length,
-            time_range: `${startTime}-${endTime}`
+            time_range: `${startTime}-${endTime}`,
+            happening_now: happeningNow
           }
         }
       });
@@ -128,7 +133,8 @@ export const MobileFilterDrawerV2: React.FC<MobileFilterDrawerV2Props> = ({
           categories: selectedCategories.length,
           radius: selectedRadius,
           offers_only: showOffersOnly,
-          days: selectedDays.length
+          days: selectedDays.length,
+          happening_now: happeningNow
         }
       }
     });
@@ -169,6 +175,8 @@ export const MobileFilterDrawerV2: React.FC<MobileFilterDrawerV2Props> = ({
             onEndTimeChange={onEndTimeChange}
             selectedMenuType={selectedMenuType}
             onMenuTypeChange={onMenuTypeChange}
+            happeningNow={happeningNow}
+            onHappeningNowChange={onHappeningNowChange}
           />
         </div>
       </DrawerContent>

@@ -6,7 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, Clock } from 'lucide-react';
 import { useCategoriesHierarchy } from '@/hooks/useCategories';
 import { RadiusOption } from './RadiusFilter';
 import { TimeDropdown } from './TimeDropdown';
@@ -30,6 +30,8 @@ interface UnifiedFilterBarProps {
   selectedMenuType: 'all' | 'food_and_drinks' | 'drinks_only';
   onMenuTypeChange: (menuType: 'all' | 'food_and_drinks' | 'drinks_only') => void;
   vertical?: boolean;
+  happeningNow?: boolean;
+  onHappeningNowChange?: (value: boolean) => void;
 }
 
 const RADIUS_OPTIONS: { value: RadiusOption; label: string; disabled?: boolean }[] = [
@@ -67,6 +69,8 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
   selectedMenuType,
   onMenuTypeChange,
   vertical = false,
+  happeningNow = false,
+  onHappeningNowChange,
 }) => {
   const { getParentCategories, getSubCategories, isLoading } = useCategoriesHierarchy();
   const { track } = useAnalytics();
@@ -110,6 +114,11 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
   const toggleDay = (dayValue: number) => {
     const isSelected = selectedDays.includes(dayValue);
     
+    // Auto-off happeningNow when manually selecting days
+    if (happeningNow && onHappeningNowChange) {
+      onHappeningNowChange(false);
+    }
+
     // Track immediately (not debounced for better UX feedback)
     track({
       eventType: 'click',
@@ -144,6 +153,10 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
   };
 
   const handleStartTimeChange = (time: string) => {
+    // Auto-off happeningNow when manually selecting time
+    if (happeningNow && onHappeningNowChange) {
+      onHappeningNowChange(false);
+    }
     track({
       eventType: 'change',
       eventCategory: 'filter',
@@ -157,6 +170,10 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
   };
 
   const handleEndTimeChange = (time: string) => {
+    // Auto-off happeningNow when manually selecting time
+    if (happeningNow && onHappeningNowChange) {
+      onHappeningNowChange(false);
+    }
     track({
       eventType: 'change',
       eventCategory: 'filter',
@@ -192,6 +209,7 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
     onStartTimeChange('');
     onEndTimeChange('');
     onMenuTypeChange('all');
+    if (onHappeningNowChange) onHappeningNowChange(false);
   };
 
   if (isLoading) {
@@ -199,7 +217,7 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
   }
 
   const parentCategories = getParentCategories();
-  const hasAnyFilters = selectedCategories.length > 0 || selectedRadius !== 'walking' || showOffersOnly || selectedDays.length > 0 || startTime || endTime || selectedMenuType !== 'all';
+  const hasAnyFilters = selectedCategories.length > 0 || selectedRadius !== 'walking' || showOffersOnly || selectedDays.length > 0 || startTime || endTime || selectedMenuType !== 'all' || happeningNow;
 
   return (
     <Card className="h-fit">
@@ -215,6 +233,36 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
+          {/* Happening Now toggle */}
+          {onHappeningNowChange && (
+            <button
+              type="button"
+              onClick={() => {
+                const newValue = !happeningNow;
+                onHappeningNowChange(newValue);
+                track({
+                  eventType: 'click',
+                  eventCategory: 'filter',
+                  eventAction: newValue ? 'happening_now_enabled' : 'happening_now_disabled',
+                });
+              }}
+              className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                happeningNow
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/25'
+                  : 'border-2 border-muted text-muted-foreground hover:border-orange-400 hover:text-orange-600'
+              }`}
+            >
+              <Clock className="h-4 w-4" />
+              <span>Happening Now</span>
+              {happeningNow && (
+                <span className="relative flex h-2.5 w-2.5 ml-1">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-300 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-400" />
+                </span>
+              )}
+            </button>
+          )}
+
           {/* Show offers only toggle - Hidden for now */}
           <div className="hidden flex items-center justify-between">
             <Label htmlFor="offers-toggle" className="text-sm font-medium">
