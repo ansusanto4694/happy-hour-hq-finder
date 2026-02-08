@@ -2,7 +2,7 @@ import React from 'react';
 import { Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MobileFilterDrawerV2 } from '@/components/MobileFilterDrawerV2';
-import { RadiusOption } from './RadiusFilter';
+import { RadiusOption, getSmartDefaultRadius } from './RadiusFilter';
 
 interface MobileFilterDrawerProps {
   selectedCategories: string[];
@@ -25,6 +25,7 @@ interface MobileFilterDrawerProps {
   onHappeningNowChange?: (value: boolean) => void;
   happeningToday?: boolean;
   onHappeningTodayChange?: (value: boolean) => void;
+  locationType?: string | null;
 }
 
 export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
@@ -48,9 +49,11 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
   onHappeningNowChange,
   happeningToday,
   onHappeningTodayChange,
+  locationType,
 }) => {
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = React.useState(false);
-  const hasFilters = selectedCategories.length > 0 || selectedRadius !== 'walking' || showOffersOnly || selectedDays.length > 0 || startTime || endTime || selectedMenuType !== 'all' || happeningNow || happeningToday;
+  const smartDefault = getSmartDefaultRadius(locationType ?? null, false);
+  const hasFilters = selectedCategories.length > 0 || selectedRadius !== smartDefault || showOffersOnly || selectedDays.length > 0 || startTime || endTime || selectedMenuType !== 'all' || happeningNow || happeningToday;
   
   // Calculate total filter count
   const filterCount = 
@@ -58,7 +61,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
     selectedDays.length + 
     (startTime ? 1 : 0) + 
     (endTime ? 1 : 0) + 
-    (selectedRadius !== 'walking' ? 1 : 0) + 
+    (selectedRadius !== smartDefault ? 1 : 0) + 
     (showOffersOnly ? 1 : 0) +
     (selectedMenuType !== 'all' ? 1 : 0) +
     (happeningNow ? 1 : 0) +
@@ -111,6 +114,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
         onHappeningNowChange={onHappeningNowChange}
         happeningToday={happeningToday}
         onHappeningTodayChange={onHappeningTodayChange}
+        locationType={locationType}
       />
     </>
   );

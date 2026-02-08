@@ -504,6 +504,7 @@ const Results = () => {
             onHappeningNowChange={setHappeningNow}
             happeningToday={happeningToday}
             onHappeningTodayChange={setHappeningToday}
+            locationType={locationTypeParam || inferLocationTypeFromInput(locationParam)}
           />
         </div>
       )}
@@ -537,6 +538,7 @@ const Results = () => {
                 onHappeningNowChange={setHappeningNow}
                 happeningToday={happeningToday}
                 onHappeningTodayChange={setHappeningToday}
+                locationType={locationTypeParam || inferLocationTypeFromInput(locationParam)}
               />
               </div>
             </div>
@@ -601,6 +603,7 @@ const Results = () => {
                   onHappeningNowChange={setHappeningNow}
                   happeningToday={happeningToday}
                   onHappeningTodayChange={setHappeningToday}
+                  locationType={locationTypeParam || inferLocationTypeFromInput(locationParam)}
                 />
             </div>
           </div>

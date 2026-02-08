@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChevronDown, ChevronRight, Clock, CalendarDays } from 'lucide-react';
 import { useCategoriesHierarchy } from '@/hooks/useCategories';
-import { RadiusOption } from './RadiusFilter';
+import { RadiusOption, getSmartDefaultRadius } from './RadiusFilter';
 import { TimeDropdown } from './TimeDropdown';
 import { useAnalytics } from '@/hooks/useAnalytics';
 
@@ -34,6 +34,7 @@ interface UnifiedFilterBarProps {
   onHappeningNowChange?: (value: boolean) => void;
   happeningToday?: boolean;
   onHappeningTodayChange?: (value: boolean) => void;
+  locationType?: string | null;
 }
 
 const RADIUS_OPTIONS: { value: RadiusOption; label: string; disabled?: boolean }[] = [
@@ -41,6 +42,7 @@ const RADIUS_OPTIONS: { value: RadiusOption; label: string; disabled?: boolean }
   { value: 'walking', label: 'Walking (within 1 mile)' },
   { value: 'bike', label: 'Bike (within 3 miles)' },
   { value: 'drive', label: 'Drive (within 5 miles)' },
+  { value: 'city', label: 'City-wide (within 25 miles)' },
 ];
 
 const DAYS_OF_WEEK = [
@@ -75,7 +77,9 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
   onHappeningNowChange,
   happeningToday = false,
   onHappeningTodayChange,
+  locationType = null,
 }) => {
+  const smartDefault = getSmartDefaultRadius(locationType, useGPS);
   const { getParentCategories, getSubCategories, isLoading } = useCategoriesHierarchy();
   const { track } = useAnalytics();
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
@@ -216,7 +220,7 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
     });
 
     onCategoryChange([]);
-    onRadiusChange('walking');
+    onRadiusChange(smartDefault);
     onShowOffersChange(false);
     onDaysChange([]);
     onStartTimeChange('');
@@ -231,7 +235,7 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
   }
 
   const parentCategories = getParentCategories();
-  const hasAnyFilters = selectedCategories.length > 0 || selectedRadius !== 'walking' || showOffersOnly || selectedDays.length > 0 || startTime || endTime || selectedMenuType !== 'all' || happeningNow || happeningToday;
+  const hasAnyFilters = selectedCategories.length > 0 || selectedRadius !== smartDefault || showOffersOnly || selectedDays.length > 0 || startTime || endTime || selectedMenuType !== 'all' || happeningNow || happeningToday;
 
   return (
     <Card className="h-fit">
