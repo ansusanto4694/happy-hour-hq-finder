@@ -7,6 +7,7 @@ import { useLocateMe } from '@/hooks/useLocateMe';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useSearchSuggestions } from '@/hooks/useSearchSuggestions';
 import { useLocationSuggestions, type LocationSuggestion } from '@/hooks/useLocationSuggestions';
+import { inferLocationTypeFromInput } from '@/components/RadiusFilter';
 
 interface SearchBarProps {
   variant?: 'hero' | 'results';
@@ -21,6 +22,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
   const [location, setLocation] = useState(searchParams.get('location') || searchParams.get('zip') || '');
   const [gpsCoordinates, setGpsCoordinates] = useState<{lat: number; lng: number} | null>(null);
+  const [locationType, setLocationType] = useState<string | null>(searchParams.get('locationType') || null);
   
   // Search term autocomplete state
   const { suggestions: searchSuggestions } = useSearchSuggestions({ query: searchTerm, maxResults: 7 });
@@ -54,6 +56,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
     debounceMs: 300, // Desktop can handle faster
     onSelect: (suggestion) => {
       setLocation(suggestion.place_name);
+      setLocationType(suggestion.location_type);
       setGpsCoordinates(null);
       locationInputRef.current?.focus();
     }
@@ -62,6 +65,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
   // Handle location input change
   const handleLocationChange = (value: string) => {
     setLocation(value);
+    setLocationType(null); // Clear until a new suggestion is selected
     setGpsCoordinates(null);
     fetchSuggestions(value);
     
@@ -305,6 +309,12 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
       params.set('useGPS', 'true');
     }
     
+    // Propagate location type for smart default radius
+    const effectiveLocationType = locationType || inferLocationTypeFromInput(effectiveLocation);
+    if (effectiveLocationType) {
+      params.set('locationType', effectiveLocationType);
+    }
+    
     const targetUrl = `/results?${params.toString()}`;
     
     console.log('[Search] Navigating to:', {
@@ -371,6 +381,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
       eventAction: 'location_cleared',
     });
     setLocation('');
+    setLocationType(null);
     clearSuggestions();
     setGpsCoordinates(null);
   };

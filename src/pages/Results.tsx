@@ -10,7 +10,7 @@ import { UnifiedFilterBar } from '@/components/UnifiedFilterBar';
 import { LazyResultsMap } from '@/components/LazyResultsMap';
 import { useMerchants } from '@/hooks/useMerchants';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { RadiusOption, getRadiusMiles } from '@/components/RadiusFilter';
+import { RadiusOption, getRadiusMiles, getSmartDefaultRadius, inferLocationTypeFromInput } from '@/components/RadiusFilter';
 import { AuthButton } from '@/components/AuthButton';
 import { SEOHead } from '@/components/SEOHead';
 import { PageHeader } from '@/components/PageHeader';
@@ -24,9 +24,20 @@ const Results = () => {
 
   // Read filter state from URL params (persisted across navigation)
   const selectedCategories = searchParams.get('categories')?.split(',').filter(Boolean) || [];
-  const selectedRadius = (searchParams.get('radius') as RadiusOption) || 'walking';
   const showOffersOnly = searchParams.get('offers') === 'true';
   const selectedMenuType = (searchParams.get('menuType') as 'all' | 'food_and_drinks' | 'drinks_only') || 'all';
+
+  // Smart default radius: use explicit URL param if user set one, otherwise compute from location type
+  const explicitRadius = searchParams.get('radius') as RadiusOption | null;
+  const locationTypeParam = searchParams.get('locationType');
+  const useGPSParam = searchParams.get('useGPS') === 'true';
+  const locationParam = searchParams.get('location') || searchParams.get('zip') || '';
+  
+  const selectedRadius: RadiusOption = explicitRadius 
+    || getSmartDefaultRadius(
+        locationTypeParam || inferLocationTypeFromInput(locationParam),
+        useGPSParam
+      );
 
   // Drawer state will be initialized after merchants query - placeholder for now
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
@@ -58,11 +69,8 @@ const Results = () => {
 
   const setSelectedRadius = (radius: RadiusOption) => {
     const newParams = new URLSearchParams(searchParams);
-    if (radius !== 'walking') {
-      newParams.set('radius', radius);
-    } else {
-      newParams.delete('radius');
-    }
+    // Always save explicit user choice in URL so it takes priority over smart default
+    newParams.set('radius', radius);
     setSearchParams(newParams, { replace: true });
   };
 
