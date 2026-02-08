@@ -65,16 +65,26 @@ export const RestaurantEventsFeed: React.FC<RestaurantEventsFeedProps> = ({ rest
     },
   });
 
+  const buildEventShareUrl = () => {
+    const proxyBase = 'https://gohcqazhofdhkghfxfok.supabase.co/functions/v1/og-meta';
+    const currentPath = window.location.pathname;
+    const proxyUrl = new URL(proxyBase);
+    proxyUrl.searchParams.set('path', currentPath);
+    proxyUrl.searchParams.set('utm_source', 'share');
+    proxyUrl.searchParams.set('utm_medium', 'event');
+    return proxyUrl.toString();
+  };
+
   const handleShare = (event: any) => {
+    const shareUrl = buildEventShareUrl();
     if (navigator.share) {
       navigator.share({
         title: event.title,
         text: event.description,
-        url: window.location.href,
+        url: shareUrl,
       });
     } else {
-      // Fallback for browsers that don't support Web Share API
-      navigator.clipboard.writeText(`${event.title} - ${window.location.href}`);
+      navigator.clipboard.writeText(`${event.title} - ${shareUrl}`);
     }
   };
 

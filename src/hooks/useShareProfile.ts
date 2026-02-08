@@ -20,10 +20,14 @@ export const useShareProfile = ({
   const { toast } = useToast();
 
   const buildShareUrl = useCallback(() => {
-    const url = new URL(window.location.href);
-    url.searchParams.set('utm_source', utmSource);
-    url.searchParams.set('utm_medium', utmMedium);
-    return url.toString();
+    // Route through the og-meta proxy so bots/crawlers see correct OG tags
+    const proxyBase = 'https://gohcqazhofdhkghfxfok.supabase.co/functions/v1/og-meta';
+    const currentPath = window.location.pathname;
+    const proxyUrl = new URL(proxyBase);
+    proxyUrl.searchParams.set('path', currentPath);
+    proxyUrl.searchParams.set('utm_source', utmSource);
+    proxyUrl.searchParams.set('utm_medium', utmMedium);
+    return proxyUrl.toString();
   }, [utmSource, utmMedium]);
 
   const handleShare = useCallback(async () => {
