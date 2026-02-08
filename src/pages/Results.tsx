@@ -440,6 +440,7 @@ const Results = () => {
               isMobile={true}
               hoveredRestaurantId={hoveredRestaurantId}
               searchLocation={location}
+              isLoading={isLoading}
             />
           </div>
           
@@ -470,8 +471,15 @@ const Results = () => {
               <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
             </div>
             <div className="px-4 pt-2">
-              <p className="text-sm text-gray-600 text-center font-medium">
-                {merchants?.length || 0} results • Swipe up for list
+              <p className="text-sm text-muted-foreground text-center font-medium">
+                {isLoading ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                    Searching...
+                  </span>
+                ) : (
+                  <>{merchants?.length || 0} results • Swipe up for list</>
+                )}
               </p>
             </div>
           </div>
@@ -570,6 +578,7 @@ const Results = () => {
                     onViewStateChange={handleViewStateChange}
                     hoveredRestaurantId={hoveredRestaurantId}
                     searchLocation={location}
+                    isLoading={isLoading}
                   />
                 </div>
               </div>
@@ -636,6 +645,7 @@ const Results = () => {
                   onViewStateChange={handleViewStateChange}
                   hoveredRestaurantId={hoveredRestaurantId}
                   searchLocation={location}
+                  isLoading={isLoading}
                 />
             </div>
           </div>
