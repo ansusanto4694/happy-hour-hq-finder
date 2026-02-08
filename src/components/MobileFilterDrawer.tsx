@@ -21,6 +21,8 @@ interface MobileFilterDrawerProps {
   selectedMenuType: 'all' | 'food_and_drinks' | 'drinks_only';
   onMenuTypeChange: (menuType: 'all' | 'food_and_drinks' | 'drinks_only') => void;
   onFilterClick?: () => void;
+  happeningNow?: boolean;
+  onHappeningNowChange?: (value: boolean) => void;
 }
 
 export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
@@ -40,9 +42,11 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
   selectedMenuType,
   onMenuTypeChange,
   onFilterClick,
+  happeningNow,
+  onHappeningNowChange,
 }) => {
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = React.useState(false);
-  const hasFilters = selectedCategories.length > 0 || selectedRadius !== 'walking' || showOffersOnly || selectedDays.length > 0 || startTime || endTime || selectedMenuType !== 'all';
+  const hasFilters = selectedCategories.length > 0 || selectedRadius !== 'walking' || showOffersOnly || selectedDays.length > 0 || startTime || endTime || selectedMenuType !== 'all' || happeningNow;
   
   // Calculate total filter count
   const filterCount = 
@@ -52,7 +56,8 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
     (endTime ? 1 : 0) + 
     (selectedRadius !== 'walking' ? 1 : 0) + 
     (showOffersOnly ? 1 : 0) +
-    (selectedMenuType !== 'all' ? 1 : 0);
+    (selectedMenuType !== 'all' ? 1 : 0) +
+    (happeningNow ? 1 : 0);
 
   const handleFilterClick = () => {
     if (onFilterClick) {
@@ -97,6 +102,8 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
         onEndTimeChange={onEndTimeChange}
         selectedMenuType={selectedMenuType}
         onMenuTypeChange={onMenuTypeChange}
+        happeningNow={happeningNow}
+        onHappeningNowChange={onHappeningNowChange}
       />
     </>
   );

@@ -100,10 +100,26 @@ const Results = () => {
     const daysParam = searchParams.get('days');
     return daysParam ? daysParam.split(',').map(Number) : [];
   })();
+  const happeningNow = searchParams.get('happeningNow') === 'true';
 
-  // Handle day change with URL update
+  const setHappeningNow = (value: boolean) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (value) {
+      newParams.set('happeningNow', 'true');
+      // Clear manual day/time selections when enabling
+      newParams.delete('days');
+      newParams.delete('startTime');
+      newParams.delete('endTime');
+    } else {
+      newParams.delete('happeningNow');
+    }
+    setSearchParams(newParams, { replace: true });
+  };
+
+  // Handle day change with URL update (auto-off happeningNow)
   const handleDaysChange = (days: number[]) => {
     const newSearchParams = new URLSearchParams(searchParams);
+    if (happeningNow) newSearchParams.delete('happeningNow');
     if (days.length > 0) {
       newSearchParams.set('days', days.join(','));
     } else {
@@ -112,9 +128,10 @@ const Results = () => {
     setSearchParams(newSearchParams, { replace: true });
   };
 
-  // Handle time changes with URL update
+  // Handle time changes with URL update (auto-off happeningNow)
   const handleStartTimeChange = (time: string) => {
     const newSearchParams = new URLSearchParams(searchParams);
+    if (happeningNow) newSearchParams.delete('happeningNow');
     if (time) {
       newSearchParams.set('startTime', time);
     } else {
@@ -125,6 +142,7 @@ const Results = () => {
 
   const handleEndTimeChange = (time: string) => {
     const newSearchParams = new URLSearchParams(searchParams);
+    if (happeningNow) newSearchParams.delete('happeningNow');
     if (time) {
       newSearchParams.set('endTime', time);
     } else {
@@ -138,9 +156,24 @@ const Results = () => {
   // Use selected radius for both GPS and location-based searches
   const radiusMiles = getRadiusMiles(selectedRadius);
 
+  // Compute effective day/time values based on happeningNow toggle
+  const effectiveDays = (() => {
+    if (!happeningNow) return selectedDays;
+    // JS getDay(): Sun=0, Mon=1...Sat=6 → DB schema: Mon=0, Tue=1...Sun=6
+    const jsDay = new Date().getDay();
+    return [jsDay === 0 ? 6 : jsDay - 1];
+  })();
+
+  const effectiveStartTime = happeningNow
+    ? new Date().toTimeString().slice(0, 5) // "HH:MM"
+    : startTime;
+  const effectiveEndTime = happeningNow
+    ? new Date().toTimeString().slice(0, 5)
+    : endTime;
+
   // Time values directly from URL params
-  const currentStartTime = startTime;
-  const currentEndTime = endTime;
+  const currentStartTime = effectiveStartTime;
+  const currentEndTime = effectiveEndTime;
 
   const { data: merchants, isLoading, error } = useMerchants(
     selectedCategories, 
@@ -151,7 +184,7 @@ const Results = () => {
     isUsingMapSearch ? searchedBounds : undefined, // Use the saved searched bounds, not live bounds
     isUsingMapSearch ? undefined : (isRadiusEnabled ? radiusMiles : undefined), // Clear radius when using map search
     showOffersOnly,
-    selectedDays,
+    effectiveDays,
     useGPS && gpsLat && gpsLng ? { lat: gpsLat, lng: gpsLng } : undefined, // GPS coordinates
     carouselId, // Carousel filtering
     undefined, // neighborhood
@@ -435,6 +468,8 @@ const Results = () => {
             onEndTimeChange={handleEndTimeChange}
             selectedMenuType={selectedMenuType}
             onMenuTypeChange={setSelectedMenuType}
+            happeningNow={happeningNow}
+            onHappeningNowChange={setHappeningNow}
           />
         </div>
       )}
@@ -464,6 +499,8 @@ const Results = () => {
                 onEndTimeChange={handleEndTimeChange}
                 selectedMenuType={selectedMenuType}
                 onMenuTypeChange={setSelectedMenuType}
+                happeningNow={happeningNow}
+                onHappeningNowChange={setHappeningNow}
               />
               </div>
             </div>
@@ -522,6 +559,8 @@ const Results = () => {
                   onEndTimeChange={handleEndTimeChange}
                   selectedMenuType={selectedMenuType}
                   onMenuTypeChange={setSelectedMenuType}
+                  happeningNow={happeningNow}
+                  onHappeningNowChange={setHappeningNow}
                 />
             </div>
           </div>
