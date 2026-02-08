@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { SearchBar } from '@/components/SearchBar';
 import { useAnalytics } from '@/hooks/useAnalytics';
-import { MobileSearchBar } from '@/components/MobileSearchBar';
+import { MobileResultsSearchBar } from '@/components/MobileResultsSearchBar';
 import { MobileListDrawer } from '@/components/MobileListDrawer';
 import { SearchResults } from '@/components/SearchResults';
 import { UnifiedFilterBar } from '@/components/UnifiedFilterBar';
@@ -332,14 +332,10 @@ const Results = () => {
       />
       {/* Fixed Header */}
       {isMobile ? (
-        <div className="bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-50 h-16">
-          <div className="px-4 py-2">
-            <div className="flex items-center justify-between">
-              <div className="flex-1 flex justify-center">
-                <div className="w-full max-w-7xl">
-                  <MobileSearchBar onExpandedChange={setIsFilterDrawerOpen} />
-                </div>
-              </div>
+        <div className="bg-background shadow-sm border-b border-border fixed top-0 left-0 right-0 z-50 h-16">
+          <div className="px-4 py-2 flex items-center h-full">
+            <div className="flex-1">
+              <MobileResultsSearchBar onExpandedChange={setIsFilterDrawerOpen} />
             </div>
           </div>
         </div>
