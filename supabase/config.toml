@@ -41,3 +41,6 @@ verify_jwt = false
 
 [functions.ping-google-sitemap]
 verify_jwt = false
+
+[functions.og-meta]
+verify_jwt = false
