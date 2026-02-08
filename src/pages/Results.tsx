@@ -504,7 +504,7 @@ const Results = () => {
         <div className="hidden xl:flex xl:gap-6">
           {/* Fixed Far Left Sidebar - Unified Filters */}
           <div className="w-80 flex-shrink-0">
-            <div className="space-y-4 sticky top-32 z-40">
+            <div className="sticky top-32 z-40 max-h-[calc(100vh-9rem)] overflow-y-auto">
                 <UnifiedFilterBar
                   selectedCategories={selectedCategories}
                   onCategoryChange={setSelectedCategories}
