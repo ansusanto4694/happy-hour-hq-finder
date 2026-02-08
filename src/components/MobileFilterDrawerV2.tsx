@@ -36,6 +36,7 @@ interface MobileFilterDrawerV2Props {
   onHappeningNowChange?: (value: boolean) => void;
   happeningToday?: boolean;
   onHappeningTodayChange?: (value: boolean) => void;
+  locationType?: string | null;
 }
 
 export const MobileFilterDrawerV2: React.FC<MobileFilterDrawerV2Props> = ({
@@ -60,6 +61,7 @@ export const MobileFilterDrawerV2: React.FC<MobileFilterDrawerV2Props> = ({
   onHappeningNowChange,
   happeningToday,
   onHappeningTodayChange,
+  locationType,
 }) => {
   const { track } = useAnalytics();
 
@@ -183,6 +185,7 @@ export const MobileFilterDrawerV2: React.FC<MobileFilterDrawerV2Props> = ({
             onHappeningNowChange={onHappeningNowChange}
             happeningToday={happeningToday}
             onHappeningTodayChange={onHappeningTodayChange}
+            locationType={locationType}
           />
         </div>
       </DrawerContent>
