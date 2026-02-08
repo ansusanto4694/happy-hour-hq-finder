@@ -1,5 +1,6 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { CalendarDays } from 'lucide-react';
 
 interface SearchResultsHeaderProps {
   resultsCount: number;
@@ -12,6 +13,7 @@ interface SearchResultsHeaderProps {
   searchTerm?: string;
   isMobile?: boolean;
   happeningNow?: boolean;
+  happeningToday?: boolean;
 }
 
 export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
@@ -24,7 +26,8 @@ export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
   resultsPerPage = 20,
   searchTerm,
   isMobile = false,
-  happeningNow = false
+  happeningNow = false,
+  happeningToday = false
 }) => {
   const startResult = (currentPage - 1) * resultsPerPage + 1;
   const endResult = Math.min(currentPage * resultsPerPage, resultsCount);
@@ -59,7 +62,7 @@ export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
                   `Showing ${startResult}-${endResult} of ${resultsCount} restaurants${totalPages > 1 ? ` (Page ${currentPage} of ${totalPages})` : ''}`
                 }
               </p>
-              {(happeningNow || startTime || endTime || location || searchTerm) && (
+              {(happeningNow || happeningToday || startTime || endTime || location || searchTerm) && (
                 <div className="flex flex-wrap gap-4 text-xs">
                   {searchTerm && (
                     <span>Search: "{searchTerm}"</span>
@@ -71,6 +74,11 @@ export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
                         <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                       </span>
                       Happening Now
+                    </span>
+                  ) : happeningToday ? (
+                    <span className="inline-flex items-center gap-1.5 font-medium text-blue-600">
+                      <CalendarDays className="h-3.5 w-3.5" />
+                      Happening Today
                     </span>
                   ) : startTime && endTime ? (
                     <span>Time: {formatTime(startTime)} - {formatTime(endTime)}</span>
