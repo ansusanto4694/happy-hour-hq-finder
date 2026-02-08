@@ -44,45 +44,44 @@ export const MerchantMapPreviewCard: React.FC<MerchantMapPreviewCardProps> = ({
     // Mobile: Fixed position at bottom with click handlers
     return (
       <Card 
-        className="fixed left-4 right-4 z-50 shadow-lg border bg-white animate-slide-up rounded-lg"
+        className="fixed left-4 right-4 z-50 shadow-lg border bg-white animate-slide-up rounded-lg overflow-hidden"
         style={{ 
-          bottom: 'calc(64px + 12.5vh + 16px)', // bottom nav (64px) + peek drawer height (100vh/8 = 12.5vh) + spacing (16px)
+          bottom: 'calc(64px + 12.5vh + 16px)',
           pointerEvents: 'auto'
         }}
       >
         <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3 flex-1">
-              {/* Merchant logo */}
-              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
-                {restaurant.logo_url ? (
-                  <img 
-                    src={restaurant.logo_url} 
-                    alt={`${restaurant.restaurant_name} logo`}
-                    className="w-full h-full object-cover rounded-full"
-                  />
-                ) : (
-                  <span className="text-orange-600 font-semibold text-lg">
-                    {restaurant.restaurant_name.charAt(0)}
-                  </span>
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-gray-900 text-lg leading-tight truncate">
-                  {restaurant.restaurant_name}
-                </h3>
-                <p className="text-sm text-gray-500 truncate">
-                  {restaurant.street_address}
-                </p>
-                <p className="text-sm text-gray-500 truncate">
-                  {restaurant.city}, {restaurant.state}
-                </p>
-              </div>
+          <div className="flex items-start gap-3">
+            {/* Merchant logo */}
+            <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+              {restaurant.logo_url ? (
+                <img 
+                  src={restaurant.logo_url} 
+                  alt={`${restaurant.restaurant_name} logo`}
+                  className="w-full h-full object-cover rounded-full"
+                />
+              ) : (
+                <span className="text-orange-600 font-semibold text-lg">
+                  {restaurant.restaurant_name.charAt(0)}
+                </span>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-gray-900 text-base leading-tight truncate">
+                {restaurant.restaurant_name}
+              </h3>
+              <p className="text-sm text-gray-500 truncate">
+                {restaurant.street_address}
+              </p>
+              <p className="text-sm text-gray-500 truncate">
+                {restaurant.city}, {restaurant.state}
+              </p>
             </div>
             {onClose && (
               <button 
                 onClick={onClose}
-                className="ml-2 w-11 h-11 flex items-center justify-center text-gray-400 hover:text-gray-600"
+                className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 flex-shrink-0 -mt-1 -mr-1"
+                aria-label="Close"
               >
                 ×
               </button>
