@@ -124,6 +124,7 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
             location={location}
             isMobile={true}
             onMerchantNavigate={onMerchantNavigate}
+            happeningNow={happeningNow}
           />
         </div>
       </DrawerContent>
