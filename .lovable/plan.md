@@ -1,64 +1,64 @@
 
 
-## Fix UnifiedFilterBar: Add City-wide Radius Option and Smart "Clear All"
+## Fix: Add Loading Indicators for Initial Search Results
 
-### Problem
+### The Problem
 
-Two issues exist in the `UnifiedFilterBar` component after the smart default radius feature was implemented:
+When you submit a search from the homepage and land on the Results page, there's a jarring flash of empty content before data arrives. This happens because `isLoading` is `true` during the initial fetch, but the page layout doesn't account for it in several places:
 
-1. **Missing "City-wide" option**: The `RADIUS_OPTIONS` array only has 4 options (blocks, walking, bike, drive) but the smart default can select `city` (25 miles). When `city` is active, no radio button appears checked in the Distance filter -- the UI is out of sync with the actual filter state.
+**Mobile:**
+- The map renders immediately with an empty restaurant array -- showing a blank map with zero markers
+- The peek handle at the bottom shows "0 results" instead of a loading indicator
+- The list drawer's skeletons only show if the drawer is already open
 
-2. **Hardcoded "Clear All" reset**: The `clearAllFilters` function always resets the radius to `walking` (1 mile). If the user searched for "New York" (city-level), clearing filters should reset back to "City-wide (25 miles)" -- the smart default for that location type -- not to "walking".
+**Desktop/Tablet:**
+- The `SearchResults` component correctly shows skeleton cards (this part works)
+- But the map panel renders with an empty array -- showing an empty map card with no markers and no visual indication that data is loading
 
-3. **Incorrect "has filters" detection**: The `hasAnyFilters` check compares radius against `walking` as the baseline. So when the smart default is `city`, the filter bar incorrectly shows the "Clear All" button even when nothing has been manually changed.
-
-### Changes
-
-**File: `src/components/UnifiedFilterBar.tsx`**
-
-1. **Add `city` to `RADIUS_OPTIONS` array** (line 39-44): Add `{ value: 'city', label: 'City-wide (within 25 miles)' }` so the radio button renders when the smart default or manual selection is "city".
-
-2. **Add `locationType` prop** to the component interface: This allows the component to compute the smart default radius for "Clear All" behavior. The prop is optional (defaults to `null`).
-
-3. **Import `getSmartDefaultRadius` and `inferLocationTypeFromInput`** from `RadiusFilter.tsx` to compute the smart default within the component.
-
-4. **Fix `clearAllFilters`** (line 219): Replace the hardcoded `onRadiusChange('walking')` with `onRadiusChange(smartDefault)` where `smartDefault` is computed from the `locationType` prop.
-
-5. **Fix `hasAnyFilters`** (line 234): Replace the hardcoded `selectedRadius !== 'walking'` check with `selectedRadius !== smartDefault` so the "Clear All" button only appears when the user has actually changed something from the default.
+### The Fix
 
 **File: `src/pages/Results.tsx`**
 
-6. **Pass `locationType` prop** to both `UnifiedFilterBar` instances (tablet on line 520 and desktop on line 583): Pass `locationTypeParam || inferLocationTypeFromInput(locationParam)` so the filter bar knows the current location context.
+1. **Mobile map area (lines 428-444):** Wrap the map in a conditional. When `isLoading` is true, show a full-screen loading skeleton (pulsing gray background with a centered spinner and "Finding happy hours..." text) instead of the empty map. Once data arrives, the real map renders with markers.
 
-**File: `src/components/MobileFilterDrawerV2.tsx`**
+2. **Mobile peek handle (lines 446-477):** When `isLoading` is true, change the text from "0 results" to a loading indicator like "Searching..." with a small spinner icon, so users see immediate feedback.
 
-7. No changes needed -- it passes through all props from the parent, and the `UnifiedFilterBar` will handle the logic internally with the new `locationType` prop.
+3. **Desktop/Tablet map panels (lines 562-575 and 627-641):** Pass `isLoading` to `LazyResultsMap` so it can show a loading state when data hasn't arrived yet.
 
-**File: `src/components/MobileListDrawer.tsx`**
+**File: `src/components/LazyResultsMap.tsx`**
 
-8. **Pass `locationType` prop** through to `UnifiedFilterBar` if it renders one (need to verify). If the mobile list drawer renders the filter bar, it also needs the `locationType`.
+4. **Add `isLoading` prop:** Accept an optional `isLoading` boolean and pass it through to `ResultsMap`. Also use it to show a data-loading fallback (distinct from the JS-bundle Suspense fallback). When `isLoading` is true and restaurants is empty, show a skeleton map state with a spinner overlay saying "Finding restaurants..."
+
+**File: `src/components/ResultsMap.tsx`**
+
+5. **Add `isLoading` prop to the component and its memo comparator:** When `isLoading` is true and the restaurants array is empty, render a loading overlay on top of the map (or instead of the empty map). This avoids showing a fully interactive but empty map.
+
+### User Experience Before vs After
+
+**Before:**
+- Submit search from homepage
+- See a blank map with no markers + "0 results" text at the bottom
+- After 1-2 seconds, markers suddenly pop in and the count updates
+- Feels broken or slow
+
+**After:**
+- Submit search from homepage
+- **Mobile:** See a subtle loading state with a spinner and "Finding happy hours..." text where the map will be. The peek handle shows "Searching..." instead of "0 results"
+- **Desktop:** See skeleton cards in the results panel (already works) + a loading overlay on the map panel with a spinner
+- After 1-2 seconds, the real map with markers smoothly appears and the results list populates
+- Feels responsive and intentional
 
 ### Technical Details
 
-The new `locationType` prop flows like this:
+The changes are localized to 3 files:
 
 ```text
-URL param "locationType" 
-  -> Results.tsx reads it 
-  -> passes to UnifiedFilterBar as prop
-  -> UnifiedFilterBar computes smartDefault = getSmartDefaultRadius(locationType, useGPS)
-  -> Uses smartDefault for "Clear All" reset and "has filters" detection
+Results.tsx        - Conditional rendering for mobile map/peek handle during loading
+LazyResultsMap.tsx - Accept and forward isLoading prop; show data-loading fallback  
+ResultsMap.tsx     - Accept isLoading prop; add to memo comparator
 ```
 
-The `RADIUS_OPTIONS` constant becomes:
+No new dependencies. No database changes. The existing `SearchResultsLoading` skeleton component for the list view already works correctly and is not modified.
 
-```text
-blocks  -> Nearby (within .25 miles)
-walking -> Walking (within 1 mile)
-bike    -> Bike (within 3 miles)
-drive   -> Drive (within 5 miles)
-city    -> City-wide (within 25 miles)
-```
-
-This is a small, focused fix -- 3-4 files, no new dependencies, no database changes.
+The loading state uses the same visual language (Loader2 spinner, muted backgrounds, skeleton-like appearance) already established by `MapLoadingFallback` and `SearchResultsLoading` for consistency.
 
