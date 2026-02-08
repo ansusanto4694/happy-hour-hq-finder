@@ -1,145 +1,60 @@
 
-
-# Solving the SPA Rendering Problem for SEO
+# Fix Stale Sitemap: Point Crawlers to the Dynamic Sitemap
 
 ## The Problem
 
-SipMunchYap is a client-side React SPA. When a crawler or social media bot visits any page, the initial HTML it receives is always the same generic `index.html`:
+Right now, your `robots.txt` tells Google and all other search engines to look at `https://sipmunchyap.com/sitemap.xml`. That file is a static copy sitting in your `public/` folder with `lastmod` dates frozen at **2025-01-12** -- over a year old. Google sees this and thinks your site hasn't been updated in a year, so it crawls less frequently.
 
-```text
-<title>SipMunchYap - Find the Best Happy Hours Near You</title>
-<meta property="og:title" content="SipMunchYap - Find the Best Happy Hours Near You">
-<meta property="og:image" content="...generic-social-image.png">
-```
+Meanwhile, you already have a perfectly good dynamic sitemap edge function (`generate-sitemap`) that generates fresh dates every time it's called. The crawlers just aren't being sent there.
 
-The restaurant-specific titles, descriptions, OG tags, and structured data are only injected later by JavaScript via `react-helmet-async`. This means:
+## The Fix (2 File Changes)
 
-- **Social sharing previews** (iMessage, Facebook, Twitter, LinkedIn, Slack) all show the generic SipMunchYap card instead of "Ainslie - Happy Hour in Brooklyn, NY" with the restaurant's logo
-- **Non-Google crawlers** (Bing, DuckDuckGo, Apple) may not execute JS at all
-- **Google** does execute JS but deprioritizes pages where metadata arrives late
+### 1. Update `robots.txt` to point to the dynamic sitemap
 
-## The Solution: Meta Proxy Edge Function
-
-Create a lightweight edge function that acts as a "meta proxy" -- it intercepts shared/crawled URLs, fetches the relevant data from Supabase, and returns a minimal HTML page with all the correct meta tags and a transparent redirect to the real SPA.
-
-This approach:
-- Changes **zero** frontend code or UI components
-- Has **zero** performance impact on the SPA (the proxy is a separate path)
-- Works with the existing Lovable Cloud hosting and Supabase stack
-
-```text
-User shares link
-       |
-       v
-  Bot/Crawler hits meta proxy URL
-       |
-       v
-  Edge function fetches restaurant data from Supabase
-       |
-       v
-  Returns HTML with correct OG tags + redirect
-       |
-       v
-  Bot sees: "Ainslie - Happy Hour in Brooklyn, NY" + restaurant logo
-  Human sees: Instant redirect to the SPA page
-```
-
-## Implementation Steps
-
-### Step 1: Create the `og-meta` Edge Function
-
-A new Supabase edge function at `supabase/functions/og-meta/index.ts` that:
-
-- Accepts a `path` query parameter (e.g., `?path=/restaurant/ainslie-williamsburg-brooklyn`)
-- Parses the path to determine the page type (restaurant, location landing, homepage)
-- Fetches the relevant data from Supabase (restaurant name, city, logo, etc.)
-- Returns a minimal HTML document containing:
-  - Correct `<title>` tag
-  - Correct `og:title`, `og:description`, `og:image`, `og:url` meta tags
-  - Correct `twitter:card`, `twitter:title`, etc.
-  - JSON-LD structured data
-  - A `<meta http-equiv="refresh">` redirect to the real SPA URL
-  - A JavaScript `window.location.replace()` fallback redirect
-- For human visitors, the redirect happens instantly (under 100ms)
-- For bots, they get the meta tags they need without executing any JavaScript
-
-Supported page types:
-- `/restaurant/:slug` -- Fetches merchant data, returns restaurant-specific meta
-- `/happy-hour/:citySlug` -- Returns city-specific meta
-- `/happy-hour/:citySlug/:neighborhoodSlug` -- Returns neighborhood-specific meta
-- `/` and other static pages -- Returns appropriate defaults
-
-### Step 2: Update the Share Function
-
-Modify `useShareProfile.ts` so that the `buildShareUrl()` method generates a meta proxy URL instead of the raw SPA URL. The proxy URL will look like:
+Change the `Sitemap:` line from the static file to the edge function URL:
 
 ```
-https://gohcqazhofdhkghfxfok.supabase.co/functions/v1/og-meta?path=/restaurant/ainslie-williamsburg-brooklyn&utm_source=share&utm_medium=profile
+Sitemap: https://gohcqazhofdhkghfxfok.supabase.co/functions/v1/generate-sitemap
 ```
 
-When a human clicks this link:
-1. The edge function returns HTML with correct OG tags
-2. The `<meta http-equiv="refresh" content="0;url=https://sipmunchyap.com/restaurant/ainslie-williamsburg-brooklyn?utm_source=share&utm_medium=profile">` immediately redirects them to the SPA
-3. Total added latency: ~50-100ms (imperceptible)
+When called without a `?type=` parameter, the edge function already returns a sitemap index that links to all four sub-sitemaps (static, cities, neighborhoods, restaurants) -- each with today's date.
 
-When a bot/crawler processes this link:
-1. It reads the HTML directly
-2. It sees the correct title, description, OG image, and structured data
-3. Social previews render correctly with the restaurant name and image
+### 2. Delete `public/sitemap.xml`
 
-### Step 3: Update Event Sharing
+Remove the stale static file so there's no confusion. The edge function completely replaces it.
 
-The `RestaurantEventsFeed.tsx` component also has share functionality that bypasses the `useShareProfile` hook. Update it to also route through the meta proxy for consistent social previews.
+## What Happens After This Change
 
-### Step 4: Register the Edge Function
+- Googlebot visits `robots.txt`, finds the new `Sitemap:` URL
+- Hits the edge function, which returns a fresh sitemap index with today's date
+- Follows the sub-sitemap links (also edge function URLs) to discover all your pages
+- Restaurant pages show their actual `updated_at` timestamps from your database
+- Cities and neighborhoods show today's date
+- Google sees fresh content and increases crawl frequency
 
-Add the function to `supabase/config.toml` with `verify_jwt = false` since it needs to be publicly accessible to crawlers.
+## Google Search Console Instructions
 
-## What This Does NOT Change
+After this change is deployed and published, you'll want to tell Google about the new sitemap URL. Here's exactly what to do:
 
-- No changes to the SPA code, routing, or rendering
-- No changes to the UI/UX -- users see the same pages, same performance
-- No SSR, no framework migration, no build process changes
-- No impact on Lighthouse scores or Core Web Vitals
-- `react-helmet-async` and `SEOHead` continue working as-is for in-app navigation
+1. Go to [Google Search Console](https://search.google.com/search-console)
+2. Select your `sipmunchyap.com` property
+3. In the left sidebar, click **Sitemaps** (under "Indexing")
+4. You'll see the old sitemap `https://sipmunchyap.com/sitemap.xml` listed -- click the three dots next to it and select **Remove sitemap** to clean it up
+5. In the "Add a new sitemap" field at the top, paste:
+   ```
+   https://gohcqazhofdhkghfxfok.supabase.co/functions/v1/generate-sitemap
+   ```
+6. Click **Submit**
+7. Google will fetch it and show a "Success" status within a few minutes
+8. You can click on the sitemap to verify it discovered all your URLs (restaurants, cities, neighborhoods)
 
-## Technical Details
+**Tip:** After submitting, click "See sitemap index" to confirm Google sees all four sub-sitemaps and the correct URL counts.
 
-### Edge Function Response (for `/restaurant/ainslie-williamsburg-brooklyn`)
+## Files Changed
 
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Ainslie - Happy Hour in Brooklyn, NY | SipMunchYap</title>
-  <meta name="description" content="Find happy hour deals at Ainslie in Brooklyn. Check hours, menu, and location details.">
-  <meta property="og:title" content="Ainslie - Happy Hour in Brooklyn, NY">
-  <meta property="og:description" content="Find happy hour deals at Ainslie in Brooklyn.">
-  <meta property="og:image" content="https://...ainslie-logo.png">
-  <meta property="og:url" content="https://sipmunchyap.com/restaurant/ainslie-williamsburg-brooklyn">
-  <meta name="twitter:card" content="summary_large_image">
-  <!-- ... more meta tags ... -->
-  <script type="application/ld+json">{ restaurant structured data }</script>
-  <meta http-equiv="refresh" content="0;url=https://sipmunchyap.com/restaurant/ainslie-williamsburg-brooklyn">
-</head>
-<body>
-  <p>Redirecting to <a href="https://sipmunchyap.com/restaurant/ainslie-williamsburg-brooklyn">Ainslie on SipMunchYap</a>...</p>
-  <script>window.location.replace("https://sipmunchyap.com/restaurant/ainslie-williamsburg-brooklyn");</script>
-</body>
-</html>
-```
+| File | Action | What Changes |
+|------|--------|--------------|
+| `public/robots.txt` | Modify | Update `Sitemap:` URL to point to the edge function |
+| `public/sitemap.xml` | Delete | Remove the stale static file |
 
-### Files to Create/Modify
-
-| File | Action |
-|------|--------|
-| `supabase/functions/og-meta/index.ts` | Create -- the meta proxy edge function |
-| `supabase/config.toml` | Modify -- add `[functions.og-meta]` with `verify_jwt = false` |
-| `src/hooks/useShareProfile.ts` | Modify -- update `buildShareUrl()` to generate proxy URLs |
-| `src/components/RestaurantEventsFeed.tsx` | Modify -- route event sharing through the proxy |
-
-### Future Enhancement (Optional, Not in This Plan)
-
-Once the meta proxy is working, the dynamic sitemap edge function could also reference the proxy URLs. This would give search engines the pre-rendered meta tags even when crawling from the sitemap, but this is only needed if Google Search Console shows indexing issues.
-
+No edge function changes needed -- `generate-sitemap` already works correctly and produces fresh dates on every request.
