@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Flag, ArrowLeft, Share } from 'lucide-react';
 import { ReportIssueModal } from '@/components/ReportIssueModal';
-import { useToast } from '@/hooks/use-toast';
 import { FavoriteButton } from '@/components/FavoriteButton';
+import { useShareProfile } from '@/hooks/useShareProfile';
 
 interface RestaurantHeaderProps {
   merchantId?: number;
@@ -16,7 +16,7 @@ interface RestaurantHeaderProps {
 export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ merchantId, merchantName }) => {
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
-  const { toast } = useToast();
+  const { handleShare } = useShareProfile({ merchantName });
   
   useEffect(() => {
     const handleScroll = () => {
@@ -30,27 +30,10 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ merchantId, 
   const handleBack = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // Use native browser back to bypass React Router scheduling issues on mobile
     if (window.history.length > 1) {
       window.history.back();
     } else {
       navigate('/results');
-    }
-  };
-  
-  const handleShare = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      toast({
-        title: "Link copied!",
-        description: "Restaurant profile link has been copied to your clipboard.",
-      });
-    } catch (err) {
-      toast({
-        title: "Copy failed",
-        description: "Unable to copy link. Please try again.",
-        variant: "destructive",
-      });
     }
   };
 
