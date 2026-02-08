@@ -1,64 +1,145 @@
 
 
-## Fix: Add Loading Indicators for Initial Search Results
+# Solving the SPA Rendering Problem for SEO
 
-### The Problem
+## The Problem
 
-When you submit a search from the homepage and land on the Results page, there's a jarring flash of empty content before data arrives. This happens because `isLoading` is `true` during the initial fetch, but the page layout doesn't account for it in several places:
-
-**Mobile:**
-- The map renders immediately with an empty restaurant array -- showing a blank map with zero markers
-- The peek handle at the bottom shows "0 results" instead of a loading indicator
-- The list drawer's skeletons only show if the drawer is already open
-
-**Desktop/Tablet:**
-- The `SearchResults` component correctly shows skeleton cards (this part works)
-- But the map panel renders with an empty array -- showing an empty map card with no markers and no visual indication that data is loading
-
-### The Fix
-
-**File: `src/pages/Results.tsx`**
-
-1. **Mobile map area (lines 428-444):** Wrap the map in a conditional. When `isLoading` is true, show a full-screen loading skeleton (pulsing gray background with a centered spinner and "Finding happy hours..." text) instead of the empty map. Once data arrives, the real map renders with markers.
-
-2. **Mobile peek handle (lines 446-477):** When `isLoading` is true, change the text from "0 results" to a loading indicator like "Searching..." with a small spinner icon, so users see immediate feedback.
-
-3. **Desktop/Tablet map panels (lines 562-575 and 627-641):** Pass `isLoading` to `LazyResultsMap` so it can show a loading state when data hasn't arrived yet.
-
-**File: `src/components/LazyResultsMap.tsx`**
-
-4. **Add `isLoading` prop:** Accept an optional `isLoading` boolean and pass it through to `ResultsMap`. Also use it to show a data-loading fallback (distinct from the JS-bundle Suspense fallback). When `isLoading` is true and restaurants is empty, show a skeleton map state with a spinner overlay saying "Finding restaurants..."
-
-**File: `src/components/ResultsMap.tsx`**
-
-5. **Add `isLoading` prop to the component and its memo comparator:** When `isLoading` is true and the restaurants array is empty, render a loading overlay on top of the map (or instead of the empty map). This avoids showing a fully interactive but empty map.
-
-### User Experience Before vs After
-
-**Before:**
-- Submit search from homepage
-- See a blank map with no markers + "0 results" text at the bottom
-- After 1-2 seconds, markers suddenly pop in and the count updates
-- Feels broken or slow
-
-**After:**
-- Submit search from homepage
-- **Mobile:** See a subtle loading state with a spinner and "Finding happy hours..." text where the map will be. The peek handle shows "Searching..." instead of "0 results"
-- **Desktop:** See skeleton cards in the results panel (already works) + a loading overlay on the map panel with a spinner
-- After 1-2 seconds, the real map with markers smoothly appears and the results list populates
-- Feels responsive and intentional
-
-### Technical Details
-
-The changes are localized to 3 files:
+SipMunchYap is a client-side React SPA. When a crawler or social media bot visits any page, the initial HTML it receives is always the same generic `index.html`:
 
 ```text
-Results.tsx        - Conditional rendering for mobile map/peek handle during loading
-LazyResultsMap.tsx - Accept and forward isLoading prop; show data-loading fallback  
-ResultsMap.tsx     - Accept isLoading prop; add to memo comparator
+<title>SipMunchYap - Find the Best Happy Hours Near You</title>
+<meta property="og:title" content="SipMunchYap - Find the Best Happy Hours Near You">
+<meta property="og:image" content="...generic-social-image.png">
 ```
 
-No new dependencies. No database changes. The existing `SearchResultsLoading` skeleton component for the list view already works correctly and is not modified.
+The restaurant-specific titles, descriptions, OG tags, and structured data are only injected later by JavaScript via `react-helmet-async`. This means:
 
-The loading state uses the same visual language (Loader2 spinner, muted backgrounds, skeleton-like appearance) already established by `MapLoadingFallback` and `SearchResultsLoading` for consistency.
+- **Social sharing previews** (iMessage, Facebook, Twitter, LinkedIn, Slack) all show the generic SipMunchYap card instead of "Ainslie - Happy Hour in Brooklyn, NY" with the restaurant's logo
+- **Non-Google crawlers** (Bing, DuckDuckGo, Apple) may not execute JS at all
+- **Google** does execute JS but deprioritizes pages where metadata arrives late
+
+## The Solution: Meta Proxy Edge Function
+
+Create a lightweight edge function that acts as a "meta proxy" -- it intercepts shared/crawled URLs, fetches the relevant data from Supabase, and returns a minimal HTML page with all the correct meta tags and a transparent redirect to the real SPA.
+
+This approach:
+- Changes **zero** frontend code or UI components
+- Has **zero** performance impact on the SPA (the proxy is a separate path)
+- Works with the existing Lovable Cloud hosting and Supabase stack
+
+```text
+User shares link
+       |
+       v
+  Bot/Crawler hits meta proxy URL
+       |
+       v
+  Edge function fetches restaurant data from Supabase
+       |
+       v
+  Returns HTML with correct OG tags + redirect
+       |
+       v
+  Bot sees: "Ainslie - Happy Hour in Brooklyn, NY" + restaurant logo
+  Human sees: Instant redirect to the SPA page
+```
+
+## Implementation Steps
+
+### Step 1: Create the `og-meta` Edge Function
+
+A new Supabase edge function at `supabase/functions/og-meta/index.ts` that:
+
+- Accepts a `path` query parameter (e.g., `?path=/restaurant/ainslie-williamsburg-brooklyn`)
+- Parses the path to determine the page type (restaurant, location landing, homepage)
+- Fetches the relevant data from Supabase (restaurant name, city, logo, etc.)
+- Returns a minimal HTML document containing:
+  - Correct `<title>` tag
+  - Correct `og:title`, `og:description`, `og:image`, `og:url` meta tags
+  - Correct `twitter:card`, `twitter:title`, etc.
+  - JSON-LD structured data
+  - A `<meta http-equiv="refresh">` redirect to the real SPA URL
+  - A JavaScript `window.location.replace()` fallback redirect
+- For human visitors, the redirect happens instantly (under 100ms)
+- For bots, they get the meta tags they need without executing any JavaScript
+
+Supported page types:
+- `/restaurant/:slug` -- Fetches merchant data, returns restaurant-specific meta
+- `/happy-hour/:citySlug` -- Returns city-specific meta
+- `/happy-hour/:citySlug/:neighborhoodSlug` -- Returns neighborhood-specific meta
+- `/` and other static pages -- Returns appropriate defaults
+
+### Step 2: Update the Share Function
+
+Modify `useShareProfile.ts` so that the `buildShareUrl()` method generates a meta proxy URL instead of the raw SPA URL. The proxy URL will look like:
+
+```
+https://gohcqazhofdhkghfxfok.supabase.co/functions/v1/og-meta?path=/restaurant/ainslie-williamsburg-brooklyn&utm_source=share&utm_medium=profile
+```
+
+When a human clicks this link:
+1. The edge function returns HTML with correct OG tags
+2. The `<meta http-equiv="refresh" content="0;url=https://sipmunchyap.com/restaurant/ainslie-williamsburg-brooklyn?utm_source=share&utm_medium=profile">` immediately redirects them to the SPA
+3. Total added latency: ~50-100ms (imperceptible)
+
+When a bot/crawler processes this link:
+1. It reads the HTML directly
+2. It sees the correct title, description, OG image, and structured data
+3. Social previews render correctly with the restaurant name and image
+
+### Step 3: Update Event Sharing
+
+The `RestaurantEventsFeed.tsx` component also has share functionality that bypasses the `useShareProfile` hook. Update it to also route through the meta proxy for consistent social previews.
+
+### Step 4: Register the Edge Function
+
+Add the function to `supabase/config.toml` with `verify_jwt = false` since it needs to be publicly accessible to crawlers.
+
+## What This Does NOT Change
+
+- No changes to the SPA code, routing, or rendering
+- No changes to the UI/UX -- users see the same pages, same performance
+- No SSR, no framework migration, no build process changes
+- No impact on Lighthouse scores or Core Web Vitals
+- `react-helmet-async` and `SEOHead` continue working as-is for in-app navigation
+
+## Technical Details
+
+### Edge Function Response (for `/restaurant/ainslie-williamsburg-brooklyn`)
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ainslie - Happy Hour in Brooklyn, NY | SipMunchYap</title>
+  <meta name="description" content="Find happy hour deals at Ainslie in Brooklyn. Check hours, menu, and location details.">
+  <meta property="og:title" content="Ainslie - Happy Hour in Brooklyn, NY">
+  <meta property="og:description" content="Find happy hour deals at Ainslie in Brooklyn.">
+  <meta property="og:image" content="https://...ainslie-logo.png">
+  <meta property="og:url" content="https://sipmunchyap.com/restaurant/ainslie-williamsburg-brooklyn">
+  <meta name="twitter:card" content="summary_large_image">
+  <!-- ... more meta tags ... -->
+  <script type="application/ld+json">{ restaurant structured data }</script>
+  <meta http-equiv="refresh" content="0;url=https://sipmunchyap.com/restaurant/ainslie-williamsburg-brooklyn">
+</head>
+<body>
+  <p>Redirecting to <a href="https://sipmunchyap.com/restaurant/ainslie-williamsburg-brooklyn">Ainslie on SipMunchYap</a>...</p>
+  <script>window.location.replace("https://sipmunchyap.com/restaurant/ainslie-williamsburg-brooklyn");</script>
+</body>
+</html>
+```
+
+### Files to Create/Modify
+
+| File | Action |
+|------|--------|
+| `supabase/functions/og-meta/index.ts` | Create -- the meta proxy edge function |
+| `supabase/config.toml` | Modify -- add `[functions.og-meta]` with `verify_jwt = false` |
+| `src/hooks/useShareProfile.ts` | Modify -- update `buildShareUrl()` to generate proxy URLs |
+| `src/components/RestaurantEventsFeed.tsx` | Modify -- route event sharing through the proxy |
+
+### Future Enhancement (Optional, Not in This Plan)
+
+Once the meta proxy is working, the dynamic sitemap edge function could also reference the proxy URLs. This would give search engines the pre-rendered meta tags even when crawling from the sitemap, but this is only needed if Google Search Console shows indexing issues.
 
