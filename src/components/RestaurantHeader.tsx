@@ -28,10 +28,11 @@ export const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ merchantId, 
   }, []);
   
   const handleBack = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
-    // Use browser history to preserve URL parameters and enable scroll restoration
+    // Use native browser back to bypass React Router scheduling issues on mobile
     if (window.history.length > 1) {
-      navigate(-1);
+      window.history.back();
     } else {
       navigate('/results');
     }
