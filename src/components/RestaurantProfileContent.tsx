@@ -1,7 +1,6 @@
 
-import React, { useCallback } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { useAnalytics } from '@/hooks/useAnalytics';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,7 +19,7 @@ import { MobileCTABar } from '@/components/MobileCTABar';
 import { useMerchantOffers } from '@/hooks/useMerchantOffers';
 import { useMerchantRating } from '@/hooks/useMerchantRating';
 import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
+import { useShareProfile } from '@/hooks/useShareProfile';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Restaurant {
@@ -62,9 +61,9 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
   const { isAdmin } = useAuth();
   const { data: offers } = useMerchantOffers(restaurant.id);
   const { data: ratingData } = useMerchantRating(restaurant.id);
-  const { toast } = useToast();
+  const { handleShare: handleShareProfile } = useShareProfile({ merchantName: restaurant.restaurant_name });
   const isMobile = useIsMobile();
-  
+
   // Use slug for URLs when available for SEO
   const merchantUrlId = restaurant.slug || restaurant.id;
   
@@ -73,24 +72,8 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
     ...restaurant,
     merchant_happy_hour: restaurant.merchant_happy_hour.map(hh => ({
       ...hh,
-      id: `${restaurant.id}-${hh.day_of_week}`, // Create a unique ID
+      id: `${restaurant.id}-${hh.day_of_week}`,
     }))
-  };
-
-  const handleShareProfile = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      toast({
-        title: "Link copied!",
-        description: "Restaurant profile link has been copied to your clipboard.",
-      });
-    } catch (err) {
-      toast({
-        title: "Copy failed",
-        description: "Unable to copy link. Please try again.",
-        variant: "destructive",
-      });
-    }
   };
 
   return (
