@@ -1,85 +1,64 @@
 
 
-## Smart Default Radius Based on Location Type
+## Fix UnifiedFilterBar: Add City-wide Radius Option and Smart "Clear All"
 
-### The Problem
+### Problem
 
-When a user searches for "230 Fifth" in "New York, New York, United States", they get 0 results because:
+Two issues exist in the `UnifiedFilterBar` component after the smart default radius feature was implemented:
 
-1. The location geocodes to downtown Manhattan (~40.71, -74.01)
-2. 230 Fifth Rooftop Bar is at (~40.74, -73.99) -- about 2 miles away
-3. The default radius is always "walking" (1 mile), which excludes the result
-4. The user has to manually discover and change the radius filter to get results
+1. **Missing "City-wide" option**: The `RADIUS_OPTIONS` array only has 4 options (blocks, walking, bike, drive) but the smart default can select `city` (25 miles). When `city` is active, no radio button appears checked in the Distance filter -- the UI is out of sync with the actual filter state.
 
-This is a poor experience for city-level searches. Yelp and Google solve this by dynamically adjusting the search area based on how specific the location input is.
+2. **Hardcoded "Clear All" reset**: The `clearAllFilters` function always resets the radius to `walking` (1 mile). If the user searched for "New York" (city-level), clearing filters should reset back to "City-wide (25 miles)" -- the smart default for that location type -- not to "walking".
 
-### The Solution
+3. **Incorrect "has filters" detection**: The `hasAnyFilters` check compares radius against `walking` as the baseline. So when the smart default is `city`, the filter bar incorrectly shows the "Clear All" button even when nothing has been manually changed.
 
-The location autocomplete system already classifies each suggestion into a **location type** (City, Neighborhood, ZIP Code, etc.) via the Mapbox API. We just need to:
+### Changes
 
-1. **Propagate** that location type through the URL when searching
-2. **Use it** to pick a smart default radius on the results page
-3. **Let users override** with the existing filter (their manual choice always wins)
+**File: `src/components/UnifiedFilterBar.tsx`**
 
-### Smart Defaults
+1. **Add `city` to `RADIUS_OPTIONS` array** (line 39-44): Add `{ value: 'city', label: 'City-wide (within 25 miles)' }` so the radio button renders when the smart default or manual selection is "city".
 
-| Location Type | Default Radius | Why |
-|---|---|---|
-| Neighborhood | 1 mile (walking) | Small area, nearby results expected |
-| ZIP Code | 3 miles (bike) | ZIP codes are compact, but adjacent areas are relevant |
-| City / Borough | 25 miles | Covers the full metro area (all of NYC, etc.) |
-| GPS (Locate Me) | 1 mile (walking) | User is physically there, want nearby spots |
-| Unknown / manual input | 5 miles (drive) | Generous fallback |
+2. **Add `locationType` prop** to the component interface: This allows the component to compute the smart default radius for "Clear All" behavior. The prop is optional (defaults to `null`).
 
-For reference, "walking" (1 mile) today misses 230 Fifth because it's 2 miles from the geocoded NYC center. With 25 miles for cities, every merchant in the NYC metro area will appear. The user can always tighten it using the filter bar.
+3. **Import `getSmartDefaultRadius` and `inferLocationTypeFromInput`** from `RadiusFilter.tsx` to compute the smart default within the component.
 
-### How It Works (User Perspective)
+4. **Fix `clearAllFilters`** (line 219): Replace the hardcoded `onRadiusChange('walking')` with `onRadiusChange(smartDefault)` where `smartDefault` is computed from the `locationType` prop.
 
-**Before**: Search "230 Fifth" in "New York" → 0 results → confused → manually change distance to "Drive" → see results
+5. **Fix `hasAnyFilters`** (line 234): Replace the hardcoded `selectedRadius !== 'walking'` check with `selectedRadius !== smartDefault` so the "Clear All" button only appears when the user has actually changed something from the default.
 
-**After**: Search "230 Fifth" in "New York" → auto-selects generous city radius → results appear immediately → user can optionally tighten the radius filter
+**File: `src/pages/Results.tsx`**
 
-The distance filter in the sidebar still works as normal. If the user manually picks a radius, their choice sticks (saved in URL). The smart default only applies when no explicit choice has been made.
+6. **Pass `locationType` prop** to both `UnifiedFilterBar` instances (tablet on line 520 and desktop on line 583): Pass `locationTypeParam || inferLocationTypeFromInput(locationParam)` so the filter bar knows the current location context.
+
+**File: `src/components/MobileFilterDrawerV2.tsx`**
+
+7. No changes needed -- it passes through all props from the parent, and the `UnifiedFilterBar` will handle the logic internally with the new `locationType` prop.
+
+**File: `src/components/MobileListDrawer.tsx`**
+
+8. **Pass `locationType` prop** through to `UnifiedFilterBar` if it renders one (need to verify). If the mobile list drawer renders the filter bar, it also needs the `locationType`.
 
 ### Technical Details
 
-**Files to modify:**
+The new `locationType` prop flows like this:
 
-**1. `src/components/SearchBar.tsx`** (Desktop search bar)
-- Track the `location_type` from the selected suggestion in component state
-- When a location suggestion is selected, store its `location_type` (e.g., "City", "Neighborhood", "ZIP Code")
-- In `handleSearch`, include `locationType` as a URL parameter
-- Also detect ZIP code pattern (5 digits) for manually typed locations without suggestion selection
+```text
+URL param "locationType" 
+  -> Results.tsx reads it 
+  -> passes to UnifiedFilterBar as prop
+  -> UnifiedFilterBar computes smartDefault = getSmartDefaultRadius(locationType, useGPS)
+  -> Uses smartDefault for "Clear All" reset and "has filters" detection
+```
 
-**2. `src/components/MobileSearchBar.tsx`** (Mobile homepage search)
-- Same changes as SearchBar: track `location_type` from suggestion selection
-- Pass `locationType` in URL params during `handleSearch`
+The `RADIUS_OPTIONS` constant becomes:
 
-**3. `src/components/MobileResultsSearchBar.tsx`** (Mobile results page search)
-- Same changes as above: track and propagate `location_type`
+```text
+blocks  -> Nearby (within .25 miles)
+walking -> Walking (within 1 mile)
+bike    -> Bike (within 3 miles)
+drive   -> Drive (within 5 miles)
+city    -> City-wide (within 25 miles)
+```
 
-**4. `src/pages/Results.tsx`** (Results page -- main logic change)
-- Read `locationType` from URL params
-- Change the default radius logic: if user has NOT explicitly set a `radius` param, compute a smart default from `locationType`
-- The existing `selectedRadius` will reflect the smart default, so the filter bar UI stays consistent
-- Map: city → 25 miles, neighborhood → 1 mile, zipcode → 3 miles, gps → 1 mile, default → 5 miles
-
-**5. `src/components/RadiusFilter.tsx`**
-- Add a new helper function `getSmartDefaultRadius(locationType, useGPS)` that returns the appropriate `RadiusOption`
-- Extend `getRadiusMiles` to handle a new `'city'` option (25 miles) for city-level searches
-- Add the "City-wide" option to the radius options list so users can see what's selected
-
-**6. `src/hooks/useLocationSuggestions.ts`**
-- No changes needed -- already provides `location_type` on each suggestion
-
-**7. `supabase/functions/location-suggestions/index.ts`**
-- No changes needed -- already classifies suggestions as City/Neighborhood/ZIP Code/etc.
-
-### Edge Cases Handled
-
-- **User types location manually** (no suggestion selected): detect ZIP code via regex (5-digit pattern), default everything else to "drive" (5 miles) as a safe fallback
-- **User uses GPS / Locate Me**: defaults to "walking" (1 mile) since they are physically present
-- **User manually changes radius**: their choice is saved in URL and always takes priority over the smart default
-- **"Clear All" filters**: resets to the smart default for the current location type (not back to 1 mile)
-- **No location provided**: radius filter is disabled (existing behavior, unchanged)
+This is a small, focused fix -- 3-4 files, no new dependencies, no database changes.
 
