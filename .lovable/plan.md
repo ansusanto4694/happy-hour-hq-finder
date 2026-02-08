@@ -1,63 +1,35 @@
 
 
-## Enrich Mobile Map Preview Card Content
+## Fix Badge Wrapping on Mobile Map Preview Card
 
-### What Changes
+### Problem
+The deal type badge ("Drinks Only") and happy hour time badge ("4:00 PM – 6:00 PM") are wrapping onto separate lines because the time format is too verbose for the available space.
 
-Replace the address-focused content in the mobile map preview card with discovery-oriented information that helps users decide whether to tap "View Restaurant":
+### Solution
+Two small changes that together guarantee both badges fit on one line:
 
-**Current (address-focused):**
-- Line 1: Merchant Name
-- Line 2: Street Address
-- Line 3: City, State
+1. **Compact time format** -- Use a shorter time display like "4-6PM" instead of "4:00 PM - 6:00 PM". Drop the minutes when they're `:00` and remove the space before AM/PM. This alone saves ~60% of the time badge width.
 
-**New (discovery-focused):**
-- Line 1: Merchant Name (bold, prominent)
-- Line 2: Deal type badge -- "Food & Drinks" (teal) or "Drinks Only" (purple), plus today's happy hour time as a secondary badge
-- Line 3: Category tags -- compact outline badges (e.g., "Sushi", "Mexican", "Sports Bar")
+2. **Prevent wrapping** -- Change the badge container from `flex-wrap` to `flex-nowrap` so they always stay on one line.
 
-### Visual Design
-
-The card will feel more like a rich mini-preview of the SearchResultCard, giving users a "taste" of what they'll find:
+### Before vs After
 
 ```text
-+----------------------------------------------+
-|  [Logo]   Merchant Name                   [X] |
-|           [Food & Drinks] [4-7 PM]            |
-|           Sushi  Mexican  +1                  |
-|                                               |
-|         [  View Restaurant  ]                 |
-+----------------------------------------------+
-```
+Before:  [Drinks Only]
+         [4:00 PM – 6:00 PM]
 
-- Deal type badges use the same teal/purple color coding from the search result cards
-- Happy hour time badge uses the amber color from search cards
-- Category badges use subtle outline style, matching the card pattern
-- If no deals exist, that line gracefully falls back to the neighborhood name so the line is never empty
-- Categories are capped at 2 visible + a "+N" overflow badge to prevent wrapping
+After:   [Drinks Only] [4-6PM]
+```
 
 ### Technical Details
 
-**Data flow fix:** The `Restaurant` interface in both `ResultsMap.tsx` and `MerchantMapPreviewCard.tsx` currently omits the deal/category data. The full merchant objects from `useMerchants` already contain `merchant_happy_hour`, `happy_hour_deals`, `merchant_categories`, and `merchant_offers` -- we just need to widen the interface and pass them through.
+**File: `src/components/MerchantMapPreviewCard.tsx`** (~10 lines changed)
 
-**Files to modify:**
-
-1. **`src/components/ResultsMap.tsx`** (~5 lines)
-   - Expand the `Restaurant` interface to include optional fields: `merchant_happy_hour`, `happy_hour_deals`, `merchant_categories`, `merchant_offers`, `neighborhood`
-   - No other logic changes needed -- the restaurant objects passed in already carry this data
-
-2. **`src/components/MerchantMapPreviewCard.tsx`** (~40 lines)
-   - Expand the `Restaurant` interface to match (add same optional fields)
-   - Import `Badge` component, `getMenuTypeBadge`, and `getAllTodaysHappyHours` utilities
-   - Replace mobile Line 2 (street address) with a badges row:
-     - Menu type badge (teal for Food & Drinks, purple for Drinks Only) using `getMenuTypeBadge()`
-     - Today's happy hour time badge (amber) using `getAllTodaysHappyHours()`
-     - If neither exists, fall back to neighborhood/city name
-   - Replace mobile Line 3 (city, state) with category tags:
-     - Show up to 2 category names as outline badges from `merchant_categories`
-     - Show "+N" overflow badge if more than 2
-     - If no categories, omit the line entirely (no empty space)
-   - Desktop card remains unchanged (it's a simple hover tooltip and works fine as-is)
-
-**No new dependencies.** All utilities (`getMenuTypeBadge`, `getAllTodaysHappyHours`) and components (`Badge`) already exist and are used by `SearchResultCard.tsx`.
+- Add a local `formatCompactTime` helper that formats times concisely:
+  - "4:00 PM" becomes "4PM"
+  - "4:30 PM" becomes "4:30PM"
+  - "12:00 PM" becomes "12PM"
+- Update the time badge to use this compact format: `{compact start}-{compact end}`
+- Change the badge row from `flex flex-wrap` to `flex flex-nowrap` to prevent any wrapping
+- No changes to the shared `formatTime` utility (other components keep the full format)
 
