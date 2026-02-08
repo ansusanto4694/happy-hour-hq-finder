@@ -264,7 +264,7 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
                   }}
                   className={`flex items-center justify-center gap-1.5 px-3 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
                     happeningNow
-                      ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/25'
+                      ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white'
                       : 'border-2 border-muted text-muted-foreground hover:border-orange-400 hover:text-orange-600'
                   }`}
                 >
@@ -292,7 +292,7 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
                   }}
                   className={`flex items-center justify-center gap-1.5 px-3 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
                     happeningToday
-                      ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/25'
+                      ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
                       : 'border-2 border-muted text-muted-foreground hover:border-blue-400 hover:text-blue-600'
                   }`}
                 >
