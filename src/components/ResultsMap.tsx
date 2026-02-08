@@ -26,6 +26,11 @@ interface Restaurant {
   latitude?: number | null;
   longitude?: number | null;
   slug?: string | null;
+  logo_url?: string | null;
+  neighborhood?: string | null;
+  merchant_happy_hour?: any[];
+  happy_hour_deals?: any[];
+  merchant_categories?: any[];
 }
 
 interface ResultsMapProps {
