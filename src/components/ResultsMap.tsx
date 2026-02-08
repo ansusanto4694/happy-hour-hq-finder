@@ -44,6 +44,7 @@ interface ResultsMapProps {
   isMobile?: boolean;
   hoveredRestaurantId?: number | null;
   searchLocation?: string;
+  isLoading?: boolean;
 }
 
 const ResultsMapComponent: React.FC<ResultsMapProps> = ({ 
@@ -427,6 +428,7 @@ export const ResultsMap = React.memo(ResultsMapComponent, (prevProps, nextProps)
     prevProps.viewState === nextProps.viewState &&
     prevProps.isMobile === nextProps.isMobile &&
     prevProps.hoveredRestaurantId === nextProps.hoveredRestaurantId &&
-    prevProps.searchLocation === nextProps.searchLocation
+    prevProps.searchLocation === nextProps.searchLocation &&
+    prevProps.isLoading === nextProps.isLoading
   );
 });
