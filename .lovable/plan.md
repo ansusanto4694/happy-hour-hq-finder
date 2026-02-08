@@ -1,35 +1,45 @@
 
 
-## Fix Badge Wrapping on Mobile Map Preview Card
+## Fix: Back Button Requires Double-Tap on Mobile
 
-### Problem
-The deal type badge ("Drinks Only") and happy hour time badge ("4:00 PM – 6:00 PM") are wrapping onto separate lines because the time format is too verbose for the available space.
+### Root Cause
 
-### Solution
-Two small changes that together guarantee both badges fit on one line:
+The issue is **not** with event propagation or decorative overlays (the previous fixes addressed the wrong layer). The actual culprit is the **Radix Toast Viewport** -- an invisible element that sits on top of the header and intercepts the first tap.
 
-1. **Compact time format** -- Use a shorter time display like "4-6PM" instead of "4:00 PM - 6:00 PM". Drop the minutes when they're `:00` and remove the space before AM/PM. This alone saves ~60% of the time badge width.
+Here's what's happening:
 
-2. **Prevent wrapping** -- Change the badge container from `flex-wrap` to `flex-nowrap` so they always stay on one line.
+In `src/components/ui/toast.tsx`, the `ToastViewport` is rendered with these classes:
 
-### Before vs After
-
-```text
-Before:  [Drinks Only]
-         [4:00 PM – 6:00 PM]
-
-After:   [Drinks Only] [4-6PM]
+```
+fixed top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4
 ```
 
-### Technical Details
+This creates an invisible, always-present element that:
+- Is positioned at **fixed top-0** (same area as the sticky header)
+- Has **z-[100]** (higher than the header's **z-50**, so it sits ON TOP)
+- Is **w-full** (spans the entire screen width)
+- Has **p-4** (16px padding on all sides, giving it a 32px height even when empty)
 
-**File: `src/components/MerchantMapPreviewCard.tsx`** (~10 lines changed)
+Even when there are **zero active toasts**, this empty container is still a DOM element with real dimensions (full width x 32px tall) sitting invisibly over the top of the screen at a higher z-index than the header.
 
-- Add a local `formatCompactTime` helper that formats times concisely:
-  - "4:00 PM" becomes "4PM"
-  - "4:30 PM" becomes "4:30PM"
-  - "12:00 PM" becomes "12PM"
-- Update the time badge to use this compact format: `{compact start}-{compact end}`
-- Change the badge row from `flex flex-wrap` to `flex flex-nowrap` to prevent any wrapping
-- No changes to the shared `formatTime` utility (other components keep the full format)
+When the user taps the back button:
+1. The touch lands on the invisible ToastViewport (z-100) instead of the button (z-50)
+2. The button may show a brief highlight/active state, but the click event is consumed by the empty viewport
+3. No navigation happens
+4. On the second tap, browser behavior or slight position difference allows the event through
 
+This also explains why the **browser's native back button works fine** -- it doesn't rely on tapping the UI.
+
+### The Fix
+
+Add `pointer-events-none` to the `ToastViewport` so it never blocks interactions when empty. The individual toast items already have `pointer-events-auto` in their styling (in the `toastVariants` definition), so actual toast notifications will remain fully interactive and dismissible.
+
+**File: `src/components/ui/toast.tsx`** (1 line changed)
+
+Add `pointer-events-none` to the `ToastViewport` className. This way:
+- Empty viewport = passes all taps through to the header below
+- Active toasts = each toast has its own `pointer-events-auto` so they still work
+
+### Previous Fixes (Can Be Cleaned Up)
+
+The earlier fixes (`e.stopPropagation()` in handleBack, `pointer-events-none` on decorative overlays) were targeting the wrong cause. They are harmless but unnecessary -- they can optionally be removed to keep the code clean, though leaving them is also fine.
