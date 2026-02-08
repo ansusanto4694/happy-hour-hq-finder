@@ -7,6 +7,7 @@ import { useLocateMe } from '@/hooks/useLocateMe';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useLocationSuggestions } from '@/hooks/useLocationSuggestions';
 import { useSearchSuggestions } from '@/hooks/useSearchSuggestions';
+import { inferLocationTypeFromInput } from '@/components/RadiusFilter';
 
 interface MobileResultsSearchBarProps {
   onExpandedChange?: (isExpanded: boolean) => void;
@@ -21,6 +22,7 @@ export const MobileResultsSearchBar = ({ onExpandedChange }: MobileResultsSearch
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
   const [location, setLocation] = useState(searchParams.get('location') || searchParams.get('zip') || '');
   const [gpsCoordinates, setGpsCoordinates] = useState<{ lat: number; lng: number } | null>(null);
+  const [locationType, setLocationType] = useState<string | null>(searchParams.get('locationType') || null);
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Search term autocomplete
@@ -52,6 +54,7 @@ export const MobileResultsSearchBar = ({ onExpandedChange }: MobileResultsSearch
     debounceMs: 400,
     onSelect: (suggestion) => {
       setLocation(suggestion.place_name);
+      setLocationType(suggestion.location_type);
       setGpsCoordinates(null);
       locationInputRef.current?.focus();
     },
@@ -126,6 +129,7 @@ export const MobileResultsSearchBar = ({ onExpandedChange }: MobileResultsSearch
   // Handle location input change
   const handleLocationChange = (value: string) => {
     setLocation(value);
+    setLocationType(null); // Clear until a new suggestion is selected
     setGpsCoordinates(null);
     fetchSuggestions(value);
   };
@@ -196,6 +200,12 @@ export const MobileResultsSearchBar = ({ onExpandedChange }: MobileResultsSearch
       params.set('lat', gpsCoordinates.lat.toString());
       params.set('lng', gpsCoordinates.lng.toString());
       params.set('useGPS', 'true');
+    }
+
+    // Propagate location type for smart default radius
+    const effectiveLocationType = locationType || inferLocationTypeFromInput(location);
+    if (effectiveLocationType) {
+      params.set('locationType', effectiveLocationType);
     }
 
     const fullQuery = [searchTerm, location].filter(Boolean).join(' in ');
@@ -283,6 +293,7 @@ export const MobileResultsSearchBar = ({ onExpandedChange }: MobileResultsSearch
 
   const handleClearLocation = () => {
     setLocation('');
+    setLocationType(null);
     clearSuggestions();
     setGpsCoordinates(null);
   };

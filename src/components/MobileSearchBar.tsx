@@ -7,6 +7,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { useLocateMe } from '@/hooks/useLocateMe';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useLocationSuggestions } from '@/hooks/useLocationSuggestions';
+import { inferLocationTypeFromInput } from '@/components/RadiusFilter';
 
 interface MobileSearchBarProps {
   onExpandedChange?: (isExpanded: boolean) => void;
@@ -24,6 +25,7 @@ export const MobileSearchBar = ({ onExpandedChange }: MobileSearchBarProps = {})
   // UI state
   const [isExpanded, setIsExpanded] = useState(false);
   const [gpsCoordinates, setGpsCoordinates] = useState<{lat: number; lng: number} | null>(null);
+  const [locationType, setLocationType] = useState<string | null>(null);
   
   // Hooks
   const { locate, isLocating } = useLocateMe();
@@ -51,6 +53,7 @@ export const MobileSearchBar = ({ onExpandedChange }: MobileSearchBarProps = {})
         totalSuggestions: locationSuggestions.length
       });
       setLocation(suggestion.place_name);
+      setLocationType(suggestion.location_type);
       setGpsCoordinates(null); // Clear GPS when selecting a suggestion
       locationInputRef.current?.focus();
     }
@@ -59,6 +62,7 @@ export const MobileSearchBar = ({ onExpandedChange }: MobileSearchBarProps = {})
   // Handle location input change
   const handleLocationChange = (value: string) => {
     setLocation(value);
+    setLocationType(null); // Clear until a new suggestion is selected
     setGpsCoordinates(null); // Clear GPS coordinates when manually editing
     fetchSuggestions(value);
   };
@@ -108,6 +112,12 @@ export const MobileSearchBar = ({ onExpandedChange }: MobileSearchBarProps = {})
       params.set('lat', gpsCoordinates.lat.toString());
       params.set('lng', gpsCoordinates.lng.toString());
       params.set('useGPS', 'true');
+    }
+    
+    // Propagate location type for smart default radius
+    const effectiveLocationType = locationType || inferLocationTypeFromInput(location);
+    if (effectiveLocationType) {
+      params.set('locationType', effectiveLocationType);
     }
     
     // Build the full query string for analytics
@@ -182,6 +192,7 @@ export const MobileSearchBar = ({ onExpandedChange }: MobileSearchBarProps = {})
 
   const handleClearLocation = () => {
     setLocation('');
+    setLocationType(null);
     clearSuggestions();
     setGpsCoordinates(null);
   };
