@@ -98,7 +98,7 @@ export default function Favorites() {
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between mb-4">
                         <Link
-                          to={`/restaurant/${merchant.id}`}
+                          to={`/restaurant/${merchant.slug || merchant.id}`}
                           className="flex-1 min-w-0"
                         >
                           {merchant.logo_url ? (
@@ -132,7 +132,7 @@ export default function Favorites() {
                       </div>
 
                       <Button asChild className="w-full" variant="outline">
-                        <Link to={`/restaurant/${merchant.id}`}>
+                        <Link to={`/restaurant/${merchant.slug || merchant.id}`}>
                           View Details
                         </Link>
                       </Button>
