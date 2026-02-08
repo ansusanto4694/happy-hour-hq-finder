@@ -4,6 +4,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getMenuTypeBadge, getAllTodaysHappyHours } from '@/utils/timeUtils';
 
+// Compact time for map preview badges: "4:00 PM" → "4PM", "4:30 PM" → "4:30PM"
+const formatCompactTime = (timeStr: string): string =>
+  timeStr.replace(':00', '').replace(' ', '');
+
 interface Restaurant {
   id: number;
   restaurant_name: string;
@@ -92,11 +96,11 @@ export const MerchantMapPreviewCard: React.FC<MerchantMapPreviewCardProps> = ({
               </h3>
               
               {/* Line 2: Deal type + Happy hour time badges */}
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-nowrap gap-1.5 items-center">
                 {menuTypeBadge && (
                   <Badge 
                     variant="secondary" 
-                    className={`text-xs px-2 py-0.5 font-semibold ${
+                    className={`text-xs px-2 py-0.5 font-semibold whitespace-nowrap ${
                       menuTypeBadge.type === 'food_and_drinks' 
                         ? 'bg-teal-500/90 text-white' 
                         : 'bg-purple-500/90 text-white'
@@ -108,9 +112,9 @@ export const MerchantMapPreviewCard: React.FC<MerchantMapPreviewCardProps> = ({
                 {todaysHappyHours.length > 0 && (
                   <Badge 
                     variant="secondary" 
-                    className="text-xs px-2 py-0.5 font-semibold bg-amber-500/90 text-white"
+                    className="text-xs px-2 py-0.5 font-semibold bg-amber-500/90 text-white whitespace-nowrap"
                   >
-                    {todaysHappyHours[0].start} - {todaysHappyHours[0].end}
+                    {formatCompactTime(todaysHappyHours[0].start)}-{formatCompactTime(todaysHappyHours[0].end)}
                     {todaysHappyHours.length > 1 && ` +${todaysHappyHours.length - 1}`}
                   </Badge>
                 )}
