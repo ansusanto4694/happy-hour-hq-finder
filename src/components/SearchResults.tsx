@@ -28,6 +28,7 @@ interface SearchResultsProps {
   isMobile?: boolean;
   onRestaurantHover?: (restaurantId: number | null) => void;
   onMerchantNavigate?: (merchantId: number) => void;
+  happeningNow?: boolean;
 }
 
 const RESULTS_PER_PAGE = 30;
@@ -41,7 +42,8 @@ const SearchResultsComponent: React.FC<SearchResultsProps> = ({
   location,
   isMobile = false,
   onRestaurantHover,
-  onMerchantNavigate
+  onMerchantNavigate,
+  happeningNow = false
 }) => {
   const [displayedResults, setDisplayedResults] = useState<any[]>([]);
   const [hasMore, setHasMore] = useState(true);
@@ -233,6 +235,7 @@ const SearchResultsComponent: React.FC<SearchResultsProps> = ({
         resultsPerPage={RESULTS_PER_PAGE}
         searchTerm={searchTerm}
         isMobile={isMobile}
+        happeningNow={happeningNow}
       />
       
       <div className="space-y-3">

@@ -516,6 +516,7 @@ const Results = () => {
               endTime={currentEndTime}
               location={location}
               onRestaurantHover={setHoveredRestaurantId}
+              happeningNow={happeningNow}
             />
               </div>
               <div className="lg:col-span-1">
@@ -575,6 +576,7 @@ const Results = () => {
               endTime={currentEndTime}
               location={location}
               onRestaurantHover={setHoveredRestaurantId}
+              happeningNow={happeningNow}
             />
           </div>
 

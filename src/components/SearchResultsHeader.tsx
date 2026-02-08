@@ -11,6 +11,7 @@ interface SearchResultsHeaderProps {
   resultsPerPage?: number;
   searchTerm?: string;
   isMobile?: boolean;
+  happeningNow?: boolean;
 }
 
 export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
@@ -22,7 +23,8 @@ export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
   totalPages = 1,
   resultsPerPage = 20,
   searchTerm,
-  isMobile = false
+  isMobile = false,
+  happeningNow = false
 }) => {
   const startResult = (currentPage - 1) * resultsPerPage + 1;
   const endResult = Math.min(currentPage * resultsPerPage, resultsCount);
@@ -57,14 +59,22 @@ export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
                   `Showing ${startResult}-${endResult} of ${resultsCount} restaurants${totalPages > 1 ? ` (Page ${currentPage} of ${totalPages})` : ''}`
                 }
               </p>
-              {(startTime || endTime || location || searchTerm) && (
+              {(happeningNow || startTime || endTime || location || searchTerm) && (
                 <div className="flex flex-wrap gap-4 text-xs">
                   {searchTerm && (
                     <span>Search: "{searchTerm}"</span>
                   )}
-                  {startTime && endTime && (
+                  {happeningNow ? (
+                    <span className="inline-flex items-center gap-1.5 font-medium text-orange-600">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                      </span>
+                      Happening Now
+                    </span>
+                  ) : startTime && endTime ? (
                     <span>Time: {formatTime(startTime)} - {formatTime(endTime)}</span>
-                  )}
+                  ) : null}
                   {location && (
                     <span>Location: {location}</span>
                   )}
