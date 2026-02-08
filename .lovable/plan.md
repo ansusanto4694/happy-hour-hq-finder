@@ -1,60 +1,52 @@
 
 
-## Fix: Bottom Navigation Always Tappable Over the Results Drawer
+## Fix: Independent Scrolling for Desktop Filters
 
-**The problem in plain terms:** When you pull up the results list on `/results`, the drawer covers the entire screen -- including the Home, Search, Favorites, and Account buttons at the bottom. Even though those buttons look like they should be on top, the drawer is actually blocking your taps from reaching them.
+**The problem:** When you expand the filter sections (Categories, Happy Hour Time, Days, Menu Type, Distance) on desktop, the filter panel grows taller than the screen. Since the panel doesn't have its own scroll bar, scrolling your mouse wheel anywhere on the page just moves the merchant results list up and down -- you can't scroll through the filter options themselves.
 
-**Why previous fixes didn't work:** Raising the navigation bar's priority (z-index) alone doesn't solve it because the drawer library applies a visual effect (`shouldScaleBackground`) that fundamentally changes how the browser decides what's "on top." It traps the navigation bar behind the drawer no matter how high we set its priority.
+**The fix:** Give the filter panel its own scroll area so it scrolls independently from the results list. This means:
 
-**The fix (two small changes):**
+- You can scroll up and down inside the filters without affecting the results list
+- You can scroll through the results list without affecting the filters
+- The map stays pinned in place as it does today
 
-1. **Disable the background scaling effect on the results drawer** -- This is a one-line change in `MobileListDrawer.tsx`. It removes the visual trick that traps the navigation bar. The drawer will still slide up and work exactly the same; you just won't see a subtle background zoom effect (which most users never notice anyway).
-
-2. **Remove the dark overlay behind the drawer** -- The drawer currently puts a dark semi-transparent layer over the entire screen (including over the nav bar). We'll remove this overlay specifically for the results drawer since the drawer sits on top of a map and doesn't need a dimming effect. This ensures nothing blocks your taps on the navigation buttons.
+**What the experience will feel like after the fix:**
+1. You open `/results` on desktop and see filters on the left, results in the middle, map on the right
+2. You expand several filter sections (e.g., Categories + Days + Menu Type)
+3. If the expanded filters are taller than your screen, a subtle scrollbar appears inside the filter panel
+4. Scrolling your mouse while hovering over the filters only scrolls the filters
+5. Scrolling while hovering over the results list only scrolls the results
+6. Everything else stays exactly the same
 
 **What stays the same:**
-- The drawer still slides up and down as before
-- Scrolling through the merchant list works identically
-- The bottom padding we already added keeps merchant cards from hiding behind the nav bar
-- All other drawers/modals in the app are unaffected
+- All filter functionality (selecting categories, days, time, etc.)
+- The "Clear All" button behavior
+- The sticky positioning of the filter panel
+- The map and results layout
+- Mobile layout is completely unaffected
 
 ---
 
 ### Technical Details
 
-**File 1: `src/components/MobileListDrawer.tsx`**
-- Add `shouldScaleBackground={false}` to the `Drawer` component on line 79
-- Change: `<Drawer open={isOpen} onOpenChange={onOpenChange}>` becomes `<Drawer open={isOpen} onOpenChange={onOpenChange} shouldScaleBackground={false}>`
+**File: `src/pages/Results.tsx`** (Desktop layout section, around line 506-507)
 
-**File 2: `src/components/MobileListDrawer.tsx`**
-- Pass a custom className to `DrawerContent` to remove the overlay
-- Change: `<DrawerContent className="max-h-[85vh] flex flex-col overflow-hidden">` becomes `<DrawerContent className="max-h-[85vh] flex flex-col overflow-hidden" overlayClassName="pointer-events-none bg-transparent">`
+Current code:
+```
+<div className="w-80 flex-shrink-0">
+  <div className="space-y-4 sticky top-32 z-40">
+```
 
-Since `DrawerContent` doesn't currently support an `overlayClassName` prop, we'll instead customize the overlay directly:
+Updated code:
+```
+<div className="w-80 flex-shrink-0">
+  <div className="sticky top-32 z-40 max-h-[calc(100vh-9rem)] overflow-y-auto">
+```
 
-**File 2 (revised): `src/components/ui/drawer.tsx`**
-- Make the `DrawerOverlay` accept an optional prop to disable pointer events
-- Update `DrawerContent` to accept an optional `overlayProps` or simply allow passing overlay className
+This single change:
+- `max-h-[calc(100vh-9rem)]` caps the filter panel's height to the viewport minus the header space (the `top-32` offset = 8rem, plus 1rem breathing room)
+- `overflow-y-auto` adds a scrollbar only when the filters are taller than the available space
+- Removes `space-y-4` from this wrapper since `UnifiedFilterBar` already handles its own internal spacing
 
-**Simpler approach -- just two changes:**
-
-**File 1: `src/components/MobileListDrawer.tsx` (line 79)**
-- Add `shouldScaleBackground={false}` and `modal={false}` to the Drawer
-- `modal={false}` tells the drawer library not to trap focus or block interactions outside the drawer
-- This is the key fix: it allows taps on the nav bar to go through
-
-**File 2: `src/components/MobileListDrawer.tsx` (line 80)**  
-- Add a custom overlay style to `DrawerContent` -- we won't need to change the shared drawer component at all since `modal={false}` removes the overlay behavior
-
-**Final implementation -- exactly two lines change in one file:**
-
-`src/components/MobileListDrawer.tsx`:
-1. Line 79: `<Drawer open={isOpen} onOpenChange={onOpenChange} shouldScaleBackground={false} modal={false}>`
-2. No other files need to change
-
-Setting `modal={false}` means:
-- The drawer no longer blocks interactions with the rest of the page
-- Users can tap Home, Search, Favorites, Account while the drawer is open
-- The drawer still opens, closes, and scrolls normally
-- `shouldScaleBackground={false}` prevents the stacking context issue
+That's it -- one line change in one file.
 
