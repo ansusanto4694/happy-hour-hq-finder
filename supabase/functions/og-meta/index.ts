@@ -190,10 +190,35 @@ Deno.serve(async (req) => {
 
     if (restaurantMatch) {
       const slug = restaurantMatch[1];
+      const isNumeric = /^\d+$/.test(slug);
       const supabase = createClient(
         Deno.env.get("SUPABASE_URL")!,
         Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
       );
+
+      // If numeric ID, look up the slug and issue a 301 redirect
+      if (isNumeric) {
+        const { data } = await supabase
+          .from("Merchant")
+          .select("slug")
+          .eq("id", parseInt(slug, 10))
+          .eq("is_active", true)
+          .maybeSingle();
+
+        if (data?.slug) {
+          const redirectTarget = new URL(`${SITE_URL}/restaurant/${data.slug}`);
+          utmParams.forEach((val, key) => redirectTarget.searchParams.set(key, val));
+          return new Response(null, {
+            status: 301,
+            headers: {
+              ...corsHeaders,
+              "Location": redirectTarget.toString(),
+              "Cache-Control": "public, max-age=31536000, immutable",
+            },
+          });
+        }
+      }
+
       const restaurantMeta = await getRestaurantMeta(supabase, slug);
       meta = restaurantMeta || getDefaultMeta();
     } else if (locationMatch) {
