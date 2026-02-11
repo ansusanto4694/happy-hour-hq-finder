@@ -203,15 +203,7 @@ const RestaurantProfile = () => {
             id,
             deal_title,
             deal_description,
-            active,
-            menu_type
-          ),
-          merchant_reviews!left (
-            id,
-            status,
-            merchant_review_ratings (
-              rating
-            )
+            active
           )
         `);
       
