@@ -18,6 +18,13 @@ export interface RecentlyViewedMerchant {
     active: boolean;
     menu_type: 'food_and_drinks' | 'drinks_only' | null;
   }>;
+  merchant_reviews?: Array<{
+    id: string;
+    status: string;
+    merchant_review_ratings?: Array<{
+      rating: number;
+    }>;
+  }>;
   viewedAt: number;
 }
 
@@ -70,6 +77,13 @@ export function useRecentlyViewed() {
       active: boolean;
       menu_type?: string | null;
     }>;
+    merchant_reviews?: Array<{
+      id: string;
+      status: string;
+      merchant_review_ratings?: Array<{
+        rating: number;
+      }>;
+    }>;
   }) => {
     const entry: RecentlyViewedMerchant = {
       id: merchant.id,
@@ -78,9 +92,14 @@ export function useRecentlyViewed() {
       logo_url: merchant.logo_url ?? null,
       neighborhood: merchant.neighborhood ?? null,
       merchant_happy_hour: merchant.merchant_happy_hour ?? [],
-    happy_hour_deals: (merchant.happy_hour_deals ?? []).map(d => ({
+      happy_hour_deals: (merchant.happy_hour_deals ?? []).map(d => ({
         active: d.active,
         menu_type: (d.menu_type as 'food_and_drinks' | 'drinks_only' | null) ?? null,
+      })),
+      merchant_reviews: (merchant.merchant_reviews ?? []).map(r => ({
+        id: r.id,
+        status: r.status,
+        merchant_review_ratings: r.merchant_review_ratings ?? [],
       })),
       viewedAt: Date.now(),
     };
