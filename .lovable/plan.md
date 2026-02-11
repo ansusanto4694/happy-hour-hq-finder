@@ -1,83 +1,49 @@
 
 
-# Fix: Make Sitemap Submittable in Google Search Console
+# Make Recently Viewed Carousel Consistent with Other Carousels
 
-## The Problem
+## Problem
 
-Google Search Console only accepts sitemap URLs under your verified domain (`sipmunchyap.com`). The current `robots.txt` points to the Supabase edge function URL, which GSC won't accept.
+The `RecentlyViewedCarousel` component duplicates the carousel wrapper logic (header, navigation buttons, scroll container) instead of reusing the existing `HomepageCarousel` and `MobileCarousel` components. While both use the same card components (`CarouselCard` / `MobileCarouselCard`), the surrounding structure is reimplemented inline, creating maintenance burden and subtle styling differences.
 
-## The Solution
+Additionally, the Recently Viewed data stored in localStorage is missing `merchant_reviews`, so those cards cannot display star ratings like the other carousels do.
 
-Create a static `public/sitemap.xml` that acts as a **sitemap index** -- it contains zero actual page URLs, only pointers to the 4 dynamic edge function sub-sitemaps. This gives you:
+## Plan
 
-- A `sipmunchyap.com/sitemap.xml` URL that GSC accepts
-- All actual page data still served fresh from the edge function on every crawl
+### Step 1: Add review data to the Recently Viewed storage
 
-## How It Works
+Update `useRecentlyViewed.ts`:
+- Add `merchant_reviews` to the `RecentlyViewedMerchant` interface
+- Update `addRecentlyViewed` to accept and store review data
+- This allows recently viewed cards to show star ratings, matching the other carousels
 
-```text
-Google Search Console
-       |
-       v
-sipmunchyap.com/sitemap.xml  (static index file -- just 4 links)
-       |
-       v
-Points to 4 dynamic sub-sitemaps (edge function):
-  - generate-sitemap?type=static        (3 pages, fresh dates)
-  - generate-sitemap?type=cities         (all cities, fresh dates)
-  - generate-sitemap?type=neighborhoods  (all neighborhoods, fresh dates)
-  - generate-sitemap?type=restaurants    (all restaurants, real updated_at dates)
-```
+### Step 2: Store review data when visiting a merchant profile
 
-Google follows the links in the index and fetches the sub-sitemaps directly from the edge function, so all the actual content is always dynamic and fresh.
+Update the call site in `RestaurantProfile.tsx` (or wherever `addRecentlyViewed` is called) to pass `merchant_reviews` data along with the other merchant fields.
 
-## Changes
+### Step 3: Refactor RecentlyViewedCarousel to reuse existing carousel wrappers
 
-### 1. Create `public/sitemap.xml` (new file)
+Reshape the recently viewed data to match the `HomepageCarousel` type structure, then pass it directly to the existing `HomepageCarousel` (desktop) and `MobileCarousel` (mobile) components. The only differences:
+- No "View All" button (since there are only up to 10 items)
+- The title is "Recently Viewed" instead of a database-driven name
 
-A minimal sitemap index file containing only references to the 4 dynamic sub-sitemaps:
+To handle this cleanly, add an optional `hideViewAll` prop to `HomepageCarousel` and `MobileCarousel`, then delete the standalone `RecentlyViewedCarousel.tsx` component entirely.
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <sitemap>
-    <loc>https://gohcqazhofdhkghfxfok.supabase.co/functions/v1/generate-sitemap?type=static</loc>
-  </sitemap>
-  <sitemap>
-    <loc>https://gohcqazhofdhkghfxfok.supabase.co/functions/v1/generate-sitemap?type=cities</loc>
-  </sitemap>
-  <sitemap>
-    <loc>https://gohcqazhofdhkghfxfok.supabase.co/functions/v1/generate-sitemap?type=neighborhoods</loc>
-  </sitemap>
-  <sitemap>
-    <loc>https://gohcqazhofdhkghfxfok.supabase.co/functions/v1/generate-sitemap?type=restaurants</loc>
-  </sitemap>
-</sitemapindex>
-```
+### Step 4: Update homepage to use the refactored component
 
-No `lastmod` dates in the index itself -- Google will re-fetch the sub-sitemaps on its own schedule and get fresh dates from the edge function every time.
+Update `Index.tsx` to pass the recently viewed data through the shared carousel components instead of rendering `RecentlyViewedCarousel` directly.
 
-### 2. Update `public/robots.txt`
+## Technical Details
 
-Change the Sitemap line back to the local path:
+**Files to modify:**
+- `src/hooks/useRecentlyViewed.ts` — add `merchant_reviews` to the stored type
+- `src/components/HomepageCarousel.tsx` — add optional `hideViewAll` prop
+- `src/components/MobileCarousel.tsx` — add optional `hideViewAll` prop
+- `src/pages/RestaurantProfile.tsx` — pass review data to `addRecentlyViewed`
+- `src/pages/Index.tsx` — replace `RecentlyViewedCarousel` usage with shared carousel
 
-```
-Sitemap: https://sipmunchyap.com/sitemap.xml
-```
+**Files to delete:**
+- `src/components/RecentlyViewedCarousel.tsx` — no longer needed
 
-### Google Search Console Steps (after publishing)
-
-1. Go to **Sitemaps** in GSC (left sidebar, under "Indexing")
-2. In the "Add a new sitemap" field, type: **sitemap.xml**
-3. Click **Submit**
-4. Google will fetch it, follow the 4 sub-sitemap links, and discover all your pages with fresh dates
-
-## Files Changed
-
-| File | Action | What Changes |
-|------|--------|--------------|
-| `public/sitemap.xml` | Create | Minimal sitemap index pointing to 4 dynamic edge function sub-sitemaps |
-| `public/robots.txt` | Modify | Change Sitemap URL back to `https://sipmunchyap.com/sitemap.xml` |
-
-No edge function changes needed.
+**No new dependencies required.**
 
