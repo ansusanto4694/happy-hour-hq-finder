@@ -7,9 +7,10 @@ import { useAnalytics } from '@/hooks/useAnalytics';
 
 interface MobileCarouselProps {
   carousel: CarouselType;
+  hideViewAll?: boolean;
 }
 
-export const MobileCarousel: React.FC<MobileCarouselProps> = ({ carousel }) => {
+export const MobileCarousel: React.FC<MobileCarouselProps> = ({ carousel, hideViewAll }) => {
   const navigate = useNavigate();
   const { track } = useAnalytics();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -43,13 +44,15 @@ export const MobileCarousel: React.FC<MobileCarouselProps> = ({ carousel }) => {
         <div>
           <h3 className="text-lg font-semibold text-foreground">{carousel.name}</h3>
         </div>
-        <button
-          onClick={handleViewAll}
-          className="w-8 h-8 bg-primary/10 hover:bg-primary/20 rounded-full flex items-center justify-center transition-colors"
-          aria-label="View all merchants"
-        >
-          <ChevronRight className="w-5 h-5 text-primary" />
-        </button>
+        {!hideViewAll && (
+          <button
+            onClick={handleViewAll}
+            className="w-8 h-8 bg-primary/10 hover:bg-primary/20 rounded-full flex items-center justify-center transition-colors"
+            aria-label="View all merchants"
+          >
+            <ChevronRight className="w-5 h-5 text-primary" />
+          </button>
+        )}
       </div>
 
       {/* Scrollable carousel */}

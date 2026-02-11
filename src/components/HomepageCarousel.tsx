@@ -14,9 +14,10 @@ import { HomepageCarousel as CarouselType } from '@/hooks/useHomepageCarousels';
 
 interface HomepageCarouselProps {
   carousel: CarouselType;
+  hideViewAll?: boolean;
 }
 
-export const HomepageCarousel: React.FC<HomepageCarouselProps> = ({ carousel }) => {
+export const HomepageCarousel: React.FC<HomepageCarouselProps> = ({ carousel, hideViewAll }) => {
   const navigate = useNavigate();
   const { track, trackFunnel } = useAnalytics();
   const [api, setApi] = useState<CarouselApi>();
@@ -119,15 +120,17 @@ export const HomepageCarousel: React.FC<HomepageCarouselProps> = ({ carousel }) 
             </Button>
           </div>
           
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleViewAll}
-            className="flex items-center space-x-1"
-          >
-            <span>View All</span>
-            <ArrowRight className="h-3 w-3" />
-          </Button>
+          {!hideViewAll && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleViewAll}
+              className="flex items-center space-x-1"
+            >
+              <span>View All</span>
+              <ArrowRight className="h-3 w-3" />
+            </Button>
+          )}
         </div>
       </div>
 
