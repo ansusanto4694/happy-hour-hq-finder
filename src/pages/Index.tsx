@@ -1,5 +1,4 @@
-import React, { useEffect } from 'react';
-import { SearchBar } from '@/components/SearchBar';
+import React, { useEffect, useMemo } from 'react';
 import Hero from '@/components/Hero';
 import { HomepageCarousels } from '@/components/HomepageCarousels';
 import { SEOHead } from '@/components/SEOHead';
@@ -7,12 +6,14 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { Footer } from '@/components/Footer';
 import { PageHeader } from '@/components/PageHeader';
-import { RecentlyViewedCarousel } from '@/components/RecentlyViewedCarousel';
-import { Link } from 'react-router-dom';
+import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
+import { HomepageCarousel } from '@/components/HomepageCarousel';
+import { HomepageCarousel as CarouselType } from '@/hooks/useHomepageCarousels';
 
 const Index = () => {
   const isMobile = useIsMobile();
   const { trackFunnel } = useAnalytics();
+  const { recentlyViewed } = useRecentlyViewed();
 
   useEffect(() => {
     trackFunnel({
@@ -21,7 +22,40 @@ const Index = () => {
     });
   }, [trackFunnel]);
 
-  // Mobile version - keep existing Hero component
+  // Shape recently viewed data into the HomepageCarousel type
+  const recentlyViewedCarousel = useMemo((): CarouselType | null => {
+    if (recentlyViewed.length === 0) return null;
+    return {
+      id: 'recently-viewed',
+      name: 'Recently Viewed',
+      display_order: -1,
+      merchants: recentlyViewed.map((m, i) => ({
+        id: `rv-${m.id}`,
+        merchant_id: m.id,
+        display_order: i,
+        merchant: {
+          id: m.id,
+          restaurant_name: m.restaurant_name,
+          street_address: '',
+          city: '',
+          state: '',
+          zip_code: '',
+          logo_url: m.logo_url ?? undefined,
+          neighborhood: m.neighborhood ?? undefined,
+          slug: m.slug ?? undefined,
+          merchant_happy_hour: m.merchant_happy_hour,
+          happy_hour_deals: (m.happy_hour_deals || []).map(d => ({
+            id: '',
+            active: d.active,
+            menu_type: d.menu_type,
+          })),
+          merchant_reviews: m.merchant_reviews,
+        },
+      })),
+    };
+  }, [recentlyViewed]);
+
+  // Mobile version
   if (isMobile) {
     return (
       <div className="relative min-h-screen pb-16 bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500">
@@ -33,8 +67,7 @@ const Index = () => {
             keywords="happy hour, bars, restaurants, drinks, food deals, nightlife, local bars, restaurant finder"
             canonical="https://sipmunchyap.com/"
           />
-          <Hero />
-          
+          <Hero recentlyViewedCarousel={recentlyViewedCarousel} />
           
           <HomepageCarousels />
           <Footer />
@@ -43,11 +76,10 @@ const Index = () => {
     );
   }
 
-  // Desktop version - new layout
+  // Desktop version
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500">
       <div className="absolute inset-0 bg-black/10"></div>
-      {/* Decorative elements */}
       <div className="absolute top-20 left-20 w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
       <div className="absolute bottom-32 right-20 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
       
@@ -59,10 +91,8 @@ const Index = () => {
           canonical="https://sipmunchyap.com/"
         />
         
-        {/* Header with company name, search bar, and navigation */}
         <PageHeader showSearchBar={true} searchBarVariant="results" />
         
-        {/* Main content */}
         <div className="max-w-6xl mx-auto px-6 pt-44 pb-4 text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
             Find the best happy hours near you
@@ -80,7 +110,9 @@ const Index = () => {
         
         {/* Recently Viewed + Carousels */}
         <div className="w-full px-6 lg:px-8 xl:px-12">
-          <RecentlyViewedCarousel />
+          {recentlyViewedCarousel && (
+            <HomepageCarousel carousel={recentlyViewedCarousel} hideViewAll />
+          )}
         </div>
         <HomepageCarousels />
         <Footer />

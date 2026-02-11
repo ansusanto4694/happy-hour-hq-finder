@@ -4,10 +4,15 @@ import { Link } from 'react-router-dom';
 import { SearchBar } from './SearchBar';
 import { AuthButton } from './AuthButton';
 import { MobileCarousels } from './MobileCarousels';
-import { RecentlyViewedCarousel } from './RecentlyViewedCarousel';
+import { MobileCarousel } from './MobileCarousel';
+import { HomepageCarousel as CarouselType } from '@/hooks/useHomepageCarousels';
 import { useAnalytics } from '@/hooks/useAnalytics';
 
-const Hero = () => {
+interface HeroProps {
+  recentlyViewedCarousel?: CarouselType | null;
+}
+
+const Hero: React.FC<HeroProps> = ({ recentlyViewedCarousel }) => {
   const { track } = useAnalytics();
 
   const handleNavClick = async (label: string) => {
@@ -77,11 +82,13 @@ const Hero = () => {
         <SearchBar />
       </div>
         
-      {/* Recently viewed merchants */}
-      <div className="px-4 mt-6">
-        <RecentlyViewedCarousel />
-      </div>
-        
+      {/* Recently viewed carousel */}
+      {recentlyViewedCarousel && (
+        <div className="px-4 mt-6">
+          <MobileCarousel carousel={recentlyViewedCarousel} hideViewAll />
+        </div>
+      )}
+
       {/* Mobile carousels */}
       <div className="px-4">
         <MobileCarousels />
