@@ -188,6 +188,7 @@ export const MobileFilterDrawerV2: React.FC<MobileFilterDrawerV2Props> = ({
             happeningToday={happeningToday}
             onHappeningTodayChange={onHappeningTodayChange}
             locationType={locationType}
+            onClearAllFilters={onClearAllFilters}
           />
         </div>
         
