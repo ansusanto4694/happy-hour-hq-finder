@@ -37,6 +37,7 @@ interface MobileFilterDrawerV2Props {
   happeningToday?: boolean;
   onHappeningTodayChange?: (value: boolean) => void;
   locationType?: string | null;
+  onClearAllFilters?: () => void;
 }
 
 export const MobileFilterDrawerV2: React.FC<MobileFilterDrawerV2Props> = ({
@@ -62,6 +63,7 @@ export const MobileFilterDrawerV2: React.FC<MobileFilterDrawerV2Props> = ({
   happeningToday,
   onHappeningTodayChange,
   locationType,
+  onClearAllFilters,
 }) => {
   const { track } = useAnalytics();
 
@@ -194,20 +196,24 @@ export const MobileFilterDrawerV2: React.FC<MobileFilterDrawerV2Props> = ({
             variant="outline"
             className="w-full"
             onClick={() => {
-              onCategoryChange([]);
-              onRadiusChange('5');
-              onShowOffersChange(false);
-              onDaysChange([]);
-              onStartTimeChange('');
-              onEndTimeChange('');
-              onMenuTypeChange('all');
-              onHappeningNowChange?.(false);
-              onHappeningTodayChange?.(false);
               track({
                 eventType: 'interaction',
                 eventCategory: 'mobile_filter_drawer',
                 eventAction: 'clear_all_filters',
               });
+              if (onClearAllFilters) {
+                onClearAllFilters();
+              } else {
+                // Fallback: call individual setters (may race, but better than nothing)
+                onCategoryChange([]);
+                onShowOffersChange(false);
+                onDaysChange([]);
+                onStartTimeChange('');
+                onEndTimeChange('');
+                onMenuTypeChange('all');
+                onHappeningNowChange?.(false);
+                onHappeningTodayChange?.(false);
+              }
             }}
           >
             Clear All Filters

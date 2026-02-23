@@ -21,6 +21,7 @@ interface MobileFilterDrawerProps {
   selectedMenuType: 'all' | 'food_and_drinks' | 'drinks_only';
   onMenuTypeChange: (menuType: 'all' | 'food_and_drinks' | 'drinks_only') => void;
   onFilterClick?: () => void;
+  onClearAllFilters?: () => void;
   happeningNow?: boolean;
   onHappeningNowChange?: (value: boolean) => void;
   happeningToday?: boolean;
@@ -45,6 +46,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
   selectedMenuType,
   onMenuTypeChange,
   onFilterClick,
+  onClearAllFilters,
   happeningNow,
   onHappeningNowChange,
   happeningToday,
@@ -115,6 +117,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
         happeningToday={happeningToday}
         onHappeningTodayChange={onHappeningTodayChange}
         locationType={locationType}
+        onClearAllFilters={onClearAllFilters}
       />
     </>
   );
