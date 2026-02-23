@@ -164,7 +164,7 @@ export const MobileFilterDrawerV2: React.FC<MobileFilterDrawerV2Props> = ({
           </DrawerClose>
         </DrawerHeader>
         
-        <div className="px-4 pb-24 overflow-y-auto flex-1 min-h-0">
+        <div className="px-4 pb-6 overflow-y-auto flex-1 min-h-0">
           <UnifiedFilterBar
             selectedCategories={selectedCategories}
             onCategoryChange={handleCategoryChange}
@@ -187,6 +187,31 @@ export const MobileFilterDrawerV2: React.FC<MobileFilterDrawerV2Props> = ({
             onHappeningTodayChange={onHappeningTodayChange}
             locationType={locationType}
           />
+        </div>
+        
+        <div className="sticky bottom-0 px-4 py-3 border-t border-border bg-background">
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => {
+              onCategoryChange([]);
+              onRadiusChange('5');
+              onShowOffersChange(false);
+              onDaysChange([]);
+              onStartTimeChange('');
+              onEndTimeChange('');
+              onMenuTypeChange('all');
+              onHappeningNowChange?.(false);
+              onHappeningTodayChange?.(false);
+              track({
+                eventType: 'interaction',
+                eventCategory: 'mobile_filter_drawer',
+                eventAction: 'clear_all_filters',
+              });
+            }}
+          >
+            Clear All Filters
+          </Button>
         </div>
       </DrawerContent>
     </Drawer>
