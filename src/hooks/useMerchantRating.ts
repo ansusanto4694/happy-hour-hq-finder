@@ -10,7 +10,7 @@ interface RatingData {
 
 export const useMerchantRating = (merchantId: number) => {
   return useQuery({
-    queryKey: ['merchant-rating', merchantId],
+    queryKey: ['merchant-rating-v2', merchantId],
     queryFn: async (): Promise<RatingData> => {
       // Fetch native reviews and Google rating in parallel
       const [reviewsResult, googleResult] = await Promise.all([
@@ -33,6 +33,12 @@ export const useMerchantRating = (merchantId: number) => {
 
       const reviews = reviewsResult.data || [];
 
+      // Extract Google listing URL before any early returns
+      const google = googleResult.data;
+      const googleRatingUrl = google?.match_confidence !== 'no_match'
+        ? google?.google_rating_url ?? null
+        : null;
+
       // Calculate native rating
       if (reviews.length > 0) {
         let totalSum = 0;
@@ -50,12 +56,12 @@ export const useMerchantRating = (merchantId: number) => {
             overallAverage: totalSum / totalCount,
             reviewCount: reviews.length,
             source: 'native',
+            googleRatingUrl,
           };
         }
       }
 
       // Fallback to Google rating
-      const google = googleResult.data;
       if (
         google?.google_rating &&
         google.match_confidence !== 'no_match'
@@ -64,11 +70,11 @@ export const useMerchantRating = (merchantId: number) => {
           overallAverage: google.google_rating,
           reviewCount: google.google_review_count || 0,
           source: 'google',
-          googleRatingUrl: google.google_rating_url,
+          googleRatingUrl,
         };
       }
 
-      return { overallAverage: null, reviewCount: 0, source: null };
+      return { overallAverage: null, reviewCount: 0, source: null, googleRatingUrl: null };
     },
   });
 };
