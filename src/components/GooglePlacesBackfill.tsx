@@ -17,7 +17,7 @@ export const GooglePlacesBackfill: React.FC = () => {
     message: string;
   } | null>(null);
 
-  const BATCH_SIZE = 50;
+  const BATCH_SIZE = 20;
 
   const runBatch = useCallback(async (): Promise<boolean> => {
     const { data, error } = await supabase.functions.invoke(
