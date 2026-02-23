@@ -16,12 +16,14 @@ interface MobileCTABarProps {
     zipCode: string;
   };
   website?: string | null;
+  googleMapsUrl?: string | null;
 }
 
 export const MobileCTABar: React.FC<MobileCTABarProps> = ({
   phoneNumber,
   address,
   website,
+  googleMapsUrl,
 }) => {
   const { track, trackFunnel } = useAnalytics();
   const { id } = useParams();
@@ -92,7 +94,7 @@ export const MobileCTABar: React.FC<MobileCTABarProps> = ({
     });
   };
 
-  const directionsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+  const directionsUrl = googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
     `${address.street}, ${address.city}, ${address.state} ${address.zipCode}`
   )}`;
 

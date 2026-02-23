@@ -342,6 +342,7 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
               zipCode: restaurant.zip_code,
             }}
             website={restaurant.website}
+            googleMapsUrl={ratingData?.googleRatingUrl}
           />
         )}
       </div>
