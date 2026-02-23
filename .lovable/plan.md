@@ -1,37 +1,82 @@
 
 
-## Fix: Pass atomic clear callback to UnifiedFilterBar inside the mobile drawer
+# Final Egress Reduction Plan
 
-### Root Cause
-The `MobileFilterDrawerV2` component renders `UnifiedFilterBar` but does NOT pass the `onClearAllFilters` prop to it. This means:
+## Problem
+Supabase cached egress is at 6.27 GB, exceeding the 5 GB free tier limit. The `user_events` table (227K rows, 138 MB) is the primary driver.
 
-- The UnifiedFilterBar's own "Clear All" button (in its card header) falls back to calling individual setters one-by-one
-- Each setter creates a new `URLSearchParams` from a stale snapshot, overwriting the previous setter's changes
-- Result: filters visually remain active because only the last setter's URL update "wins"
+## Changes
 
-### The Fix (single line addition)
-In `src/components/MobileFilterDrawerV2.tsx`, add `onClearAllFilters` to the `UnifiedFilterBar` props (around line 191):
+### 1. Route low-value events to GA4 only (skip Supabase insert)
 
+**File:** `src/utils/analytics.ts`
+
+Events that will no longer be written to Supabase (but still sent to GA4):
+- `impression` (~71K existing rows)
+- `performance` (~42K existing rows)
+- `hover` (~22K existing rows)
+- `scroll`
+
+Events that continue writing to Supabase (used in dashboards/reports):
+- `page_view`, `click`, `search`, `interaction`, `filter`, `navigation`, `engagement`, `funnel`
+
+### 2. Remove per-event session count database query
+
+**File:** `src/utils/analytics.ts`
+
+Replace the `SELECT count(*) FROM user_events WHERE session_id = ?` call in `initializeSessionEventCount()` with a simple in-memory counter that starts at 0 per page load. The 500/1000 event throttle limits still apply per session -- they just reset on page refresh, which is fine for abuse prevention.
+
+### 3. Purge existing low-value events from the database
+
+**Database migration (one-time cleanup):**
+
+```sql
+DELETE FROM user_events
+WHERE event_type IN ('impression', 'performance', 'hover', 'scroll');
 ```
-onClearAllFilters={onClearAllFilters}
-```
 
-This ensures that when the user taps "Clear All" (whether the inline button inside UnifiedFilterBar or the sticky bottom button), the atomic `handleClearAllFilters` from `Results.tsx` is used -- performing a single `setSearchParams` call that removes all filter keys at once.
+This removes ~135K rows (~60% of the table), reclaiming significant storage and reducing egress from any future reads.
 
-### Files Changed
-- `src/components/MobileFilterDrawerV2.tsx` -- add one prop to the UnifiedFilterBar render
+### 4. Trim merchant query payload
 
-### Why this works
-- `Results.tsx` already has the correct atomic `handleClearAllFilters` that deletes all filter params in one URL update
-- `MobileFilterDrawer.tsx` already forwards `onClearAllFilters` to `MobileFilterDrawerV2`
-- `MobileFilterDrawerV2` already receives `onClearAllFilters` as a prop
-- The only missing link is passing it down to the `UnifiedFilterBar` component rendered inside the drawer
+**File:** `src/hooks/useMerchants.ts`
 
-### Verification
-After the fix:
-1. Open mobile filter drawer with active filters (categories + days)
-2. Tap "Clear All" (either button)
-3. All visual cues should reset immediately
-4. URL should no longer contain `categories`, `days`, or other filter params
-5. Results count should update to show unfiltered total
+Remove columns from the `select()` that are not used in search result cards or map markers:
+- `created_at`
+- `updated_at`
+- `phone_number`
+- `website`
+- `street_address_line_2`
+
+These fields are only needed on the individual restaurant profile page, which uses its own query.
+
+### 5. Increase homepage carousel cache duration
+
+**File:** `src/hooks/useHomepageCarousels.ts`
+
+Change `staleTime` from 5 minutes to 30 minutes. Carousel data rarely changes and is already persisted to localStorage across sessions.
+
+## What is NOT affected
+
+- All analytics dashboards (they query `user_sessions` and `funnel_events`, not the pruned event types)
+- GA4 reporting (still receives every event type)
+- Search, filtering, map, and restaurant profile functionality
+- Page view, click, search, and funnel tracking in Supabase
+
+## Estimated Impact
+
+| Change | Egress Reduction |
+|--------|-----------------|
+| GA4-only routing for low-value events | ~40-50% of future egress |
+| Remove session count query | ~10-15% |
+| Purge old low-value events | One-time: ~80 MB reclaimed |
+| Trim merchant query fields | ~5-10% |
+| Increase carousel staleTime | ~2-5% |
+| **Total** | **~60-70% reduction** |
+
+## Files Modified
+- `src/utils/analytics.ts` -- GA4-only routing + remove session count query
+- `src/hooks/useMerchants.ts` -- trim select fields
+- `src/hooks/useHomepageCarousels.ts` -- increase staleTime
+- One database migration -- purge old events
 
