@@ -1,24 +1,40 @@
 
-## Link Mobile Directions Button to Exact Google Maps Listing
+## Fix: Mobile Directions Button Still Using Address Search
 
-### What Changes
-When tapping "Directions" in the mobile CTA bar, users will be taken to the merchant's exact Google Maps listing (same as desktop map preview) instead of a generic address search.
+### Root Cause
+The app uses **React Query persistence to localStorage** (`PersistQueryClientProvider`) with a 24-hour garbage collection time. The `merchant-rating` query results cached in localStorage are stale -- they were saved before the `googleRatingUrl` field was properly included in all return paths of `useMerchantRating`.
 
-### How It Works
-The `ratingData?.googleRatingUrl` is already available in `RestaurantProfileContent.tsx` where one of the two `MobileCTABar` instances lives. It just needs a new optional prop.
+Even after the code was updated, the browser keeps serving the old cached result (which lacks `googleRatingUrl`), so `MobileCTABar` falls back to the address-based Google Maps search.
 
-### Files Changed (2 files)
+Additionally, the hook has a structural bug: when a merchant has native reviews, the `googleRatingUrl` is dropped entirely from the return value. This affects merchants like Ainslie that have both native reviews AND a valid Google listing URL.
 
-1. **`src/components/MobileCTABar.tsx`**
-   - Add optional `googleMapsUrl?: string | null` prop to the interface
-   - Update the `directionsUrl` to use `googleMapsUrl` when available, falling back to the current address-based URL
+### Fix (2 changes in 1 file)
 
-2. **`src/components/RestaurantProfileContent.tsx`**
-   - Pass `googleMapsUrl={ratingData?.googleRatingUrl}` to the `MobileCTABar` component (line 336)
+**File: `src/hooks/useMerchantRating.ts`**
 
-3. **`src/pages/RestaurantProfile.tsx`**
-   - The `MobileCTABar` here does NOT have access to `ratingData`, so it will continue using the address-based fallback (this is fine -- it only renders if the `RestaurantProfileContent` version doesn't)
+1. **Always preserve `googleRatingUrl` in the native-review return path**
+   - Extract the Google listing URL from `googleResult.data` before the native review early-return
+   - Include it in the native return branch so it's available for navigation even when native ratings are displayed
 
-### Fallback Behavior
-- Merchant HAS a Google listing URL: tapping Directions opens the exact Google Maps listing
-- Merchant does NOT: tapping Directions opens a Google Maps address search (current behavior, unchanged)
+2. **Bust stale cache by updating the query key**
+   - Change `queryKey` from `['merchant-rating', merchantId]` to `['merchant-rating-v2', merchantId]`
+   - This forces React Query to ignore the old cached data and fetch fresh results
+   - All existing consumers use the hook (not the key directly), so no other files need updating
+
+### Updated Hook Logic (simplified)
+
+```text
+1. Fetch native reviews + Google rating in parallel
+2. Extract googleRatingUrl from Google data (if match_confidence != 'no_match')
+3. If native reviews exist -> return { source: 'native', ..., googleRatingUrl }
+4. If Google rating exists -> return { source: 'google', ..., googleRatingUrl }
+5. Fallback -> return { source: null, ..., googleRatingUrl: null }
+```
+
+### Why This Fixes Both Merchants
+- **Boqueria Flatiron** (no native reviews): Cache bust forces a fresh fetch that properly includes `googleRatingUrl` from the Google path
+- **Ainslie** (has native reviews): The native path now preserves the Google listing URL instead of dropping it
+
+### No Other Files Change
+- `MobileCTABar.tsx` already has the `googleMapsUrl` prop wired correctly
+- `RestaurantProfileContent.tsx` already passes `ratingData?.googleRatingUrl`
