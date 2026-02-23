@@ -149,7 +149,7 @@ export const MobileFilterDrawerV2: React.FC<MobileFilterDrawerV2Props> = ({
 
   return (
     <Drawer open={isOpen} onOpenChange={onOpenChange}>
-      <DrawerContent className="max-h-[90vh]">
+      <DrawerContent className="max-h-[85vh]">
         <DrawerHeader className="flex flex-row items-center justify-between">
           <DrawerTitle>Filters</DrawerTitle>
           <DrawerClose asChild>
@@ -164,7 +164,7 @@ export const MobileFilterDrawerV2: React.FC<MobileFilterDrawerV2Props> = ({
           </DrawerClose>
         </DrawerHeader>
         
-        <div className="px-4 pb-6 overflow-auto">
+        <div className="px-4 pb-24 overflow-y-auto flex-1 min-h-0">
           <UnifiedFilterBar
             selectedCategories={selectedCategories}
             onCategoryChange={handleCategoryChange}
