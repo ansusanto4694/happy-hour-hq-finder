@@ -56,7 +56,10 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
   // Google rating fallback
   const googleRating = useMemo(() => {
     if (ratingData) return null;
-    const gr = restaurant.merchant_google_ratings?.[0];
+    // merchant_google_ratings is an object (1-to-1) or an array depending on context
+    const gr = Array.isArray(restaurant.merchant_google_ratings)
+      ? restaurant.merchant_google_ratings?.[0]
+      : restaurant.merchant_google_ratings;
     if (gr?.google_rating && gr.match_confidence !== 'no_match') {
       return gr;
     }
