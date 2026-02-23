@@ -1,49 +1,91 @@
 
 
-# Make Recently Viewed Carousel Consistent with Other Carousels
+# Google Places Rating Integration
 
-## Problem
+## Overview
+Import Google Places star ratings and review counts for all merchants, store them in a dedicated table, display as trust signals across the app, and auto-fetch for new merchants going forward.
 
-The `RecentlyViewedCarousel` component duplicates the carousel wrapper logic (header, navigation buttons, scroll container) instead of reusing the existing `HomepageCarousel` and `MobileCarousel` components. While both use the same card components (`CarouselCard` / `MobileCarouselCard`), the surrounding structure is reimplemented inline, creating maintenance burden and subtle styling differences.
+## Prerequisites
+- Store `GOOGLE_PLACES_API_KEY` as a Supabase edge function secret (first step)
 
-Additionally, the Recently Viewed data stored in localStorage is missing `merchant_reviews`, so those cards cannot display star ratings like the other carousels do.
+## Step 1: Database Migration
 
-## Plan
+Create `merchant_google_ratings` table:
 
-### Step 1: Add review data to the Recently Viewed storage
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid (PK) | Default gen_random_uuid() |
+| merchant_id | integer (FK, UNIQUE) | References Merchant(id) |
+| google_place_id | text | For cheap future lookups |
+| google_rating | numeric(2,1) | e.g. 4.3 |
+| google_review_count | integer | Total Google reviews |
+| google_rating_url | text | Link to Google Maps page |
+| match_confidence | text | 'high', 'medium', 'low', 'no_match' |
+| fetched_at | timestamptz | Tracks data freshness |
+| created_at | timestamptz | Default now() |
+| updated_at | timestamptz | Default now() |
 
-Update `useRecentlyViewed.ts`:
-- Add `merchant_reviews` to the `RecentlyViewedMerchant` interface
-- Update `addRecentlyViewed` to accept and store review data
-- This allows recently viewed cards to show star ratings, matching the other carousels
+RLS Policies:
+- SELECT: anyone can view (public trust signal)
+- ALL (insert/update/delete): service_role only
 
-### Step 2: Store review data when visiting a merchant profile
+Add `AFTER INSERT` trigger on `Merchant` table to auto-call the edge function for new merchants (same pattern as `auto_geocode_merchant`).
 
-Update the call site in `RestaurantProfile.tsx` (or wherever `addRecentlyViewed` is called) to pass `merchant_reviews` data along with the other merchant fields.
+## Step 2: Edge Function -- `fetch-google-places`
 
-### Step 3: Refactor RecentlyViewedCarousel to reuse existing carousel wrappers
+New file: `supabase/functions/fetch-google-places/index.ts`
 
-Reshape the recently viewed data to match the `HomepageCarousel` type structure, then pass it directly to the existing `HomepageCarousel` (desktop) and `MobileCarousel` (mobile) components. The only differences:
-- No "View All" button (since there are only up to 10 items)
-- The title is "Recently Viewed" instead of a database-driven name
+Two modes:
+1. **Single merchant**: `{ merchantId: 123 }` -- called by trigger
+2. **Batch refresh**: `{ mode: "refresh" }` -- called by cron or admin backfill
 
-To handle this cleanly, add an optional `hideViewAll` prop to `HomepageCarousel` and `MobileCarousel`, then delete the standalone `RecentlyViewedCarousel.tsx` component entirely.
+Matching logic:
+1. Build query: `restaurant_name + city + state`
+2. Call Google Text Search (New) with `locationBias` using merchant's lat/lng
+3. Validate: compare Google's returned coordinates with ours (within ~100m = high confidence)
+4. Fetch rating + review count from response
+5. Construct Google Maps URL from place_id
+6. Upsert into `merchant_google_ratings`
 
-### Step 4: Update homepage to use the refactored component
+## Step 3: Monthly Incremental Refresh (pg_cron)
 
-Update `Index.tsx` to pass the recently viewed data through the shared carousel components instead of rendering `RecentlyViewedCarousel` directly.
+Schedule a monthly cron job targeting:
+- Merchants with no entry in `merchant_google_ratings`
+- Merchants where `fetched_at` older than 30 days
 
-## Technical Details
+## Step 4: Frontend -- GoogleRatingBadge Component
 
-**Files to modify:**
-- `src/hooks/useRecentlyViewed.ts` — add `merchant_reviews` to the stored type
-- `src/components/HomepageCarousel.tsx` — add optional `hideViewAll` prop
-- `src/components/MobileCarousel.tsx` — add optional `hideViewAll` prop
-- `src/pages/RestaurantProfile.tsx` — pass review data to `addRecentlyViewed`
-- `src/pages/Index.tsx` — replace `RecentlyViewedCarousel` usage with shared carousel
+New file: `src/components/GoogleRatingBadge.tsx`
 
-**Files to delete:**
-- `src/components/RecentlyViewedCarousel.tsx` — no longer needed
+Displays:
+- Star icon + rating number (e.g. "4.3")
+- Review count (e.g. "(127)")
+- Google attribution
+- Links to Google Maps page
 
-**No new dependencies required.**
+## Step 5: Update Data Fetching Hooks
+
+- `useMerchants.ts`: Add `merchant_google_ratings` to the select join
+- `useMerchantRating.ts`: Return Google rating as fallback when no native reviews exist
+
+## Step 6: Display on UI Surfaces
+
+Update these components to show GoogleRatingBadge when no native rating exists:
+- `SearchResultCard.tsx`
+- `CarouselCard.tsx`
+- `MobileCarouselCard.tsx`
+- `RestaurantProfileContent.tsx`
+
+## Step 7: Admin Backfill Tool
+
+New component similar to `GeocodingManager.tsx` -- provides a button to trigger batch Google Places lookups for all merchants missing data. Shows progress and results. Admin-only access.
+
+## Cost
+
+| Scenario | API Calls/Month | Cost |
+|---|---|---|
+| Initial backfill (728 merchants) | ~1,456 | $0 |
+| Monthly refresh | ~1,456 | $0 |
+| New merchants (~10/mo) | ~20 | $0 |
+| At 10,000 merchants | ~20,000 | ~$50/mo |
 
