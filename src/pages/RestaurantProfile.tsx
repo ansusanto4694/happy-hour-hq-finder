@@ -12,7 +12,7 @@ import { trackFunnelStep } from '@/utils/analytics';
 import { Footer } from '@/components/Footer';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { MobileCTABar } from '@/components/MobileCTABar';
+
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 
 // Restaurant profile page with enhanced analytics tracking
@@ -343,19 +343,6 @@ const RestaurantProfile = () => {
         <Footer />
       </div>
       
-      {/* Mobile CTA Bar - positioned above bottom nav */}
-      {isMobile && (
-        <MobileCTABar
-          phoneNumber={restaurant.phone_number}
-          address={{
-            street: restaurant.street_address,
-            city: restaurant.city,
-            state: restaurant.state,
-            zipCode: restaurant.zip_code,
-          }}
-          website={restaurant.website}
-        />
-      )}
     </div>
   );
 };
