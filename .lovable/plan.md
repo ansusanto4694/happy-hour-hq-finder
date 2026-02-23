@@ -1,78 +1,37 @@
 
-Goal: fix the mobile “Clear All” behavior so visual filter cues (Tue/Wed/Sat + category chips/checks) reliably turn off after clearing.
 
-1) Step-by-step diagnosis (what is actually broken)
-- Source of truth for filters is URL query params in `src/pages/Results.tsx` (`categories`, `days`, `radius`, etc.).
-- The mobile clear action in `MobileFilterDrawerV2` calls many setters back-to-back:
-  - `onCategoryChange([])`, `onRadiusChange(...)`, `onDaysChange([])`, etc.
-- In `Results.tsx`, each setter currently builds new params from the same render snapshot:
-  - `const newParams = new URLSearchParams(searchParams); ... setSearchParams(newParams, { replace: true })`
-- When several setters run in one click, they overwrite each other using stale query snapshots.
-- Net effect: earlier clears (like removing `days`/`categories`) get reintroduced by later setter calls, so UI still shows selected day/category states.
-- Extra bug found: mobile sticky clear uses `onRadiusChange('5')`, but `RadiusOption` is `'blocks' | 'walking' | 'bike' | 'drive' | 'city'`. `'5'` is invalid and can leave radius state inconsistent.
+## Fix: Pass atomic clear callback to UnifiedFilterBar inside the mobile drawer
 
-2) Implementation strategy
-Use a single atomic “clear all filters” update from the page-level URL state owner (`Results.tsx`) and route all clear buttons to it.
+### Root Cause
+The `MobileFilterDrawerV2` component renders `UnifiedFilterBar` but does NOT pass the `onClearAllFilters` prop to it. This means:
 
-Why this is safest:
-- Eliminates stale-overwrite race from multiple URL writes per click.
-- Keeps one source of truth for what “clear all” means.
-- Fixes both mobile drawer clear and inline UnifiedFilterBar clear consistently.
+- The UnifiedFilterBar's own "Clear All" button (in its card header) falls back to calling individual setters one-by-one
+- Each setter creates a new `URLSearchParams` from a stale snapshot, overwriting the previous setter's changes
+- Result: filters visually remain active because only the last setter's URL update "wins"
 
-3) Planned code changes
+### The Fix (single line addition)
+In `src/components/MobileFilterDrawerV2.tsx`, add `onClearAllFilters` to the `UnifiedFilterBar` props (around line 191):
 
-A. `src/pages/Results.tsx`
-- Add `handleClearAllFilters` that performs one `setSearchParams` call and removes all filter params in one shot:
-  - remove: `categories`, `radius`, `offers`, `days`, `startTime`, `endTime`, `menuType`, `happeningNow`, `happeningToday`, and `page`
-  - preserve search context params (e.g. `search`, `location`, `zip`, gps/map context) so user stays on same results context but unfiltered.
-- Pass this callback down to:
-  - mobile flow (`MobileListDrawer` → `MobileFilterDrawer` → `MobileFilterDrawerV2`)
-  - desktop/tablet `UnifiedFilterBar` instances.
+```
+onClearAllFilters={onClearAllFilters}
+```
 
-B. `src/components/MobileListDrawer.tsx`
-- Add optional prop: `onClearAllFilters?: () => void`
-- Forward it to `MobileFilterDrawer`.
+This ensures that when the user taps "Clear All" (whether the inline button inside UnifiedFilterBar or the sticky bottom button), the atomic `handleClearAllFilters` from `Results.tsx` is used -- performing a single `setSearchParams` call that removes all filter keys at once.
 
-C. `src/components/MobileFilterDrawer.tsx`
-- Add optional prop: `onClearAllFilters?: () => void`
-- Forward it to `MobileFilterDrawerV2`.
+### Files Changed
+- `src/components/MobileFilterDrawerV2.tsx` -- add one prop to the UnifiedFilterBar render
 
-D. `src/components/MobileFilterDrawerV2.tsx`
-- Add optional prop: `onClearAllFilters?: () => void`
-- Update sticky “Clear All Filters” button:
-  - if `onClearAllFilters` exists, call it (single source-of-truth clear)
-  - keep analytics event tracking
-- Remove invalid radius fallback behavior (`'5'`) in the fallback path; use smart default if fallback is retained.
+### Why this works
+- `Results.tsx` already has the correct atomic `handleClearAllFilters` that deletes all filter params in one URL update
+- `MobileFilterDrawer.tsx` already forwards `onClearAllFilters` to `MobileFilterDrawerV2`
+- `MobileFilterDrawerV2` already receives `onClearAllFilters` as a prop
+- The only missing link is passing it down to the `UnifiedFilterBar` component rendered inside the drawer
 
-E. `src/components/UnifiedFilterBar.tsx`
-- Add optional prop: `onClearAllFilters?: () => void`
-- In `clearAllFilters`, prefer `onClearAllFilters()` when provided; otherwise keep existing fallback behavior.
-- This ensures both clear entry points behave identically and prevents recurrence.
+### Verification
+After the fix:
+1. Open mobile filter drawer with active filters (categories + days)
+2. Tap "Clear All" (either button)
+3. All visual cues should reset immediately
+4. URL should no longer contain `categories`, `days`, or other filter params
+5. Results count should update to show unfiltered total
 
-4) Validation plan (must verify end-to-end)
-Primary repro/verification:
-- Open `/results?days=2,5,1&categories=<restaurant-id>` on mobile.
-- Open filter drawer, confirm Tue/Wed/Sat + restaurant are visibly active.
-- Tap sticky “Clear All Filters”.
-- Confirm:
-  - day buttons are no longer highlighted
-  - category checkbox/chip is cleared
-  - filter badge/count updates to no active filters
-  - URL no longer contains `days`/`categories` (and other cleared filter params)
-
-Secondary checks:
-- Tap inline “Clear All” inside `UnifiedFilterBar` (if visible) and confirm same result.
-- Repeat on desktop/tablet filter sidebar to ensure consistent behavior.
-- Ensure “Happening Now/Today” toggles also clear correctly.
-- Confirm no regressions to single-filter interactions (toggling one day/category still updates URL correctly).
-
-5) Risk and mitigation
-- Risk: accidental clearing of non-filter query params.
-  - Mitigation: explicitly delete only filter keys; keep search/location/map context keys.
-- Risk: duplicated analytics events if both old and new clear paths run.
-  - Mitigation: keep event call in the button handler and avoid double invocation in delegated callback path.
-
-6) Expected outcome
-- Clear-all performs one atomic URL update.
-- Visual cues and URL remain in sync immediately after clear.
-- The specific user-reported state (Tue/Wed/Sat + restaurant) fully resets in one tap.
