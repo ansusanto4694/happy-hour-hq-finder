@@ -71,7 +71,9 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
   // Google rating fallback
   const googleRating = useMemo(() => {
     if (ratingData) return null;
-    const gr = merchant.merchant_google_ratings?.[0];
+    const gr = Array.isArray(merchant.merchant_google_ratings)
+      ? merchant.merchant_google_ratings?.[0]
+      : merchant.merchant_google_ratings;
     if (gr?.google_rating && gr.match_confidence !== 'no_match') return gr;
     return null;
   }, [ratingData, merchant.merchant_google_ratings]);
