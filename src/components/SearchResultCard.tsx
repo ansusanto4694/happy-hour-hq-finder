@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Store, Star } from 'lucide-react';
+import { GoogleRatingBadge } from '@/components/GoogleRatingBadge';
 import { getTodaysHappyHour, getAllTodaysHappyHours, getMenuTypeBadge } from '@/utils/timeUtils';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { getDeviceType } from '@/utils/analytics';
@@ -51,6 +52,16 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
       reviewCount: reviews.length
     };
   }, [restaurant.merchant_reviews]);
+
+  // Google rating fallback
+  const googleRating = useMemo(() => {
+    if (ratingData) return null;
+    const gr = restaurant.merchant_google_ratings?.[0];
+    if (gr?.google_rating && gr.match_confidence !== 'no_match') {
+      return gr;
+    }
+    return null;
+  }, [ratingData, restaurant.merchant_google_ratings]);
 
   // Check if merchant has active offers that haven't expired - memoized
   const hasActiveOffers = useMemo(() => {
@@ -214,6 +225,14 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
                         <span className="text-sm font-semibold">{ratingData.average.toFixed(1)}</span>
                       </div>
                     )}
+                    {!ratingData && googleRating && (
+                      <GoogleRatingBadge
+                        rating={googleRating.google_rating}
+                        reviewCount={googleRating.google_review_count}
+                        googleUrl={googleRating.google_rating_url}
+                        size="sm"
+                      />
+                    )}
                   </div>
                 </div>
                 <FavoriteButton 
@@ -323,6 +342,14 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
                         <span className="text-sm font-semibold">{ratingData.average.toFixed(1)}</span>
                         <span className="text-xs text-muted-foreground">({ratingData.reviewCount})</span>
                       </div>
+                    )}
+                    {!ratingData && googleRating && (
+                      <GoogleRatingBadge
+                        rating={googleRating.google_rating}
+                        reviewCount={googleRating.google_review_count}
+                        googleUrl={googleRating.google_rating_url}
+                        size="sm"
+                      />
                     )}
                   </div>
                   {restaurant.phone_number && (

@@ -81,6 +81,12 @@ export const useMerchants = (categoryIds?: string[], searchTerm?: string, startT
             merchant_review_ratings (
               rating
             )
+          ),
+          merchant_google_ratings (
+            google_rating,
+            google_review_count,
+            google_rating_url,
+            match_confidence
           )
         `)
         .eq('is_active', true);

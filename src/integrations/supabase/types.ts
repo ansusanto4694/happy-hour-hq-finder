@@ -581,6 +581,60 @@ export type Database = {
           },
         ]
       }
+      merchant_google_ratings: {
+        Row: {
+          created_at: string
+          fetched_at: string | null
+          google_place_id: string | null
+          google_rating: number | null
+          google_rating_url: string | null
+          google_review_count: number | null
+          id: string
+          match_confidence: string | null
+          merchant_id: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          fetched_at?: string | null
+          google_place_id?: string | null
+          google_rating?: number | null
+          google_rating_url?: string | null
+          google_review_count?: number | null
+          id?: string
+          match_confidence?: string | null
+          merchant_id: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          fetched_at?: string | null
+          google_place_id?: string | null
+          google_rating?: number | null
+          google_rating_url?: string | null
+          google_review_count?: number | null
+          id?: string
+          match_confidence?: string | null
+          merchant_id?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_google_ratings_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: true
+            referencedRelation: "Merchant"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_google_ratings_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: true
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       merchant_happy_hour: {
         Row: {
           created_at: string

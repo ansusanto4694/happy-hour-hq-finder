@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.og-meta]
 verify_jwt = false
+
+[functions.fetch-google-places]
+verify_jwt = false

@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Star } from 'lucide-react';
 import { getTodaysHappyHour, getMenuTypeBadge } from '@/utils/timeUtils';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { GoogleRatingBadge } from '@/components/GoogleRatingBadge';
 
 interface MobileCarouselCardProps {
   merchant: {
@@ -27,6 +28,12 @@ interface MobileCarouselCardProps {
       merchant_review_ratings?: Array<{
         rating: number;
       }>;
+    }>;
+    merchant_google_ratings?: Array<{
+      google_rating: number;
+      google_review_count: number;
+      google_rating_url: string | null;
+      match_confidence: string;
     }>;
   };
   onClick?: () => void;
@@ -60,6 +67,14 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
       reviewCount: reviews.length
     };
   }, [merchant.merchant_reviews]);
+
+  // Google rating fallback
+  const googleRating = useMemo(() => {
+    if (ratingData) return null;
+    const gr = merchant.merchant_google_ratings?.[0];
+    if (gr?.google_rating && gr.match_confidence !== 'no_match') return gr;
+    return null;
+  }, [ratingData, merchant.merchant_google_ratings]);
 
   const todaysHappyHourText = getTodaysHappyHour(merchant.merchant_happy_hour || []);
   const menuTypeBadge = getMenuTypeBadge(merchant.happy_hour_deals || []);
@@ -134,6 +149,17 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
           <>
             <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
             <span className="font-medium text-foreground">{ratingData.overallAverage.toFixed(1)}</span>
+            {merchant.neighborhood && <span className="text-muted-foreground/60">•</span>}
+          </>
+        )}
+        {!ratingData && googleRating && (
+          <>
+            <GoogleRatingBadge
+              rating={googleRating.google_rating}
+              reviewCount={googleRating.google_review_count}
+              googleUrl={googleRating.google_rating_url}
+              size="sm"
+            />
             {merchant.neighborhood && <span className="text-muted-foreground/60">•</span>}
           </>
         )}
