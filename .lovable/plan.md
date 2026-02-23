@@ -1,91 +1,78 @@
 
+Goal: fix the mobile “Clear All” behavior so visual filter cues (Tue/Wed/Sat + category chips/checks) reliably turn off after clearing.
 
-# Google Places Rating Integration
+1) Step-by-step diagnosis (what is actually broken)
+- Source of truth for filters is URL query params in `src/pages/Results.tsx` (`categories`, `days`, `radius`, etc.).
+- The mobile clear action in `MobileFilterDrawerV2` calls many setters back-to-back:
+  - `onCategoryChange([])`, `onRadiusChange(...)`, `onDaysChange([])`, etc.
+- In `Results.tsx`, each setter currently builds new params from the same render snapshot:
+  - `const newParams = new URLSearchParams(searchParams); ... setSearchParams(newParams, { replace: true })`
+- When several setters run in one click, they overwrite each other using stale query snapshots.
+- Net effect: earlier clears (like removing `days`/`categories`) get reintroduced by later setter calls, so UI still shows selected day/category states.
+- Extra bug found: mobile sticky clear uses `onRadiusChange('5')`, but `RadiusOption` is `'blocks' | 'walking' | 'bike' | 'drive' | 'city'`. `'5'` is invalid and can leave radius state inconsistent.
 
-## Overview
-Import Google Places star ratings and review counts for all merchants, store them in a dedicated table, display as trust signals across the app, and auto-fetch for new merchants going forward.
+2) Implementation strategy
+Use a single atomic “clear all filters” update from the page-level URL state owner (`Results.tsx`) and route all clear buttons to it.
 
-## Prerequisites
-- Store `GOOGLE_PLACES_API_KEY` as a Supabase edge function secret (first step)
+Why this is safest:
+- Eliminates stale-overwrite race from multiple URL writes per click.
+- Keeps one source of truth for what “clear all” means.
+- Fixes both mobile drawer clear and inline UnifiedFilterBar clear consistently.
 
-## Step 1: Database Migration
+3) Planned code changes
 
-Create `merchant_google_ratings` table:
+A. `src/pages/Results.tsx`
+- Add `handleClearAllFilters` that performs one `setSearchParams` call and removes all filter params in one shot:
+  - remove: `categories`, `radius`, `offers`, `days`, `startTime`, `endTime`, `menuType`, `happeningNow`, `happeningToday`, and `page`
+  - preserve search context params (e.g. `search`, `location`, `zip`, gps/map context) so user stays on same results context but unfiltered.
+- Pass this callback down to:
+  - mobile flow (`MobileListDrawer` → `MobileFilterDrawer` → `MobileFilterDrawerV2`)
+  - desktop/tablet `UnifiedFilterBar` instances.
 
-| Column | Type | Notes |
-|---|---|---|
-| id | uuid (PK) | Default gen_random_uuid() |
-| merchant_id | integer (FK, UNIQUE) | References Merchant(id) |
-| google_place_id | text | For cheap future lookups |
-| google_rating | numeric(2,1) | e.g. 4.3 |
-| google_review_count | integer | Total Google reviews |
-| google_rating_url | text | Link to Google Maps page |
-| match_confidence | text | 'high', 'medium', 'low', 'no_match' |
-| fetched_at | timestamptz | Tracks data freshness |
-| created_at | timestamptz | Default now() |
-| updated_at | timestamptz | Default now() |
+B. `src/components/MobileListDrawer.tsx`
+- Add optional prop: `onClearAllFilters?: () => void`
+- Forward it to `MobileFilterDrawer`.
 
-RLS Policies:
-- SELECT: anyone can view (public trust signal)
-- ALL (insert/update/delete): service_role only
+C. `src/components/MobileFilterDrawer.tsx`
+- Add optional prop: `onClearAllFilters?: () => void`
+- Forward it to `MobileFilterDrawerV2`.
 
-Add `AFTER INSERT` trigger on `Merchant` table to auto-call the edge function for new merchants (same pattern as `auto_geocode_merchant`).
+D. `src/components/MobileFilterDrawerV2.tsx`
+- Add optional prop: `onClearAllFilters?: () => void`
+- Update sticky “Clear All Filters” button:
+  - if `onClearAllFilters` exists, call it (single source-of-truth clear)
+  - keep analytics event tracking
+- Remove invalid radius fallback behavior (`'5'`) in the fallback path; use smart default if fallback is retained.
 
-## Step 2: Edge Function -- `fetch-google-places`
+E. `src/components/UnifiedFilterBar.tsx`
+- Add optional prop: `onClearAllFilters?: () => void`
+- In `clearAllFilters`, prefer `onClearAllFilters()` when provided; otherwise keep existing fallback behavior.
+- This ensures both clear entry points behave identically and prevents recurrence.
 
-New file: `supabase/functions/fetch-google-places/index.ts`
+4) Validation plan (must verify end-to-end)
+Primary repro/verification:
+- Open `/results?days=2,5,1&categories=<restaurant-id>` on mobile.
+- Open filter drawer, confirm Tue/Wed/Sat + restaurant are visibly active.
+- Tap sticky “Clear All Filters”.
+- Confirm:
+  - day buttons are no longer highlighted
+  - category checkbox/chip is cleared
+  - filter badge/count updates to no active filters
+  - URL no longer contains `days`/`categories` (and other cleared filter params)
 
-Two modes:
-1. **Single merchant**: `{ merchantId: 123 }` -- called by trigger
-2. **Batch refresh**: `{ mode: "refresh" }` -- called by cron or admin backfill
+Secondary checks:
+- Tap inline “Clear All” inside `UnifiedFilterBar` (if visible) and confirm same result.
+- Repeat on desktop/tablet filter sidebar to ensure consistent behavior.
+- Ensure “Happening Now/Today” toggles also clear correctly.
+- Confirm no regressions to single-filter interactions (toggling one day/category still updates URL correctly).
 
-Matching logic:
-1. Build query: `restaurant_name + city + state`
-2. Call Google Text Search (New) with `locationBias` using merchant's lat/lng
-3. Validate: compare Google's returned coordinates with ours (within ~100m = high confidence)
-4. Fetch rating + review count from response
-5. Construct Google Maps URL from place_id
-6. Upsert into `merchant_google_ratings`
+5) Risk and mitigation
+- Risk: accidental clearing of non-filter query params.
+  - Mitigation: explicitly delete only filter keys; keep search/location/map context keys.
+- Risk: duplicated analytics events if both old and new clear paths run.
+  - Mitigation: keep event call in the button handler and avoid double invocation in delegated callback path.
 
-## Step 3: Monthly Incremental Refresh (pg_cron)
-
-Schedule a monthly cron job targeting:
-- Merchants with no entry in `merchant_google_ratings`
-- Merchants where `fetched_at` older than 30 days
-
-## Step 4: Frontend -- GoogleRatingBadge Component
-
-New file: `src/components/GoogleRatingBadge.tsx`
-
-Displays:
-- Star icon + rating number (e.g. "4.3")
-- Review count (e.g. "(127)")
-- Google attribution
-- Links to Google Maps page
-
-## Step 5: Update Data Fetching Hooks
-
-- `useMerchants.ts`: Add `merchant_google_ratings` to the select join
-- `useMerchantRating.ts`: Return Google rating as fallback when no native reviews exist
-
-## Step 6: Display on UI Surfaces
-
-Update these components to show GoogleRatingBadge when no native rating exists:
-- `SearchResultCard.tsx`
-- `CarouselCard.tsx`
-- `MobileCarouselCard.tsx`
-- `RestaurantProfileContent.tsx`
-
-## Step 7: Admin Backfill Tool
-
-New component similar to `GeocodingManager.tsx` -- provides a button to trigger batch Google Places lookups for all merchants missing data. Shows progress and results. Admin-only access.
-
-## Cost
-
-| Scenario | API Calls/Month | Cost |
-|---|---|---|
-| Initial backfill (728 merchants) | ~1,456 | $0 |
-| Monthly refresh | ~1,456 | $0 |
-| New merchants (~10/mo) | ~20 | $0 |
-| At 10,000 merchants | ~20,000 | ~$50/mo |
-
+6) Expected outcome
+- Clear-all performs one atomic URL update.
+- Visual cues and URL remain in sync immediately after clear.
+- The specific user-reported state (Tue/Wed/Sat + restaurant) fully resets in one tap.
