@@ -35,6 +35,7 @@ interface UnifiedFilterBarProps {
   happeningToday?: boolean;
   onHappeningTodayChange?: (value: boolean) => void;
   locationType?: string | null;
+  onClearAllFilters?: () => void;
 }
 
 const RADIUS_OPTIONS: { value: RadiusOption; label: string; disabled?: boolean }[] = [
@@ -78,6 +79,7 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
   happeningToday = false,
   onHappeningTodayChange,
   locationType = null,
+  onClearAllFilters,
 }) => {
   const smartDefault = getSmartDefaultRadius(locationType, useGPS);
   const { getParentCategories, getSubCategories, isLoading } = useCategoriesHierarchy();
@@ -219,15 +221,19 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
       },
     });
 
-    onCategoryChange([]);
-    onRadiusChange(smartDefault);
-    onShowOffersChange(false);
-    onDaysChange([]);
-    onStartTimeChange('');
-    onEndTimeChange('');
-    onMenuTypeChange('all');
-    if (onHappeningNowChange) onHappeningNowChange(false);
-    if (onHappeningTodayChange) onHappeningTodayChange(false);
+    if (onClearAllFilters) {
+      onClearAllFilters();
+    } else {
+      onCategoryChange([]);
+      onRadiusChange(smartDefault);
+      onShowOffersChange(false);
+      onDaysChange([]);
+      onStartTimeChange('');
+      onEndTimeChange('');
+      onMenuTypeChange('all');
+      if (onHappeningNowChange) onHappeningNowChange(false);
+      if (onHappeningTodayChange) onHappeningTodayChange(false);
+    }
   };
 
   if (isLoading) {

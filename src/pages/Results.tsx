@@ -179,6 +179,15 @@ const Results = () => {
     setSearchParams(newSearchParams, { replace: true });
   };
 
+  // Atomic clear-all: single URL update removes every filter param at once
+  const handleClearAllFilters = useCallback(() => {
+    const newParams = new URLSearchParams(searchParams);
+    // Delete all filter keys
+    const filterKeys = ['categories', 'radius', 'offers', 'days', 'startTime', 'endTime', 'menuType', 'happeningNow', 'happeningToday', 'page'];
+    filterKeys.forEach(key => newParams.delete(key));
+    setSearchParams(newParams, { replace: true });
+  }, [searchParams, setSearchParams]);
+
   // Check if radius filtering should be enabled (location OR GPS coordinates provided)
   const isRadiusEnabled = Boolean((location && location.trim()) || (useGPS && gpsLat && gpsLng));
   // Use selected radius for both GPS and location-based searches
@@ -513,6 +522,7 @@ const Results = () => {
             happeningToday={happeningToday}
             onHappeningTodayChange={setHappeningToday}
             locationType={locationTypeParam || inferLocationTypeFromInput(locationParam)}
+            onClearAllFilters={handleClearAllFilters}
           />
         </div>
       )}
@@ -547,6 +557,7 @@ const Results = () => {
                 happeningToday={happeningToday}
                 onHappeningTodayChange={setHappeningToday}
                 locationType={locationTypeParam || inferLocationTypeFromInput(locationParam)}
+                onClearAllFilters={handleClearAllFilters}
               />
               </div>
             </div>
@@ -613,6 +624,7 @@ const Results = () => {
                   happeningToday={happeningToday}
                   onHappeningTodayChange={setHappeningToday}
                   locationType={locationTypeParam || inferLocationTypeFromInput(locationParam)}
+                  onClearAllFilters={handleClearAllFilters}
                 />
             </div>
           </div>

@@ -39,6 +39,7 @@ interface MobileListDrawerProps {
   happeningToday?: boolean;
   onHappeningTodayChange?: (value: boolean) => void;
   locationType?: string | null;
+  onClearAllFilters?: () => void;
 }
 
 export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
@@ -69,6 +70,7 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
   happeningToday,
   onHappeningTodayChange,
   locationType,
+  onClearAllFilters,
 }) => {
   const { track } = useAnalytics();
 
@@ -115,6 +117,7 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
               happeningToday={happeningToday}
               onHappeningTodayChange={onHappeningTodayChange}
               locationType={locationType}
+              onClearAllFilters={onClearAllFilters}
             />
           </div>
         </DrawerHeader>
