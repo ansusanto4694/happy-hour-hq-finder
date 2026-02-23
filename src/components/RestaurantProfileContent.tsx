@@ -297,6 +297,7 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
               longitude={restaurant.longitude}
               restaurantName={restaurant.restaurant_name}
               neighborhood={restaurant.neighborhood}
+              googleMapsUrl={ratingData?.googleRatingUrl}
             />
                 </CardContent>
               </Card>
