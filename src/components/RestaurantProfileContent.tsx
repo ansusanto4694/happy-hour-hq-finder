@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Share, Utensils, PenLine, Star, MapPin } from 'lucide-react';
+import { GoogleRatingBadge } from '@/components/GoogleRatingBadge';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { RestaurantBasicInfo } from '@/components/RestaurantBasicInfo';
 import { RestaurantContactInfo } from '@/components/RestaurantContactInfo';
@@ -103,7 +104,7 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
               <h1 className="text-2xl font-bold text-foreground">{restaurant.restaurant_name}</h1>
 
               {/* Rating Display */}
-              {ratingData?.overallAverage !== null && ratingData?.overallAverage !== undefined && (
+              {ratingData?.overallAverage != null && ratingData?.source === 'native' ? (
                 <div className="flex items-center gap-2">
                   <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
                   <span className="text-xl font-bold">{ratingData.overallAverage.toFixed(1)}</span>
@@ -111,7 +112,14 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
                     ({ratingData.reviewCount} {ratingData.reviewCount === 1 ? 'review' : 'reviews'})
                   </span>
                 </div>
-              )}
+              ) : ratingData?.overallAverage != null && ratingData?.source === 'google' ? (
+                <GoogleRatingBadge
+                  rating={ratingData.overallAverage}
+                  reviewCount={ratingData.reviewCount}
+                  googleUrl={ratingData.googleRatingUrl}
+                  size="md"
+                />
+              ) : null}
 
               {/* Centered Category Badges with Icons */}
               {restaurant.merchant_categories && restaurant.merchant_categories.length > 0 && (
@@ -158,7 +166,7 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
                   </div>
                   <div>
                     <h1 className="text-3xl font-bold text-gray-900">{restaurant.restaurant_name}</h1>
-                    {ratingData?.overallAverage !== null && ratingData?.overallAverage !== undefined && (
+                    {ratingData?.overallAverage != null && ratingData?.source === 'native' ? (
                       <div className="flex items-center gap-2 mt-1">
                         <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
                         <span className="text-lg font-bold">{ratingData.overallAverage.toFixed(1)}</span>
@@ -166,7 +174,16 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
                           ({ratingData.reviewCount} {ratingData.reviewCount === 1 ? 'review' : 'reviews'})
                         </span>
                       </div>
-                    )}
+                    ) : ratingData?.overallAverage != null && ratingData?.source === 'google' ? (
+                      <div className="mt-1">
+                        <GoogleRatingBadge
+                          rating={ratingData.overallAverage}
+                          reviewCount={ratingData.reviewCount}
+                          googleUrl={ratingData.googleRatingUrl}
+                          size="md"
+                        />
+                      </div>
+                    ) : null}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">

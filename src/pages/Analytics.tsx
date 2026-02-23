@@ -7,6 +7,7 @@ import { TrafficOverviewChart } from '@/components/analytics/TrafficOverviewChar
 import { SessionMetricsCard } from '@/components/analytics/SessionMetricsCard';
 import { TrafficSourcesChart } from '@/components/analytics/TrafficSourcesChart';
 import { DeviceBreakdownChart } from '@/components/analytics/DeviceBreakdownChart';
+import { GooglePlacesBackfill } from '@/components/GooglePlacesBackfill';
 import { SEOHead } from '@/components/SEOHead';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon } from 'lucide-react';
@@ -155,6 +156,14 @@ export default function Analytics() {
               <ConversionFunnelChart startDate={start} endDate={end} />
             </TabsContent>
           </Tabs>
+
+          {/* Admin Tools */}
+          <div className="mt-8">
+            <h2 className="text-xl font-bold text-foreground mb-4">Admin Tools</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <GooglePlacesBackfill />
+            </div>
+          </div>
         </div>
       </div>
     </>

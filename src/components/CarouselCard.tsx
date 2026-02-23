@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Star } from 'lucide-react';
 import { getTodaysHappyHour, getMenuTypeBadge } from "@/utils/timeUtils";
 import { useAnalytics } from "@/hooks/useAnalytics";
+import { GoogleRatingBadge } from '@/components/GoogleRatingBadge';
 
 interface CarouselCardProps {
   merchant: {
@@ -28,6 +29,12 @@ interface CarouselCardProps {
       merchant_review_ratings?: Array<{
         rating: number;
       }>;
+    }>;
+    merchant_google_ratings?: Array<{
+      google_rating: number;
+      google_review_count: number;
+      google_rating_url: string | null;
+      match_confidence: string;
     }>;
   };
   onClick?: (merchantId: string) => void;
@@ -58,6 +65,14 @@ export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick })
       reviewCount: reviews.length
     };
   }, [merchant.merchant_reviews]);
+
+  // Google rating fallback
+  const googleRating = useMemo(() => {
+    if (ratingData) return null;
+    const gr = merchant.merchant_google_ratings?.[0];
+    if (gr?.google_rating && gr.match_confidence !== 'no_match') return gr;
+    return null;
+  }, [ratingData, merchant.merchant_google_ratings]);
 
   const todaysHappyHour = merchant.merchant_happy_hour ? getTodaysHappyHour(merchant.merchant_happy_hour) : 'No Happy Hour Today';
   const menuTypeBadge = getMenuTypeBadge(merchant.happy_hour_deals || []);
@@ -136,6 +151,16 @@ export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick })
               <span className="text-xs text-muted-foreground">
                 ({ratingData.reviewCount})
               </span>
+            </div>
+          )}
+          {!ratingData && googleRating && (
+            <div className="mt-1">
+              <GoogleRatingBadge
+                rating={googleRating.google_rating}
+                reviewCount={googleRating.google_review_count}
+                googleUrl={googleRating.google_rating_url}
+                size="sm"
+              />
             </div>
           )}
           <div className="mt-1.5 flex flex-col gap-1.5">
