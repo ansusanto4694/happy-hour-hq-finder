@@ -11,6 +11,7 @@ interface RestaurantMapPreviewProps {
   neighborhood?: string | null;
   city: string;
   state: string;
+  googleMapsUrl?: string | null;
 }
 
 export const RestaurantMapPreview: React.FC<RestaurantMapPreviewProps> = ({
@@ -21,6 +22,7 @@ export const RestaurantMapPreview: React.FC<RestaurantMapPreviewProps> = ({
   neighborhood,
   city,
   state,
+  googleMapsUrl,
 }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -39,7 +41,7 @@ export const RestaurantMapPreview: React.FC<RestaurantMapPreviewProps> = ({
   const staticMapUrl = `https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/pin-l+f59e0b(${longitude},${latitude})/${longitude},${latitude},${zoom},0/${width}x${height}@2x?access_token=${mapboxToken}`;
 
   const handleMapClick = () => {
-    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+    const targetUrl = googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
     
     track({
       eventType: 'click',
@@ -52,7 +54,7 @@ export const RestaurantMapPreview: React.FC<RestaurantMapPreviewProps> = ({
       },
     });
 
-    window.open(googleMapsUrl, '_blank', 'noopener,noreferrer');
+    window.open(targetUrl, '_blank', 'noopener,noreferrer');
   };
 
   const handleImageLoad = () => {
