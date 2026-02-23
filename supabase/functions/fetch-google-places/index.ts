@@ -52,7 +52,6 @@ async function fetchGoogleRating(merchant: MerchantRow) {
     maxResultCount: 1,
   };
 
-  // Add location bias if we have coordinates
   if (merchant.latitude && merchant.longitude) {
     body.locationBias = {
       circle: {
@@ -94,7 +93,6 @@ async function fetchGoogleRating(merchant: MerchantRow) {
     return null;
   }
 
-  // Calculate confidence based on coordinate distance
   let confidence = "no_match";
   if (merchant.latitude && merchant.longitude && place.location) {
     const dist = haversineMeters(
@@ -117,6 +115,41 @@ async function fetchGoogleRating(merchant: MerchantRow) {
   };
 }
 
+async function processMerchants(
+  supabase: any,
+  merchants: MerchantRow[]
+): Promise<{ success: number; failed: number }> {
+  let success = 0;
+  let failed = 0;
+
+  for (const merchant of merchants) {
+    try {
+      const result = await fetchGoogleRating(merchant);
+      if (result) {
+        const { error: upsertError } = await supabase
+          .from("merchant_google_ratings")
+          .upsert(result, { onConflict: "merchant_id" });
+
+        if (upsertError) {
+          console.error(`Upsert error for ${merchant.id}:`, upsertError);
+          failed++;
+        } else {
+          success++;
+        }
+      } else {
+        failed++;
+      }
+      // Rate limiting: 100ms between requests
+      await new Promise((r) => setTimeout(r, 100));
+    } catch (e) {
+      console.error(`Error processing merchant ${merchant.id}:`, e);
+      failed++;
+    }
+  }
+
+  return { success, failed };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -124,134 +157,111 @@ Deno.serve(async (req) => {
 
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    const { merchantId, mode } = await req.json();
+    const { merchantId, mode, batchSize = 50 } = await req.json();
 
-    if (mode === "refresh" || mode === "backfill") {
-      // Batch mode: fetch merchants needing data
+    if (mode === "backfill") {
+      // Get merchants with no google rating entry
+      const { data: existingRatings } = await supabase
+        .from("merchant_google_ratings")
+        .select("merchant_id");
+
+      const existingIds =
+        existingRatings?.map((r: any) => r.merchant_id) || [];
+
       let query = supabase
         .from("Merchant")
         .select("id, restaurant_name, city, state, latitude, longitude")
-        .eq("is_active", true);
+        .eq("is_active", true)
+        .order("id", { ascending: true })
+        .limit(batchSize);
 
-      if (mode === "backfill") {
-        // Get merchants with no google rating entry
-        const { data: existingRatings } = await supabase
-          .from("merchant_google_ratings")
-          .select("merchant_id");
+      if (existingIds.length > 0) {
+        query = query.not("id", "in", `(${existingIds.join(",")})`);
+      }
 
-        const existingIds =
-          existingRatings?.map((r: any) => r.merchant_id) || [];
+      const { data: merchants, error: merchantError } = await query;
+      if (merchantError) throw merchantError;
 
-        if (existingIds.length > 0) {
-          query = query.not("id", "in", `(${existingIds.join(",")})`);
-        }
-      } else {
-        // Refresh mode: get stale entries (older than 30 days)
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const totalRemaining = (() => {
+        // We can't easily count with the filter, so estimate
+        return merchants?.length || 0;
+      })();
 
-        const { data: staleRatings } = await supabase
-          .from("merchant_google_ratings")
-          .select("merchant_id")
-          .lt("fetched_at", thirtyDaysAgo.toISOString());
+      const { success, failed } = await processMerchants(
+        supabase,
+        merchants || []
+      );
 
-        const staleIds = staleRatings?.map((r: any) => r.merchant_id) || [];
-
-        // Also get merchants with no entry
-        const { data: allRatings } = await supabase
-          .from("merchant_google_ratings")
-          .select("merchant_id");
-
-        const allRatedIds = allRatings?.map((r: any) => r.merchant_id) || [];
-
-        // We need merchants that are either stale or missing
-        // For simplicity, fetch all active merchants and filter
-        const { data: allMerchants, error: allError } = await supabase
-          .from("Merchant")
-          .select("id, restaurant_name, city, state, latitude, longitude")
-          .eq("is_active", true);
-
-        if (allError) throw allError;
-
-        const merchantsToProcess = (allMerchants || []).filter(
-          (m: any) =>
-            !allRatedIds.includes(m.id) || staleIds.includes(m.id)
+      // Check how many remain after this batch
+      const { count: remainingCount } = await supabase
+        .from("Merchant")
+        .select("id", { count: "exact", head: true })
+        .eq("is_active", true)
+        .not(
+          "id",
+          "in",
+          `(${[...existingIds, ...(merchants || []).map((m: any) => m.id)].join(",")})`
         );
 
-        let success = 0;
-        let failed = 0;
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: `Batch complete. Success: ${success}, Failed: ${failed}`,
+          results: {
+            success,
+            failed,
+            total: (merchants || []).length,
+            remaining: remainingCount || 0,
+          },
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-        for (const merchant of merchantsToProcess) {
-          try {
-            const result = await fetchGoogleRating(merchant);
-            if (result) {
-              const { error: upsertError } = await supabase
-                .from("merchant_google_ratings")
-                .upsert(result, { onConflict: "merchant_id" });
+    if (mode === "refresh") {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-              if (upsertError) {
-                console.error(`Upsert error for ${merchant.id}:`, upsertError);
-                failed++;
-              } else {
-                success++;
-              }
-            } else {
-              failed++;
-            }
-            // Rate limiting: 100ms between requests
-            await new Promise((r) => setTimeout(r, 100));
-          } catch (e) {
-            console.error(`Error processing merchant ${merchant.id}:`, e);
-            failed++;
-          }
-        }
+      const { data: staleRatings } = await supabase
+        .from("merchant_google_ratings")
+        .select("merchant_id")
+        .lt("fetched_at", thirtyDaysAgo.toISOString());
 
+      const staleIds = staleRatings?.map((r: any) => r.merchant_id) || [];
+
+      if (staleIds.length === 0) {
         return new Response(
           JSON.stringify({
             success: true,
-            message: `Processed ${success + failed} merchants. Success: ${success}, Failed: ${failed}`,
-            results: { success, failed, total: merchantsToProcess.length },
+            message: "No stale ratings to refresh.",
+            results: { success: 0, failed: 0, total: 0, remaining: 0 },
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
-      // Backfill path continues here
-      const { data: merchants, error: merchantError } = await query;
+      const { data: merchants, error: merchantError } = await supabase
+        .from("Merchant")
+        .select("id, restaurant_name, city, state, latitude, longitude")
+        .in("id", staleIds.slice(0, batchSize));
+
       if (merchantError) throw merchantError;
 
-      let success = 0;
-      let failed = 0;
-
-      for (const merchant of merchants || []) {
-        try {
-          const result = await fetchGoogleRating(merchant);
-          if (result) {
-            const { error: upsertError } = await supabase
-              .from("merchant_google_ratings")
-              .upsert(result, { onConflict: "merchant_id" });
-
-            if (upsertError) {
-              console.error(`Upsert error for ${merchant.id}:`, upsertError);
-              failed++;
-            } else {
-              success++;
-            }
-          } else {
-            failed++;
-          }
-          await new Promise((r) => setTimeout(r, 100));
-        } catch (e) {
-          console.error(`Error processing merchant ${merchant.id}:`, e);
-          failed++;
-        }
-      }
+      const { success, failed } = await processMerchants(
+        supabase,
+        merchants || []
+      );
 
       return new Response(
         JSON.stringify({
           success: true,
-          message: `Processed ${success + failed} merchants. Success: ${success}, Failed: ${failed}`,
-          results: { success, failed, total: (merchants || []).length },
+          message: `Refresh complete. Success: ${success}, Failed: ${failed}`,
+          results: {
+            success,
+            failed,
+            total: (merchants || []).length,
+            remaining: Math.max(0, staleIds.length - batchSize),
+          },
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -260,8 +270,11 @@ Deno.serve(async (req) => {
     // Single merchant mode
     if (!merchantId) {
       return new Response(
-        JSON.stringify({ error: "merchantId required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "merchantId or mode required" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
       );
     }
 
@@ -274,14 +287,20 @@ Deno.serve(async (req) => {
     if (merchantError || !merchant) {
       return new Response(
         JSON.stringify({ error: "Merchant not found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
       );
     }
 
     const result = await fetchGoogleRating(merchant);
     if (!result) {
       return new Response(
-        JSON.stringify({ success: false, message: "No Google Places match found" }),
+        JSON.stringify({
+          success: false,
+          message: "No Google Places match found",
+        }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -300,7 +319,10 @@ Deno.serve(async (req) => {
     console.error("Error:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
     );
   }
 });
