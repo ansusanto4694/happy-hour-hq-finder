@@ -49,7 +49,7 @@ export type HomepageCarousel = {
 export const useHomepageCarousels = () => {
   return useQuery({
     queryKey: ['homepage-carousels'],
-    staleTime: 1000 * 60 * 5, // Consider data stale after 5 minutes
+    staleTime: 1000 * 60 * 30, // Consider data stale after 30 minutes
     queryFn: async () => {
       const { data, error } = await supabase
         .from('homepage_carousels')

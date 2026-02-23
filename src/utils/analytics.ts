@@ -81,32 +81,16 @@ const isDuplicateEvent = (eventKey: string): boolean => {
   return false;
 };
 
-// Initialize session event count from database by querying actual events
-const initializeSessionEventCount = async () => {
-  const sessionId = getSessionId();
-  
-  try {
-    // Query actual event count from user_events table
-    const { count, error } = await supabase
-      .from('user_events')
-      .select('*', { count: 'exact', head: true })
-      .eq('session_id', sessionId);
-    
-    if (!error) {
-      sessionEventCount = count || 0;
-      
-      // Check if session should be throttled or blocked
-      if (sessionEventCount >= SESSION_CRITICAL_LIMIT) {
-        sessionBlocked = true;
-        console.warn('[Analytics] Session blocked due to excessive events:', sessionEventCount);
-      } else if (sessionEventCount >= SESSION_EVENT_LIMIT) {
-        sessionThrottled = true;
-        console.warn('[Analytics] Session throttled due to high event count:', sessionEventCount);
-      }
-    }
-  } catch (err) {
-    console.error('[Analytics] Error initializing session event count:', err);
-  }
+// GA4-only event types: these are sent to GA4 but NOT written to Supabase
+// to reduce database egress and storage costs
+const GA4_ONLY_EVENT_TYPES = new Set(['impression', 'performance', 'hover', 'scroll']);
+
+// Initialize session event count from in-memory counter (no DB query needed)
+// The throttle limits reset per page load, which is sufficient for abuse prevention
+const initializeSessionEventCount = () => {
+  // sessionEventCount is already initialized to 0 at module level
+  // No database query needed - just use the in-memory counter
+  console.log('[Analytics] Session event count initialized (in-memory):', sessionEventCount);
 };
 
 // List of events that should be marked as conversions in GA4
@@ -955,12 +939,8 @@ export const initializeSession = async (forceReinitialize: boolean = false) => {
     sessionStorage.setItem('analytics_session_start_time', sessionStartTime.toString());
     lastActivityTime = Date.now();
     
-    // Initialize session event count for safeguards
-    try {
-      await initializeSessionEventCount();
-    } catch (countError) {
-      console.warn('[Analytics] Session event count init failed (non-blocking):', countError);
-    }
+    // Initialize session event count (in-memory, no DB query)
+    initializeSessionEventCount();
     
     console.log('[Analytics] Session initialized successfully');
   } catch (err) {
@@ -1161,7 +1141,13 @@ export const trackEvent = async (params: TrackEventParams) => {
   const currentEventCount = parseInt(sessionStorage.getItem('analytics_total_event_count') || '0', 10);
   sessionStorage.setItem('analytics_total_event_count', String(currentEventCount + 1));
   
-  // Add to queue
+  // GA4-only events: skip Supabase insert entirely to reduce egress
+  if (GA4_ONLY_EVENT_TYPES.has(params.eventType)) {
+    console.log(`[Analytics] GA4-only event (skipping Supabase): ${params.eventType}`);
+    return;
+  }
+  
+  // Add to queue for Supabase insert
   eventQueue.push(event);
   
   // Mobile: flush more aggressively (20 events or 15s) to ensure data capture
