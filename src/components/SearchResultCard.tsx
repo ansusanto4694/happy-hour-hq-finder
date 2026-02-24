@@ -183,7 +183,7 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
         ref={cardRef}
         className={`${
           isMobile 
-            ? 'min-h-[140px] active:scale-[0.98] active:bg-muted/50 transition-all duration-150 cursor-pointer touch-manipulation' 
+            ? 'min-h-[140px] border-0 shadow-none rounded-none border-b border-border active:bg-muted/50 transition-all duration-150 cursor-pointer touch-manipulation' 
             : 'hover:shadow-lg hover:scale-[1.02] hover:border-l-4 hover:border-l-primary/60 transition-all duration-300 cursor-pointer group'
         }`}
       >

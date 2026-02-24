@@ -241,7 +241,7 @@ const SearchResultsComponent: React.FC<SearchResultsProps> = ({
         happeningToday={happeningToday}
       />
       
-      <div className="space-y-3">
+      <div className={isMobile ? "space-y-0" : "space-y-3"}>
         {resultsToShow.map((restaurant) => (
           <SearchResultCard
             key={restaurant.id}
