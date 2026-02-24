@@ -86,11 +86,11 @@ export const HomepageCarousel: React.FC<HomepageCarouselProps> = ({ carousel, hi
   }
 
   return (
-    <div className="mb-8">
+    <div className="bg-card rounded-lg border p-4 mb-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3">
         <div>
-          <h2 className="text-xl font-bold text-foreground tracking-tight">{carousel.name}</h2>
+          <h2 className="text-xl font-semibold text-foreground">{carousel.name}</h2>
           {carousel.description && (
             <p className="text-sm text-muted-foreground mt-1">{carousel.description}</p>
           )}

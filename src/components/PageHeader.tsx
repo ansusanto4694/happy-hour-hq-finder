@@ -39,11 +39,11 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
 
   const baseClasses = transparent
     ? 'relative top-4 left-4 right-4 md:top-6 md:left-6 md:right-6 z-20'
-    : 'bg-gradient-to-r from-orange-400 via-amber-500 to-yellow-500 shadow-lg backdrop-blur-md bg-opacity-95 fixed top-0 left-0 right-0 z-50';
+    : 'bg-gradient-to-r from-orange-400 via-amber-500 to-yellow-500 shadow-md fixed top-0 left-0 right-0 z-50';
 
   const containerClasses = transparent
     ? 'flex justify-between items-center px-4 md:px-6'
-    : 'w-full px-8 py-0 flex items-center justify-between';
+    : 'w-full px-8 py-1 flex items-center justify-between';
 
   return (
     <>
@@ -60,12 +60,12 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             <img 
               src="/lovable-uploads/f30134b8-b54d-491a-b6bc-fc7a20199dd2.png" 
               alt="SipMunchYap Logo" 
-              className="h-12 md:h-14 w-auto cursor-pointer"
+              className="h-16 md:h-24 lg:h-32 w-auto cursor-pointer"
               onClick={handleLogoClick}
               fetchPriority="high"
               loading="eager"
-              width={56}
-              height={56}
+              width={128}
+              height={128}
             />
           )}
           
@@ -76,7 +76,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             </div>
           )}
           
-          <nav className="flex items-center space-x-1 md:space-x-3 lg:space-x-5">
+          <nav className="flex items-center space-x-2 md:space-x-4 lg:space-x-6">
             {/* Mobile: Show search button instead of full bar */}
             {showSearchBar && isMobile && (
               <Button
