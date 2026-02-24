@@ -4,6 +4,13 @@ import { MobileFilterDrawer } from '@/components/MobileFilterDrawer';
 import { RadiusOption } from '@/components/RadiusFilter';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Drawer,
   DrawerContent,
   DrawerHeader,
@@ -40,6 +47,8 @@ interface MobileListDrawerProps {
   onHappeningTodayChange?: (value: boolean) => void;
   locationType?: string | null;
   onClearAllFilters?: () => void;
+  sortBy?: string;
+  onSortChange?: (value: string) => void;
 }
 
 export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
@@ -71,6 +80,8 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
   onHappeningTodayChange,
   locationType,
   onClearAllFilters,
+  sortBy = 'default',
+  onSortChange,
 }) => {
   const { track } = useAnalytics();
 
@@ -92,10 +103,22 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
       <DrawerContent className="max-h-[85vh] flex flex-col overflow-hidden">
         <DrawerHeader className="pb-4 flex-shrink-0">
           <div className="flex items-center justify-center mb-2">
-            <GripHorizontal className="h-6 w-6 text-gray-400" />
+            <GripHorizontal className="h-6 w-6 text-muted-foreground" />
           </div>
-          <div className="flex items-center justify-between">
-            <DrawerTitle>Results ({merchants?.length || 0})</DrawerTitle>
+          <div className="flex items-center justify-between gap-2">
+            <DrawerTitle className="flex-shrink-0">Results ({merchants?.length || 0})</DrawerTitle>
+            {onSortChange && (
+              <Select value={sortBy} onValueChange={onSortChange}>
+                <SelectTrigger className="w-[150px] h-8 text-xs">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="default">Default</SelectItem>
+                  <SelectItem value="highest_rated">Highest Rated</SelectItem>
+                  <SelectItem value="most_reviewed">Most Reviewed</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
             <MobileFilterDrawer
               selectedCategories={selectedCategories}
               onCategoryChange={onCategoryChange}

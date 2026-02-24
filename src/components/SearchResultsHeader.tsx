@@ -1,6 +1,13 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { CalendarDays } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface SearchResultsHeaderProps {
   resultsCount: number;
@@ -14,6 +21,8 @@ interface SearchResultsHeaderProps {
   isMobile?: boolean;
   happeningNow?: boolean;
   happeningToday?: boolean;
+  sortBy?: string;
+  onSortChange?: (value: string) => void;
 }
 
 export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
@@ -27,18 +36,18 @@ export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
   searchTerm,
   isMobile = false,
   happeningNow = false,
-  happeningToday = false
+  happeningToday = false,
+  sortBy = 'default',
+  onSortChange,
 }) => {
   const startResult = (currentPage - 1) * resultsPerPage + 1;
   const endResult = Math.min(currentPage * resultsPerPage, resultsCount);
 
   const formatTime = (time?: string) => {
     if (!time) return '';
-    // If time already includes AM/PM, return as is
     if (time.toUpperCase().includes('AM') || time.toUpperCase().includes('PM')) {
       return time;
     }
-    // Otherwise format from 24-hour format
     const [hours, minutes] = time.split(':');
     const hour = parseInt(hours);
     const ampm = hour >= 12 ? 'PM' : 'AM';
@@ -51,11 +60,11 @@ export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
       <CardContent className="p-3 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-lg font-semibold text-foreground">
               Happy Hour Results
-              {searchTerm && <span className="text-orange-600"> for "{searchTerm}"</span>}
+              {searchTerm && <span className="text-primary"> for "{searchTerm}"</span>}
             </h2>
-            <div className="text-sm text-gray-600 space-y-1">
+            <div className="text-sm text-muted-foreground space-y-1">
               <p>
                 {isMobile ? 
                   `${resultsCount} restaurants found` : 
@@ -68,7 +77,7 @@ export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
                     <span>Search: "{searchTerm}"</span>
                   )}
                   {happeningNow ? (
-                    <span className="inline-flex items-center gap-1.5 font-medium text-orange-600">
+                    <span className="inline-flex items-center gap-1.5 font-medium text-primary">
                       <span className="relative flex h-2 w-2">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
@@ -90,6 +99,18 @@ export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
               )}
             </div>
           </div>
+          {!isMobile && onSortChange && (
+            <Select value={sortBy} onValueChange={onSortChange}>
+              <SelectTrigger className="w-[180px] flex-shrink-0">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="default">Default</SelectItem>
+                <SelectItem value="highest_rated">Highest Rated</SelectItem>
+                <SelectItem value="most_reviewed">Most Reviewed</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
         </div>
       </CardContent>
     </Card>
