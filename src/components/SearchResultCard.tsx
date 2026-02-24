@@ -187,7 +187,7 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
             : 'hover:shadow-lg hover:scale-[1.02] hover:border-l-4 hover:border-l-primary/60 transition-all duration-300 cursor-pointer group'
         }`}
       >
-      <CardContent className={isMobile ? "p-4" : "p-4 sm:p-6"}>
+      <CardContent className={isMobile ? "px-5 py-4" : "p-4 sm:p-6"}>
         {isMobile ? (
           // Mobile Layout - Enhanced touch targets and clear CTA
           <div className="flex items-start gap-3">
