@@ -124,7 +124,7 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
         
         <div 
           data-vaul-drawer-scroll="true"
-          className="px-4 pb-20 overflow-y-auto flex-1"
+          className="pb-20 overflow-y-auto flex-1"
           style={{ minHeight: 0 }}
         >
           <SearchResults 
