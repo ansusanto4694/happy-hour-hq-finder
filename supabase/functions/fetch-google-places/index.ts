@@ -156,36 +156,38 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Verify authentication: accept service role key (internal triggers) or admin JWT
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const { merchantId, mode, batchSize = 50 } = await req.json();
 
-    const token = authHeader.replace("Bearer ", "");
-    const isServiceRole = token === SUPABASE_SERVICE_ROLE_KEY;
-
-    if (!isServiceRole) {
-      // Standard admin JWT verification
-      const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-      const authClient = createClient(SUPABASE_URL, supabaseAnonKey, {
-        global: { headers: { Authorization: authHeader } },
-      });
-
-      const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token);
-      if (claimsError || !claimsData?.claims) {
+    // Single-merchant mode (used by DB trigger) allows anon key.
+    // Backfill/refresh modes require admin authentication.
+    if (mode === "backfill" || mode === "refresh") {
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader?.startsWith("Bearer ")) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
-      const userId = claimsData.claims.sub;
-      const { data: roleData } = await authClient.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle();
-      if (!roleData) {
-        return new Response(JSON.stringify({ error: "Forbidden - Admin access required" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      const token = authHeader.replace("Bearer ", "");
+      const isServiceRole = token === SUPABASE_SERVICE_ROLE_KEY;
+
+      if (!isServiceRole) {
+        const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+        const authClient = createClient(SUPABASE_URL, supabaseAnonKey, {
+          global: { headers: { Authorization: authHeader } },
+        });
+
+        const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token);
+        if (claimsError || !claimsData?.claims) {
+          return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+
+        const userId = claimsData.claims.sub;
+        const { data: roleData } = await authClient.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle();
+        if (!roleData) {
+          return new Response(JSON.stringify({ error: "Forbidden - Admin access required" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
       }
     }
-
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    const { merchantId, mode, batchSize = 50 } = await req.json();
 
     if (mode === "backfill") {
       // Get merchants with no google rating entry
