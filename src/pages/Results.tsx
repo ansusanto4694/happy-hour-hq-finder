@@ -179,11 +179,24 @@ const Results = () => {
     setSearchParams(newSearchParams, { replace: true });
   };
 
+  // Sort state from URL
+  const sortBy = searchParams.get('sortBy') || 'default';
+  const setSortBy = useCallback((value: string) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (value === 'default') {
+      newParams.delete('sortBy');
+    } else {
+      newParams.set('sortBy', value);
+    }
+    newParams.delete('page');
+    setSearchParams(newParams, { replace: true });
+  }, [searchParams, setSearchParams]);
+
   // Atomic clear-all: single URL update removes every filter param at once
   const handleClearAllFilters = useCallback(() => {
     const newParams = new URLSearchParams(searchParams);
     // Delete all filter keys
-    const filterKeys = ['categories', 'radius', 'offers', 'days', 'startTime', 'endTime', 'menuType', 'happeningNow', 'happeningToday', 'page'];
+    const filterKeys = ['categories', 'radius', 'offers', 'days', 'startTime', 'endTime', 'menuType', 'happeningNow', 'happeningToday', 'page', 'sortBy'];
     filterKeys.forEach(key => newParams.delete(key));
     setSearchParams(newParams, { replace: true });
   }, [searchParams, setSearchParams]);
@@ -216,7 +229,7 @@ const Results = () => {
   const currentStartTime = effectiveStartTime;
   const currentEndTime = effectiveEndTime;
 
-  const { data: merchants, isLoading, error } = useMerchants(
+  const { data: rawMerchants, isLoading, error } = useMerchants(
     selectedCategories, 
     searchTerm, 
     currentStartTime, 
@@ -231,6 +244,52 @@ const Results = () => {
     undefined, // neighborhood
     selectedMenuType // Menu type filter
   );
+
+  // Sort merchants based on sortBy param
+  const merchants = React.useMemo(() => {
+    if (!rawMerchants || sortBy === 'default') return rawMerchants;
+
+    const sorted = [...rawMerchants];
+
+    const getEffectiveRating = (m: any): number => {
+      const reviews = m.merchant_reviews?.filter((r: any) => r.status === 'published') || [];
+      if (reviews.length > 0) {
+        let sum = 0, count = 0;
+        reviews.forEach((review: any) => {
+          review.merchant_review_ratings?.forEach((r: { rating: number }) => {
+            sum += r.rating;
+            count++;
+          });
+        });
+        if (count > 0) return sum / count;
+      }
+      // Fallback to Google rating
+      const google = m.merchant_google_ratings;
+      if (google && google.match_confidence !== 'no_match' && google.google_rating) {
+        return google.google_rating;
+      }
+      return 0;
+    };
+
+    const getEffectiveReviewCount = (m: any): number => {
+      const reviews = m.merchant_reviews?.filter((r: any) => r.status === 'published') || [];
+      if (reviews.length > 0) return reviews.length;
+      // Fallback to Google review count
+      const google = m.merchant_google_ratings;
+      if (google && google.match_confidence !== 'no_match' && google.google_review_count) {
+        return google.google_review_count;
+      }
+      return 0;
+    };
+
+    if (sortBy === 'highest_rated') {
+      sorted.sort((a, b) => getEffectiveRating(b) - getEffectiveRating(a));
+    } else if (sortBy === 'most_reviewed') {
+      sorted.sort((a, b) => getEffectiveReviewCount(b) - getEffectiveReviewCount(a));
+    }
+
+    return sorted;
+  }, [rawMerchants, sortBy]);
 
   // Use drawer scroll restoration hook for persistent drawer state
   // Pass content ready state so scroll restoration waits for merchants to render
@@ -523,6 +582,8 @@ const Results = () => {
             onHappeningTodayChange={setHappeningToday}
             locationType={locationTypeParam || inferLocationTypeFromInput(locationParam)}
             onClearAllFilters={handleClearAllFilters}
+            sortBy={sortBy}
+            onSortChange={setSortBy}
           />
         </div>
       )}
@@ -575,6 +636,8 @@ const Results = () => {
               onRestaurantHover={setHoveredRestaurantId}
               happeningNow={happeningNow}
               happeningToday={happeningToday}
+              sortBy={sortBy}
+              onSortChange={setSortBy}
             />
               </div>
               <div className="lg:col-span-1">
@@ -641,6 +704,8 @@ const Results = () => {
               onRestaurantHover={setHoveredRestaurantId}
               happeningNow={happeningNow}
               happeningToday={happeningToday}
+              sortBy={sortBy}
+              onSortChange={setSortBy}
             />
           </div>
 

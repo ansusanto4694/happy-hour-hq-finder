@@ -30,6 +30,8 @@ interface SearchResultsProps {
   onMerchantNavigate?: (merchantId: number) => void;
   happeningNow?: boolean;
   happeningToday?: boolean;
+  sortBy?: string;
+  onSortChange?: (value: string) => void;
 }
 
 const RESULTS_PER_PAGE = 30;
@@ -45,7 +47,9 @@ const SearchResultsComponent: React.FC<SearchResultsProps> = ({
   onRestaurantHover,
   onMerchantNavigate,
   happeningNow = false,
-  happeningToday = false
+  happeningToday = false,
+  sortBy,
+  onSortChange,
 }) => {
   const [displayedResults, setDisplayedResults] = useState<any[]>([]);
   const [hasMore, setHasMore] = useState(true);
@@ -239,6 +243,8 @@ const SearchResultsComponent: React.FC<SearchResultsProps> = ({
         isMobile={isMobile}
         happeningNow={happeningNow}
         happeningToday={happeningToday}
+        sortBy={sortBy}
+        onSortChange={onSortChange}
       />
       
       <div className={isMobile ? "space-y-0" : "space-y-3"}>
@@ -306,6 +312,8 @@ export const SearchResults = React.memo(SearchResultsComponent, (prevProps, next
     prevProps.onRestaurantHover === nextProps.onRestaurantHover &&
     prevProps.onMerchantNavigate === nextProps.onMerchantNavigate &&
     prevProps.happeningNow === nextProps.happeningNow &&
-    prevProps.happeningToday === nextProps.happeningToday
+    prevProps.happeningToday === nextProps.happeningToday &&
+    prevProps.sortBy === nextProps.sortBy &&
+    prevProps.onSortChange === nextProps.onSortChange
   );
 });
