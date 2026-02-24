@@ -113,7 +113,7 @@ export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick })
       draggable={false}
     >
       <Card 
-        className="cursor-pointer hover:shadow-lg hover:scale-[1.02] hover:border-primary/50 transition-all duration-300 bg-card border border-border h-40"
+        className="cursor-pointer hover:shadow-xl hover:scale-[1.02] hover:border-primary/40 transition-all duration-300 bg-card border border-border h-40 border-l-4 border-l-amber-500/70"
       >
       <CardContent className="p-4 h-full flex items-center space-x-4">
         {/* Logo */}

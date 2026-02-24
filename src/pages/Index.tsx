@@ -93,7 +93,7 @@ const Index = () => {
         
         <PageHeader showSearchBar={true} searchBarVariant="results" />
         
-        <div className="max-w-6xl mx-auto px-6 pt-44 pb-4 text-center">
+        <div className="max-w-6xl mx-auto px-6 pt-24 pb-4 text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
             Find the best happy hours near you
           </h1>
@@ -102,9 +102,25 @@ const Index = () => {
             Discover amazing deals, great drinks, and perfect spots to unwind after work
           </p>
           
-          <div className="text-lg text-white/80 mb-12 max-w-2xl mx-auto leading-relaxed">
+          <div className="text-lg text-white/80 mb-8 max-w-2xl mx-auto leading-relaxed">
             <p className="mb-2">We are the best source for discovering and browsing deals in NYC.</p>
             <p>Over 700+ verified happy hours with more being added every week.</p>
+          </div>
+
+          {/* Trust Stats Bar */}
+          <div className="flex items-center justify-center gap-8 mb-12">
+            <div className="flex flex-col items-center px-6 py-3 bg-white/15 backdrop-blur-sm rounded-xl border border-white/20">
+              <span className="text-2xl font-bold text-white">700+</span>
+              <span className="text-xs text-white/80 uppercase tracking-wider font-medium">Happy Hours</span>
+            </div>
+            <div className="flex flex-col items-center px-6 py-3 bg-white/15 backdrop-blur-sm rounded-xl border border-white/20">
+              <span className="text-2xl font-bold text-white">50+</span>
+              <span className="text-xs text-white/80 uppercase tracking-wider font-medium">Neighborhoods</span>
+            </div>
+            <div className="flex flex-col items-center px-6 py-3 bg-white/15 backdrop-blur-sm rounded-xl border border-white/20">
+              <span className="text-2xl font-bold text-white">Weekly</span>
+              <span className="text-xs text-white/80 uppercase tracking-wider font-medium">Updates</span>
+            </div>
           </div>
         </div>
         

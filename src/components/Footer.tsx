@@ -27,17 +27,25 @@ export const Footer = () => {
   ];
 
   return (
-    <footer className="bg-card border-t border-border mt-auto">
+    <footer className="bg-foreground text-primary-foreground mt-auto">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
           {/* About Section */}
           <div>
-            <h3 className="text-lg font-semibold text-foreground mb-4">SipMunchYap</h3>
-            <p className="text-sm text-muted-foreground mb-4">
+            <div className="flex items-center gap-3 mb-4">
+              <img 
+                src="/lovable-uploads/f30134b8-b54d-491a-b6bc-fc7a20199dd2.png" 
+                alt="SipMunchYap" 
+                className="h-10 w-auto"
+                loading="lazy"
+              />
+              <h3 className="text-lg font-bold text-primary-foreground">SipMunchYap</h3>
+            </div>
+            <p className="text-sm text-primary-foreground/70 mb-4">
               Your go-to source for discovering the best happy hour deals in New York City. 
               Over 700+ verified happy hours and growing.
             </p>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 text-sm text-primary-foreground/60">
               <Clock className="h-4 w-4" />
               <span>Updated Weekly</span>
             </div>
@@ -45,12 +53,12 @@ export const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-lg font-semibold text-foreground mb-4">Quick Links</h3>
+            <h3 className="text-lg font-semibold text-primary-foreground mb-4">Quick Links</h3>
             <ul className="space-y-2">
               <li>
                 <Link 
                   to="/" 
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                  className="text-sm text-primary-foreground/60 hover:text-amber-400 transition-colors"
                 >
                   Home
                 </Link>
@@ -58,7 +66,7 @@ export const Footer = () => {
               <li>
                 <Link 
                   to="/happy-hour/new-york-ny" 
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                  className="text-sm text-primary-foreground/60 hover:text-amber-400 transition-colors"
                 >
                   All NYC Happy Hours
                 </Link>
@@ -66,7 +74,7 @@ export const Footer = () => {
               <li>
                 <Link 
                   to="/about" 
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                  className="text-sm text-primary-foreground/60 hover:text-amber-400 transition-colors"
                 >
                   About Us
                 </Link>
@@ -74,7 +82,7 @@ export const Footer = () => {
               <li>
                 <Link 
                   to="/contact" 
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                  className="text-sm text-primary-foreground/60 hover:text-amber-400 transition-colors"
                 >
                   Contact
                 </Link>
@@ -84,7 +92,7 @@ export const Footer = () => {
 
           {/* Popular Neighborhoods */}
           <div>
-            <h3 className="text-lg font-semibold text-foreground mb-4">
+            <h3 className="text-lg font-semibold text-primary-foreground mb-4">
               <MapPin className="inline h-4 w-4 mr-1" />
               Popular Areas
             </h3>
@@ -93,7 +101,7 @@ export const Footer = () => {
                 <li key={neighborhood.slug}>
                   <Link 
                     to={`/happy-hour/new-york-ny/${neighborhood.slug}`}
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                    className="text-sm text-primary-foreground/60 hover:text-amber-400 transition-colors"
                   >
                     {neighborhood.name}
                   </Link>
@@ -104,13 +112,13 @@ export const Footer = () => {
 
           {/* More Neighborhoods */}
           <div>
-            <h3 className="text-lg font-semibold text-foreground mb-4">More Neighborhoods</h3>
+            <h3 className="text-lg font-semibold text-primary-foreground mb-4">More Neighborhoods</h3>
             <ul className="space-y-2">
               {moreNeighborhoods.map((neighborhood) => (
                 <li key={neighborhood.slug}>
                   <Link 
                     to={`/happy-hour/new-york-ny/${neighborhood.slug}`}
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                    className="text-sm text-primary-foreground/60 hover:text-amber-400 transition-colors"
                   >
                     {neighborhood.name}
                   </Link>
@@ -121,11 +129,11 @@ export const Footer = () => {
         </div>
 
         {/* Contact Info Bar */}
-        <div className="border-t border-border pt-6 mb-6">
-          <div className="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-muted-foreground">
+        <div className="border-t border-primary-foreground/10 pt-6 mb-6">
+          <div className="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-primary-foreground/60">
             <a 
               href="mailto:andrew@sipmunchyap.com" 
-              className="flex items-center gap-2 hover:text-primary transition-colors"
+              className="flex items-center gap-2 hover:text-amber-400 transition-colors"
             >
               <Mail className="h-4 w-4" />
               andrew@sipmunchyap.com
@@ -138,14 +146,14 @@ export const Footer = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-border pt-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
+        <div className="border-t border-primary-foreground/10 pt-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-primary-foreground/50">
             <p>© {currentYear} SipMunchYap. All rights reserved.</p>
             <div className="flex gap-4">
-              <Link to="/about" className="hover:text-primary transition-colors">
+              <Link to="/about" className="hover:text-amber-400 transition-colors">
                 Privacy Policy
               </Link>
-              <Link to="/about" className="hover:text-primary transition-colors">
+              <Link to="/about" className="hover:text-amber-400 transition-colors">
                 Terms of Service
               </Link>
             </div>
