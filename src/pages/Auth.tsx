@@ -30,6 +30,7 @@ const Auth = () => {
     lastName: '',
     phoneNumber: '',
   });
+  const [signUpErrors, setSignUpErrors] = useState<Record<string, string>>({});
   
   // Form interaction tracking state
   const signupStartTimeRef = useRef<number | null>(null);
@@ -123,10 +124,33 @@ const Auth = () => {
     });
   };
   
-  // Track field blur
+  // Validate a single signup field
+  const validateSignUpField = (fieldName: string, value: string): string => {
+    switch (fieldName) {
+      case 'firstName':
+        return value.trim() ? '' : 'First name is required';
+      case 'email':
+        if (!value.trim()) return 'Email is required';
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Please enter a valid email';
+        return '';
+      case 'password':
+        if (!value) return 'Password is required';
+        if (value.length < 6) return 'Password must be at least 6 characters';
+        return '';
+      default:
+        return '';
+    }
+  };
+
+  // Track field blur and validate
   const handleFieldBlur = (fieldName: string, hasValue: boolean) => {
     const focusTime = fieldInteractionTimesRef.current[fieldName];
     const timeSpent = focusTime ? Math.round((Date.now() - focusTime) / 1000) : 0;
+    
+    // Run validation on blur
+    const value = signUpData[fieldName as keyof typeof signUpData] || '';
+    const error = validateSignUpField(fieldName, value);
+    setSignUpErrors(prev => ({ ...prev, [fieldName]: error }));
     
     track({
       eventType: 'interaction',
@@ -176,6 +200,16 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate all required fields before submitting
+    const errors: Record<string, string> = {};
+    errors.firstName = validateSignUpField('firstName', signUpData.firstName);
+    errors.email = validateSignUpField('email', signUpData.email);
+    errors.password = validateSignUpField('password', signUpData.password);
+    setSignUpErrors(errors);
+    
+    if (Object.values(errors).some(err => err)) return;
+    
     setIsLoading(true);
     
     // Calculate total time spent on form
@@ -435,11 +469,15 @@ const Auth = () => {
                         type="text"
                         placeholder="First name"
                         value={signUpData.firstName}
-                        onChange={(e) => setSignUpData({ ...signUpData, firstName: e.target.value })}
+                        onChange={(e) => {
+                          setSignUpData({ ...signUpData, firstName: e.target.value });
+                          if (signUpErrors.firstName) setSignUpErrors(prev => ({ ...prev, firstName: '' }));
+                        }}
                         onFocus={() => handleFieldFocus('firstName')}
                         onBlur={() => handleFieldBlur('firstName', !!signUpData.firstName)}
                         required
                       />
+                      {signUpErrors.firstName && <p className="text-xs text-destructive">{signUpErrors.firstName}</p>}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="signup-lastname">Last Name</Label>
@@ -461,11 +499,15 @@ const Auth = () => {
                       type="email"
                       placeholder="Enter your email"
                       value={signUpData.email}
-                      onChange={(e) => setSignUpData({ ...signUpData, email: e.target.value })}
+                      onChange={(e) => {
+                        setSignUpData({ ...signUpData, email: e.target.value });
+                        if (signUpErrors.email) setSignUpErrors(prev => ({ ...prev, email: '' }));
+                      }}
                       onFocus={() => handleFieldFocus('email')}
                       onBlur={() => handleFieldBlur('email', !!signUpData.email)}
                       required
                     />
+                    {signUpErrors.email && <p className="text-xs text-destructive">{signUpErrors.email}</p>}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-phone">Phone Number</Label>
@@ -487,7 +529,10 @@ const Auth = () => {
                         type={showSignUpPassword ? "text" : "password"}
                         placeholder="Create a password"
                         value={signUpData.password}
-                        onChange={(e) => setSignUpData({ ...signUpData, password: e.target.value })}
+                        onChange={(e) => {
+                          setSignUpData({ ...signUpData, password: e.target.value });
+                          if (signUpErrors.password) setSignUpErrors(prev => ({ ...prev, password: '' }));
+                        }}
                         onFocus={() => handleFieldFocus('password')}
                         onBlur={() => handleFieldBlur('password', !!signUpData.password)}
                         required
@@ -501,7 +546,11 @@ const Auth = () => {
                         {showSignUpPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                       </button>
                     </div>
-                    <p className="text-xs text-muted-foreground">Minimum 6 characters</p>
+                    {signUpErrors.password ? (
+                      <p className="text-xs text-destructive">{signUpErrors.password}</p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">Minimum 6 characters</p>
+                    )}
                   </div>
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? 'Creating Account...' : 'Sign Up'}
