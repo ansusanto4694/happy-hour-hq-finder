@@ -1,58 +1,62 @@
 
 
-## Add Sort by Rating and Review Count
+# Fix Security Definer Views
 
-### Goal
-Add a sort dropdown to both desktop and mobile results views, allowing users to sort merchants by "Highest Rated" or "Most Reviewed", with a "Default" option to return to the original order.
+## What We're Doing
 
-### How It Works
-- Sort state is stored as a URL parameter (`sortBy`) so it persists across navigation
-- Sorting happens client-side on the already-fetched merchant array -- no backend changes needed
-- Rating logic mirrors what `SearchResultCard` already computes: native review average first, Google rating as fallback
-- Review count uses native review count first, Google review count as fallback
+Two database views (`profile_display_names` and `restaurants_public`) currently run with the database owner's permissions instead of the querying user's permissions. This means they bypass Row Level Security (RLS) policies, potentially exposing data that should be protected.
 
-### Changes
+We will recreate both views with `security_invoker = on` so that RLS policies are properly enforced for whoever is querying.
 
-**1. `src/pages/Results.tsx`** -- Sort state and logic
-- Read `sortBy` from URL search params (values: `default`, `highest_rated`, `most_reviewed`)
-- Add a `setSortBy` helper that updates the URL param
-- Add a `sortMerchants()` function that sorts the merchants array based on the selected option
-- Pass sorted merchants (instead of raw) to `SearchResults`, `MobileListDrawer`, and the map
-- Pass `sortBy` and `setSortBy` down to `SearchResultsHeader` (desktop) and `MobileListDrawer` (mobile)
-- Add `sortBy` to the `handleClearAllFilters` cleanup list
+## Changes
 
-**2. `src/components/SearchResultsHeader.tsx`** -- Desktop sort dropdown
-- Add `sortBy` and `onSortChange` props
-- Render a `Select` dropdown (using existing Radix Select component) next to the results count
-- Options: "Default", "Highest Rated", "Most Reviewed"
+A single database migration that:
 
-**3. `src/components/MobileListDrawer.tsx`** -- Mobile sort control
-- Add `sortBy` and `onSortChange` props
-- Render the same sort `Select` dropdown in the drawer header, next to the existing filter button
+1. Drops and recreates `profile_display_names` with `security_invoker = on`
+2. Drops and recreates `restaurants_public` with `security_invoker = on`
 
-**4. `src/components/SearchResults.tsx`** -- Memo comparison update
-- Add `sortBy` to the memo comparison so re-renders happen when sort changes
+Both views keep their exact same column definitions and logic -- the only change is adding the security invoker flag.
 
-### Sort Logic Detail
-```text
-Highest Rated:
-  For each merchant, compute effective rating:
-    1. Native: average of all merchant_review_ratings across published reviews
-    2. Fallback: google_rating (if match_confidence != 'no_match')
-    3. No rating: treated as 0
-  Sort descending by effective rating
+## Technical Details
 
-Most Reviewed:
-  For each merchant, compute effective review count:
-    1. Native: count of published merchant_reviews
-    2. Fallback: google_review_count (if match_confidence != 'no_match')
-    3. No reviews: treated as 0
-  Sort descending by effective count
+```sql
+-- Recreate profile_display_names
+DROP VIEW IF EXISTS public.profile_display_names;
+CREATE VIEW public.profile_display_names
+WITH (security_invoker = on) AS
+SELECT
+  profiles.id,
+  profiles.first_name,
+  CASE
+    WHEN profiles.last_name IS NOT NULL AND length(profiles.last_name) > 0
+    THEN left(profiles.last_name, 1) || '.'
+    ELSE NULL
+  END AS last_name_initial
+FROM profiles;
+
+-- Recreate restaurants_public
+DROP VIEW IF EXISTS public.restaurants_public;
+CREATE VIEW public.restaurants_public
+WITH (security_invoker = on) AS
+SELECT
+  "Merchant".id,
+  "Merchant".restaurant_name,
+  "Merchant".street_address,
+  "Merchant".street_address_line_2,
+  "Merchant".city,
+  "Merchant".state,
+  "Merchant".zip_code,
+  "Merchant".phone_number,
+  "Merchant".website,
+  "Merchant".latitude,
+  "Merchant".longitude,
+  "Merchant".logo_url,
+  "Merchant".is_active,
+  "Merchant".created_at,
+  "Merchant".updated_at
+FROM "Merchant"
+WHERE "Merchant".is_active = true;
 ```
 
-### UI Layout
-
-Desktop: Sort dropdown appears in the `SearchResultsHeader` card, right-aligned on the same row as the results count.
-
-Mobile: Sort dropdown appears in the `MobileListDrawer` header row, between the title and the filter button.
+No application code changes are needed -- the views' columns and names remain identical.
 
