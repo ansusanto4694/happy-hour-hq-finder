@@ -100,16 +100,19 @@ export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
             </div>
           </div>
           {!isMobile && onSortChange && (
-            <Select value={sortBy} onValueChange={onSortChange}>
-              <SelectTrigger className="w-[180px] flex-shrink-0">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="default">Default</SelectItem>
-                <SelectItem value="highest_rated">Highest Rated</SelectItem>
-                <SelectItem value="most_reviewed">Most Reviewed</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Sort By</span>
+              <Select value={sortBy} onValueChange={onSortChange}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="default">Default</SelectItem>
+                  <SelectItem value="highest_rated">Highest Rated</SelectItem>
+                  <SelectItem value="most_reviewed">Most Reviewed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           )}
         </div>
       </CardContent>
