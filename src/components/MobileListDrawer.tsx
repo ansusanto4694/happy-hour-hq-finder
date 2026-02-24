@@ -106,7 +106,7 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
             <GripHorizontal className="h-6 w-6 text-muted-foreground" />
           </div>
           <div className="flex items-center justify-between gap-2">
-            <DrawerTitle className="flex-shrink-0">Results ({merchants?.length || 0})</DrawerTitle>
+            <DrawerTitle className="flex-shrink-0">Sort By</DrawerTitle>
             {onSortChange && (
               <Select value={sortBy} onValueChange={onSortChange}>
                 <SelectTrigger className="w-[150px] h-8 text-xs">
