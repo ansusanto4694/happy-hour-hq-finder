@@ -49,6 +49,7 @@ interface MobileListDrawerProps {
   onClearAllFilters?: () => void;
   sortBy?: string;
   onSortChange?: (value: string) => void;
+  useGPS?: boolean;
 }
 
 export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
@@ -82,6 +83,7 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
   onClearAllFilters,
   sortBy = 'default',
   onSortChange,
+  useGPS = false,
 }) => {
   const { track } = useAnalytics();
 
@@ -141,6 +143,7 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
               onHappeningTodayChange={onHappeningTodayChange}
               locationType={locationType}
               onClearAllFilters={onClearAllFilters}
+              useGPS={useGPS}
             />
           </div>
         </DrawerHeader>
