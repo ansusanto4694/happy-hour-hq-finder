@@ -85,6 +85,16 @@ const isDuplicateEvent = (eventKey: string): boolean => {
 // to reduce database egress and storage costs
 const GA4_ONLY_EVENT_TYPES = new Set(['impression', 'performance', 'hover', 'scroll']);
 
+// GA4-only event actions: high-volume/low-value actions that are tracked in GA4
+// but skipped from Supabase to reduce egress. map_marker_clicked is intentionally
+// excluded (kept in Supabase) as it's a high-value conversion signal.
+const GA4_ONLY_EVENT_ACTIONS = new Set([
+  'map_moved', 'map_zoom', 'map_pan',
+  'mobile_drawer_opened', 'drawer_opened', 'drawer_closed',
+  'location_suggestions_displayed',
+  'days_changed', 'category_changed', 'radius_changed', 'offers_toggled',
+]);
+
 // Initialize session event count from in-memory counter (no DB query needed)
 // The throttle limits reset per page load, which is sufficient for abuse prevention
 const initializeSessionEventCount = () => {
@@ -1143,7 +1153,13 @@ export const trackEvent = async (params: TrackEventParams) => {
   
   // GA4-only events: skip Supabase insert entirely to reduce egress
   if (GA4_ONLY_EVENT_TYPES.has(params.eventType)) {
-    console.log(`[Analytics] GA4-only event (skipping Supabase): ${params.eventType}`);
+    console.log(`[Analytics] GA4-only event type (skipping Supabase): ${params.eventType}`);
+    return;
+  }
+  
+  // GA4-only actions: high-volume actions routed to GA4 only
+  if (GA4_ONLY_EVENT_ACTIONS.has(params.eventAction)) {
+    console.log(`[Analytics] GA4-only event action (skipping Supabase): ${params.eventAction}`);
     return;
   }
   
