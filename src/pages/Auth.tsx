@@ -501,6 +501,7 @@ const Auth = () => {
                         {showSignUpPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                       </button>
                     </div>
+                    <p className="text-xs text-muted-foreground">Minimum 6 characters</p>
                   </div>
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? 'Creating Account...' : 'Sign Up'}
