@@ -584,6 +584,7 @@ const Results = () => {
             onClearAllFilters={handleClearAllFilters}
             sortBy={sortBy}
             onSortChange={setSortBy}
+            useGPS={useGPS}
           />
         </div>
       )}

@@ -12,6 +12,7 @@ interface MobileFilterDrawerProps {
   isRadiusEnabled: boolean;
   showOffersOnly: boolean;
   onShowOffersChange: (showOffers: boolean) => void;
+  useGPS?: boolean;
   selectedDays: number[];
   onDaysChange: (days: number[]) => void;
   startTime: string;
@@ -37,6 +38,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
   isRadiusEnabled,
   showOffersOnly,
   onShowOffersChange,
+  useGPS = false,
   selectedDays,
   onDaysChange,
   startTime,
@@ -54,7 +56,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
   locationType,
 }) => {
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = React.useState(false);
-  const smartDefault = getSmartDefaultRadius(locationType ?? null, false);
+  const smartDefault = getSmartDefaultRadius(locationType ?? null, useGPS);
   const hasFilters = selectedCategories.length > 0 || selectedRadius !== smartDefault || showOffersOnly || selectedDays.length > 0 || startTime || endTime || selectedMenuType !== 'all' || happeningNow || happeningToday;
   
   // Calculate total filter count
