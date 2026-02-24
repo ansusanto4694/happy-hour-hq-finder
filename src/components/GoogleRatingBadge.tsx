@@ -35,13 +35,6 @@ export const GoogleRatingBadge: React.FC<GoogleRatingBadgeProps> = ({
       >
         ({reviewCount})
       </span>
-      <span
-        className={`${
-          size === 'sm' ? 'text-[10px]' : 'text-xs'
-        } text-muted-foreground/70 ml-0.5`}
-      >
-        Google
-      </span>
     </div>
   );
 
