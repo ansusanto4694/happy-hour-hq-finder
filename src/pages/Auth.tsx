@@ -122,7 +122,14 @@ const Auth = () => {
 
       <div className="relative z-10 flex-grow flex items-center justify-center pt-40 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
-          <div className="text-center"></div>
+          <div className="text-center space-y-3">
+            <h1 className="text-3xl sm:text-4xl font-bold text-white drop-shadow-md">
+              Your Happy Hour Companion
+            </h1>
+            <p className="text-white/90 text-base sm:text-lg max-w-sm mx-auto leading-relaxed drop-shadow-sm">
+              Save your favorite spots, get personalized recommendations, and never miss a deal again.
+            </p>
+          </div>
 
           <Card>
             <CardHeader>
