@@ -25,6 +25,11 @@ export interface RecentlyViewedMerchant {
       rating: number;
     }>;
   }>;
+  merchant_google_ratings?: Array<{
+    google_rating: number;
+    google_review_count: number;
+    match_confidence: string | null;
+  }>;
   viewedAt: number;
 }
 
@@ -84,6 +89,11 @@ export function useRecentlyViewed() {
         rating: number;
       }>;
     }>;
+    merchant_google_ratings?: Array<{
+      google_rating: number;
+      google_review_count: number;
+      match_confidence: string | null;
+    }>;
   }) => {
     const entry: RecentlyViewedMerchant = {
       id: merchant.id,
@@ -97,6 +107,7 @@ export function useRecentlyViewed() {
         menu_type: (d.menu_type as 'food_and_drinks' | 'drinks_only' | null) ?? null,
       })),
       merchant_reviews: merchant.merchant_reviews,
+      merchant_google_ratings: merchant.merchant_google_ratings,
       viewedAt: Date.now(),
     };
 
