@@ -50,6 +50,7 @@ const Index = () => {
             menu_type: d.menu_type,
           })),
           merchant_reviews: m.merchant_reviews,
+          merchant_google_ratings: m.merchant_google_ratings,
         },
       })),
     };
