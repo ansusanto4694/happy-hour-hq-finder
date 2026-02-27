@@ -1,29 +1,30 @@
 
 
-## Problem
+## Empty State Messaging Update
 
-The Recently Viewed carousel **does** use the same card components (`CarouselCard` / `MobileCarouselCard`) as other carousels. The issue is a **data gap**: Google rating data (`merchant_google_ratings`) is never saved to localStorage, so it's unavailable when rendering the Recently Viewed carousel.
+### Problem
+When users search for locations outside NYC, the query runs slowly (hitting the normalize-location edge function as a last resort), and then shows a generic "No restaurants found" message that doesn't guide users on what to do next.
 
-## Root Cause
+### Changes
 
-1. `useRecentlyViewed.ts` -- the `RecentlyViewedMerchant` interface and `addRecentlyViewed` function don't include `merchant_google_ratings`.
-2. `Index.tsx` -- the mapping from recently viewed data to `CarouselType` doesn't pass `merchant_google_ratings` through.
-3. `RestaurantProfile.tsx` (where `addRecentlyViewed` is called) -- doesn't pass Google rating data to the hook.
+**File: `src/components/SearchResultsEmpty.tsx`**
 
-## Plan
+Replace the current generic messaging with a friendlier, actionable message:
 
-### 1. Update `useRecentlyViewed.ts`
+- **Heading**: "We aren't in your neighborhood yet!"
+- **Body**: "Reach out to andrew@sipmunchyap.com and let me know where you're coming from so I can add in your neighborhood."
+- Make the email a clickable `mailto:` link for convenience
+- Remove the time-based conditional messaging since this component is primarily hit for out-of-area searches
+- Keep it simple -- no other logic changes needed
 
-- Add `merchant_google_ratings` to the `RecentlyViewedMerchant` interface (matching the shape used by carousel cards).
-- Accept and persist `merchant_google_ratings` in `addRecentlyViewed`.
+This also applies to the `LocationLanding.tsx` page which uses the same component.
 
-### 2. Update `Index.tsx`
+### Technical Details
 
-- Include `merchant_google_ratings` in the recently viewed carousel data mapping so the card components receive it.
+- Single file change: `src/components/SearchResultsEmpty.tsx`
+- The `startTime`/`endTime` props can be kept in the interface for backward compatibility but the display will use the new unified message
+- The email will be wrapped in an anchor tag with `mailto:` for easy one-tap contact on mobile
 
-### 3. Update the call site in `RestaurantProfile.tsx`
-
-- Pass `merchant_google_ratings` when calling `addRecentlyViewed` so the data gets stored in localStorage.
-
-This is a small, surgical fix -- no new components or architectural changes needed. The cards already handle Google ratings correctly; they just need the data.
+### Note on Query Speed
+The slowness comes from the location normalization pipeline (cache miss leading to edge function call). That's a separate optimization -- this change addresses the user-facing messaging.
 
