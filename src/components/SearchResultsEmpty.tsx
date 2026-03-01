@@ -5,16 +5,16 @@ interface SearchResultsEmptyProps {
   startTime?: string;
   endTime?: string;
   location?: string;
-  hasFiltersApplied?: boolean;
+  hasLocalMerchants?: boolean;
 }
 
 export const SearchResultsEmpty: React.FC<SearchResultsEmptyProps> = ({ 
   startTime, 
   endTime, 
   location,
-  hasFiltersApplied = false,
+  hasLocalMerchants = false,
 }) => {
-  if (hasFiltersApplied) {
+  if (hasLocalMerchants) {
     return (
       <div className="space-y-4">
         <h2 className="text-xl font-semibold text-foreground">No results found for your given search criteria.</h2>
