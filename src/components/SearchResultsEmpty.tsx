@@ -5,13 +5,26 @@ interface SearchResultsEmptyProps {
   startTime?: string;
   endTime?: string;
   location?: string;
+  hasFiltersApplied?: boolean;
 }
 
 export const SearchResultsEmpty: React.FC<SearchResultsEmptyProps> = ({ 
   startTime, 
   endTime, 
-  location 
+  location,
+  hasFiltersApplied = false,
 }) => {
+  if (hasFiltersApplied) {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold text-foreground">No results found for your given search criteria.</h2>
+        <p className="text-muted-foreground">
+          Please try another search or browse around!
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-semibold text-foreground">We aren't in your neighborhood yet!</h2>

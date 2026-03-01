@@ -229,6 +229,19 @@ const Results = () => {
   const currentStartTime = effectiveStartTime;
   const currentEndTime = effectiveEndTime;
 
+  // Determine if any filters are active (used for empty state messaging)
+  const hasFiltersApplied = Boolean(
+    searchTerm ||
+    currentStartTime ||
+    currentEndTime ||
+    (effectiveDays.length > 0) ||
+    (selectedCategories.length > 0) ||
+    showOffersOnly ||
+    (selectedMenuType !== 'all') ||
+    happeningNow ||
+    happeningToday
+  );
+
   const { data: rawMerchants, isLoading, error } = useMerchants(
     selectedCategories, 
     searchTerm, 
@@ -585,6 +598,7 @@ const Results = () => {
             sortBy={sortBy}
             onSortChange={setSortBy}
             useGPS={useGPS}
+            hasFiltersApplied={hasFiltersApplied}
           />
         </div>
       )}
@@ -638,6 +652,8 @@ const Results = () => {
               happeningNow={happeningNow}
               happeningToday={happeningToday}
               sortBy={sortBy}
+              onSortChange={setSortBy}
+              hasFiltersApplied={hasFiltersApplied}
               onSortChange={setSortBy}
             />
               </div>
@@ -706,6 +722,8 @@ const Results = () => {
               happeningNow={happeningNow}
               happeningToday={happeningToday}
               sortBy={sortBy}
+              onSortChange={setSortBy}
+              hasFiltersApplied={hasFiltersApplied}
               onSortChange={setSortBy}
             />
           </div>
