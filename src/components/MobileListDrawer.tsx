@@ -50,7 +50,7 @@ interface MobileListDrawerProps {
   sortBy?: string;
   onSortChange?: (value: string) => void;
   useGPS?: boolean;
-  hasFiltersApplied?: boolean;
+  hasLocalMerchants?: boolean;
 }
 
 export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
@@ -85,7 +85,7 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
   sortBy = 'default',
   onSortChange,
   useGPS = false,
-  hasFiltersApplied = false,
+  hasLocalMerchants = false,
 }) => {
   const { track } = useAnalytics();
 
@@ -166,7 +166,7 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
             onMerchantNavigate={onMerchantNavigate}
             happeningNow={happeningNow}
             happeningToday={happeningToday}
-            hasFiltersApplied={hasFiltersApplied}
+            hasLocalMerchants={hasLocalMerchants}
           />
         </div>
       </DrawerContent>

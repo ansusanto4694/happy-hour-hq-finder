@@ -32,7 +32,7 @@ interface SearchResultsProps {
   happeningToday?: boolean;
   sortBy?: string;
   onSortChange?: (value: string) => void;
-  hasFiltersApplied?: boolean;
+  hasLocalMerchants?: boolean;
 }
 
 const RESULTS_PER_PAGE = 30;
@@ -51,7 +51,7 @@ const SearchResultsComponent: React.FC<SearchResultsProps> = ({
   happeningToday = false,
   sortBy,
   onSortChange,
-  hasFiltersApplied = false,
+  hasLocalMerchants = false,
 }) => {
   const [displayedResults, setDisplayedResults] = useState<any[]>([]);
   const [hasMore, setHasMore] = useState(true);
@@ -148,7 +148,7 @@ const SearchResultsComponent: React.FC<SearchResultsProps> = ({
         startTime={startTime} 
         endTime={endTime} 
         location={location}
-        hasFiltersApplied={hasFiltersApplied}
+        hasLocalMerchants={hasLocalMerchants}
       />
     );
   }
@@ -318,6 +318,6 @@ export const SearchResults = React.memo(SearchResultsComponent, (prevProps, next
     prevProps.happeningToday === nextProps.happeningToday &&
     prevProps.sortBy === nextProps.sortBy &&
     prevProps.onSortChange === nextProps.onSortChange &&
-    prevProps.hasFiltersApplied === nextProps.hasFiltersApplied
+    prevProps.hasLocalMerchants === nextProps.hasLocalMerchants
   );
 });

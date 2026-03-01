@@ -229,18 +229,23 @@ const Results = () => {
   const currentStartTime = effectiveStartTime;
   const currentEndTime = effectiveEndTime;
 
-  // Determine if any filters are active (used for empty state messaging)
-  const hasFiltersApplied = Boolean(
-    searchTerm ||
-    currentStartTime ||
-    currentEndTime ||
-    (effectiveDays.length > 0) ||
-    (selectedCategories.length > 0) ||
-    showOffersOnly ||
-    (selectedMenuType !== 'all') ||
-    happeningNow ||
-    happeningToday
+  // Lightweight area-only query: checks if ANY merchants exist in the searched location/radius
+  const { data: areaMerchants } = useMerchants(
+    undefined,   // no categories
+    undefined,   // no search term
+    undefined,   // no start time
+    undefined,   // no end time
+    isUsingMapSearch ? undefined : location,
+    isUsingMapSearch ? searchedBounds : undefined,
+    isUsingMapSearch ? undefined : (isRadiusEnabled ? radiusMiles : undefined),
+    false,       // no offers filter
+    undefined,   // no days
+    useGPS && gpsLat && gpsLng ? { lat: gpsLat, lng: gpsLng } : undefined,
+    undefined,   // no carousel
+    undefined,   // no neighborhood
+    'all'        // no menu type filter
   );
+  const hasLocalMerchants = (areaMerchants?.length ?? 0) > 0;
 
   const { data: rawMerchants, isLoading, error } = useMerchants(
     selectedCategories, 
@@ -598,7 +603,7 @@ const Results = () => {
             sortBy={sortBy}
             onSortChange={setSortBy}
             useGPS={useGPS}
-            hasFiltersApplied={hasFiltersApplied}
+            hasLocalMerchants={hasLocalMerchants}
           />
         </div>
       )}
@@ -653,8 +658,7 @@ const Results = () => {
               happeningToday={happeningToday}
               sortBy={sortBy}
               onSortChange={setSortBy}
-              hasFiltersApplied={hasFiltersApplied}
-              onSortChange={setSortBy}
+              hasLocalMerchants={hasLocalMerchants}
             />
               </div>
               <div className="lg:col-span-1">
@@ -723,8 +727,7 @@ const Results = () => {
               happeningToday={happeningToday}
               sortBy={sortBy}
               onSortChange={setSortBy}
-              hasFiltersApplied={hasFiltersApplied}
-              onSortChange={setSortBy}
+              hasLocalMerchants={hasLocalMerchants}
             />
           </div>
 
