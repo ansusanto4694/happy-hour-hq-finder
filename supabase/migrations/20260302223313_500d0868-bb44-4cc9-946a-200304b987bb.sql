@@ -1,0 +1,1 @@
+DELETE FROM merchant_google_ratings WHERE merchant_id BETWEEN 774 AND 813 AND match_confidence = 'no_match';
