@@ -43,18 +43,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const profileCache = useRef<{ userId: string; profile: Profile; timestamp: number } | null>(null);
   const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = async (userId: string): Promise<boolean> => {
     // Check cache first
     if (profileCache.current && 
         profileCache.current.userId === userId && 
         Date.now() - profileCache.current.timestamp < CACHE_DURATION) {
       setProfile(profileCache.current.profile);
-      return;
+      return true;
     }
 
     // Prevent duplicate fetches
     if (isFetchingProfile.current) {
-      return;
+      return false;
     }
 
     isFetchingProfile.current = true;
@@ -92,9 +92,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setIsAdmin(!!roleData);
     } catch (error) {
       console.error('Error fetching profile:', error);
+      return true;
     } finally {
       isFetchingProfile.current = false;
     }
+    return true;
   };
 
   const refreshProfile = async () => {
@@ -122,12 +124,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           // Fetch profile data when user signs in - wait for completion before setting loading false
           setTimeout(async () => {
             if (!mounted) return;
+            let didRun = false;
             try {
-              await fetchProfile(session.user.id);
+              didRun = await fetchProfile(session.user.id);
             } catch (error) {
               console.error('[Auth] Profile fetch error in onAuthStateChange:', error);
             } finally {
-              if (mounted) setLoading(false);
+              if (mounted && didRun) setLoading(false);
             }
           }, 0);
         } else {
