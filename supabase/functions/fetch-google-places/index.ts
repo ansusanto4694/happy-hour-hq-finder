@@ -38,6 +38,7 @@ function getConfidence(distanceMeters: number): string {
 interface MerchantRow {
   id: number;
   restaurant_name: string;
+  street_address: string;
   city: string;
   state: string;
   latitude: number | null;
@@ -45,7 +46,7 @@ interface MerchantRow {
 }
 
 async function fetchGoogleRating(merchant: MerchantRow) {
-  const query = `${merchant.restaurant_name} ${merchant.city} ${merchant.state}`;
+  const query = `${merchant.restaurant_name} ${merchant.street_address} ${merchant.city} ${merchant.state}`;
 
   const body: any = {
     textQuery: query,
@@ -200,7 +201,7 @@ Deno.serve(async (req) => {
 
       let query = supabase
         .from("Merchant")
-        .select("id, restaurant_name, city, state, latitude, longitude")
+        .select("id, restaurant_name, street_address, city, state, latitude, longitude")
         .eq("is_active", true)
         .order("id", { ascending: true })
         .limit(batchSize);
@@ -272,7 +273,7 @@ Deno.serve(async (req) => {
 
       const { data: merchants, error: merchantError } = await supabase
         .from("Merchant")
-        .select("id, restaurant_name, city, state, latitude, longitude")
+        .select("id, restaurant_name, street_address, city, state, latitude, longitude")
         .in("id", staleIds.slice(0, batchSize));
 
       if (merchantError) throw merchantError;
@@ -310,7 +311,7 @@ Deno.serve(async (req) => {
 
     const { data: merchant, error: merchantError } = await supabase
       .from("Merchant")
-      .select("id, restaurant_name, city, state, latitude, longitude")
+      .select("id, restaurant_name, street_address, city, state, latitude, longitude")
       .eq("id", merchantId)
       .single();
 
