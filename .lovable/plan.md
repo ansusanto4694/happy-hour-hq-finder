@@ -1,61 +1,40 @@
 
-## Fix Empty State: Check Area Merchant Count
 
-### Problem
-The current `hasFiltersApplied` approach is incorrect. Searching "Whiskey" in zip code 94112 (San Francisco) shows "No results found for your given search criteria" because the search term is considered a filter. The correct behavior: since we have **zero** merchants in 94112 at all, it should show "We aren't in your neighborhood yet!"
+# Fix: Analytics Page Redirect Due to Auth Race Condition
 
-### Correct Approach
-Run a **second lightweight query** that checks if any active merchants exist in the searched location/radius -- with no search term, no category, no time, no day, or other filters applied. Compare:
+## Problem
+When navigating to `/analytics`, the `AdminRoute` guard redirects to `/` because of a race condition between `getSession()` and `onAuthStateChange()` in the auth provider. The `loading` flag gets set to `false` before `isAdmin` has been resolved.
 
-- **Area query returns 0** -> "We aren't in your neighborhood yet!"
-- **Area query returns >0 but filtered query returns 0** -> "No results found for your given search criteria."
+## Root Cause
+In `src/hooks/useAuth.tsx` (lines 108-175):
+- `getSession()` starts `fetchProfile()`, which sets `isFetchingProfile = true`
+- `onAuthStateChange` fires with `INITIAL_SESSION` and tries `fetchProfile()` inside a `setTimeout`
+- The second call exits early due to the `isFetchingProfile` guard, but its `finally` block still sets `loading = false`
+- At that point, `isAdmin` hasn't been resolved yet, so `AdminRoute` redirects
 
-### Changes
+## Solution
+Modify `useAuth.tsx` so that `loading` is only set to `false` once — after the profile and role data have actually been fetched. Two changes:
 
-**1. `src/pages/Results.tsx`**
-- Add a second `useMerchants` call with ONLY location/radius parameters (no `searchTerm`, no `categoryIds`, no time filters, no `showOffersOnly`, no `selectedDays`, no `menuType`).
-- Compute `hasLocalMerchants = (areaMerchants?.length ?? 0) > 0`.
-- Replace the current `hasFiltersApplied` logic with `hasLocalMerchants`.
-- Pass `hasLocalMerchants` (instead of `hasFiltersApplied`) to `SearchResults` and `MobileListDrawer`.
-- Remove the duplicate `onSortChange={setSortBy}` lines introduced in the last diff.
+### 1. Make `fetchProfile` return a boolean indicating if it actually ran
+If the fetch was skipped due to the guard, the caller should NOT set `loading = false`.
 
-The second query call:
+### 2. Only set `loading = false` in `onAuthStateChange` if `fetchProfile` actually completed
+Change the `setTimeout` block so it checks whether `fetchProfile` was skipped. If skipped, don't touch `loading` — let the `getSession` path handle it.
+
+## Files Changed
+- **`src/hooks/useAuth.tsx`** — Fix the race condition by having `fetchProfile` return whether it actually ran, and only setting `loading = false` in the `onAuthStateChange` handler when the fetch wasn't skipped.
+
+## Technical Details
+
 ```text
-const { data: areaMerchants } = useMerchants(
-  undefined,   // no categories
-  undefined,   // no search term
-  undefined,   // no start time
-  undefined,   // no end time
-  location,    // same location
-  bounds,      // same bounds (if map search)
-  radiusMiles, // same radius
-  false,       // no offers filter
-  undefined,   // no days
-  gpsCoordinates, // same GPS
-  undefined,   // no carousel
-  undefined,   // no neighborhood
-  'all'        // no menu type filter
-);
+Before (race condition):
+  getSession ──> fetchProfile (sets guard) ──────────> resolves isAdmin ──> loading=false
+  onAuthStateChange ──> setTimeout ──> fetchProfile (guard hit, returns) ──> loading=false  [TOO EARLY]
+
+After (fixed):
+  getSession ──> fetchProfile (sets guard) ──────────> resolves isAdmin ──> loading=false
+  onAuthStateChange ──> setTimeout ──> fetchProfile (guard hit, returns false) ──> skips loading=false
 ```
 
-This reuses the existing `useMerchants` hook and its caching. The query is lightweight because it skips all the search/filter sub-queries.
+The fix is minimal: `fetchProfile` returns `true` if it ran, `false` if skipped. The `onAuthStateChange` handler only sets `loading = false` in its `finally` block if the fetch actually ran (returned `true`).
 
-**2. `src/components/SearchResults.tsx`**
-- Rename prop from `hasFiltersApplied` to `hasLocalMerchants` (boolean).
-- Pass it through to `SearchResultsEmpty`.
-
-**3. `src/components/SearchResultsEmpty.tsx`**
-- Rename prop from `hasFiltersApplied` to `hasLocalMerchants`.
-- If `hasLocalMerchants` is true and results are empty: show "No results found for your given search criteria."
-- If `hasLocalMerchants` is false: show "We aren't in your neighborhood yet!"
-
-**4. `src/components/MobileListDrawer.tsx`**
-- Rename prop from `hasFiltersApplied` to `hasLocalMerchants`.
-
-### Why This Works
-- Search "Whiskey" + 94112: Area query finds 0 merchants in 94112 -> "Not in your neighborhood"
-- Search "Oysters" + Williamsburg: Area query finds 69 merchants -> filtered query returns 0 -> "No results for criteria"
-- Search Williamsburg with no filters: Area query finds 69, filtered also finds 69 -> results shown normally
-
-### Bug Fix
-The last diff introduced duplicate `onSortChange={setSortBy}` props in two places in `Results.tsx`. These will be removed.
