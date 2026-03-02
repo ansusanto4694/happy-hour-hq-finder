@@ -151,15 +151,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(session?.user ?? null);
       
       if (session?.user) {
+        let didRun = false;
         try {
-          await fetchProfile(session.user.id);
+          didRun = await fetchProfile(session.user.id);
         } catch (error) {
           console.error('[Auth] Profile fetch error in getSession:', error);
         }
+        if (mounted && didRun) setLoading(false);
       } else {
         setIsAdmin(false);
+        if (mounted) setLoading(false);
       }
-      if (mounted) setLoading(false);
     });
 
     // Safety timeout - never stay loading forever (5 seconds max)
