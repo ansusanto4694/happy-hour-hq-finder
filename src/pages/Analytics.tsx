@@ -7,6 +7,8 @@ import { TrafficOverviewChart } from '@/components/analytics/TrafficOverviewChar
 import { SessionMetricsCard } from '@/components/analytics/SessionMetricsCard';
 import { TrafficSourcesChart } from '@/components/analytics/TrafficSourcesChart';
 import { DeviceBreakdownChart } from '@/components/analytics/DeviceBreakdownChart';
+import { BotTrafficCard } from '@/components/analytics/BotTrafficCard';
+import { AnalyticsComparisonCard } from '@/components/analytics/AnalyticsComparisonCard';
 import { GooglePlacesBackfill } from '@/components/GooglePlacesBackfill';
 import { SEOHead } from '@/components/SEOHead';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -138,6 +140,17 @@ export default function Analytics() {
 
             <TabsContent value="traffic" className="space-y-6">
               <TrafficOverviewChart startDate={start} endDate={end} />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <AnalyticsComparisonCard
+                  startDate={start}
+                  endDate={end}
+                  lovableVisitors={891}
+                  lovablePageviews={2521}
+                  lovableBounceRate={71}
+                  lovableAvgDuration={801}
+                />
+                <BotTrafficCard startDate={start} endDate={end} />
+              </div>
             </TabsContent>
 
             <TabsContent value="behavior" className="space-y-6">
