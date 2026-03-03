@@ -1,40 +1,46 @@
 
 
-# Fix: Analytics Page Redirect Due to Auth Race Condition
+# Add Bot Filtering Comparison to Analytics Dashboard
 
-## Problem
-When navigating to `/analytics`, the `AdminRoute` guard redirects to `/` because of a race condition between `getSession()` and `onAuthStateChange()` in the auth provider. The `loading` flag gets set to `false` before `isAdmin` has been resolved.
+## Context
+Lovable's built-in analytics (last 7 days) shows **858 visitors** and **2,450 pageviews**. Your custom Supabase analytics already filters bots via the `is_bot` flag on `user_sessions`. Here's the actual breakdown from your database for the same period:
 
-## Root Cause
-In `src/hooks/useAuth.tsx` (lines 108-175):
-- `getSession()` starts `fetchProfile()`, which sets `isFetchingProfile = true`
-- `onAuthStateChange` fires with `INITIAL_SESSION` and tries `fetchProfile()` inside a `setTimeout`
-- The second call exits early due to the `isFetchingProfile` guard, but its `finally` block still sets `loading = false`
-- At that point, `isAdmin` hasn't been resolved yet, so `AdminRoute` redirects
+- **Total sessions**: 1,096 (711 human + 385 bot)
+- **Human visitors**: ~454 unique
+- **Bot sessions**: 385 (246 unknown, 100 search engine, 39 malicious)
+- **Bot traffic**: ~35% of all sessions are bots
 
-## Solution
-Modify `useAuth.tsx` so that `loading` is only set to `false` once — after the profile and role data have actually been fetched. Two changes:
+Lovable's analytics likely includes some of this bot traffic since it uses a lightweight JS-based tracker that headless browsers and sophisticated bots can trigger.
 
-### 1. Make `fetchProfile` return a boolean indicating if it actually ran
-If the fetch was skipped due to the guard, the caller should NOT set `loading = false`.
+## Plan
 
-### 2. Only set `loading = false` in `onAuthStateChange` if `fetchProfile` actually completed
-Change the `setTimeout` block so it checks whether `fetchProfile` was skipped. If skipped, don't touch `loading` — let the `getSession` path handle it.
+### 1. Create a new comparison component: `AnalyticsComparisonCard`
+A new card for the Traffic tab that shows a side-by-side comparison table:
 
-## Files Changed
-- **`src/hooks/useAuth.tsx`** — Fix the race condition by having `fetchProfile` return whether it actually ran, and only setting `loading = false` in the `onAuthStateChange` handler when the fetch wasn't skipped.
+| Metric | Lovable Analytics | Custom (Bot-Filtered) | Difference |
+|--------|------------------|-----------------------|------------|
+| Visitors | (from Lovable API) | (from user_sessions) | delta % |
+| Pageviews | (from Lovable API) | (from user_events) | delta % |
+| Bounce Rate | (from Lovable API) | (from user_sessions) | delta % |
+| Avg Duration | (from Lovable API) | (from user_sessions) | delta % |
 
-## Technical Details
+### 2. Create a hook: `useAnalyticsComparison`
+- Fetches custom Supabase metrics (reuses existing `useTrafficOverview` and `useSessionMetrics` data)
+- Accepts Lovable analytics numbers as props (manually entered or fetched via the Lovable analytics API if available)
+- Calculates percentage differences
 
-```text
-Before (race condition):
-  getSession ──> fetchProfile (sets guard) ──────────> resolves isAdmin ──> loading=false
-  onAuthStateChange ──> setTimeout ──> fetchProfile (guard hit, returns) ──> loading=false  [TOO EARLY]
+### 3. Add bot traffic breakdown card
+A small summary card showing:
+- Total bot sessions detected
+- Breakdown by bot type (search engine, malicious, unknown)
+- Percentage of total traffic that is bots
 
-After (fixed):
-  getSession ──> fetchProfile (sets guard) ──────────> resolves isAdmin ──> loading=false
-  onAuthStateChange ──> setTimeout ──> fetchProfile (guard hit, returns false) ──> skips loading=false
-```
+### 4. Add to Analytics page
+Place the comparison card and bot breakdown card in the Traffic tab, below the existing `TrafficOverviewChart`.
 
-The fix is minimal: `fetchProfile` returns `true` if it ran, `false` if skipped. The `onAuthStateChange` handler only sets `loading = false` in its `finally` block if the fetch actually ran (returned `true`).
+## Files to create/modify
+- **`src/components/analytics/BotTrafficCard.tsx`** -- New component showing bot breakdown
+- **`src/components/analytics/AnalyticsComparisonCard.tsx`** -- New component with side-by-side comparison
+- **`src/hooks/useBotTraffic.ts`** -- New hook querying bot session data from `user_sessions`
+- **`src/pages/Analytics.tsx`** -- Add the two new components to the Traffic tab
 
