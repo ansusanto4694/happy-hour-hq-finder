@@ -353,6 +353,17 @@ export const LocationLanding = () => {
 
   const radiusMiles = getRadiusMiles(selectedRadius);
 
+  // Fetch unfiltered merchants first to build neighborhood centers and options (only for city pages)
+  const { data: allMerchants } = useMerchants(
+    undefined, undefined, undefined, undefined,
+    locationString,
+    undefined,
+    50, // large radius
+    undefined, undefined, undefined, undefined,
+    undefined, // no neighborhood filter
+    'all'
+  );
+
   // Compute neighborhood centers by averaging lat/lng of merchants tagged with each neighborhood
   const neighborhoodCenters = useMemo(() => {
     if (!allMerchants?.length) return {};
@@ -425,17 +436,6 @@ export const LocationLanding = () => {
     else if (sortBy === 'most_reviewed') sorted.sort((a, b) => getEffectiveReviewCount(b) - getEffectiveReviewCount(a));
     return sorted;
   }, [rawMerchants, sortBy]);
-
-  // Also fetch unfiltered merchants to build neighborhood list (only for city pages)
-  const { data: allMerchants } = useMerchants(
-    undefined, undefined, undefined, undefined,
-    locationString,
-    undefined,
-    50, // large radius
-    undefined, undefined, undefined, undefined,
-    undefined, // no neighborhood filter
-    'all'
-  );
 
   // Get unique neighborhoods with counts from unfiltered data
   const neighborhoodOptions = useMemo(() => {
