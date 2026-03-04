@@ -1,18 +1,50 @@
 
+Issue identified from logs and code, step by step:
 
-# Fix: "Cannot access 'neighborhoodCenters' before initialization"
+1) Runtime logs show:
+- `ReferenceError: Cannot access 'allMerchants' before initialization`
+- at `LocationLanding.tsx` around line `367`
 
-## Root Cause
+2) In `src/pages/LocationLanding.tsx`:
+- `neighborhoodCenters` is computed with `useMemo` around lines `357-373`
+- That memo references `allMerchants` (both inside the callback and in `[allMerchants]` dependencies)
 
-In `LocationLanding.tsx`, the variable `neighborhoodCenters` is **used on line 359** but **declared on line 436**. JavaScript `const` declarations are not hoisted, so referencing it before its definition throws a `ReferenceError`.
+3) `allMerchants` is declared later (around line `430`) via:
+- `const { data: allMerchants } = useMerchants(...)`
 
-## Fix
+4) Because `allMerchants` is a `const`, this is a temporal dead zone error:
+- `neighborhoodCenters` tries to read `allMerchants` before declaration
+- React crashes and `ErrorBoundary` shows “Something went wrong”
 
-Move the `neighborhoodCenters` `useMemo` block (currently around lines 436-460) **above** line 359, so it's declared before it's referenced. Specifically, it should go right before the line `const neighborhoodCenter = selectedNeighborhood ? neighborhoodCenters[selectedNeighborhood] : undefined;`.
+Why this happened:
+- The previous fix moved `neighborhoodCenters` earlier to solve the `neighborhoodCenters` ordering bug, but it ended up before `allMerchants`, creating a new initialization-order bug.
 
-No other changes needed — just reordering the declaration.
+Implementation plan to fix:
 
-### File: `src/pages/LocationLanding.tsx`
-- Cut the `neighborhoodCenters` `useMemo` block from ~line 436
-- Paste it before line 359 (after the `radiusMiles` declaration on line 354)
+1) Reorder declarations in `LocationLanding.tsx` so `allMerchants` is declared before `neighborhoodCenters`.
+   - Keep hooks unconditional.
+   - No logic changes, only order.
 
+2) Keep `neighborhoodCenters` before first usage:
+   - It must stay above `const neighborhoodCenter = ...`
+   - But below `const { data: allMerchants } = useMerchants(...)`
+
+3) Recommended stable order in the data section:
+```text
+radiusMiles
+allMerchants query
+neighborhoodCenters memo
+neighborhoodCenter/useGeoNeighborhood derived values
+rawMerchants query
+sorted merchants memo
+neighborhoodOptions memo
+```
+
+4) Validate after reorder:
+- Select neighborhood on `/happy-hour/new-york-ny`
+- Confirm no error boundary
+- Confirm radius auto-sets to Nearby
+- Expand radius (walking/bike) and results update
+- Clear filters and confirm reset behavior
+
+This is a pure initialization-order fix; no backend or edge-function changes are needed.
