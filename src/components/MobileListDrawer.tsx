@@ -51,6 +51,9 @@ interface MobileListDrawerProps {
   onSortChange?: (value: string) => void;
   useGPS?: boolean;
   hasLocalMerchants?: boolean;
+  neighborhoods?: { name: string; count: number }[];
+  selectedNeighborhood?: string | null;
+  onNeighborhoodChange?: (value: string | null) => void;
 }
 
 export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
@@ -86,6 +89,9 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
   onSortChange,
   useGPS = false,
   hasLocalMerchants = false,
+  neighborhoods,
+  selectedNeighborhood,
+  onNeighborhoodChange,
 }) => {
   const { track } = useAnalytics();
 
@@ -146,6 +152,9 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
               locationType={locationType}
               onClearAllFilters={onClearAllFilters}
               useGPS={useGPS}
+              neighborhoods={neighborhoods}
+              selectedNeighborhood={selectedNeighborhood}
+              onNeighborhoodChange={onNeighborhoodChange}
             />
           </div>
         </DrawerHeader>

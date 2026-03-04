@@ -28,6 +28,9 @@ interface MobileFilterDrawerProps {
   happeningToday?: boolean;
   onHappeningTodayChange?: (value: boolean) => void;
   locationType?: string | null;
+  neighborhoods?: { name: string; count: number }[];
+  selectedNeighborhood?: string | null;
+  onNeighborhoodChange?: (value: string | null) => void;
 }
 
 export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
@@ -54,6 +57,9 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
   happeningToday,
   onHappeningTodayChange,
   locationType,
+  neighborhoods,
+  selectedNeighborhood,
+  onNeighborhoodChange,
 }) => {
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = React.useState(false);
   const smartDefault = getSmartDefaultRadius(locationType ?? null, useGPS);
@@ -120,6 +126,9 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
         onHappeningTodayChange={onHappeningTodayChange}
         locationType={locationType}
         onClearAllFilters={onClearAllFilters}
+        neighborhoods={neighborhoods}
+        selectedNeighborhood={selectedNeighborhood}
+        onNeighborhoodChange={onNeighborhoodChange}
       />
     </>
   );
