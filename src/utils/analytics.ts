@@ -128,9 +128,16 @@ const sendToGA4 = (eventName: string, eventParams?: Record<string, any>) => {
     const utmParams = getUtmParameters();
     const referrerInfo = categorizeReferrer(document.referrer);
     
+    // Get bot detection status (cached in sessionStorage after session init)
+    const cachedIsBot = sessionStorage.getItem('analytics_is_bot') === 'true';
+    const cachedBotType = sessionStorage.getItem('analytics_bot_type') || null;
+    
     // Enrich with traffic source data for better attribution
     const enrichedParams: Record<string, any> = {
       ...cleanedParams,
+      // Bot detection dimensions (for GA4 filtering)
+      is_bot: cachedIsBot,
+      bot_type: cachedBotType || '(none)',
       // Traffic source attribution
       traffic_source: referrerInfo.traffic_source,
       traffic_medium: utmParams.utm_medium || referrerInfo.category || 'none',
@@ -933,8 +940,17 @@ export const initializeSession = async (forceReinitialize: boolean = false) => {
     sessionInitialized = true;
     sessionStorage.setItem(sessionInitKey, 'true');
     
-    // Cache is_bot status in sessionStorage to avoid DB query in updateSessionActivity
+    // Cache bot detection in sessionStorage for GA4 dimensions and session updates
     sessionStorage.setItem('analytics_is_bot', botDetection.isBot.toString());
+    sessionStorage.setItem('analytics_bot_type', botDetection.botType || '');
+    
+    // Set GA4 user properties for bot filtering in reports
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('set', 'user_properties', {
+        is_bot: botDetection.isBot,
+        bot_type: botDetection.botType || '(none)',
+      });
+    }
     
     // Initialize local counters for optimized session updates
     if (!sessionStorage.getItem('analytics_page_view_count')) {
