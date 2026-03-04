@@ -9,6 +9,7 @@ export type BotType =
   | 'social_media'
   | 'monitoring'
   | 'malicious'
+  | 'suspicious'
   | 'unknown';
 
 export interface BotDetectionResult {
@@ -17,79 +18,71 @@ export interface BotDetectionResult {
   botName: string | null;
 }
 
+// Current Chrome major version (as of March 2026)
+const CURRENT_CHROME_VERSION = 134;
+const OUTDATED_THRESHOLD = 3; // Flag if 3+ versions behind
+
 // Search engine bots (good for SEO)
 const searchEngineBots = [
-  'Googlebot',
-  'Bingbot',
-  'Slurp', // Yahoo
-  'DuckDuckBot',
-  'Baiduspider',
-  'YandexBot',
-  'Sogou',
-  'Exabot',
+  'Googlebot', 'Bingbot', 'Slurp', 'DuckDuckBot',
+  'Baiduspider', 'YandexBot', 'Sogou', 'Exabot',
 ];
 
 // SEO and web analysis tools
 const seoToolBots = [
-  'AhrefsBot',
-  'SemrushBot',
-  'MJ12bot',
-  'DotBot',
-  'Rogerbot',
-  'SEOkicks',
-  'SeznamBot',
-  'LinkpadBot',
-  'MegaIndex',
-  'BLEXBot',
-  'DataForSeoBot',
+  'AhrefsBot', 'SemrushBot', 'MJ12bot', 'DotBot',
+  'Rogerbot', 'SEOkicks', 'SeznamBot', 'LinkpadBot',
+  'MegaIndex', 'BLEXBot', 'DataForSeoBot',
 ];
 
 // Social media crawlers
 const socialMediaBots = [
-  'facebookexternalhit',
-  'Twitterbot',
-  'LinkedInBot',
-  'Pinterestbot',
-  'Slackbot',
-  'TelegramBot',
-  'WhatsApp',
-  'Discordbot',
+  'facebookexternalhit', 'Twitterbot', 'LinkedInBot',
+  'Pinterestbot', 'Slackbot', 'TelegramBot', 'WhatsApp', 'Discordbot',
 ];
 
 // Monitoring and uptime services
 const monitoringBots = [
-  'UptimeRobot',
-  'Pingdom',
-  'StatusCake',
-  'Site24x7',
-  'Netcraft',
-  'GTmetrix',
-  'WebPageTest',
+  'UptimeRobot', 'Pingdom', 'StatusCake', 'Site24x7',
+  'Netcraft', 'GTmetrix', 'WebPageTest',
 ];
 
 // Potentially malicious or unwanted scrapers
 const maliciousBots = [
-  'scrapy',
-  'curl',
-  'wget',
-  'python-requests',
-  'Go-http-client',
-  'libwww-perl',
-  'Apache-HttpClient',
-  'okhttp',
-  'axios',
-  'node-fetch',
+  'scrapy', 'curl', 'wget', 'python-requests',
+  'Go-http-client', 'libwww-perl', 'Apache-HttpClient',
+  'okhttp', 'axios', 'node-fetch',
 ];
 
 // Headless browser indicators
 const headlessBrowserPatterns = [
-  'HeadlessChrome',
-  'PhantomJS',
-  'Puppeteer',
-  'Selenium',
-  'webdriver',
-  'Playwright',
+  'HeadlessChrome', 'PhantomJS', 'Puppeteer',
+  'Selenium', 'webdriver', 'Playwright',
 ];
+
+/**
+ * Extract Chrome major version from user agent string
+ */
+const getChromeVersion = (userAgent: string): number | null => {
+  const match = userAgent.match(/Chrome\/(\d+)/);
+  return match ? parseInt(match[1], 10) : null;
+};
+
+/**
+ * Check if user agent is Linux x86_64 desktop (suspicious for a NYC happy hour site)
+ */
+const isLinuxDesktop = (userAgent: string): boolean => {
+  return userAgent.includes('X11; Linux x86_64') && !userAgent.includes('Android');
+};
+
+/**
+ * Check if Chrome version is outdated (3+ major versions behind current)
+ */
+const isOutdatedChrome = (userAgent: string): boolean => {
+  const version = getChromeVersion(userAgent);
+  if (version === null) return false;
+  return version <= (CURRENT_CHROME_VERSION - OUTDATED_THRESHOLD);
+};
 
 /**
  * Detect if the current session is from a bot
@@ -97,126 +90,92 @@ const headlessBrowserPatterns = [
 export const detectBot = (): BotDetectionResult => {
   const userAgent = navigator.userAgent;
   
-  // Check if user agent exists (basic sanity check)
   if (!userAgent || userAgent.trim() === '') {
-    return {
-      isBot: true,
-      botType: 'unknown',
-      botName: 'No User Agent',
-    };
+    return { isBot: true, botType: 'unknown', botName: 'No User Agent' };
   }
 
-  // Check for search engine bots
+  // Check known bot lists
   for (const botName of searchEngineBots) {
     if (userAgent.includes(botName)) {
-      return {
-        isBot: true,
-        botType: 'search_engine',
-        botName,
-      };
+      return { isBot: true, botType: 'search_engine', botName };
     }
   }
-
-  // Check for SEO tool bots
   for (const botName of seoToolBots) {
     if (userAgent.includes(botName)) {
-      return {
-        isBot: true,
-        botType: 'seo_tool',
-        botName,
-      };
+      return { isBot: true, botType: 'seo_tool', botName };
     }
   }
-
-  // Check for social media bots
   for (const botName of socialMediaBots) {
     if (userAgent.includes(botName)) {
-      return {
-        isBot: true,
-        botType: 'social_media',
-        botName,
-      };
+      return { isBot: true, botType: 'social_media', botName };
     }
   }
-
-  // Check for monitoring bots
   for (const botName of monitoringBots) {
     if (userAgent.includes(botName)) {
-      return {
-        isBot: true,
-        botType: 'monitoring',
-        botName,
-      };
+      return { isBot: true, botType: 'monitoring', botName };
     }
   }
-
-  // Check for malicious/scraper bots
   for (const botName of maliciousBots) {
     if (userAgent.toLowerCase().includes(botName.toLowerCase())) {
-      return {
-        isBot: true,
-        botType: 'malicious',
-        botName,
-      };
+      return { isBot: true, botType: 'malicious', botName };
     }
   }
-
-  // Check for headless browsers
   for (const pattern of headlessBrowserPatterns) {
     if (userAgent.includes(pattern)) {
-      return {
-        isBot: true,
-        botType: 'malicious',
-        botName: pattern,
-      };
+      return { isBot: true, botType: 'malicious', botName: pattern };
     }
   }
 
-  // Check for generic bot indicators in user agent
-  const botIndicators = [
-    'bot',
-    'crawler',
-    'spider',
-    'scraper',
-    'crawling',
-  ];
-
+  // Generic bot indicators
+  const botIndicators = ['bot', 'crawler', 'spider', 'scraper', 'crawling'];
   for (const indicator of botIndicators) {
     if (userAgent.toLowerCase().includes(indicator)) {
-      return {
-        isBot: true,
-        botType: 'unknown',
-        botName: `Generic Bot (${indicator})`,
-      };
+      return { isBot: true, botType: 'unknown', botName: `Generic Bot (${indicator})` };
     }
   }
 
-  // Additional checks for bot-like behavior
-  
-  // Check for webdriver (automation tools)
+  // --- Sophisticated bot heuristics ---
+
+  // Linux x86_64 desktop with outdated Chrome = almost certainly a scraper/bot
+  if (isLinuxDesktop(userAgent) && isOutdatedChrome(userAgent)) {
+    const version = getChromeVersion(userAgent);
+    return {
+      isBot: true,
+      botType: 'suspicious',
+      botName: `Linux Desktop + Outdated Chrome/${version}`,
+    };
+  }
+
+  // Linux x86_64 desktop alone is suspicious for a NYC restaurant site
+  if (isLinuxDesktop(userAgent)) {
+    return {
+      isBot: true,
+      botType: 'suspicious',
+      botName: 'Linux Desktop (X11)',
+    };
+  }
+
+  // Outdated Chrome on any platform (3+ versions behind)
+  if (isOutdatedChrome(userAgent)) {
+    const version = getChromeVersion(userAgent);
+    return {
+      isBot: true,
+      botType: 'suspicious',
+      botName: `Outdated Chrome/${version}`,
+    };
+  }
+
+  // WebDriver detection
   if ('webdriver' in navigator && (navigator as any).webdriver) {
-    return {
-      isBot: true,
-      botType: 'malicious',
-      botName: 'WebDriver Detection',
-    };
+    return { isBot: true, botType: 'malicious', botName: 'WebDriver Detection' };
   }
 
-  // Check for missing/suspicious viewport
+  // No viewport
   if (window.innerWidth === 0 || window.innerHeight === 0) {
-    return {
-      isBot: true,
-      botType: 'unknown',
-      botName: 'No Viewport',
-    };
+    return { isBot: true, botType: 'unknown', botName: 'No Viewport' };
   }
 
-  // If all checks pass, likely a human user
-  return {
-    isBot: false,
-    botType: null,
-    botName: null,
-  };
+  return { isBot: false, botType: null, botName: null };
 };
 
 /**
@@ -224,19 +183,13 @@ export const detectBot = (): BotDetectionResult => {
  */
 export const getBotTypeDescription = (botType: BotType | null): string => {
   switch (botType) {
-    case 'search_engine':
-      return 'Search Engine Crawler';
-    case 'seo_tool':
-      return 'SEO Analysis Tool';
-    case 'social_media':
-      return 'Social Media Bot';
-    case 'monitoring':
-      return 'Uptime Monitoring Service';
-    case 'malicious':
-      return 'Scraper/Malicious Bot';
-    case 'unknown':
-      return 'Unknown Bot';
-    default:
-      return 'Human User';
+    case 'search_engine': return 'Search Engine Crawler';
+    case 'seo_tool': return 'SEO Analysis Tool';
+    case 'social_media': return 'Social Media Bot';
+    case 'monitoring': return 'Uptime Monitoring Service';
+    case 'malicious': return 'Scraper/Malicious Bot';
+    case 'suspicious': return 'Suspicious Traffic (Linux/Outdated Browser)';
+    case 'unknown': return 'Unknown Bot';
+    default: return 'Human User';
   }
 };
