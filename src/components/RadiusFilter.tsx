@@ -109,7 +109,7 @@ export const getSmartDefaultRadius = (
 
   // Neighborhood-level is tight
   if (normalized.includes('neighborhood') || normalized.includes('locality')) {
-    return 'walking';
+    return 'blocks';
   }
 
   // ZIP code
