@@ -554,7 +554,9 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
           <div className="space-y-3">
             <div className="border rounded-lg p-2 bg-white">
               <div className="flex items-center justify-between mb-1">
-                <h4 className="font-medium text-sm">Distance</h4>
+                <h4 className="font-medium text-sm">
+                  {selectedNeighborhood ? `Distance from ${selectedNeighborhood}` : 'Distance'}
+                </h4>
                 <Button
                   variant="ghost"
                   size="sm"
