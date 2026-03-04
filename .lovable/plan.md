@@ -1,50 +1,37 @@
 
-Issue identified from logs and code, step by step:
 
-1) Runtime logs show:
-- `ReferenceError: Cannot access 'allMerchants' before initialization`
-- at `LocationLanding.tsx` around line `367`
+## Your idea — in plain English
 
-2) In `src/pages/LocationLanding.tsx`:
-- `neighborhoodCenters` is computed with `useMemo` around lines `357-373`
-- That memo references `allMerchants` (both inside the callback and in `[allMerchants]` dependencies)
+**Your proposal is absolutely valid and a great idea.** Here's why:
 
-3) `allMerchants` is declared later (around line `430`) via:
-- `const { data: allMerchants } = useMerchants(...)`
+Right now, if someone lands on `/happy-hour/new-york-ny/west-village`, they see West Village results — but there's no way to browse other neighborhoods from that page. They're stuck. The neighborhood filter dropdown doesn't even show up on neighborhood pages. It's like walking into a store that only has one aisle and no signs pointing to the rest of the store.
 
-4) Because `allMerchants` is a `const`, this is a temporal dead zone error:
-- `neighborhoodCenters` tries to read `allMerchants` before declaration
-- React crashes and `ErrorBoundary` shows “Something went wrong”
+Your idea: **show the same neighborhood dropdown on neighborhood pages, just pre-selected to the current one.** If someone picks "Williamsburg" from the dropdown, the page navigates to `/new-york-ny/williamsburg`. If they clear it, they go back to `/new-york-ny` (the full city view). Simple, intuitive, and it turns a dead-end page into a discovery tool.
 
-Why this happened:
-- The previous fix moved `neighborhoodCenters` earlier to solve the `neighborhoodCenters` ordering bug, but it ended up before `allMerchants`, creating a new initialization-order bug.
+## What's wrong today (no code jargon)
 
-Implementation plan to fix:
+Two things block this:
 
-1) Reorder declarations in `LocationLanding.tsx` so `allMerchants` is declared before `neighborhoodCenters`.
-   - Keep hooks unconditional.
-   - No logic changes, only order.
+1. **The neighborhood dropdown is deliberately hidden** on neighborhood pages. The code says: "if we're already on a neighborhood page, don't show any neighborhood options." So the filter just doesn't appear.
 
-2) Keep `neighborhoodCenters` before first usage:
-   - It must stay above `const neighborhoodCenter = ...`
-   - But below `const { data: allMerchants } = useMerchants(...)`
+2. **Picking a neighborhood uses a search parameter** (like `?neighborhood=Williamsburg`) instead of changing the URL path. So even if we showed the dropdown, selecting a new neighborhood wouldn't take you to its dedicated page — it would just tack on a filter to the current page.
 
-3) Recommended stable order in the data section:
-```text
-radiusMiles
-allMerchants query
-neighborhoodCenters memo
-neighborhoodCenter/useGeoNeighborhood derived values
-rawMerchants query
-sorted merchants memo
-neighborhoodOptions memo
-```
+## What we'll change
 
-4) Validate after reorder:
-- Select neighborhood on `/happy-hour/new-york-ny`
-- Confirm no error boundary
-- Confirm radius auto-sets to Nearby
-- Expand radius (walking/bike) and results update
-- Clear filters and confirm reset behavior
+**Three small changes, all in one file** (`LocationLanding.tsx`):
 
-This is a pure initialization-order fix; no backend or edge-function changes are needed.
+1. **Always show the neighborhood dropdown** — remove the rule that hides it on neighborhood pages. Whether you're on the city page or a specific neighborhood page, the dropdown appears with all available neighborhoods listed.
+
+2. **Pre-select the current neighborhood** — if you're on `/west-village`, the dropdown shows "West Village" already selected, so you know where you are.
+
+3. **Navigate to the new neighborhood URL when you pick one** — instead of adding a search parameter, selecting "Williamsburg" takes you to `/happy-hour/new-york-ny/williamsburg`. Clearing the filter takes you back to `/happy-hour/new-york-ny`. This keeps your SEO-friendly URLs intact and makes the browser back button work naturally.
+
+Also applies the same geo-radius filtering (center-of-neighborhood + distance) for URL-based neighborhood pages, not just dropdown selections — so the distance slider works consistently everywhere.
+
+## The user experience after this change
+
+- **Land on** `/new-york-ny/west-village` → see West Village results, dropdown shows "West Village" selected
+- **Pick "Williamsburg"** from dropdown → URL changes to `/new-york-ny/williamsburg`, results update
+- **Clear the filter** → URL changes to `/new-york-ny`, see all city results
+- **Distance slider** works the same way on all views
+
