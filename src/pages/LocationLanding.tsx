@@ -353,6 +353,25 @@ export const LocationLanding = () => {
 
   const radiusMiles = getRadiusMiles(selectedRadius);
 
+  // Compute neighborhood centers by averaging lat/lng of merchants tagged with each neighborhood
+  const neighborhoodCenters = useMemo(() => {
+    if (!allMerchants?.length) return {};
+    const acc: Record<string, { sumLat: number; sumLng: number; count: number }> = {};
+    allMerchants.forEach(m => {
+      if (m.neighborhood && m.latitude && m.longitude) {
+        if (!acc[m.neighborhood]) acc[m.neighborhood] = { sumLat: 0, sumLng: 0, count: 0 };
+        acc[m.neighborhood].sumLat += Number(m.latitude);
+        acc[m.neighborhood].sumLng += Number(m.longitude);
+        acc[m.neighborhood].count += 1;
+      }
+    });
+    const centers: Record<string, { lat: number; lng: number }> = {};
+    for (const [name, data] of Object.entries(acc)) {
+      centers[name] = { lat: data.sumLat / data.count, lng: data.sumLng / data.count };
+    }
+    return centers;
+  }, [allMerchants]);
+
   // ── Data fetching ──
   // When a neighborhood is selected from the dropdown, use geo-radius filtering
   // instead of DB column matching for better results
@@ -432,24 +451,6 @@ export const LocationLanding = () => {
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [allMerchants, neighborhood]);
 
-  // Compute neighborhood centers by averaging lat/lng of merchants tagged with each neighborhood
-  const neighborhoodCenters = useMemo(() => {
-    if (!allMerchants?.length) return {};
-    const acc: Record<string, { sumLat: number; sumLng: number; count: number }> = {};
-    allMerchants.forEach(m => {
-      if (m.neighborhood && m.latitude && m.longitude) {
-        if (!acc[m.neighborhood]) acc[m.neighborhood] = { sumLat: 0, sumLng: 0, count: 0 };
-        acc[m.neighborhood].sumLat += Number(m.latitude);
-        acc[m.neighborhood].sumLng += Number(m.longitude);
-        acc[m.neighborhood].count += 1;
-      }
-    });
-    const centers: Record<string, { lat: number; lng: number }> = {};
-    for (const [name, data] of Object.entries(acc)) {
-      centers[name] = { lat: data.sumLat / data.count, lng: data.sumLng / data.count };
-    }
-    return centers;
-  }, [allMerchants]);
 
   // Determine if this is an invalid location (404 case)
   const isInvalidLocation = useMemo(() => {
