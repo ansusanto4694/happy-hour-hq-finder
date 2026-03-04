@@ -10,6 +10,7 @@ import { ChevronDown, ChevronRight, Clock, CalendarDays } from 'lucide-react';
 import { useCategoriesHierarchy } from '@/hooks/useCategories';
 import { RadiusOption, getSmartDefaultRadius } from './RadiusFilter';
 import { TimeDropdown } from './TimeDropdown';
+import { NeighborhoodFilter } from './NeighborhoodFilter';
 import { useAnalytics } from '@/hooks/useAnalytics';
 
 interface UnifiedFilterBarProps {
@@ -36,6 +37,9 @@ interface UnifiedFilterBarProps {
   onHappeningTodayChange?: (value: boolean) => void;
   locationType?: string | null;
   onClearAllFilters?: () => void;
+  neighborhoods?: { name: string; count: number }[];
+  selectedNeighborhood?: string | null;
+  onNeighborhoodChange?: (value: string | null) => void;
 }
 
 const RADIUS_OPTIONS: { value: RadiusOption; label: string; disabled?: boolean }[] = [
@@ -80,6 +84,9 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
   onHappeningTodayChange,
   locationType = null,
   onClearAllFilters,
+  neighborhoods,
+  selectedNeighborhood,
+  onNeighborhoodChange,
 }) => {
   const smartDefault = getSmartDefaultRadius(locationType, useGPS);
   const { getParentCategories, getSubCategories, isLoading } = useCategoriesHierarchy();
@@ -233,6 +240,7 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
       onMenuTypeChange('all');
       if (onHappeningNowChange) onHappeningNowChange(false);
       if (onHappeningTodayChange) onHappeningTodayChange(false);
+      if (onNeighborhoodChange) onNeighborhoodChange(null);
     }
   };
 
@@ -241,7 +249,7 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
   }
 
   const parentCategories = getParentCategories();
-  const hasAnyFilters = selectedCategories.length > 0 || selectedRadius !== smartDefault || showOffersOnly || selectedDays.length > 0 || startTime || endTime || selectedMenuType !== 'all' || happeningNow || happeningToday;
+  const hasAnyFilters = selectedCategories.length > 0 || selectedRadius !== smartDefault || showOffersOnly || selectedDays.length > 0 || startTime || endTime || selectedMenuType !== 'all' || happeningNow || happeningToday || !!selectedNeighborhood;
 
   return (
     <Card className="h-fit">
@@ -324,6 +332,15 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
               onCheckedChange={onShowOffersChange}
             />
           </div>
+
+          {/* Neighborhood filter (only on location landing pages) */}
+          {neighborhoods && neighborhoods.length > 0 && onNeighborhoodChange && (
+            <NeighborhoodFilter
+              neighborhoods={neighborhoods}
+              selected={selectedNeighborhood ?? null}
+              onChange={onNeighborhoodChange}
+            />
+          )}
 
           {/* Selected categories badges */}
           {selectedCategories.length > 0 && (
