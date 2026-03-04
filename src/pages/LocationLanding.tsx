@@ -7,7 +7,7 @@ import { SearchResultCard } from '@/components/SearchResultCard';
 import { SearchResultsLoading } from '@/components/SearchResultsLoading';
 import { SearchResultsEmpty } from '@/components/SearchResultsEmpty';
 import { UnifiedFilterBar } from '@/components/UnifiedFilterBar';
-import { NeighborhoodFilter } from '@/components/NeighborhoodFilter';
+
 import { LazyResultsMap } from '@/components/LazyResultsMap';
 import { Button } from '@/components/ui/button';
 import { MapPin, Clock, Utensils } from 'lucide-react';
@@ -297,8 +297,18 @@ export const LocationLanding = () => {
 
   const setSelectedNeighborhood = (value: string | null) => {
     const newParams = new URLSearchParams(searchParams);
-    if (value) newParams.set('neighborhood', value);
-    else newParams.delete('neighborhood');
+    if (value) {
+      newParams.set('neighborhood', value);
+      // Auto-set radius to "blocks" (0.25mi) when selecting a neighborhood
+      newParams.set('radius', 'blocks');
+    } else {
+      newParams.delete('neighborhood');
+      // Reset radius to smart default when clearing neighborhood
+      const defaultRadius = getSmartDefaultRadius('city', false);
+      if (defaultRadius !== selectedRadius) {
+        newParams.delete('radius');
+      }
+    }
     newParams.delete('page');
     setSearchParams(newParams, { replace: true });
     
@@ -344,22 +354,24 @@ export const LocationLanding = () => {
   const radiusMiles = getRadiusMiles(selectedRadius);
 
   // ── Data fetching ──
-  // For the city page we pass the neighborhood filter from the dropdown, not the URL slug
-  const effectiveNeighborhood = neighborhood || selectedNeighborhood || undefined;
+  // When a neighborhood is selected from the dropdown, use geo-radius filtering
+  // instead of DB column matching for better results
+  const neighborhoodCenter = selectedNeighborhood ? neighborhoodCenters[selectedNeighborhood] : undefined;
+  const useGeoNeighborhood = !!neighborhoodCenter && !neighborhood; // only for dropdown selection, not URL slug
 
   const { data: rawMerchants, isLoading, isFetched } = useMerchants(
     selectedCategories.length > 0 ? selectedCategories : undefined,
     undefined, // searchTerm
     effectiveStartTime || undefined,
     effectiveEndTime || undefined,
-    isUsingMapSearch ? undefined : locationString,
+    isUsingMapSearch ? undefined : (useGeoNeighborhood ? undefined : locationString),
     isUsingMapSearch ? searchedBounds : undefined,
     isUsingMapSearch ? undefined : radiusMiles,
     showOffersOnly || undefined,
     effectiveDays.length > 0 ? effectiveDays : undefined,
-    undefined, // gpsCoordinates
+    useGeoNeighborhood ? neighborhoodCenter : undefined, // gpsCoordinates from neighborhood center
     undefined, // carouselId
-    effectiveNeighborhood,
+    neighborhood || undefined, // only pass DB neighborhood filter for URL slug pages
     selectedMenuType
   );
 
@@ -419,6 +431,25 @@ export const LocationLanding = () => {
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [allMerchants, neighborhood]);
+
+  // Compute neighborhood centers by averaging lat/lng of merchants tagged with each neighborhood
+  const neighborhoodCenters = useMemo(() => {
+    if (!allMerchants?.length) return {};
+    const acc: Record<string, { sumLat: number; sumLng: number; count: number }> = {};
+    allMerchants.forEach(m => {
+      if (m.neighborhood && m.latitude && m.longitude) {
+        if (!acc[m.neighborhood]) acc[m.neighborhood] = { sumLat: 0, sumLng: 0, count: 0 };
+        acc[m.neighborhood].sumLat += Number(m.latitude);
+        acc[m.neighborhood].sumLng += Number(m.longitude);
+        acc[m.neighborhood].count += 1;
+      }
+    });
+    const centers: Record<string, { lat: number; lng: number }> = {};
+    for (const [name, data] of Object.entries(acc)) {
+      centers[name] = { lat: data.sumLat / data.count, lng: data.sumLng / data.count };
+    }
+    return centers;
+  }, [allMerchants]);
 
   // Determine if this is an invalid location (404 case)
   const isInvalidLocation = useMemo(() => {
@@ -667,8 +698,11 @@ export const LocationLanding = () => {
                   onHappeningNowChange={setHappeningNow}
                   happeningToday={happeningToday}
                   onHappeningTodayChange={setHappeningToday}
-                  locationType="city"
-                  onClearAllFilters={handleClearAllFilters}
+                    locationType="city"
+                    onClearAllFilters={handleClearAllFilters}
+                    neighborhoods={!neighborhood ? neighborhoodOptions : undefined}
+                    selectedNeighborhood={selectedNeighborhood}
+                    onNeighborhoodChange={setSelectedNeighborhood}
                 />
               </div>
 
