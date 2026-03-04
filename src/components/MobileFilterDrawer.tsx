@@ -31,6 +31,7 @@ interface MobileFilterDrawerProps {
   neighborhoods?: { name: string; count: number }[];
   selectedNeighborhood?: string | null;
   onNeighborhoodChange?: (value: string | null) => void;
+  isNeighborhoodPage?: boolean;
 }
 
 export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
@@ -60,6 +61,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
   neighborhoods,
   selectedNeighborhood,
   onNeighborhoodChange,
+  isNeighborhoodPage = false,
 }) => {
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = React.useState(false);
   const smartDefault = getSmartDefaultRadius(locationType ?? null, useGPS);
@@ -129,6 +131,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
         neighborhoods={neighborhoods}
         selectedNeighborhood={selectedNeighborhood}
         onNeighborhoodChange={onNeighborhoodChange}
+        isNeighborhoodPage={isNeighborhoodPage}
       />
     </>
   );

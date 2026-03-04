@@ -2,7 +2,7 @@ import React from 'react';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
-export type RadiusOption = 'blocks' | 'walking' | 'bike' | 'drive' | 'city';
+export type RadiusOption = 'neighborhood' | 'blocks' | 'walking' | 'bike' | 'drive' | 'city';
 
 interface RadiusFilterProps {
   selectedRadius: RadiusOption;
@@ -74,6 +74,7 @@ export const RadiusFilter: React.FC<RadiusFilterProps> = ({
 // Helper function to get miles from radius option
 export const getRadiusMiles = (radius: RadiusOption | null): number => {
   const radiusMap: Record<RadiusOption, number> = {
+    neighborhood: 0, // signals: skip geo-radius, use DB column filter
     blocks: 0.25,
     walking: 1,
     bike: 3,
@@ -107,9 +108,9 @@ export const getSmartDefaultRadius = (
     return 'city';
   }
 
-  // Neighborhood-level is tight
+  // Neighborhood-level: use DB column filter (no geo-radius)
   if (normalized.includes('neighborhood') || normalized.includes('locality')) {
-    return 'blocks';
+    return 'neighborhood';
   }
 
   // ZIP code

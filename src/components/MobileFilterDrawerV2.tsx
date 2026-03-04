@@ -41,6 +41,7 @@ interface MobileFilterDrawerV2Props {
   neighborhoods?: { name: string; count: number }[];
   selectedNeighborhood?: string | null;
   onNeighborhoodChange?: (value: string | null) => void;
+  isNeighborhoodPage?: boolean;
 }
 
 export const MobileFilterDrawerV2: React.FC<MobileFilterDrawerV2Props> = ({
@@ -70,6 +71,7 @@ export const MobileFilterDrawerV2: React.FC<MobileFilterDrawerV2Props> = ({
   neighborhoods,
   selectedNeighborhood,
   onNeighborhoodChange,
+  isNeighborhoodPage = false,
 }) => {
   const { track } = useAnalytics();
 
@@ -198,6 +200,7 @@ export const MobileFilterDrawerV2: React.FC<MobileFilterDrawerV2Props> = ({
             neighborhoods={neighborhoods}
             selectedNeighborhood={selectedNeighborhood}
             onNeighborhoodChange={onNeighborhoodChange}
+            isNeighborhoodPage={isNeighborhoodPage}
           />
         </div>
         
