@@ -672,15 +672,6 @@ export const LocationLanding = () => {
                 />
               </div>
 
-              {/* Neighborhood dropdown for tablet */}
-              {!neighborhood && neighborhoodOptions.length > 0 && (
-                <NeighborhoodFilter
-                  neighborhoods={neighborhoodOptions}
-                  selected={selectedNeighborhood}
-                  onChange={setSelectedNeighborhood}
-                />
-              )}
-
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="lg:col-span-1">
                   <SearchResults
@@ -743,23 +734,15 @@ export const LocationLanding = () => {
                     onHappeningTodayChange={setHappeningToday}
                     locationType="city"
                     onClearAllFilters={handleClearAllFilters}
+                    neighborhoods={!neighborhood ? neighborhoodOptions : undefined}
+                    selectedNeighborhood={selectedNeighborhood}
+                    onNeighborhoodChange={setSelectedNeighborhood}
                   />
                 </div>
               </div>
 
-              {/* Center: Neighborhood dropdown + results */}
+              {/* Center: Results */}
               <div className="flex-1 min-w-[28rem]">
-                {/* Neighborhood dropdown (city pages only, not neighborhood sub-pages) */}
-                {!neighborhood && neighborhoodOptions.length > 0 && (
-                  <div className="mb-4">
-                    <NeighborhoodFilter
-                      neighborhoods={neighborhoodOptions}
-                      selected={selectedNeighborhood}
-                      onChange={setSelectedNeighborhood}
-                    />
-                  </div>
-                )}
-
                 <SearchResults
                   merchants={merchants}
                   isLoading={isLoading}
