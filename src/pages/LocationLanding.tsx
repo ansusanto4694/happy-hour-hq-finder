@@ -655,7 +655,7 @@ export const LocationLanding = () => {
                 onClearAllFilters={handleClearAllFilters}
                 sortBy={sortBy}
                 onSortChange={setSortBy}
-                neighborhoods={!neighborhood ? neighborhoodOptions : undefined}
+                neighborhoods={neighborhoodOptions}
                 selectedNeighborhood={selectedNeighborhood}
                 onNeighborhoodChange={setSelectedNeighborhood}
               />
