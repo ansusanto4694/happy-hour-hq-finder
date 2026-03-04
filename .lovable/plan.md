@@ -1,24 +1,40 @@
 
 
-## Fix: Neighborhood page default radius
+## Mobile Neighborhood Pages — Match /results Mobile Experience
 
-**One-line change** in `src/components/RadiusFilter.tsx`, line 112:
+### Current state (mobile)
+Lines 526-646 in `LocationLanding.tsx`: Large orange hero banner, breadcrumb nav, flat card grid, basic list/map toggle, no filters, no sort, no drawer pattern.
 
-Change `return 'walking'` to `return 'blocks'` for the neighborhood/locality branch.
+### Target state (mobile)
+Identical to `/results` mobile (lines 454-608 in `Results.tsx`):
+- **Fixed compact header** (h-16, z-50) with breadcrumb text or `MobileResultsSearchBar`
+- **Full-screen map** (`LazyResultsMap`) behind everything
+- **"Search this area" button** (fixed, top-20)
+- **Swipe-up peek handle** showing result count + "Swipe up for list"
+- **`MobileListDrawer`** with sort, all filters, and results — including neighborhood dropdown passed through the chain
 
-```
-// Before (line 112):
-return 'walking';
+### Changes
 
-// After:
-return 'blocks';
-```
+**1. `src/pages/LocationLanding.tsx` (lines 526-646)**
+Replace the entire mobile block with the Results mobile pattern:
+- Fixed header bar with neighborhood name breadcrumb and back link to city page
+- Full-screen `LazyResultsMap` (already wired up in this file)
+- "Search this area" fixed button (use existing `showSearchThisArea` state)
+- Peek handle with result count
+- `MobileListDrawer` with all filter props already managed in this file, plus `neighborhoods`/`selectedNeighborhood`/`onNeighborhoodChange` for city pages
 
-This makes neighborhood-type locations default to Nearby (0.25mi) everywhere the smart default is used. The `/results` page uses a different code path — it passes the location type from the search bar autocomplete suggestion, so GPS searches still default to Walking (line 99: `if (useGPS) return 'walking'`).
+**2. `src/components/MobileListDrawer.tsx`**
+Add optional props: `neighborhoods`, `selectedNeighborhood`, `onNeighborhoodChange`. Pass them through to `MobileFilterDrawer`.
 
-**Impact check:**
-- `/happy-hour/new-york-ny/west-village` → passes `'neighborhood'` → now gets `'blocks'` (Nearby) ✓
-- `/results` with GPS → passes `useGPS=true` → still gets `'walking'` ✓
-- `/results` with neighborhood autocomplete suggestion → passes `'neighborhood'` → also gets `'blocks'`. This is actually more correct for neighborhood searches on results too, since it matches your geo-radius philosophy.
-- City pages remain `'city'` (25mi) ✓
+**3. `src/components/MobileFilterDrawer.tsx`**
+Add same optional props. Pass them through to `MobileFilterDrawerV2`.
+
+**4. `src/components/MobileFilterDrawerV2.tsx`**
+Add same optional props. Pass them through to `UnifiedFilterBar` (which already accepts them).
+
+### What stays the same
+- All filter state management and URL param logic (already built for desktop, reused)
+- Desktop layout (untouched)
+- The `MobileBottomNav` (already rendered at app level)
+- SEO head, structured data, page title logic
 
