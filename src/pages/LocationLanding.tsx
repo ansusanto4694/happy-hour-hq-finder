@@ -179,7 +179,8 @@ export const LocationLanding = () => {
   const happeningNow = searchParams.get('happeningNow') === 'true';
   const happeningToday = searchParams.get('happeningToday') === 'true';
   const sortBy = searchParams.get('sortBy') || 'default';
-  const selectedNeighborhood = searchParams.get('neighborhood') || null;
+  // Pre-select neighborhood from URL slug or search param
+  const selectedNeighborhood = neighborhood || searchParams.get('neighborhood') || null;
 
   const selectedDays = (() => {
     const daysParam = searchParams.get('days');
@@ -296,22 +297,6 @@ export const LocationLanding = () => {
   }, [searchParams, setSearchParams]);
 
   const setSelectedNeighborhood = (value: string | null) => {
-    const newParams = new URLSearchParams(searchParams);
-    if (value) {
-      newParams.set('neighborhood', value);
-      // Auto-set radius to "blocks" (0.25mi) when selecting a neighborhood
-      newParams.set('radius', 'blocks');
-    } else {
-      newParams.delete('neighborhood');
-      // Reset radius to smart default when clearing neighborhood
-      const defaultRadius = getSmartDefaultRadius('city', false);
-      if (defaultRadius !== selectedRadius) {
-        newParams.delete('radius');
-      }
-    }
-    newParams.delete('page');
-    setSearchParams(newParams, { replace: true });
-    
     track({
       eventType: 'click',
       eventCategory: 'location_landing',
@@ -319,6 +304,14 @@ export const LocationLanding = () => {
       eventLabel: value || 'all',
       locationQuery: locationString,
     });
+
+    if (value) {
+      // Navigate to the neighborhood URL (e.g. /happy-hour/new-york-ny/williamsburg)
+      navigate(`/happy-hour/${citySlug}/${displayNameToSlug(value)}`);
+    } else {
+      // Navigate back to the city page (e.g. /happy-hour/new-york-ny)
+      navigate(`/happy-hour/${citySlug}`);
+    }
   };
 
   // ── Effective time/day computations ──
@@ -387,7 +380,7 @@ export const LocationLanding = () => {
   // When a neighborhood is selected from the dropdown, use geo-radius filtering
   // instead of DB column matching for better results
   const neighborhoodCenter = selectedNeighborhood ? neighborhoodCenters[selectedNeighborhood] : undefined;
-  const useGeoNeighborhood = !!neighborhoodCenter && !neighborhood; // only for dropdown selection, not URL slug
+  const useGeoNeighborhood = !!neighborhoodCenter; // geo-radius for both URL slug and dropdown selection
 
   const { data: rawMerchants, isLoading, isFetched } = useMerchants(
     selectedCategories.length > 0 ? selectedCategories : undefined,
@@ -401,7 +394,7 @@ export const LocationLanding = () => {
     effectiveDays.length > 0 ? effectiveDays : undefined,
     useGeoNeighborhood ? neighborhoodCenter : undefined, // gpsCoordinates from neighborhood center
     undefined, // carouselId
-    neighborhood || undefined, // only pass DB neighborhood filter for URL slug pages
+    useGeoNeighborhood ? undefined : (neighborhood || undefined), // use geo when available, DB filter as fallback
     selectedMenuType
   );
 
@@ -439,7 +432,7 @@ export const LocationLanding = () => {
 
   // Get unique neighborhoods with counts from unfiltered data
   const neighborhoodOptions = useMemo(() => {
-    if (neighborhood || !allMerchants?.length) return [];
+    if (!allMerchants?.length) return [];
     const counts = new Map<string, number>();
     allMerchants.forEach(m => {
       if (m.neighborhood) {
@@ -701,7 +694,7 @@ export const LocationLanding = () => {
                   onHappeningTodayChange={setHappeningToday}
                     locationType="city"
                     onClearAllFilters={handleClearAllFilters}
-                    neighborhoods={!neighborhood ? neighborhoodOptions : undefined}
+                    neighborhoods={neighborhoodOptions}
                     selectedNeighborhood={selectedNeighborhood}
                     onNeighborhoodChange={setSelectedNeighborhood}
                 />
@@ -769,7 +762,7 @@ export const LocationLanding = () => {
                     onHappeningTodayChange={setHappeningToday}
                     locationType="city"
                     onClearAllFilters={handleClearAllFilters}
-                    neighborhoods={!neighborhood ? neighborhoodOptions : undefined}
+                    neighborhoods={neighborhoodOptions}
                     selectedNeighborhood={selectedNeighborhood}
                     onNeighborhoodChange={setSelectedNeighborhood}
                   />
