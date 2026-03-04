@@ -10,10 +10,12 @@ import { UnifiedFilterBar } from '@/components/UnifiedFilterBar';
 
 import { LazyResultsMap } from '@/components/LazyResultsMap';
 import { Button } from '@/components/ui/button';
-import { MapPin, Clock, Utensils } from 'lucide-react';
+import { MapPin, Clock, Utensils, ChevronLeft } from 'lucide-react';
 import { Footer } from '@/components/Footer';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ViewToggle } from '@/components/ViewToggle';
+import { MobileListDrawer } from '@/components/MobileListDrawer';
+import { MobileResultsSearchBar } from '@/components/MobileResultsSearchBar';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import NotFound from '@/pages/NotFound';
 import { PageHeader } from '@/components/PageHeader';
@@ -342,8 +344,10 @@ export const LocationLanding = () => {
   const [searchedBounds, setSearchedBounds] = useState<{ north: number; south: number; east: number; west: number } | null>(null);
   const [isUsingMapSearch, setIsUsingMapSearch] = useState(false);
 
-  // Mobile-only state (keep legacy for mobile)
+  // Mobile-only state
   const [view, setView] = useState<'list' | 'map'>('list');
+  const [isListDrawerOpen, setIsListDrawerOpen] = useState(false);
+  const [showSearchThisAreaMobile, setShowSearchThisAreaMobile] = useState(false);
 
   const radiusMiles = getRadiusMiles(selectedRadius);
 
@@ -460,10 +464,14 @@ export const LocationLanding = () => {
       const boundsChanged =
         bounds.north !== searchedBounds.north || bounds.south !== searchedBounds.south ||
         bounds.east !== searchedBounds.east || bounds.west !== searchedBounds.west;
-      if (boundsChanged) setShowSearchThisAreaDesktop(true);
+      if (boundsChanged) {
+        setShowSearchThisAreaDesktop(true);
+        setShowSearchThisAreaMobile(true);
+      }
     } else if (!hasMapMoved) {
       setHasMapMoved(true);
       setShowSearchThisAreaDesktop(true);
+      setShowSearchThisAreaMobile(true);
     }
   }, [isUsingMapSearch, searchedBounds, hasMapMoved]);
 
@@ -477,6 +485,7 @@ export const LocationLanding = () => {
     setSearchedBounds(mapBounds);
     setIsUsingMapSearch(true);
     setShowSearchThisAreaDesktop(false);
+    setShowSearchThisAreaMobile(false);
   }, [mapBounds, merchants?.length, track]);
 
   const handleViewStateChange = useCallback((newViewState: { longitude: number; latitude: number; zoom: number }) => {
@@ -522,127 +531,136 @@ export const LocationLanding = () => {
       <div className="min-h-screen bg-muted/30">
         {!isMobile && <PageHeader showSearchBar={true} searchBarVariant="results" />}
 
-        {/* ── Mobile Layout (keep legacy for now) ── */}
+        {/* ── Mobile Layout (matches /results mobile pattern) ── */}
         {isMobile && (
-          <div className="bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500">
-            <div className="absolute inset-0 bg-black/10"></div>
-            <div className="relative z-10">
-              <section className="py-12 px-4">
-                <div className="container mx-auto max-w-6xl">
-                  <nav className="mb-6 text-sm text-white/80">
-                    <Link to="/" className="hover:text-white transition-colors">Home</Link>
-                    <span className="mx-2">/</span>
-                    <Link to={`/happy-hour/${citySlug}`} className="hover:text-white transition-colors">
-                      Happy Hour {city}, {state}
-                    </Link>
-                    {neighborhood && (
-                      <>
-                        <span className="mx-2">/</span>
-                        <span className="text-white">{neighborhood}</span>
-                      </>
-                    )}
-                  </nav>
-                  <h1 className="text-4xl font-bold mb-4 text-white">
-                    Happy Hour in {neighborhood ? `${neighborhood}, ${city}` : `${city}, ${state}`}
-                  </h1>
-                  <p className="text-lg text-white/90 mb-6 max-w-2xl">
-                    {neighborhood 
-                      ? `Discover the best happy hour spots in ${neighborhood}.`
-                      : `Browse happy hour deals across ${city}.`
-                    }
+          <>
+            {/* Fixed compact header */}
+            <div className="bg-background shadow-sm border-b border-border fixed top-0 left-0 right-0 z-50 h-16">
+              <div className="px-4 py-2 flex items-center h-full gap-2">
+                <Link
+                  to={neighborhood ? `/happy-hour/${citySlug}` : '/'}
+                  className="flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </Link>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate text-foreground">
+                    {neighborhood ? `${neighborhood}, ${city}` : `${city}, ${state}`}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {merchants?.length || 0} happy hour spots
                   </p>
                 </div>
-              </section>
-
-              <div className="container mx-auto max-w-6xl px-4 py-4">
-                {/* Neighborhoods Grid (mobile city page) */}
-                {!neighborhood && neighborhoodOptions.length > 0 && (
-                  <section className="mb-6">
-                    <h2 className="text-2xl font-bold mb-6 text-white">Browse by Neighborhood</h2>
-                    <div className="grid grid-cols-2 gap-4">
-                      {neighborhoodOptions.map((hood) => (
-                        <Link
-                          key={hood.name}
-                          to={`/happy-hour/${citySlug}/${displayNameToSlug(hood.name)}`}
-                          className="p-4 rounded-lg border border-border bg-card hover:border-primary hover:shadow-md transition-all"
-                        >
-                          <MapPin className="h-5 w-5 text-primary mb-2" />
-                          <h3 className="font-semibold text-foreground">{hood.name}</h3>
-                          <p className="text-sm text-muted-foreground mt-1">{hood.count} spots</p>
-                        </Link>
-                      ))}
-                    </div>
-                  </section>
-                )}
-
-                {/* Mobile results */}
-                <section>
-                  <div className="flex justify-end items-center mb-4">
-                    <div className="flex items-center gap-4">
-                      {neighborhood && (
-                        <ViewToggle view={view} onViewChange={setView} />
-                      )}
-                      {neighborhood && (
-                        <Button variant="outline" size="sm" asChild>
-                          <Link to={`/happy-hour/${citySlug}`}>View All {city}</Link>
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-
-                  {isLoading ? (
-                    <SearchResultsLoading />
-                  ) : merchants && merchants.length > 0 ? (
-                    <>
-                      {view === 'list' && (
-                        <div className="grid gap-4">
-                          {merchants.map((merchant) => (
-                            <SearchResultCard
-                              key={merchant.id}
-                              restaurant={merchant}
-                              onClick={(id) => navigate(`/restaurant/${id}`)}
-                              isMobile={true}
-                              onHover={undefined}
-                            />
-                          ))}
-                        </div>
-                      )}
-                      {view === 'map' && neighborhood && (
-                        <div className="min-h-[600px]">
-                          <LazyResultsMap
-                            restaurants={merchants || []}
-                            onMapMove={handleMapMove}
-                            showSearchThisArea={false}
-                            isUsingMapSearch={false}
-                            viewState={mapViewState}
-                            onViewStateChange={handleViewStateChange}
-                            isMobile={true}
-                            hoveredRestaurantId={hoveredRestaurantId}
-                            searchLocation={locationString}
-                          />
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <SearchResultsEmpty location={locationString} />
-                  )}
-                </section>
-
-                <section className="mt-12 prose prose-sm max-w-none">
-                  <h2 className="text-xl font-semibold mb-4 text-white">
-                    About Happy Hour in {neighborhood || city}
-                  </h2>
-                  <p className="text-white/90">
-                    {neighborhood
-                      ? `${neighborhood} is known for its vibrant dining and nightlife scene. Browse our listings to find the perfect spot for after-work drinks.`
-                      : `${city} is home to some of the best happy hours in ${state}. Use our neighborhood guides to discover hidden gems.`
-                    }
-                  </p>
-                </section>
               </div>
-              <Footer />
             </div>
-          </div>
+
+            {/* Full-screen map */}
+            <div className="fixed inset-0 pt-16 overflow-hidden">
+              <div className="h-full w-full overflow-hidden">
+                <LazyResultsMap
+                  restaurants={merchants || []}
+                  onMapMove={handleMapMove}
+                  showSearchThisArea={false}
+                  onSearchThisArea={handleSearchThisArea}
+                  isUsingMapSearch={isUsingMapSearch}
+                  viewState={mapViewState}
+                  onViewStateChange={handleViewStateChange}
+                  isMobile={true}
+                  hoveredRestaurantId={hoveredRestaurantId}
+                  searchLocation={locationString}
+                  isLoading={isLoading}
+                />
+              </div>
+
+              {/* Search this area button */}
+              {showSearchThisAreaMobile && !isListDrawerOpen && (
+                <div className="fixed top-20 left-4 right-4 z-50">
+                  <button
+                    onClick={handleSearchThisArea}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-medium shadow-lg transition-colors duration-200"
+                  >
+                    Search this area
+                  </button>
+                </div>
+              )}
+
+              {/* Swipeable peek handle */}
+              <div
+                className="fixed bottom-16 left-0 right-0 bg-background rounded-t-2xl shadow-2xl z-50"
+                style={{ height: 'calc(100vh / 8)' }}
+                onTouchStart={(e) => {
+                  const startY = e.touches[0].clientY;
+                  const handleTouchMove = (moveE: TouchEvent) => {
+                    const currentY = moveE.touches[0].clientY;
+                    const deltaY = startY - currentY;
+                    if (deltaY > 50) {
+                      setIsListDrawerOpen(true);
+                      document.removeEventListener('touchmove', handleTouchMove);
+                    }
+                  };
+                  const handleTouchEnd = () => {
+                    document.removeEventListener('touchmove', handleTouchMove);
+                    document.removeEventListener('touchend', handleTouchEnd);
+                  };
+                  document.addEventListener('touchmove', handleTouchMove);
+                  document.addEventListener('touchend', handleTouchEnd);
+                }}
+                onClick={() => setIsListDrawerOpen(true)}
+              >
+                <div className="flex items-center justify-center pt-3">
+                  <div className="w-12 h-1.5 bg-muted-foreground/30 rounded-full" />
+                </div>
+                <div className="px-4 pt-2">
+                  <p className="text-sm text-muted-foreground text-center font-medium">
+                    {isLoading ? (
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                        Searching...
+                      </span>
+                    ) : (
+                      <>{merchants?.length || 0} results • Swipe up for list</>
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              {/* List drawer */}
+              <MobileListDrawer
+                isOpen={isListDrawerOpen}
+                onOpenChange={setIsListDrawerOpen}
+                merchants={merchants || []}
+                isLoading={isLoading}
+                error={null}
+                startTime={effectiveStartTime}
+                endTime={effectiveEndTime}
+                location={locationString}
+                selectedCategories={selectedCategories}
+                onCategoryChange={setSelectedCategories}
+                selectedRadius={selectedRadius}
+                onRadiusChange={setSelectedRadius}
+                isRadiusEnabled={true}
+                showOffersOnly={showOffersOnly}
+                onShowOffersChange={setShowOffersOnly}
+                selectedDays={selectedDays}
+                onDaysChange={handleDaysChange}
+                onStartTimeChange={handleStartTimeChange}
+                onEndTimeChange={handleEndTimeChange}
+                selectedMenuType={selectedMenuType}
+                onMenuTypeChange={setSelectedMenuType}
+                happeningNow={happeningNow}
+                onHappeningNowChange={setHappeningNow}
+                happeningToday={happeningToday}
+                onHappeningTodayChange={setHappeningToday}
+                locationType={locationTypeForRadius}
+                onClearAllFilters={handleClearAllFilters}
+                sortBy={sortBy}
+                onSortChange={setSortBy}
+                neighborhoods={!neighborhood ? neighborhoodOptions : undefined}
+                selectedNeighborhood={selectedNeighborhood}
+                onNeighborhoodChange={setSelectedNeighborhood}
+              />
+            </div>
+          </>
         )}
 
         {/* ── Desktop Layout (3-column, mirrors /results) ── */}

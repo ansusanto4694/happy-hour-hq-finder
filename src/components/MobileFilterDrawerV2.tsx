@@ -38,6 +38,9 @@ interface MobileFilterDrawerV2Props {
   onHappeningTodayChange?: (value: boolean) => void;
   locationType?: string | null;
   onClearAllFilters?: () => void;
+  neighborhoods?: { name: string; count: number }[];
+  selectedNeighborhood?: string | null;
+  onNeighborhoodChange?: (value: string | null) => void;
 }
 
 export const MobileFilterDrawerV2: React.FC<MobileFilterDrawerV2Props> = ({
@@ -64,6 +67,9 @@ export const MobileFilterDrawerV2: React.FC<MobileFilterDrawerV2Props> = ({
   onHappeningTodayChange,
   locationType,
   onClearAllFilters,
+  neighborhoods,
+  selectedNeighborhood,
+  onNeighborhoodChange,
 }) => {
   const { track } = useAnalytics();
 
@@ -189,6 +195,9 @@ export const MobileFilterDrawerV2: React.FC<MobileFilterDrawerV2Props> = ({
             onHappeningTodayChange={onHappeningTodayChange}
             locationType={locationType}
             onClearAllFilters={onClearAllFilters}
+            neighborhoods={neighborhoods}
+            selectedNeighborhood={selectedNeighborhood}
+            onNeighborhoodChange={onNeighborhoodChange}
           />
         </div>
         
