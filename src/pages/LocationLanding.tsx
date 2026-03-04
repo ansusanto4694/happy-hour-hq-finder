@@ -387,19 +387,22 @@ export const LocationLanding = () => {
   const neighborhoodCenter = selectedNeighborhood ? neighborhoodCenters[selectedNeighborhood] : undefined;
   const useGeoNeighborhood = !!neighborhoodCenter; // geo-radius for both URL slug and dropdown selection
 
+  // When 'neighborhood' radius is selected, use DB column filter instead of geo-radius
+  const useNeighborhoodDbFilter = selectedRadius === 'neighborhood' && !!neighborhood;
+
   const { data: rawMerchants, isLoading, isFetched } = useMerchants(
     selectedCategories.length > 0 ? selectedCategories : undefined,
     undefined, // searchTerm
     effectiveStartTime || undefined,
     effectiveEndTime || undefined,
-    isUsingMapSearch ? undefined : (useGeoNeighborhood ? undefined : locationString),
+    isUsingMapSearch ? undefined : (useNeighborhoodDbFilter ? locationString : (useGeoNeighborhood ? undefined : locationString)),
     isUsingMapSearch ? searchedBounds : undefined,
-    isUsingMapSearch ? undefined : radiusMiles,
+    isUsingMapSearch ? undefined : (useNeighborhoodDbFilter ? undefined : radiusMiles),
     showOffersOnly || undefined,
     effectiveDays.length > 0 ? effectiveDays : undefined,
-    useGeoNeighborhood ? neighborhoodCenter : undefined, // gpsCoordinates from neighborhood center
+    useNeighborhoodDbFilter ? undefined : (useGeoNeighborhood ? neighborhoodCenter : undefined), // no geo coords for DB filter
     undefined, // carouselId
-    useGeoNeighborhood ? undefined : (neighborhood || undefined), // use geo when available, DB filter as fallback
+    useNeighborhoodDbFilter ? neighborhood : (useGeoNeighborhood ? undefined : (neighborhood || undefined)),
     selectedMenuType
   );
 
@@ -658,6 +661,7 @@ export const LocationLanding = () => {
                 neighborhoods={neighborhoodOptions}
                 selectedNeighborhood={selectedNeighborhood}
                 onNeighborhoodChange={setSelectedNeighborhood}
+                isNeighborhoodPage={!!neighborhood}
               />
             </div>
           </>
@@ -716,6 +720,7 @@ export const LocationLanding = () => {
                     neighborhoods={neighborhoodOptions}
                     selectedNeighborhood={selectedNeighborhood}
                     onNeighborhoodChange={setSelectedNeighborhood}
+                    isNeighborhoodPage={!!neighborhood}
                 />
               </div>
 
@@ -784,6 +789,7 @@ export const LocationLanding = () => {
                     neighborhoods={neighborhoodOptions}
                     selectedNeighborhood={selectedNeighborhood}
                     onNeighborhoodChange={setSelectedNeighborhood}
+                    isNeighborhoodPage={!!neighborhood}
                   />
                 </div>
               </div>

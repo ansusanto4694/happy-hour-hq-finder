@@ -40,9 +40,10 @@ interface UnifiedFilterBarProps {
   neighborhoods?: { name: string; count: number }[];
   selectedNeighborhood?: string | null;
   onNeighborhoodChange?: (value: string | null) => void;
+  isNeighborhoodPage?: boolean;
 }
 
-const RADIUS_OPTIONS: { value: RadiusOption; label: string; disabled?: boolean }[] = [
+const BASE_RADIUS_OPTIONS: { value: RadiusOption; label: string; disabled?: boolean }[] = [
   { value: 'blocks', label: 'Nearby (within .25 miles)' },
   { value: 'walking', label: 'Walking (within 1 mile)' },
   { value: 'bike', label: 'Bike (within 3 miles)' },
@@ -87,8 +88,20 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
   neighborhoods,
   selectedNeighborhood,
   onNeighborhoodChange,
+  isNeighborhoodPage = false,
 }) => {
   const smartDefault = getSmartDefaultRadius(locationType, useGPS);
+  
+  // Build radius options: on neighborhood pages, replace "Nearby" with "Within neighborhood"
+  const RADIUS_OPTIONS = React.useMemo(() => {
+    if (isNeighborhoodPage) {
+      return [
+        { value: 'neighborhood' as RadiusOption, label: 'Within neighborhood' },
+        ...BASE_RADIUS_OPTIONS.filter(o => o.value !== 'blocks'),
+      ];
+    }
+    return BASE_RADIUS_OPTIONS;
+  }, [isNeighborhoodPage]);
   const { getParentCategories, getSubCategories, isLoading } = useCategoriesHierarchy();
   const { track } = useAnalytics();
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);

@@ -54,6 +54,7 @@ interface MobileListDrawerProps {
   neighborhoods?: { name: string; count: number }[];
   selectedNeighborhood?: string | null;
   onNeighborhoodChange?: (value: string | null) => void;
+  isNeighborhoodPage?: boolean;
 }
 
 export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
@@ -92,6 +93,7 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
   neighborhoods,
   selectedNeighborhood,
   onNeighborhoodChange,
+  isNeighborhoodPage = false,
 }) => {
   const { track } = useAnalytics();
 
@@ -155,6 +157,7 @@ export const MobileListDrawer: React.FC<MobileListDrawerProps> = ({
               neighborhoods={neighborhoods}
               selectedNeighborhood={selectedNeighborhood}
               onNeighborhoodChange={onNeighborhoodChange}
+              isNeighborhoodPage={isNeighborhoodPage}
             />
           </div>
         </DrawerHeader>
