@@ -641,18 +641,6 @@ export const LocationLanding = () => {
                 <h1 className="text-2xl font-bold text-foreground">
                   Happy Hour in {neighborhood ? `${neighborhood}, ${city}` : `${city}, ${state}`}
                 </h1>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1.5">
-                    <Utensils className="h-4 w-4" />
-                    {merchants?.length || 0} spots
-                  </span>
-                  {!neighborhood && neighborhoodOptions.length > 0 && (
-                    <span className="flex items-center gap-1.5">
-                      <MapPin className="h-4 w-4" />
-                      {neighborhoodOptions.length} neighborhoods
-                    </span>
-                  )}
-                </div>
               </div>
             </div>
 
