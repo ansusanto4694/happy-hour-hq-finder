@@ -1,21 +1,23 @@
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useMemo, useState, useLayoutEffect } from 'react';
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
+import React, { useMemo, useState, useCallback, useLayoutEffect } from 'react';
 import { SEOHead } from '@/components/SEOHead';
 import { useMerchants } from '@/hooks/useMerchants';
+import { SearchResults } from '@/components/SearchResults';
 import { SearchResultCard } from '@/components/SearchResultCard';
 import { SearchResultsLoading } from '@/components/SearchResultsLoading';
 import { SearchResultsEmpty } from '@/components/SearchResultsEmpty';
+import { UnifiedFilterBar } from '@/components/UnifiedFilterBar';
+import { NeighborhoodFilter } from '@/components/NeighborhoodFilter';
+import { LazyResultsMap } from '@/components/LazyResultsMap';
 import { Button } from '@/components/ui/button';
 import { MapPin, Clock, Utensils } from 'lucide-react';
 import { Footer } from '@/components/Footer';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ViewToggle } from '@/components/ViewToggle';
-import { LazyResultsMap } from '@/components/LazyResultsMap';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import NotFound from '@/pages/NotFound';
 import { PageHeader } from '@/components/PageHeader';
-
-// Location landing page with analytics tracking
+import { RadiusOption, getRadiusMiles, getSmartDefaultRadius, inferLocationTypeFromInput } from '@/components/RadiusFilter';
 
 // Helper function to convert slug to display name
 const slugToDisplayName = (slug: string): string => {
@@ -106,12 +108,10 @@ const generateRestaurantListSchema = (
     "description": `List of ${limitedMerchants.length} restaurants and bars with happy hour deals in ${locationName}`,
     "numberOfItems": limitedMerchants.length,
     "itemListElement": limitedMerchants.map((merchant, index) => {
-      // Extract cuisine types from categories
       const cuisineTypes = merchant.merchant_categories
         ?.map(mc => mc.categories?.name)
         .filter((name): name is string => !!name) || [];
 
-      // Build restaurant schema with only available data - always use slug for SEO
       const restaurantSchema: Record<string, unknown> = {
         "@type": "Restaurant",
         "@id": `https://sipmunchyap.com/restaurant/${merchant.slug || merchant.id}`,
@@ -126,16 +126,9 @@ const generateRestaurantListSchema = (
         }
       };
 
-      // Add optional fields only if they exist
-      if (merchant.phone_number) {
-        restaurantSchema.telephone = merchant.phone_number;
-      }
-      if (merchant.website) {
-        restaurantSchema.url = merchant.website;
-      }
-      if (merchant.logo_url) {
-        restaurantSchema.image = merchant.logo_url;
-      }
+      if (merchant.phone_number) restaurantSchema.telephone = merchant.phone_number;
+      if (merchant.website) restaurantSchema.url = merchant.website;
+      if (merchant.logo_url) restaurantSchema.image = merchant.logo_url;
       if (merchant.latitude && merchant.longitude) {
         restaurantSchema.geo = {
           "@type": "GeoCoordinates",
@@ -143,9 +136,7 @@ const generateRestaurantListSchema = (
           "longitude": merchant.longitude
         };
       }
-      if (cuisineTypes.length > 0) {
-        restaurantSchema.servesCuisine = cuisineTypes;
-      }
+      if (cuisineTypes.length > 0) restaurantSchema.servesCuisine = cuisineTypes;
 
       return {
         "@type": "ListItem",
@@ -159,6 +150,7 @@ const generateRestaurantListSchema = (
 export const LocationLanding = () => {
   const { citySlug, neighborhoodSlug } = useParams<{ citySlug: string; neighborhoodSlug?: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const isMobile = useIsMobile();
   const { track } = useAnalytics();
   
@@ -166,15 +158,6 @@ export const LocationLanding = () => {
   useLayoutEffect(() => {
     window.scrollTo(0, 0);
   }, [citySlug, neighborhoodSlug]);
-  
-  // View state for desktop only
-  const [view, setView] = useState<'list' | 'map'>('list');
-  const [hoveredRestaurantId, setHoveredRestaurantId] = useState<number | null>(null);
-  const [mapViewState, setMapViewState] = useState({
-    longitude: -73.9712,
-    latitude: 40.7831,
-    zoom: 12
-  });
   
   // Parse city and state from slug (e.g., "new-york-ny" -> "New York", "NY")
   const cityParts = citySlug?.split('-') || [];
@@ -187,42 +170,300 @@ export const LocationLanding = () => {
     ? `${neighborhood}, ${city}, ${state}`
     : `${city}, ${state}`;
 
-  const { data: merchants, isLoading, isFetched } = useMerchants(
-    undefined, // categoryIds
+  // ── Filter state from URL params (mirrors Results.tsx) ──
+  const selectedCategories = searchParams.get('categories')?.split(',').filter(Boolean) || [];
+  const showOffersOnly = searchParams.get('offers') === 'true';
+  const selectedMenuType = (searchParams.get('menuType') as 'all' | 'food_and_drinks' | 'drinks_only') || 'all';
+  const explicitRadius = searchParams.get('radius') as RadiusOption | null;
+  const selectedRadius: RadiusOption = explicitRadius || getSmartDefaultRadius('city', false);
+  const happeningNow = searchParams.get('happeningNow') === 'true';
+  const happeningToday = searchParams.get('happeningToday') === 'true';
+  const sortBy = searchParams.get('sortBy') || 'default';
+  const selectedNeighborhood = searchParams.get('neighborhood') || null;
+
+  const selectedDays = (() => {
+    const daysParam = searchParams.get('days');
+    return daysParam ? daysParam.split(',').map(Number) : [];
+  })();
+  const startTime = searchParams.get('startTime') || '';
+  const endTime = searchParams.get('endTime') || '';
+
+  // ── URL param setters ──
+  const setSelectedCategories = (categories: string[]) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (categories.length > 0) newParams.set('categories', categories.join(','));
+    else newParams.delete('categories');
+    newParams.delete('page');
+    setSearchParams(newParams, { replace: true });
+  };
+
+  const setSelectedRadius = (radius: RadiusOption) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('radius', radius);
+    newParams.delete('page');
+    setSearchParams(newParams, { replace: true });
+  };
+
+  const setShowOffersOnly = (show: boolean) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (show) newParams.set('offers', 'true');
+    else newParams.delete('offers');
+    newParams.delete('page');
+    setSearchParams(newParams, { replace: true });
+  };
+
+  const setSelectedMenuType = (menuType: 'all' | 'food_and_drinks' | 'drinks_only') => {
+    const newParams = new URLSearchParams(searchParams);
+    if (menuType !== 'all') newParams.set('menuType', menuType);
+    else newParams.delete('menuType');
+    newParams.delete('page');
+    setSearchParams(newParams, { replace: true });
+  };
+
+  const setHappeningNow = (value: boolean) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (value) {
+      newParams.set('happeningNow', 'true');
+      newParams.delete('happeningToday');
+      newParams.delete('days');
+      newParams.delete('startTime');
+      newParams.delete('endTime');
+    } else {
+      newParams.delete('happeningNow');
+    }
+    newParams.delete('page');
+    setSearchParams(newParams, { replace: true });
+  };
+
+  const setHappeningToday = (value: boolean) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (value) {
+      newParams.set('happeningToday', 'true');
+      newParams.delete('happeningNow');
+      newParams.delete('days');
+      newParams.delete('startTime');
+      newParams.delete('endTime');
+    } else {
+      newParams.delete('happeningToday');
+    }
+    newParams.delete('page');
+    setSearchParams(newParams, { replace: true });
+  };
+
+  const handleDaysChange = (days: number[]) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (happeningNow) newParams.delete('happeningNow');
+    if (happeningToday) newParams.delete('happeningToday');
+    if (days.length > 0) newParams.set('days', days.join(','));
+    else newParams.delete('days');
+    newParams.delete('page');
+    setSearchParams(newParams, { replace: true });
+  };
+
+  const handleStartTimeChange = (time: string) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (happeningNow) newParams.delete('happeningNow');
+    if (happeningToday) newParams.delete('happeningToday');
+    if (time) newParams.set('startTime', time);
+    else newParams.delete('startTime');
+    newParams.delete('page');
+    setSearchParams(newParams, { replace: true });
+  };
+
+  const handleEndTimeChange = (time: string) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (happeningNow) newParams.delete('happeningNow');
+    if (happeningToday) newParams.delete('happeningToday');
+    if (time) newParams.set('endTime', time);
+    else newParams.delete('endTime');
+    newParams.delete('page');
+    setSearchParams(newParams, { replace: true });
+  };
+
+  const setSortBy = useCallback((value: string) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (value === 'default') newParams.delete('sortBy');
+    else newParams.set('sortBy', value);
+    newParams.delete('page');
+    setSearchParams(newParams, { replace: true });
+  }, [searchParams, setSearchParams]);
+
+  const handleClearAllFilters = useCallback(() => {
+    const newParams = new URLSearchParams(searchParams);
+    const filterKeys = ['categories', 'radius', 'offers', 'days', 'startTime', 'endTime', 'menuType', 'happeningNow', 'happeningToday', 'page', 'sortBy', 'neighborhood'];
+    filterKeys.forEach(key => newParams.delete(key));
+    setSearchParams(newParams, { replace: true });
+  }, [searchParams, setSearchParams]);
+
+  const setSelectedNeighborhood = (value: string | null) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (value) newParams.set('neighborhood', value);
+    else newParams.delete('neighborhood');
+    newParams.delete('page');
+    setSearchParams(newParams, { replace: true });
+    
+    track({
+      eventType: 'click',
+      eventCategory: 'location_landing',
+      eventAction: value ? 'neighborhood_filter_selected' : 'neighborhood_filter_cleared',
+      eventLabel: value || 'all',
+      locationQuery: locationString,
+    });
+  };
+
+  // ── Effective time/day computations ──
+  const effectiveDays = (() => {
+    if (!happeningNow && !happeningToday) return selectedDays;
+    const jsDay = new Date().getDay();
+    return [jsDay === 0 ? 6 : jsDay - 1];
+  })();
+
+  const effectiveStartTime = happeningNow
+    ? new Date().toTimeString().slice(0, 5)
+    : happeningToday ? '' : startTime;
+  const effectiveEndTime = happeningNow
+    ? new Date().toTimeString().slice(0, 5)
+    : happeningToday ? '' : endTime;
+
+  // ── Map state ──
+  const [hoveredRestaurantId, setHoveredRestaurantId] = useState<number | null>(null);
+  const [mapViewState, setMapViewState] = useState({
+    longitude: -73.9712,
+    latitude: 40.7831,
+    zoom: 12
+  });
+  const [showSearchThisAreaDesktop, setShowSearchThisAreaDesktop] = useState(false);
+  const [mapBounds, setMapBounds] = useState<{ north: number; south: number; east: number; west: number } | null>(null);
+  const [hasMapMoved, setHasMapMoved] = useState(false);
+  const [searchedBounds, setSearchedBounds] = useState<{ north: number; south: number; east: number; west: number } | null>(null);
+  const [isUsingMapSearch, setIsUsingMapSearch] = useState(false);
+
+  // Mobile-only state (keep legacy for mobile)
+  const [view, setView] = useState<'list' | 'map'>('list');
+
+  const radiusMiles = getRadiusMiles(selectedRadius);
+
+  // ── Data fetching ──
+  // For the city page we pass the neighborhood filter from the dropdown, not the URL slug
+  const effectiveNeighborhood = neighborhood || selectedNeighborhood || undefined;
+
+  const { data: rawMerchants, isLoading, isFetched } = useMerchants(
+    selectedCategories.length > 0 ? selectedCategories : undefined,
     undefined, // searchTerm
-    undefined, // startTime
-    undefined, // endTime
-    locationString, // location
-    undefined, // bounds
-    50, // radiusMiles - large radius to get all merchants in the area
-    undefined, // showOffersOnly
-    undefined, // selectedDays
+    effectiveStartTime || undefined,
+    effectiveEndTime || undefined,
+    isUsingMapSearch ? undefined : locationString,
+    isUsingMapSearch ? searchedBounds : undefined,
+    isUsingMapSearch ? undefined : radiusMiles,
+    showOffersOnly || undefined,
+    effectiveDays.length > 0 ? effectiveDays : undefined,
     undefined, // gpsCoordinates
     undefined, // carouselId
-    neighborhood // neighborhood - filter by exact neighborhood if provided
+    effectiveNeighborhood,
+    selectedMenuType
   );
 
+  // Sort merchants
+  const merchants = React.useMemo(() => {
+    if (!rawMerchants || sortBy === 'default') return rawMerchants;
+    const sorted = [...rawMerchants];
+
+    const getEffectiveRating = (m: any): number => {
+      const reviews = m.merchant_reviews?.filter((r: any) => r.status === 'published') || [];
+      if (reviews.length > 0) {
+        let sum = 0, count = 0;
+        reviews.forEach((review: any) => {
+          review.merchant_review_ratings?.forEach((r: { rating: number }) => { sum += r.rating; count++; });
+        });
+        if (count > 0) return sum / count;
+      }
+      const google = m.merchant_google_ratings;
+      if (google && google.match_confidence !== 'no_match' && google.google_rating) return google.google_rating;
+      return 0;
+    };
+
+    const getEffectiveReviewCount = (m: any): number => {
+      const reviews = m.merchant_reviews?.filter((r: any) => r.status === 'published') || [];
+      if (reviews.length > 0) return reviews.length;
+      const google = m.merchant_google_ratings;
+      if (google && google.match_confidence !== 'no_match' && google.google_review_count) return google.google_review_count;
+      return 0;
+    };
+
+    if (sortBy === 'highest_rated') sorted.sort((a, b) => getEffectiveRating(b) - getEffectiveRating(a));
+    else if (sortBy === 'most_reviewed') sorted.sort((a, b) => getEffectiveReviewCount(b) - getEffectiveReviewCount(a));
+    return sorted;
+  }, [rawMerchants, sortBy]);
+
+  // Also fetch unfiltered merchants to build neighborhood list (only for city pages)
+  const { data: allMerchants } = useMerchants(
+    undefined, undefined, undefined, undefined,
+    locationString,
+    undefined,
+    50, // large radius
+    undefined, undefined, undefined, undefined,
+    undefined, // no neighborhood filter
+    'all'
+  );
+
+  // Get unique neighborhoods with counts from unfiltered data
+  const neighborhoodOptions = useMemo(() => {
+    if (neighborhood || !allMerchants?.length) return [];
+    const counts = new Map<string, number>();
+    allMerchants.forEach(m => {
+      if (m.neighborhood) {
+        counts.set(m.neighborhood, (counts.get(m.neighborhood) || 0) + 1);
+      }
+    });
+    return Array.from(counts.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [allMerchants, neighborhood]);
+
   // Determine if this is an invalid location (404 case)
-  // For neighborhood pages: if data loaded but no merchants found AND this is a specific neighborhood
   const isInvalidLocation = useMemo(() => {
     if (!isFetched || isLoading) return false;
-    // If it's a neighborhood page with no results, it's likely an invalid combination
-    if (neighborhoodSlug && (!merchants || merchants.length === 0)) {
-      return true;
-    }
+    if (neighborhoodSlug && (!rawMerchants || rawMerchants.length === 0)) return true;
     return false;
-  }, [isFetched, isLoading, neighborhoodSlug, merchants]);
+  }, [isFetched, isLoading, neighborhoodSlug, rawMerchants]);
 
-  // Generate combined structured data (WebPage + ItemList)
+  // ── Map handlers ──
+  const handleMapMove = useCallback((bounds: { north: number; south: number; east: number; west: number }) => {
+    setMapBounds(bounds);
+    if (isUsingMapSearch && searchedBounds) {
+      const boundsChanged =
+        bounds.north !== searchedBounds.north || bounds.south !== searchedBounds.south ||
+        bounds.east !== searchedBounds.east || bounds.west !== searchedBounds.west;
+      if (boundsChanged) setShowSearchThisAreaDesktop(true);
+    } else if (!hasMapMoved) {
+      setHasMapMoved(true);
+      setShowSearchThisAreaDesktop(true);
+    }
+  }, [isUsingMapSearch, searchedBounds, hasMapMoved]);
+
+  const handleSearchThisArea = useCallback(async () => {
+    await track({
+      eventType: 'click',
+      eventCategory: 'map_interaction',
+      eventAction: 'search_area_clicked',
+      metadata: { mapBounds, previousResultsCount: merchants?.length || 0 },
+    });
+    setSearchedBounds(mapBounds);
+    setIsUsingMapSearch(true);
+    setShowSearchThisAreaDesktop(false);
+  }, [mapBounds, merchants?.length, track]);
+
+  const handleViewStateChange = useCallback((newViewState: { longitude: number; latitude: number; zoom: number }) => {
+    setMapViewState(newViewState);
+  }, []);
+
+  // ── SEO ──
   const structuredData = useMemo(() => {
     const pageSchema = generateLocationStructuredData(city, state, neighborhood);
-    
-    // Only add ItemList if we have merchants
     if (merchants && merchants.length > 0) {
       const itemListSchema = generateRestaurantListSchema(merchants, city, state, neighborhood);
       return [pageSchema, itemListSchema];
     }
-    
     return pageSchema;
   }, [city, state, neighborhood, merchants]);
 
@@ -238,35 +479,9 @@ export const LocationLanding = () => {
     ? `happy hour ${neighborhood}, ${neighborhood} bars, ${neighborhood} restaurants, happy hour deals ${city}, ${neighborhood} ${city}`
     : `happy hour ${city}, ${city} bars, ${city} restaurants, happy hour ${state}, best happy hours ${city}`;
 
-  // Get unique neighborhoods from merchants for city page
-  const neighborhoods = useMemo(() => {
-    if (neighborhood || !merchants?.length) return [];
-    
-    const uniqueNeighborhoods = new Set<string>();
-    merchants.forEach(merchant => {
-      if (merchant.neighborhood) {
-        uniqueNeighborhoods.add(merchant.neighborhood);
-      }
-    });
-    
-    return Array.from(uniqueNeighborhoods).sort();
-  }, [merchants, neighborhood]);
+  if (isInvalidLocation) return <NotFound />;
 
-  // Map handlers for desktop
-  const handleMapMove = (bounds: { north: number; south: number; east: number; west: number }) => {
-    // We don't filter by bounds on location pages, just track the movement
-  };
-
-  const handleViewStateChange = (viewState: { longitude: number; latitude: number; zoom: number }) => {
-    setMapViewState(viewState);
-  };
-
-  // Return 404 for invalid city/neighborhood combinations
-  // This tells search engines this page doesn't exist
-  if (isInvalidLocation) {
-    return <NotFound />;
-  }
-
+  // ── Render ──
   return (
     <>
       <SEOHead
@@ -277,200 +492,338 @@ export const LocationLanding = () => {
         structuredData={structuredData}
         noIndex={isInvalidLocation}
       />
-      
-      <div className="min-h-screen relative bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500">
-        <div className="absolute inset-0 bg-black/10"></div>
-        <div className="relative z-10">
-          {!isMobile && <PageHeader showSearchBar={true} searchBarVariant="results" />}
-        {/* Hero Section */}
-        <section className={`py-12 px-4 ${!isMobile ? 'pt-40' : ''}`}>
-          <div className="container mx-auto max-w-6xl">
-            {/* Breadcrumb */}
-            <nav className="mb-6 text-sm text-white/80">
-              <Link to="/" className="hover:text-white transition-colors">Home</Link>
-              <span className="mx-2">/</span>
-              <Link to={`/happy-hour/${citySlug}`} className="hover:text-white transition-colors">
-                Happy Hour {city}, {state}
-              </Link>
-              {neighborhood && (
-                <>
-                  <span className="mx-2">/</span>
-                  <span className="text-white">{neighborhood}</span>
-                </>
-              )}
-            </nav>
 
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white">
-              Happy Hour in {neighborhood ? `${neighborhood}, ${city}` : `${city}, ${state}`}
-            </h1>
-            <p className="text-lg text-white/90 mb-6 max-w-2xl">
-              {neighborhood 
-                ? `Discover the best happy hour spots in ${neighborhood}. Find amazing deals on drinks and food at local bars and restaurants.`
-                : `Browse happy hour deals across ${city}. Select a neighborhood below or explore all locations.`
-              }
-            </p>
+      <div className="min-h-screen bg-muted/30">
+        {!isMobile && <PageHeader showSearchBar={true} searchBarVariant="results" />}
 
-            {/* Stats */}
-            <div className="flex flex-wrap gap-6 text-sm text-white">
-              <div className="flex items-center gap-2">
-                <Utensils className="h-5 w-5 text-white" />
-                <span className="font-semibold">{merchants?.length || 0} Restaurants & Bars</span>
+        {/* ── Mobile Layout (keep legacy for now) ── */}
+        {isMobile && (
+          <div className="bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500">
+            <div className="absolute inset-0 bg-black/10"></div>
+            <div className="relative z-10">
+              <section className="py-12 px-4">
+                <div className="container mx-auto max-w-6xl">
+                  <nav className="mb-6 text-sm text-white/80">
+                    <Link to="/" className="hover:text-white transition-colors">Home</Link>
+                    <span className="mx-2">/</span>
+                    <Link to={`/happy-hour/${citySlug}`} className="hover:text-white transition-colors">
+                      Happy Hour {city}, {state}
+                    </Link>
+                    {neighborhood && (
+                      <>
+                        <span className="mx-2">/</span>
+                        <span className="text-white">{neighborhood}</span>
+                      </>
+                    )}
+                  </nav>
+                  <h1 className="text-4xl font-bold mb-4 text-white">
+                    Happy Hour in {neighborhood ? `${neighborhood}, ${city}` : `${city}, ${state}`}
+                  </h1>
+                  <p className="text-lg text-white/90 mb-6 max-w-2xl">
+                    {neighborhood 
+                      ? `Discover the best happy hour spots in ${neighborhood}.`
+                      : `Browse happy hour deals across ${city}.`
+                    }
+                  </p>
+                </div>
+              </section>
+
+              <div className="container mx-auto max-w-6xl px-4 py-4">
+                {/* Neighborhoods Grid (mobile city page) */}
+                {!neighborhood && neighborhoodOptions.length > 0 && (
+                  <section className="mb-6">
+                    <h2 className="text-2xl font-bold mb-6 text-white">Browse by Neighborhood</h2>
+                    <div className="grid grid-cols-2 gap-4">
+                      {neighborhoodOptions.map((hood) => (
+                        <Link
+                          key={hood.name}
+                          to={`/happy-hour/${citySlug}/${displayNameToSlug(hood.name)}`}
+                          className="p-4 rounded-lg border border-border bg-card hover:border-primary hover:shadow-md transition-all"
+                        >
+                          <MapPin className="h-5 w-5 text-primary mb-2" />
+                          <h3 className="font-semibold text-foreground">{hood.name}</h3>
+                          <p className="text-sm text-muted-foreground mt-1">{hood.count} spots</p>
+                        </Link>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {/* Mobile results */}
+                <section>
+                  <div className="flex justify-end items-center mb-4">
+                    <div className="flex items-center gap-4">
+                      {neighborhood && (
+                        <ViewToggle view={view} onViewChange={setView} />
+                      )}
+                      {neighborhood && (
+                        <Button variant="outline" size="sm" asChild>
+                          <Link to={`/happy-hour/${citySlug}`}>View All {city}</Link>
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {isLoading ? (
+                    <SearchResultsLoading />
+                  ) : merchants && merchants.length > 0 ? (
+                    <>
+                      {view === 'list' && (
+                        <div className="grid gap-4">
+                          {merchants.map((merchant) => (
+                            <SearchResultCard
+                              key={merchant.id}
+                              restaurant={merchant}
+                              onClick={(id) => navigate(`/restaurant/${id}`)}
+                              isMobile={true}
+                              onHover={undefined}
+                            />
+                          ))}
+                        </div>
+                      )}
+                      {view === 'map' && neighborhood && (
+                        <div className="min-h-[600px]">
+                          <LazyResultsMap
+                            restaurants={merchants || []}
+                            onMapMove={handleMapMove}
+                            showSearchThisArea={false}
+                            isUsingMapSearch={false}
+                            viewState={mapViewState}
+                            onViewStateChange={handleViewStateChange}
+                            isMobile={true}
+                            hoveredRestaurantId={hoveredRestaurantId}
+                            searchLocation={locationString}
+                          />
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <SearchResultsEmpty location={locationString} />
+                  )}
+                </section>
+
+                <section className="mt-12 prose prose-sm max-w-none">
+                  <h2 className="text-xl font-semibold mb-4 text-white">
+                    About Happy Hour in {neighborhood || city}
+                  </h2>
+                  <p className="text-white/90">
+                    {neighborhood
+                      ? `${neighborhood} is known for its vibrant dining and nightlife scene. Browse our listings to find the perfect spot for after-work drinks.`
+                      : `${city} is home to some of the best happy hours in ${state}. Use our neighborhood guides to discover hidden gems.`
+                    }
+                  </p>
+                </section>
               </div>
-              <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-white" />
-                <span className="font-semibold">Daily Happy Hour Deals</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-white" />
-                <span className="font-semibold">{neighborhood || `${neighborhoods.length} Neighborhoods`}</span>
-              </div>
+              <Footer />
             </div>
           </div>
-        </section>
+        )}
 
-        <div className="container mx-auto max-w-6xl px-4 py-4">
-          {/* Neighborhoods Grid (City page only) */}
-          {!neighborhood && neighborhoods.length > 0 && (
-            <section className="mb-6">
-              <h2 className="text-2xl font-bold mb-6 text-white">Browse by Neighborhood</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {neighborhoods.map((hood) => (
-                  <Link
-                    key={hood}
-                    to={`/happy-hour/${citySlug}/${displayNameToSlug(hood)}`}
-                    className="p-4 rounded-lg border border-border bg-card hover:border-primary hover:shadow-md transition-all"
-                    onClick={() => {
-                      track({
-                        eventType: 'click',
-                        eventCategory: 'location_landing',
-                        eventAction: 'neighborhood_click',
-                        eventLabel: hood,
-                        locationQuery: locationString,
-                        metadata: {
-                          neighborhood: hood,
-                          merchant_count: merchants.filter(m => m.neighborhood === hood).length
-                        }
-                      });
-                    }}
-                  >
-                    <MapPin className="h-5 w-5 text-primary mb-2" />
-                    <h3 className="font-semibold text-foreground">{hood}</h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {merchants.filter(m => m.neighborhood === hood).length} spots
-                    </p>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Results Section */}
-          <section>
-            <div className="flex justify-end items-center mb-4">
-              <div className="flex items-center gap-4">
-                {/* Mobile View Toggle - only on neighborhood pages */}
-                {isMobile && neighborhood && (
-                  <ViewToggle 
-                    view={view} 
-                    onViewChange={(newView) => {
-                      setView(newView);
-                      track({
-                        eventType: 'click',
-                        eventCategory: 'location_landing',
-                        eventAction: 'view_toggle',
-                        eventLabel: newView,
-                        locationQuery: locationString,
-                        metadata: { view: newView, device: 'mobile' }
-                      });
-                    }} 
-                  />
+        {/* ── Desktop Layout (3-column, mirrors /results) ── */}
+        {!isMobile && (
+          <div className="pt-40 px-4 py-6">
+            {/* Compact breadcrumb + title */}
+            <div className="max-w-[120rem] mx-auto mb-6">
+              <nav className="mb-2 text-sm text-muted-foreground">
+                <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
+                <span className="mx-2">/</span>
+                <Link to={`/happy-hour/${citySlug}`} className="hover:text-foreground transition-colors">
+                  Happy Hour {city}, {state}
+                </Link>
+                {neighborhood && (
+                  <>
+                    <span className="mx-2">/</span>
+                    <span className="text-foreground">{neighborhood}</span>
+                  </>
                 )}
-                {/* Desktop View Toggle */}
-                {!isMobile && (
-                  <ViewToggle 
-                    view={view} 
-                    onViewChange={(newView) => {
-                      setView(newView);
-                      track({
-                        eventType: 'click',
-                        eventCategory: 'location_landing',
-                        eventAction: 'view_toggle',
-                        eventLabel: newView,
-                        locationQuery: locationString,
-                        metadata: { view: newView, device: 'desktop' }
-                      });
-                    }} 
-                  />
-                )}
-                {/* View All button for mobile on neighborhood pages */}
-                {isMobile && neighborhood && (
-                  <Button variant="outline" size="sm" asChild>
-                    <Link to={`/happy-hour/${citySlug}`}>
-                      View All {city}
-                    </Link>
-                  </Button>
-                )}
+              </nav>
+              <div className="flex items-center justify-between">
+                <h1 className="text-2xl font-bold text-foreground">
+                  Happy Hour in {neighborhood ? `${neighborhood}, ${city}` : `${city}, ${state}`}
+                </h1>
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1.5">
+                    <Utensils className="h-4 w-4" />
+                    {merchants?.length || 0} spots
+                  </span>
+                  {!neighborhood && neighborhoodOptions.length > 0 && (
+                    <span className="flex items-center gap-1.5">
+                      <MapPin className="h-4 w-4" />
+                      {neighborhoodOptions.length} neighborhoods
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
 
-            {isLoading ? (
-              <SearchResultsLoading />
-            ) : merchants && merchants.length > 0 ? (
-              <>
-                {/* List View */}
-                {view === 'list' && (
-                  <div className="grid gap-4">
-                    {merchants.map((merchant) => (
-                      <SearchResultCard
-                        key={merchant.id}
-                        restaurant={merchant}
-                        onClick={(id) => navigate(`/restaurant/${id}`)}
-                        isMobile={isMobile}
-                        onHover={!isMobile ? setHoveredRestaurantId : undefined}
-                      />
-                    ))}
-                  </div>
-                )}
+            {/* Tablet Layout (768px - 1280px) */}
+            <div className="xl:hidden max-w-7xl mx-auto space-y-6">
+              <div className="bg-card rounded-lg shadow-sm p-3">
+                <UnifiedFilterBar
+                  selectedCategories={selectedCategories}
+                  onCategoryChange={setSelectedCategories}
+                  selectedRadius={selectedRadius}
+                  onRadiusChange={setSelectedRadius}
+                  isRadiusEnabled={true}
+                  showOffersOnly={showOffersOnly}
+                  onShowOffersChange={setShowOffersOnly}
+                  selectedDays={selectedDays}
+                  onDaysChange={handleDaysChange}
+                  startTime={startTime}
+                  endTime={endTime}
+                  onStartTimeChange={handleStartTimeChange}
+                  onEndTimeChange={handleEndTimeChange}
+                  selectedMenuType={selectedMenuType}
+                  onMenuTypeChange={setSelectedMenuType}
+                  happeningNow={happeningNow}
+                  onHappeningNowChange={setHappeningNow}
+                  happeningToday={happeningToday}
+                  onHappeningTodayChange={setHappeningToday}
+                  locationType="city"
+                  onClearAllFilters={handleClearAllFilters}
+                />
+              </div>
 
-                {/* Map View - Mobile (neighborhood only) and Desktop */}
-                {view === 'map' && (isMobile ? neighborhood : true) && (
-                  <div className="min-h-[600px]">
-                    <LazyResultsMap 
+              {/* Neighborhood dropdown for tablet */}
+              {!neighborhood && neighborhoodOptions.length > 0 && (
+                <NeighborhoodFilter
+                  neighborhoods={neighborhoodOptions}
+                  selected={selectedNeighborhood}
+                  onChange={setSelectedNeighborhood}
+                />
+              )}
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="lg:col-span-1">
+                  <SearchResults
+                    merchants={merchants}
+                    isLoading={isLoading}
+                    error={null}
+                    startTime={effectiveStartTime}
+                    endTime={effectiveEndTime}
+                    location={locationString}
+                    onRestaurantHover={setHoveredRestaurantId}
+                    happeningNow={happeningNow}
+                    happeningToday={happeningToday}
+                    sortBy={sortBy}
+                    onSortChange={setSortBy}
+                  />
+                </div>
+                <div className="lg:col-span-1">
+                  <div className="sticky top-48 z-30">
+                    <LazyResultsMap
                       restaurants={merchants || []}
                       onMapMove={handleMapMove}
-                      showSearchThisArea={false}
-                      isUsingMapSearch={false}
+                      showSearchThisArea={showSearchThisAreaDesktop}
+                      onSearchThisArea={handleSearchThisArea}
+                      isUsingMapSearch={isUsingMapSearch}
                       viewState={mapViewState}
                       onViewStateChange={handleViewStateChange}
-                      isMobile={false}
                       hoveredRestaurantId={hoveredRestaurantId}
                       searchLocation={locationString}
+                      isLoading={isLoading}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Desktop Layout (>1280px) - 3 columns */}
+            <div className="hidden xl:flex xl:gap-6 max-w-[120rem] mx-auto">
+              {/* Left: Sticky filter sidebar */}
+              <div className="w-80 flex-shrink-0">
+                <div className="sticky top-32 z-40 max-h-[calc(100vh-9rem)] overflow-y-auto">
+                  <UnifiedFilterBar
+                    selectedCategories={selectedCategories}
+                    onCategoryChange={setSelectedCategories}
+                    selectedRadius={selectedRadius}
+                    onRadiusChange={setSelectedRadius}
+                    isRadiusEnabled={true}
+                    showOffersOnly={showOffersOnly}
+                    onShowOffersChange={setShowOffersOnly}
+                    selectedDays={selectedDays}
+                    onDaysChange={handleDaysChange}
+                    startTime={startTime}
+                    endTime={endTime}
+                    onStartTimeChange={handleStartTimeChange}
+                    onEndTimeChange={handleEndTimeChange}
+                    selectedMenuType={selectedMenuType}
+                    onMenuTypeChange={setSelectedMenuType}
+                    happeningNow={happeningNow}
+                    onHappeningNowChange={setHappeningNow}
+                    happeningToday={happeningToday}
+                    onHappeningTodayChange={setHappeningToday}
+                    locationType="city"
+                    onClearAllFilters={handleClearAllFilters}
+                  />
+                </div>
+              </div>
+
+              {/* Center: Neighborhood dropdown + results */}
+              <div className="flex-1 min-w-[28rem]">
+                {/* Neighborhood dropdown (city pages only, not neighborhood sub-pages) */}
+                {!neighborhood && neighborhoodOptions.length > 0 && (
+                  <div className="mb-4">
+                    <NeighborhoodFilter
+                      neighborhoods={neighborhoodOptions}
+                      selected={selectedNeighborhood}
+                      onChange={setSelectedNeighborhood}
                     />
                   </div>
                 )}
-              </>
-            ) : (
-              <SearchResultsEmpty 
-                location={locationString}
-              />
-            )}
-          </section>
 
-          {/* SEO Content */}
-          <section className="mt-12 prose prose-sm max-w-none">
-            <h2 className="text-xl font-semibold mb-4 text-white">
-              About Happy Hour in {neighborhood || city}
-            </h2>
-            <p className="text-white/90">
-              {neighborhood 
-                ? `${neighborhood} is known for its vibrant dining and nightlife scene. Whether you're looking for craft cocktails, local brews, or delicious appetizers, ${neighborhood} offers a diverse selection of happy hour venues. Browse our listings to find the perfect spot for after-work drinks or a casual evening out.`
-                : `${city} is home to some of the best happy hours in ${state}. From rooftop bars to cozy neighborhood pubs, the city offers endless options for enjoying discounted drinks and food. Use our neighborhood guides to discover hidden gems and popular spots in your area.`
-              }
-            </p>
-          </section>
-        </div>
-        <Footer />
-        </div>
+                <SearchResults
+                  merchants={merchants}
+                  isLoading={isLoading}
+                  error={null}
+                  startTime={effectiveStartTime}
+                  endTime={effectiveEndTime}
+                  location={locationString}
+                  onRestaurantHover={setHoveredRestaurantId}
+                  happeningNow={happeningNow}
+                  happeningToday={happeningToday}
+                  sortBy={sortBy}
+                  onSortChange={setSortBy}
+                />
+              </div>
+
+              {/* Right: Sticky map */}
+              <div className="flex-1 min-w-[32rem] 2xl:min-w-[36rem] max-w-[50rem]">
+                <div className="sticky top-32 z-30">
+                  <LazyResultsMap
+                    restaurants={merchants || []}
+                    onMapMove={handleMapMove}
+                    showSearchThisArea={showSearchThisAreaDesktop}
+                    onSearchThisArea={handleSearchThisArea}
+                    isUsingMapSearch={isUsingMapSearch}
+                    viewState={mapViewState}
+                    onViewStateChange={handleViewStateChange}
+                    hoveredRestaurantId={hoveredRestaurantId}
+                    searchLocation={locationString}
+                    isLoading={isLoading}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* SEO content */}
+            <div className="max-w-[120rem] mx-auto mt-12">
+              <section className="prose prose-sm max-w-none">
+                <h2 className="text-xl font-semibold mb-4 text-foreground">
+                  About Happy Hour in {neighborhood || city}
+                </h2>
+                <p className="text-muted-foreground">
+                  {neighborhood
+                    ? `${neighborhood} is known for its vibrant dining and nightlife scene. Whether you're looking for craft cocktails, local brews, or delicious appetizers, ${neighborhood} offers a diverse selection of happy hour venues.`
+                    : `${city} is home to some of the best happy hours in ${state}. From rooftop bars to cozy neighborhood pubs, the city offers endless options for enjoying discounted drinks and food.`
+                  }
+                </p>
+              </section>
+            </div>
+
+            <Footer />
+          </div>
+        )}
       </div>
     </>
   );
