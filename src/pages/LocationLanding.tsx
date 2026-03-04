@@ -175,7 +175,8 @@ export const LocationLanding = () => {
   const showOffersOnly = searchParams.get('offers') === 'true';
   const selectedMenuType = (searchParams.get('menuType') as 'all' | 'food_and_drinks' | 'drinks_only') || 'all';
   const explicitRadius = searchParams.get('radius') as RadiusOption | null;
-  const selectedRadius: RadiusOption = explicitRadius || getSmartDefaultRadius('city', false);
+  const locationTypeForRadius = neighborhood ? 'neighborhood' : 'city';
+  const selectedRadius: RadiusOption = explicitRadius || getSmartDefaultRadius(locationTypeForRadius, false);
   const happeningNow = searchParams.get('happeningNow') === 'true';
   const happeningToday = searchParams.get('happeningToday') === 'true';
   const sortBy = searchParams.get('sortBy') || 'default';
@@ -692,7 +693,7 @@ export const LocationLanding = () => {
                   onHappeningNowChange={setHappeningNow}
                   happeningToday={happeningToday}
                   onHappeningTodayChange={setHappeningToday}
-                    locationType="city"
+                    locationType={locationTypeForRadius}
                     onClearAllFilters={handleClearAllFilters}
                     neighborhoods={neighborhoodOptions}
                     selectedNeighborhood={selectedNeighborhood}
@@ -760,7 +761,7 @@ export const LocationLanding = () => {
                     onHappeningNowChange={setHappeningNow}
                     happeningToday={happeningToday}
                     onHappeningTodayChange={setHappeningToday}
-                    locationType="city"
+                    locationType={locationTypeForRadius}
                     onClearAllFilters={handleClearAllFilters}
                     neighborhoods={neighborhoodOptions}
                     selectedNeighborhood={selectedNeighborhood}
