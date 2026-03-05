@@ -64,7 +64,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
   isNeighborhoodPage = false,
 }) => {
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = React.useState(false);
-  const smartDefault = getSmartDefaultRadius(locationType ?? null, useGPS);
+  const smartDefault = getSmartDefaultRadius(locationType ?? null, useGPS, isNeighborhoodPage);
   const hasFilters = selectedCategories.length > 0 || selectedRadius !== smartDefault || showOffersOnly || selectedDays.length > 0 || startTime || endTime || selectedMenuType !== 'all' || happeningNow || happeningToday;
   
   // Calculate total filter count
