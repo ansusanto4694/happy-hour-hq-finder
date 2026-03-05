@@ -94,7 +94,8 @@ const isZipCode = (input: string): boolean => /^\d{5}(-\d{4})?$/.test(input.trim
  */
 export const getSmartDefaultRadius = (
   locationType: string | null,
-  useGPS: boolean
+  useGPS: boolean,
+  isNeighborhoodPage = false
 ): RadiusOption => {
   // GPS always defaults to walking
   if (useGPS) return 'walking';
@@ -108,9 +109,9 @@ export const getSmartDefaultRadius = (
     return 'city';
   }
 
-  // Neighborhood-level: use DB column filter (no geo-radius)
+  // Neighborhood-level: only use DB column filter on dedicated neighborhood pages
   if (normalized.includes('neighborhood') || normalized.includes('locality')) {
-    return 'neighborhood';
+    return isNeighborhoodPage ? 'neighborhood' : 'blocks';
   }
 
   // ZIP code

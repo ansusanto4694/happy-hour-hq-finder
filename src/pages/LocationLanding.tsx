@@ -178,7 +178,7 @@ export const LocationLanding = () => {
   const selectedMenuType = (searchParams.get('menuType') as 'all' | 'food_and_drinks' | 'drinks_only') || 'all';
   const explicitRadius = searchParams.get('radius') as RadiusOption | null;
   const locationTypeForRadius = neighborhood ? 'neighborhood' : 'city';
-  const selectedRadius: RadiusOption = explicitRadius || getSmartDefaultRadius(locationTypeForRadius, false);
+  const selectedRadius: RadiusOption = explicitRadius || getSmartDefaultRadius(locationTypeForRadius, false, true);
   const happeningNow = searchParams.get('happeningNow') === 'true';
   const happeningToday = searchParams.get('happeningToday') === 'true';
   const sortBy = searchParams.get('sortBy') || 'default';

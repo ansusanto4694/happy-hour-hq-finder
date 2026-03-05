@@ -90,7 +90,7 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
   onNeighborhoodChange,
   isNeighborhoodPage = false,
 }) => {
-  const smartDefault = getSmartDefaultRadius(locationType, useGPS);
+  const smartDefault = getSmartDefaultRadius(locationType, useGPS, isNeighborhoodPage);
   
   // Build radius options: on neighborhood pages, replace "Nearby" with "Within neighborhood"
   const RADIUS_OPTIONS = React.useMemo(() => {
