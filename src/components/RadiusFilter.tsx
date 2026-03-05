@@ -111,7 +111,7 @@ export const getSmartDefaultRadius = (
 
   // Neighborhood-level: only use DB column filter on dedicated neighborhood pages
   if (normalized.includes('neighborhood') || normalized.includes('locality')) {
-    return isNeighborhoodPage ? 'neighborhood' : 'blocks';
+    return isNeighborhoodPage ? 'neighborhood' : 'bike';
   }
 
   // ZIP code
