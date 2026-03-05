@@ -18,7 +18,7 @@ export const RadiusFilter: React.FC<RadiusFilterProps> = ({
   useGPS = false
 }) => {
   const radiusOptions = [
-    { value: 'blocks' as const, label: 'Nearby (within .25 miles)', miles: 0.25 },
+    { value: 'blocks' as const, label: 'Nearby (within .5 miles)', miles: 0.5 },
     { value: 'walking' as const, label: 'Walking (within 1 mile)', miles: 1 },
     { value: 'bike' as const, label: 'Bike (within 3 miles)', miles: 3 },
     { value: 'drive' as const, label: 'Drive (within 5 miles)', miles: 5 },
@@ -75,7 +75,7 @@ export const RadiusFilter: React.FC<RadiusFilterProps> = ({
 export const getRadiusMiles = (radius: RadiusOption | null): number => {
   const radiusMap: Record<RadiusOption, number> = {
     neighborhood: 0, // signals: skip geo-radius, use DB column filter
-    blocks: 0.25,
+    blocks: 0.5,
     walking: 1,
     bike: 3,
     drive: 5,
