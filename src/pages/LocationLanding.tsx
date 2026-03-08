@@ -453,12 +453,20 @@ export const LocationLanding = () => {
   }, [allMerchants, neighborhood]);
 
 
+  // Determine if any filters are active (time, day, category, offers, menu type, etc.)
+  const hasActiveFilters = happeningNow || happeningToday || selectedDays.length > 0 || 
+    !!startTime || !!endTime || selectedCategories.length > 0 || 
+    showOffersOnly || (selectedMenuType !== 'all') || isUsingMapSearch;
+
   // Determine if this is an invalid location (404 case)
+  // Only show 404 when there are NO results AND no filters are applied
+  // (filters can legitimately narrow results to zero)
   const isInvalidLocation = useMemo(() => {
     if (!isFetched || isLoading) return false;
+    if (hasActiveFilters) return false;
     if (neighborhoodSlug && (!rawMerchants || rawMerchants.length === 0)) return true;
     return false;
-  }, [isFetched, isLoading, neighborhoodSlug, rawMerchants]);
+  }, [isFetched, isLoading, neighborhoodSlug, rawMerchants, hasActiveFilters]);
 
   // ── Map handlers ──
   const handleMapMove = useCallback((bounds: { north: number; south: number; east: number; west: number }) => {
