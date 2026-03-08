@@ -456,7 +456,7 @@ export const LocationLanding = () => {
   // Determine if any filters are active (time, day, category, offers, menu type, etc.)
   const hasActiveFilters = happeningNow || happeningToday || selectedDays.length > 0 || 
     !!startTime || !!endTime || selectedCategories.length > 0 || 
-    showOffersOnly || (menuType !== 'all') || isUsingMapSearch;
+    showOffersOnly || (selectedMenuType !== 'all') || isUsingMapSearch;
 
   // Determine if this is an invalid location (404 case)
   // Only show 404 when there are NO results AND no filters are applied
