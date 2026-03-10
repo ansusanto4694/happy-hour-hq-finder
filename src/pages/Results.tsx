@@ -477,7 +477,7 @@ const Results = () => {
                 "@type": "Restaurant",
                 "name": merchant.restaurant_name,
                 "address": `${merchant.city}, ${merchant.state}`,
-                "telephone": merchant.phone_number,
+                "telephone": (merchant as any).phone_number,
                 "url": `${typeof window !== 'undefined' ? window.location.origin : ''}/restaurant/${merchant.slug || merchant.id}`
               }
             })) || []

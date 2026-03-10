@@ -257,7 +257,14 @@ const RestaurantProfile = () => {
   useEffect(() => {
     if (restaurant?.id) {
       trackFunnelStep({ funnelStep: 'profile_viewed', merchantId: restaurant.id, stepOrder: 5 });
-      addRecentlyViewed(restaurant);
+      // Wrap merchant_google_ratings in array since Supabase returns single object for 1:1 relations
+      const merchantForRecent = {
+        ...restaurant,
+        merchant_google_ratings: restaurant.merchant_google_ratings
+          ? [restaurant.merchant_google_ratings as any]
+          : undefined,
+      };
+      addRecentlyViewed(merchantForRecent);
     }
   }, [restaurant?.id, addRecentlyViewed]);
 
