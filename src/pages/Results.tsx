@@ -419,9 +419,10 @@ const Results = () => {
     setShowSearchThisAreaDesktop(false);
   }, [mapBounds, merchants?.length, track]);
 
-  // Handle map view state changes to persist across view toggles - memoized for stable reference
+  // Handle map view state changes to persist across view toggles and back-navigation
   const handleViewStateChange = useCallback((newViewState: { longitude: number; latitude: number; zoom: number }) => {
     setMapViewState(newViewState);
+    try { sessionStorage.setItem('mapViewState', JSON.stringify(newViewState)); } catch {}
   }, []);
 
   const seoTitle = carouselName 
