@@ -47,11 +47,13 @@ const Results = () => {
   const [showSearchThisArea, setShowSearchThisArea] = useState(false);
   const [searchedBounds, setSearchedBounds] = useState<{ north: number; south: number; east: number; west: number } | null>(null);
   const [isUsingMapSearch, setIsUsingMapSearch] = useState(false);
-  // Persist map view state across view toggles
-  const [mapViewState, setMapViewState] = useState({
-    longitude: -73.9712,
-    latitude: 40.7831,
-    zoom: 12
+  // Persist map view state across view toggles AND back-navigation
+  const [mapViewState, setMapViewState] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('mapViewState');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return { longitude: -73.9712, latitude: 40.7831, zoom: 12 };
   });
   // Track hovered restaurant for map icon highlighting (desktop only)
   const [hoveredRestaurantId, setHoveredRestaurantId] = useState<number | null>(null);
