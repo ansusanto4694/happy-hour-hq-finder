@@ -26,6 +26,7 @@ const OUTDATED_THRESHOLD = 3; // Flag if 3+ versions behind
 const searchEngineBots = [
   'Googlebot', 'Bingbot', 'Slurp', 'DuckDuckBot',
   'Baiduspider', 'YandexBot', 'Sogou', 'Exabot',
+  'Google-InspectionTool', 'Google-Read-Aloud',
 ];
 
 // SEO and web analysis tools
@@ -85,6 +86,20 @@ const isOutdatedChrome = (userAgent: string): boolean => {
 };
 
 /**
+ * Detect Google's Web Rendering Service (WRS).
+ * WRS runs modern Chrome on Linux x86_64 with no headless indicators.
+ */
+const isGoogleWebRenderer = (userAgent: string): boolean => {
+  if (!isLinuxDesktop(userAgent)) return false;
+  const version = getChromeVersion(userAgent);
+  if (version === null) return false;
+  // Modern Chrome (within 10 versions of current) + no headless flags
+  const isModern = version >= (CURRENT_CHROME_VERSION - 10);
+  const hasHeadless = headlessBrowserPatterns.some(p => userAgent.includes(p));
+  return isModern && !hasHeadless;
+};
+
+/**
  * Detect if the current session is from a bot
  */
 export const detectBot = (): BotDetectionResult => {
@@ -135,6 +150,12 @@ export const detectBot = (): BotDetectionResult => {
   }
 
   // --- Sophisticated bot heuristics ---
+
+  // Google Web Rendering Service: modern Chrome on Linux = legit Google bot
+  if (isGoogleWebRenderer(userAgent)) {
+    return { isBot: true, botType: 'search_engine', botName: 'Google Web Renderer' };
+  }
+
 
   // Linux x86_64 desktop with outdated Chrome = almost certainly a scraper/bot
   if (isLinuxDesktop(userAgent) && isOutdatedChrome(userAgent)) {
