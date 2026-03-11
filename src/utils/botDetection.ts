@@ -26,6 +26,7 @@ const OUTDATED_THRESHOLD = 3; // Flag if 3+ versions behind
 const searchEngineBots = [
   'Googlebot', 'Bingbot', 'Slurp', 'DuckDuckBot',
   'Baiduspider', 'YandexBot', 'Sogou', 'Exabot',
+  'Google-InspectionTool', 'Google-Read-Aloud',
 ];
 
 // SEO and web analysis tools
