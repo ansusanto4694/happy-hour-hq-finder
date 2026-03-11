@@ -151,6 +151,12 @@ export const detectBot = (): BotDetectionResult => {
 
   // --- Sophisticated bot heuristics ---
 
+  // Google Web Rendering Service: modern Chrome on Linux = legit Google bot
+  if (isGoogleWebRenderer(userAgent)) {
+    return { isBot: true, botType: 'search_engine', botName: 'Google Web Renderer' };
+  }
+
+
   // Linux x86_64 desktop with outdated Chrome = almost certainly a scraper/bot
   if (isLinuxDesktop(userAgent) && isOutdatedChrome(userAgent)) {
     const version = getChromeVersion(userAgent);
