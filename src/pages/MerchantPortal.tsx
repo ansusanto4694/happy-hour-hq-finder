@@ -116,10 +116,7 @@ const MerchantPortal: React.FC = () => {
                 ) : (
                   <MerchantEventsList
                     events={events || []}
-                    onDelete={(id) => deleteEvent.mutate(id)}
                     onEdit={(event) => setEditingEvent(event)}
-                    onToggleActive={(id, isActive) => toggleActive.mutate({ eventId: id, isActive })}
-                    isDeleting={deleteEvent.isPending}
                   />
                 )}
               </CardContent>
