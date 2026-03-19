@@ -98,6 +98,7 @@ export const EventCreateForm: React.FC<EventCreateFormProps> = ({ onSubmit, isSu
       event_date: eventType === 'one_time' && eventDate ? eventDate.toISOString() : undefined,
       recurrence_rule: eventType === 'recurring' ? recurrenceRule : undefined,
       recurrence_day: eventType === 'recurring' ? recurrenceDay : undefined,
+      repeat_until: eventType === 'recurring' && repeatUntil ? repeatUntil.toISOString().split('T')[0] : undefined,
       start_time: startTime || undefined,
       end_time: endTime || undefined,
       category_tags: selectedTags,
