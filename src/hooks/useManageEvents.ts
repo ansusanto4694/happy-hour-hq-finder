@@ -16,6 +16,7 @@ export interface MerchantEvent {
   end_time: string | null;
   category_tags: string[];
   is_active: boolean;
+  repeat_until: string | null;
   created_at: string;
   updated_at: string;
 }
