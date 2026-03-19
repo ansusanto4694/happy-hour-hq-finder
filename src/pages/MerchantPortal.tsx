@@ -11,8 +11,8 @@ import { PortalEvents } from '@/components/merchant-portal/PortalEvents';
 import { PortalHappyHours } from '@/components/merchant-portal/PortalHappyHours';
 import { PortalStoreHours } from '@/components/merchant-portal/PortalStoreHours';
 import { PortalSettings } from '@/components/merchant-portal/PortalSettings';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tag, Loader2 } from 'lucide-react';
+import { PortalOffers } from '@/components/merchant-portal/PortalOffers';
+import { Loader2 } from 'lucide-react';
 
 const MerchantPortal: React.FC = () => {
   const { id } = useParams<{ id: string }>();
