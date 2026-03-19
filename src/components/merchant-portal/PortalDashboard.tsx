@@ -105,6 +105,7 @@ export const PortalDashboard: React.FC<PortalDashboardProps> = ({ merchantId, me
   const menuSourceClicks = trafficStats?.['deal_source_clicked'] ?? 0;
   const cardClicks = trafficStats?.['result_card_clicked'] ?? 0;
   const markerClicks = trafficStats?.['map_marker_clicked'] ?? 0;
+  const profileShares = trafficStats?.['profile_shared'] ?? 0;
 
   const cards = [
     {
