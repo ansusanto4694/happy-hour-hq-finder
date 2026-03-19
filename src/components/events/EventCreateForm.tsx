@@ -81,7 +81,7 @@ export const EventCreateForm: React.FC<EventCreateFormProps> = ({ onSubmit, isSu
     if (!title.trim()) return;
 
     const uploadedUrl = await uploadImage();
-    onSubmit({
+    const finalImageUrl = uploadedUrl || existingImageUrl || undefined;
       title: title.trim(),
       description: description.trim() || undefined,
       image_url: uploadedUrl,
