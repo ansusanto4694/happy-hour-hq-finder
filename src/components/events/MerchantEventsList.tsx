@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Trash2, Calendar, Clock, Repeat } from 'lucide-react';
+import { Trash2, Pencil, Calendar, Clock, Repeat } from 'lucide-react';
 import { type MerchantEvent, DAY_NAMES } from '@/hooks/useManageEvents';
 
 interface MerchantEventsListProps {
