@@ -1,113 +1,90 @@
 
 
-## Phase 1: Merchant Portal — Event Management
+## Merchant Portal Redesign — Sidebar + Multi-Section SaaS Layout
 
-You're right that events and deals are fundamentally different. The existing tables already reflect this:
-- **`merchant_events`** — for things like "Trivia Night" or "NBA Watch Party" (one-time or recurring)
-- **`merchant_offers`** — for things like "10% off $20+" (time-bounded deals)
+### Current State
+The Merchant Portal is a single-page layout with tabs (Events, Offers). Happy hours and deals are managed through modal dialogs on the public profile page (`RestaurantProfileEditor`), not within the portal. There is no store hours table in the database.
 
-We should keep them separate and evolve each table independently.
+### Proposed Architecture
 
-### What we're building
-
-1. **Merchant Portal page** — a new `/merchant/:id/manage` route where authenticated merchant owners (and admins) can manage their listing's events and offers
-2. **Event creation form** — supports one-time and recurring events
-3. **Homepage events feed** — neighborhood-filtered, Instagram-style feed
-
-### Scope for this slice
-
-Given the size, I recommend we split into **two implementation slices**:
-
-**Slice A (this build):** Database schema + Merchant Portal with event CRUD on merchant profiles
-**Slice B (next build):** Homepage neighborhood events feed
-
----
-
-### Slice A: Schema + Merchant Portal
-
-#### 1. Database migration
-
-**Evolve `merchant_events`** (add recurring support + denormalized location):
-
-```sql
-ALTER TABLE merchant_events
-  ADD COLUMN event_type text NOT NULL DEFAULT 'one_time',  -- 'one_time' | 'recurring'
-  ADD COLUMN recurrence_rule text,          -- 'weekly' | 'biweekly' | 'monthly'
-  ADD COLUMN recurrence_day integer,        -- 0=Sun, 1=Mon, ..., 6=Sat
-  ADD COLUMN start_time time,               -- e.g. 19:00 for "7 PM"
-  ADD COLUMN end_time time,                 -- optional end time
-  ADD COLUMN neighborhood text,             -- denormalized from Merchant
-  ADD COLUMN city text,                     -- denormalized from Merchant
-  ADD COLUMN category_tags text[] DEFAULT '{}',  -- ['trivia','watch-party','live-music']
-  ADD COLUMN is_active boolean NOT NULL DEFAULT true;
+```text
+┌──────────────────────────────────────────────────────┐
+│  Header: Logo + Restaurant Name + "View Listing" →   │
+├────────────┬─────────────────────────────────────────┤
+│  Sidebar   │  Main Content Area                      │
+│            │                                         │
+│  Dashboard │  (renders section based on sidebar      │
+│  Events    │   selection)                            │
+│  Offers    │                                         │
+│  Happy Hr  │                                         │
+│  Store Hrs │                                         │
+│  Settings  │                                         │
+│            │                                         │
+└────────────┴─────────────────────────────────────────┘
 ```
 
-**Create `merchant_owners`** (links users to merchants they can manage):
+### Sidebar Sections
 
-```sql
-CREATE TABLE merchant_owners (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  merchant_id integer NOT NULL REFERENCES "Merchant"(id) ON DELETE CASCADE,
-  status text NOT NULL DEFAULT 'approved',
-  created_at timestamptz NOT NULL DEFAULT now(),
-  UNIQUE(user_id, merchant_id)
-);
-```
+1. **Dashboard** — Overview card showing listing health: number of active events, whether happy hours are set, store hours completeness. Quick-glance stats.
 
-**Add RLS:**
-- `merchant_events`: admin OR owner of the merchant can INSERT/UPDATE/DELETE
-- `merchant_owners`: admin can manage all; users can view their own rows
+2. **Events** — Existing CRUD for one-time and recurring events. Already built; just moves into the new layout.
 
-**Add trigger** to auto-copy `neighborhood` and `city` from `Merchant` into `merchant_events` on insert.
+3. **Offers** — Currently a "coming soon" placeholder. Keeps the placeholder but is now a real nav item.
 
-**Create helper function** `is_merchant_owner(merchant_id)` for RLS policies.
+4. **Happy Hours** — Brings the `HappyHoursForm` (currently inside `RestaurantProfileEditor` dialog) into the portal as a standalone page section. Merchants can manage their happy hour schedule directly. Also surfaces the `HappyHourDealsManager` (menu items) inline below the schedule.
 
-#### 2. Merchant Portal page
+5. **Store Hours** — New feature. Requires a new `merchant_store_hours` table to store regular operating hours (day_of_week, open_time, close_time, is_closed). Similar UI to HappyHoursForm.
 
-**New route:** `/merchant/:id/manage`
+6. **Settings** — Brings `BasicInfoForm`, `AddressForm`, and `LogoUpload` from `RestaurantProfileEditor` into a full settings page. No more modal — merchants edit their listing info directly in the portal.
 
-**Access:** Authenticated users who are either admin OR have an approved row in `merchant_owners` for that merchant.
+### Technical Plan
 
-**Page layout:**
-- Header with merchant name + logo
-- Tabs: "Events" | "Offers" (offers tab is future, but we set up the tab structure now)
-- Events tab shows:
-  - "Add Event" button → opens form
-  - List of existing events with edit/delete actions
+**Database migration** — Create `merchant_store_hours` table:
+- `id` (uuid, PK)
+- `store_id` (integer, FK to Merchant.id)
+- `day_of_week` (integer, 0-6)
+- `open_time` (time)
+- `close_time` (time)
+- `is_closed` (boolean, default false)
+- `created_at`, `updated_at` (timestamps)
+- RLS: public SELECT, admin + merchant owner INSERT/UPDATE/DELETE
 
-#### 3. Event creation form
+**New/modified files:**
 
-**Fields:**
-- Event type toggle: One-time / Recurring
-- Title (required)
-- Description (optional, textarea)
-- Image URL (optional, text input — image upload can come later)
-- Category tags (multi-select chips: trivia, watch-party, live-music, karaoke, comedy, DJ, brunch, open-mic, sports)
-- **If one-time:** Date picker + optional start/end time
-- **If recurring:** Day of week picker + start time + optional end time + recurrence rule (weekly/biweekly/monthly)
+| File | Change |
+|---|---|
+| `src/pages/MerchantPortal.tsx` | Full rewrite: wrap in `SidebarProvider`, render sidebar + routed content area using local state (not URL routes) to switch sections |
+| `src/components/merchant-portal/PortalSidebar.tsx` | New — sidebar with nav items (Dashboard, Events, Offers, Happy Hours, Store Hours, Settings), using Shadcn Sidebar with `collapsible="icon"` |
+| `src/components/merchant-portal/PortalDashboard.tsx` | New — overview cards showing listing completeness |
+| `src/components/merchant-portal/PortalEvents.tsx` | New — extracted events section (existing logic from MerchantPortal) |
+| `src/components/merchant-portal/PortalHappyHours.tsx` | New — embeds `HappyHoursForm` + `HappyHourDealsManager` inline |
+| `src/components/merchant-portal/PortalStoreHours.tsx` | New — CRUD for store hours using new table |
+| `src/components/merchant-portal/PortalSettings.tsx` | New — embeds `BasicInfoForm`, `AddressForm`, `LogoUpload` inline |
+| `src/hooks/useMerchantStoreHours.ts` | New — query + mutations for store hours |
 
-#### 4. Access from merchant profile
+**Layout approach**: Uses the Shadcn `SidebarProvider` + `Sidebar` component. On mobile, the sidebar collapses to icon-only or offcanvas. The main content area fills the remaining space. Section switching is managed via local React state (`activeSection`) rather than nested routes, keeping the URL as `/merchant/:id/manage`.
 
-- Add "Manage Listing" button on `RestaurantProfileContent.tsx` (visible to admins and merchant owners)
-- Links to `/merchant/:id/manage`
+**What stays the same**: The `RestaurantProfileEditor` dialog on the public profile page remains functional for admin quick-edits, but the portal becomes the primary management interface for merchant owners.
 
----
+### Section Details
 
-### Files to create
-- `src/pages/MerchantPortal.tsx` — portal page with tabs
-- `src/components/events/EventCreateForm.tsx` — event form
-- `src/components/events/MerchantEventsList.tsx` — list with edit/delete
-- `src/hooks/useManageEvents.ts` — CRUD operations
-- `src/hooks/useMerchantOwnership.ts` — check if user owns a merchant
+**Dashboard** shows:
+- Active events count
+- Happy hour schedule status (set / not set)
+- Store hours status (complete / incomplete)
+- Link to view public listing
 
-### Files to modify
-- `src/App.tsx` — add `/merchant/:id/manage` route
-- `src/components/RestaurantProfileContent.tsx` — add "Manage Listing" button, uncomment events feed
-- `src/components/RestaurantEventsFeed.tsx` — update to handle recurring events display
+**Store Hours** UI:
+- 7-row form (Mon–Sun), each with open/close time pickers and an "is closed" toggle
+- Save button applies all changes at once (delete-and-reinsert pattern, same as happy hours)
 
-### Build order
-1. Database migration (schema + RLS + trigger + helper function)
-2. Merchant portal page with event CRUD
-3. Update merchant profile to link to portal + show events
+**Happy Hours** section:
+- Top half: happy hour time schedule (reuses `HappyHoursForm`)
+- Bottom half: happy hour menu/deals (reuses `HappyHourDealsManager`, but adapted to work inline instead of in a dialog)
+
+**Settings** section:
+- Restaurant name, phone, website
+- Full address
+- Logo upload
+- All using existing form components, just rendered inline instead of in a modal
 
