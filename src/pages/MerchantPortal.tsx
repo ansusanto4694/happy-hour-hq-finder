@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useMerchantOwnership } from '@/hooks/useMerchantOwnership';
-import { useManageEvents } from '@/hooks/useManageEvents';
+import { useManageEvents, type MerchantEvent } from '@/hooks/useManageEvents';
 import { EventCreateForm } from '@/components/events/EventCreateForm';
 import { MerchantEventsList } from '@/components/events/MerchantEventsList';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
