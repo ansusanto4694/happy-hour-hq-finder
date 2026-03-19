@@ -74,6 +74,7 @@ export const useManageEvents = (merchantId: number) => {
       } else {
         insertData.recurrence_rule = formData.recurrence_rule || 'weekly';
         insertData.recurrence_day = formData.recurrence_day ?? null;
+        insertData.repeat_until = formData.repeat_until || null;
       }
 
       insertData.start_time = formData.start_time || null;
