@@ -17,6 +17,7 @@ const MerchantPortal: React.FC = () => {
   const { user } = useAuth();
   const merchantId = Number(id);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<MerchantEvent | null>(null);
 
   // Fetch merchant info
   const { data: merchant, isLoading: merchantLoading } = useQuery({
