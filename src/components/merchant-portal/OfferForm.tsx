@@ -37,6 +37,7 @@ export const OfferForm: React.FC<OfferFormProps> = ({
   const [description, setDescription] = useState(initialData?.offer_description ?? '');
   const [startTime, setStartTime] = useState(initialData ? toDatetimeLocal(initialData.start_time) : '');
   const [endTime, setEndTime] = useState(initialData ? toDatetimeLocal(initialData.end_time) : '');
+  const [pin, setPin] = useState(initialData?.redemption_pin ?? '');
   const [error, setError] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
