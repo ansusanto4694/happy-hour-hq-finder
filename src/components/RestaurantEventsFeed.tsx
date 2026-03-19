@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar, Clock, Share, Repeat, ImageIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { sortEventsByNextOccurrence, formatNextDate } from '@/utils/eventUtils';
 
 interface RestaurantEventsFeedProps {
   restaurantId: number;
@@ -37,6 +38,11 @@ export const RestaurantEventsFeed: React.FC<RestaurantEventsFeedProps> = ({ rest
     },
   });
 
+  const sortedEvents = React.useMemo(() => {
+    if (!events) return [];
+    return sortEventsByNextOccurrence(events);
+  }, [events]);
+
   const handleShare = (event: any) => {
     const shareUrl = window.location.href;
     if (navigator.share) {
@@ -47,20 +53,20 @@ export const RestaurantEventsFeed: React.FC<RestaurantEventsFeedProps> = ({ rest
   };
 
   if (isLoading) return null;
-  if (error || !events?.length) return null;
+  if (error || !sortedEvents.length) return null;
 
   return (
-    <Card className="shadow-lg border-l-4 border-amber-500 bg-white">
+    <Card className="shadow-lg border-l-4 border-amber-500 bg-card">
       <CardContent className="p-6">
         <h2 className="text-xl font-semibold text-foreground mb-4">Events & Updates</h2>
         <div className="space-y-4">
-          {events.map((event) => (
+          {sortedEvents.map((event) => (
             <Card key={event.id} className="border border-border">
               <CardContent className="p-4">
                 <div className="flex items-start gap-4">
                   {/* Event Image */}
                   <div className="flex-shrink-0">
-                    <div className={`w-20 h-20 ${event.image_url ? 'bg-white' : 'bg-gradient-to-br from-primary/10 to-secondary/10'} border border-border rounded-lg flex items-center justify-center overflow-hidden`}>
+                    <div className={`w-20 h-20 ${event.image_url ? 'bg-card' : 'bg-gradient-to-br from-primary/10 to-secondary/10'} border border-border rounded-lg flex items-center justify-center overflow-hidden`}>
                       {event.image_url ? (
                         <img
                           src={event.image_url}
@@ -81,7 +87,7 @@ export const RestaurantEventsFeed: React.FC<RestaurantEventsFeedProps> = ({ rest
                       <h3 className="font-semibold text-foreground truncate">{event.title}</h3>
                       <Badge variant="secondary" className="text-xs capitalize">
                         {event.event_type === 'recurring' ? (
-                          <><Repeat className="h-3 w-3 mr-1" />{event.recurrence_rule || 'recurring'}</>
+                          <><Repeat className="h-3 w-3 mr-1" />Weekly</>
                         ) : 'One-time'}
                       </Badge>
                     </div>
@@ -90,19 +96,27 @@ export const RestaurantEventsFeed: React.FC<RestaurantEventsFeedProps> = ({ rest
                       <p className="text-sm text-muted-foreground line-clamp-2">{event.description}</p>
                     )}
 
-                    <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                    <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                      {/* Next occurrence date — the key virtual instance display */}
+                      {event.nextDate && (
+                        <span className="flex items-center gap-1 font-medium text-foreground">
+                          <Calendar className="h-3 w-3" />
+                          {event.event_type === 'recurring' 
+                            ? `Next: ${formatNextDate(event.nextDate)}`
+                            : formatNextDate(event.nextDate)
+                          }
+                        </span>
+                      )}
+
+                      {/* Recurrence context */}
                       {event.event_type === 'recurring' && event.recurrence_day != null && (
                         <span className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
+                          <Repeat className="h-3 w-3" />
                           Every {DAY_NAMES[event.recurrence_day]}
                         </span>
                       )}
-                      {event.event_type === 'one_time' && event.event_date && (
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {new Date(event.event_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                        </span>
-                      )}
+
+                      {/* Time */}
                       {event.start_time && (
                         <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
