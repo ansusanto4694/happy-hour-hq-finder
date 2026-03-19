@@ -139,10 +139,15 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
                 </div>
               )}
 
-              {/* Action Buttons - Admin Only */}
-              {isAdmin && (
-                <div className="flex items-center justify-center pt-2">
+              {/* Action Buttons - Admin/Owner */}
+              {canManage && (
+                <div className="flex items-center justify-center gap-2 pt-2">
                   <RestaurantProfileEditor restaurant={restaurantWithIds} />
+                  <Button asChild variant="outline" size="sm">
+                    <Link to={`/merchant/${restaurant.id}/manage`}>
+                      <Settings className="h-4 w-4 mr-2" />Manage
+                    </Link>
+                  </Button>
                 </div>
               )}
             </div>
