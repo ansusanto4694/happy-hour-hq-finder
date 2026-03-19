@@ -11,8 +11,8 @@ import { PortalEvents } from '@/components/merchant-portal/PortalEvents';
 import { PortalHappyHours } from '@/components/merchant-portal/PortalHappyHours';
 import { PortalStoreHours } from '@/components/merchant-portal/PortalStoreHours';
 import { PortalSettings } from '@/components/merchant-portal/PortalSettings';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tag, Loader2 } from 'lucide-react';
+import { PortalOffers } from '@/components/merchant-portal/PortalOffers';
+import { Loader2 } from 'lucide-react';
 
 const MerchantPortal: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -56,21 +56,7 @@ const MerchantPortal: React.FC = () => {
       case 'events':
         return <PortalEvents merchantId={merchantId} />;
       case 'offers':
-        return (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold text-foreground">Offers</h2>
-              <p className="text-sm text-muted-foreground mt-1">Manage time-bounded deals and promotions</p>
-            </div>
-            <Card>
-              <CardContent className="py-16 text-center text-muted-foreground">
-                <Tag className="h-12 w-12 mx-auto mb-3 opacity-40" />
-                <p className="font-medium text-foreground">Coming soon</p>
-                <p className="text-sm mt-1">Offer management is on the way.</p>
-              </CardContent>
-            </Card>
-          </div>
-        );
+        return <PortalOffers merchantId={merchantId} />;
       case 'happy-hours':
         return <PortalHappyHours merchantId={merchantId} />;
       case 'store-hours':

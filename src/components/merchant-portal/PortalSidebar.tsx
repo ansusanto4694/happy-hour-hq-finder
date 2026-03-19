@@ -20,7 +20,7 @@ export type PortalSection = 'dashboard' | 'events' | 'offers' | 'happy-hours' | 
 const NAV_ITEMS: { section: PortalSection; label: string; icon: React.ElementType; disabled?: boolean }[] = [
   { section: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { section: 'events', label: 'Events', icon: Calendar },
-  { section: 'offers', label: 'Offers', icon: Tag, disabled: true },
+  { section: 'offers', label: 'Offers', icon: Tag },
   { section: 'happy-hours', label: 'Happy Hours', icon: Clock },
   { section: 'store-hours', label: 'Store Hours', icon: Store },
   { section: 'settings', label: 'Settings', icon: Settings },
