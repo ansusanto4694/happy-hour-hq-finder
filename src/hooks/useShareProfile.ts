@@ -1,8 +1,10 @@
 import { useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 interface ShareProfileOptions {
   merchantName?: string;
+  merchantId?: number;
   utmSource?: string;
   utmMedium?: string;
 }
@@ -14,10 +16,12 @@ interface ShareProfileOptions {
  */
 export const useShareProfile = ({
   merchantName,
+  merchantId,
   utmSource = 'share',
   utmMedium = 'profile',
 }: ShareProfileOptions = {}) => {
   const { toast } = useToast();
+  const { track } = useAnalytics();
 
   const buildShareUrl = useCallback(() => {
     // Route through the og-meta proxy so bots/crawlers see correct OG tags
@@ -29,6 +33,16 @@ export const useShareProfile = ({
     proxyUrl.searchParams.set('utm_medium', utmMedium);
     return proxyUrl.toString();
   }, [utmSource, utmMedium]);
+
+  const trackShare = useCallback((method: string) => {
+    track({
+      eventType: 'click',
+      eventCategory: 'merchant_interaction',
+      eventAction: 'profile_shared',
+      merchantId,
+      metadata: { method, merchantName },
+    });
+  }, [track, merchantId, merchantName]);
 
   const handleShare = useCallback(async () => {
     const shareUrl = buildShareUrl();
@@ -44,12 +58,11 @@ export const useShareProfile = ({
           text: `Check out ${merchantName || 'this restaurant'}'s happy hour details!`,
           url: shareUrl,
         });
-        // User completed or cancelled native share – no toast needed
+        trackShare('native');
         return;
       } catch (err) {
-        // User cancelled share or API failed – fall through to clipboard
         if ((err as DOMException)?.name === 'AbortError') {
-          return; // User intentionally cancelled
+          return;
         }
       }
     }
@@ -57,6 +70,7 @@ export const useShareProfile = ({
     // Fallback: copy to clipboard
     try {
       await navigator.clipboard.writeText(shareUrl);
+      trackShare('clipboard');
       toast({
         title: 'Link copied!',
         description: 'Restaurant profile link has been copied to your clipboard.',
@@ -68,7 +82,7 @@ export const useShareProfile = ({
         variant: 'destructive',
       });
     }
-  }, [buildShareUrl, merchantName, toast]);
+  }, [buildShareUrl, merchantName, toast, trackShare]);
 
   return { handleShare, buildShareUrl };
 };

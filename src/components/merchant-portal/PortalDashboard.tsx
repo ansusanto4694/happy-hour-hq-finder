@@ -4,7 +4,7 @@ import { useMerchantStoreHours } from '@/hooks/useMerchantStoreHours';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, Clock, Store, CheckCircle2, AlertCircle, Eye, Globe, MapPin, Phone, UtensilsCrossed, TrendingUp } from 'lucide-react';
+import { Calendar, Clock, Store, CheckCircle2, AlertCircle, Eye, Globe, MapPin, Phone, UtensilsCrossed, TrendingUp, Share2 } from 'lucide-react';
 import type { PortalSection } from './PortalSidebar';
 
 interface PortalDashboardProps {
@@ -79,6 +79,7 @@ export const PortalDashboard: React.FC<PortalDashboardProps> = ({ merchantId, me
           'deal_source_clicked',
           'result_card_clicked',
           'map_marker_clicked',
+          'profile_shared',
         ]);
       if (error) throw error;
 
@@ -104,6 +105,7 @@ export const PortalDashboard: React.FC<PortalDashboardProps> = ({ merchantId, me
   const menuSourceClicks = trafficStats?.['deal_source_clicked'] ?? 0;
   const cardClicks = trafficStats?.['result_card_clicked'] ?? 0;
   const markerClicks = trafficStats?.['map_marker_clicked'] ?? 0;
+  const profileShares = trafficStats?.['profile_shared'] ?? 0;
 
   const cards = [
     {
@@ -159,6 +161,7 @@ export const PortalDashboard: React.FC<PortalDashboardProps> = ({ merchantId, me
             <StatCard label="Direction Requests" value={directionsClicks} icon={MapPin} />
             <StatCard label="Phone Calls" value={phoneClicks} icon={Phone} />
             <StatCard label="Menu Source Clicks" value={menuSourceClicks} icon={UtensilsCrossed} subtitle="Happy hour menu links" />
+            <StatCard label="Profile Shares" value={profileShares} icon={Share2} subtitle="Shared via link" />
           </div>
         </CardContent>
       </Card>
