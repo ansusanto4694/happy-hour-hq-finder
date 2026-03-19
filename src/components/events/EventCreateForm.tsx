@@ -179,6 +179,35 @@ export const EventCreateForm: React.FC<EventCreateFormProps> = ({ onSubmit, isSu
         </div>
       )}
 
+      {/* Recurring: Repeat Until */}
+      {eventType === 'recurring' && (
+        <div className="space-y-2">
+          <Label>Repeat Until</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !repeatUntil && "text-muted-foreground")}>
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {repeatUntil ? format(repeatUntil, 'PPP') : 'No end date'}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={repeatUntil}
+                onSelect={setRepeatUntil}
+                disabled={(date) => date < new Date()}
+                initialFocus
+                className="p-3 pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+          {repeatUntil && (
+            <Button type="button" variant="ghost" size="sm" onClick={() => setRepeatUntil(undefined)} className="text-xs text-muted-foreground">
+              Clear end date
+            </Button>
+          )}
+        </div>
+
       {/* Start/End Time */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
