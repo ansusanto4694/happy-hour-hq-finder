@@ -4,7 +4,7 @@ import { useMerchantStoreHours } from '@/hooks/useMerchantStoreHours';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, Clock, Store, CheckCircle2, AlertCircle, Eye, Globe, MapPin, Phone, UtensilsCrossed, TrendingUp, Share2 } from 'lucide-react';
+import { Calendar, Clock, Store, CheckCircle2, AlertCircle, Eye, Globe, MapPin, Phone, UtensilsCrossed, TrendingUp, Share2, Tag } from 'lucide-react';
 import type { PortalSection } from './PortalSidebar';
 
 interface PortalDashboardProps {
