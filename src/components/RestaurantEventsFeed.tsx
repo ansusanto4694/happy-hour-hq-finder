@@ -2,48 +2,35 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, Share } from 'lucide-react';
+import { Calendar, Clock, Share, Repeat } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface RestaurantEventsFeedProps {
   restaurantId: number;
 }
 
-// Helper function to format event date
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
 const formatEventDate = (dateString: string): string => {
   const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { 
-    weekday: 'long',
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  });
+  return date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 };
 
-// Helper function to format event time
-const formatEventTime = (dateString: string): string => {
-  const date = new Date(dateString);
-  return date.toLocaleTimeString('en-US', { 
-    hour: 'numeric', 
-    minute: '2-digit',
-    hour12: true 
-  });
+const formatTime = (time: string | null): string | null => {
+  if (!time) return null;
+  const [h, m] = time.split(':');
+  const hour = parseInt(h);
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  return `${hour % 12 || 12}:${m} ${ampm}`;
 };
 
-// Helper function to get time since posted
 const getTimeSincePosted = (dateString: string): string => {
-  const now = new Date();
-  const posted = new Date(dateString);
-  const diffInHours = Math.floor((now.getTime() - posted.getTime()) / (1000 * 60 * 60));
-  
+  const diffInHours = Math.floor((Date.now() - new Date(dateString).getTime()) / (1000 * 60 * 60));
   if (diffInHours < 1) return 'Just now';
   if (diffInHours < 24) return `${diffInHours}h ago`;
-  
   const diffInDays = Math.floor(diffInHours / 24);
   if (diffInDays < 7) return `${diffInDays}d ago`;
-  
-  const diffInWeeks = Math.floor(diffInDays / 7);
-  return `${diffInWeeks}w ago`;
+  return `${Math.floor(diffInDays / 7)}w ago`;
 };
 
 export const RestaurantEventsFeed: React.FC<RestaurantEventsFeedProps> = ({ restaurantId }) => {
@@ -54,142 +41,86 @@ export const RestaurantEventsFeed: React.FC<RestaurantEventsFeedProps> = ({ rest
         .from('merchant_events')
         .select('*')
         .eq('restaurant_id', restaurantId)
+        .eq('is_active', true)
         .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching restaurant events:', error);
-        throw error;
-      }
-
+      if (error) throw error;
       return data;
     },
   });
 
-  const buildEventShareUrl = () => {
-    const proxyBase = 'https://gohcqazhofdhkghfxfok.supabase.co/functions/v1/og-meta';
-    const currentPath = window.location.pathname;
-    const proxyUrl = new URL(proxyBase);
-    proxyUrl.searchParams.set('path', currentPath);
-    proxyUrl.searchParams.set('utm_source', 'share');
-    proxyUrl.searchParams.set('utm_medium', 'event');
-    return proxyUrl.toString();
-  };
-
   const handleShare = (event: any) => {
-    const shareUrl = buildEventShareUrl();
+    const shareUrl = window.location.href;
     if (navigator.share) {
-      navigator.share({
-        title: event.title,
-        text: event.description,
-        url: shareUrl,
-      });
+      navigator.share({ title: event.title, text: event.description, url: shareUrl });
     } else {
       navigator.clipboard.writeText(`${event.title} - ${shareUrl}`);
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-gray-900">Events & Updates</h2>
-        <div className="text-gray-500">Loading events...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-gray-900">Events & Updates</h2>
-        <div className="text-red-500">Error loading events. Please try again later.</div>
-      </div>
-    );
-  }
-
-  if (!events || events.length === 0) {
-    return (
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-gray-900">Events & Updates</h2>
-        <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 text-center">
-          <p className="text-gray-500">No events posted yet. Check back soon for exciting updates!</p>
-        </div>
-      </div>
-    );
-  }
+  if (isLoading) return null;
+  if (error || !events?.length) return null;
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-xl font-semibold text-gray-900">Events & Updates</h2>
-      
-      <div className="space-y-6">
-        {events.map((event) => (
-          <Card key={event.id} className="bg-white shadow-sm border border-gray-200 overflow-hidden">
-            <CardContent className="p-0">
-              {/* Event Image */}
+    <Card className="shadow-lg border-l-4 border-amber-500 bg-white">
+      <CardContent className="p-6">
+        <h2 className="text-xl font-semibold text-foreground mb-4">Events & Updates</h2>
+        <div className="space-y-4">
+          {events.map((event) => (
+            <div key={event.id} className="border border-border rounded-lg overflow-hidden">
               {event.image_url && (
-                <div className="w-full h-64 bg-gray-200">
-                  <img
-                    src={event.image_url}
-                    alt={event.title}
-                    className="w-full h-full object-cover"
-                  />
+                <div className="w-full h-48 bg-muted">
+                  <img src={event.image_url} alt={event.title} className="w-full h-full object-cover" />
                 </div>
               )}
-              
-              {/* Event Content */}
-              <div className="p-6">
-                {/* Post Header */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center">
-                      <span className="text-white text-sm font-semibold">📅</span>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-900">New Event</p>
-                      <p className="text-sm text-gray-500">{getTimeSincePosted(event.created_at)}</p>
-                    </div>
+              <div className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center space-x-2">
+                    <Badge variant="secondary" className="text-xs capitalize">
+                      {event.event_type === 'recurring' ? (
+                        <><Repeat className="h-3 w-3 mr-1" />{event.recurrence_rule || 'recurring'}</>
+                      ) : 'Event'}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">{getTimeSincePosted(event.created_at)}</span>
                   </div>
-                  
-                  {/* Share Button */}
                   <button
                     onClick={() => handleShare(event)}
-                    className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
-                    title="Share event"
+                    className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
                   >
-                    <Share className="w-5 h-5 text-gray-600" />
+                    <Share className="w-4 h-4 text-muted-foreground" />
                   </button>
                 </div>
 
-                {/* Event Title */}
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                  {event.title}
-                </h3>
+                <h3 className="text-lg font-semibold text-foreground mb-2">{event.title}</h3>
+                {event.description && <p className="text-muted-foreground text-sm mb-3">{event.description}</p>}
 
-                {/* Event Description */}
-                {event.description && (
-                  <p className="text-gray-700 mb-4 leading-relaxed">
-                    {event.description}
-                  </p>
-                )}
-
-                {/* Event Date and Time */}
-                {event.event_date && (
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="secondary" className="flex items-center space-x-1">
+                <div className="flex flex-wrap gap-2">
+                  {event.event_type === 'recurring' && event.recurrence_day != null && (
+                    <Badge variant="outline" className="flex items-center gap-1 text-xs">
                       <Calendar className="w-3 h-3" />
-                      <span>{formatEventDate(event.event_date)}</span>
+                      Every {DAY_NAMES[event.recurrence_day]}
                     </Badge>
-                    <Badge variant="secondary" className="flex items-center space-x-1">
+                  )}
+                  {event.event_type === 'one_time' && event.event_date && (
+                    <Badge variant="outline" className="flex items-center gap-1 text-xs">
+                      <Calendar className="w-3 h-3" />
+                      {formatEventDate(event.event_date)}
+                    </Badge>
+                  )}
+                  {event.start_time && (
+                    <Badge variant="outline" className="flex items-center gap-1 text-xs">
                       <Clock className="w-3 h-3" />
-                      <span>{formatEventTime(event.event_date)}</span>
+                      {formatTime(event.start_time)}{event.end_time ? ` – ${formatTime(event.end_time)}` : ''}
                     </Badge>
-                  </div>
-                )}
+                  )}
+                  {event.category_tags?.map((tag: string) => (
+                    <Badge key={tag} variant="secondary" className="text-xs capitalize">{tag.replace('-', ' ')}</Badge>
+                  ))}
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
