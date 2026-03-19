@@ -60,6 +60,21 @@ export const PortalDashboard: React.FC<PortalDashboardProps> = ({ merchantId, me
     },
   });
 
+  // Redemption count (last 30 days)
+  const { data: redemptionCount } = useQuery({
+    queryKey: ['merchant-redemptions-count', merchantId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('offer_redemptions')
+        .select('id')
+        .eq('store_id', merchantId)
+        .gte('redeemed_at', thirtyDaysAgo);
+      if (error) throw error;
+      return data?.length ?? 0;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   // Merchant-specific traffic analytics (last 30 days)
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
