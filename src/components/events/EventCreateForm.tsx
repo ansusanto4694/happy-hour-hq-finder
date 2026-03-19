@@ -42,6 +42,9 @@ export const EventCreateForm: React.FC<EventCreateFormProps> = ({ onSubmit, isSu
   );
   const [recurrenceRule, setRecurrenceRule] = useState(initialData?.recurrence_rule || 'weekly');
   const [recurrenceDay, setRecurrenceDay] = useState<number>(initialData?.recurrence_day ?? 1);
+  const [repeatUntil, setRepeatUntil] = useState<Date | undefined>(
+    initialData?.repeat_until ? new Date(initialData.repeat_until) : undefined
+  );
   const [startTime, setStartTime] = useState(initialData?.start_time?.slice(0, 5) || '');
   const [endTime, setEndTime] = useState(initialData?.end_time?.slice(0, 5) || '');
   const [selectedTags, setSelectedTags] = useState<string[]>(initialData?.category_tags || []);
