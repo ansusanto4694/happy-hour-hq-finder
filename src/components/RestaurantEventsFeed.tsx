@@ -37,11 +37,13 @@ export const RestaurantEventsFeed: React.FC<RestaurantEventsFeedProps> = ({ rest
   const { data: events, isLoading, error } = useQuery({
     queryKey: ['restaurant-events', restaurantId],
     queryFn: async () => {
+      const today = new Date().toISOString().split('T')[0];
       const { data, error } = await supabase
         .from('merchant_events')
         .select('*')
         .eq('restaurant_id', restaurantId)
         .eq('is_active', true)
+        .or(`repeat_until.is.null,repeat_until.gte.${today}`)
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data;
