@@ -548,6 +548,7 @@ export type Database = {
           neighborhood: string | null
           recurrence_day: number | null
           recurrence_rule: string | null
+          repeat_until: string | null
           restaurant_id: number
           start_time: string | null
           title: string
@@ -567,6 +568,7 @@ export type Database = {
           neighborhood?: string | null
           recurrence_day?: number | null
           recurrence_rule?: string | null
+          repeat_until?: string | null
           restaurant_id: number
           start_time?: string | null
           title: string
@@ -586,6 +588,7 @@ export type Database = {
           neighborhood?: string | null
           recurrence_day?: number | null
           recurrence_rule?: string | null
+          repeat_until?: string | null
           restaurant_id?: number
           start_time?: string | null
           title?: string
