@@ -763,6 +763,7 @@ export type Database = {
           is_active: boolean
           offer_description: string | null
           offer_name: string
+          redemption_pin: string | null
           start_time: string
           store_id: number
           updated_at: string
@@ -774,6 +775,7 @@ export type Database = {
           is_active?: boolean
           offer_description?: string | null
           offer_name: string
+          redemption_pin?: string | null
           start_time: string
           store_id: number
           updated_at?: string
@@ -785,6 +787,7 @@ export type Database = {
           is_active?: boolean
           offer_description?: string | null
           offer_name?: string
+          redemption_pin?: string | null
           start_time?: string
           store_id?: number
           updated_at?: string
@@ -1018,6 +1021,41 @@ export type Database = {
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      offer_redemptions: {
+        Row: {
+          id: string
+          offer_id: string
+          redeemed_at: string
+          session_id: string | null
+          store_id: number
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          offer_id: string
+          redeemed_at?: string
+          session_id?: string | null
+          store_id: number
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          offer_id?: string
+          redeemed_at?: string
+          session_id?: string | null
+          store_id?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offer_redemptions_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_offers"
             referencedColumns: ["id"]
           },
         ]
