@@ -22,6 +22,7 @@ import { useMerchantRating } from '@/hooks/useMerchantRating';
 import { useAuth } from '@/hooks/useAuth';
 import { useShareProfile } from '@/hooks/useShareProfile';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useMerchantOwnership } from '@/hooks/useMerchantOwnership';
 
 interface Restaurant {
   id: number;
