@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Share, Utensils, PenLine, Star, MapPin } from 'lucide-react';
+import { Share, Utensils, PenLine, Star, MapPin, Settings } from 'lucide-react';
 import { GoogleRatingBadge } from '@/components/GoogleRatingBadge';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { RestaurantBasicInfo } from '@/components/RestaurantBasicInfo';
