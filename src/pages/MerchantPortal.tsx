@@ -92,7 +92,16 @@ const MerchantPortal: React.FC = () => {
                 )}
               </CardHeader>
               <CardContent>
-                {showCreateForm ? (
+                {editingEvent ? (
+                  <EventCreateForm
+                    initialData={editingEvent}
+                    onSubmit={(data) => {
+                      updateEvent.mutate({ eventId: editingEvent.id, formData: data }, { onSuccess: () => setEditingEvent(null) });
+                    }}
+                    isSubmitting={updateEvent.isPending}
+                    onCancel={() => setEditingEvent(null)}
+                  />
+                ) : showCreateForm ? (
                   <EventCreateForm
                     onSubmit={(data) => {
                       createEvent.mutate(data, { onSuccess: () => setShowCreateForm(false) });
@@ -108,6 +117,7 @@ const MerchantPortal: React.FC = () => {
                   <MerchantEventsList
                     events={events || []}
                     onDelete={(id) => deleteEvent.mutate(id)}
+                    onEdit={(event) => setEditingEvent(event)}
                     onToggleActive={(id, isActive) => toggleActive.mutate({ eventId: id, isActive })}
                     isDeleting={deleteEvent.isPending}
                   />

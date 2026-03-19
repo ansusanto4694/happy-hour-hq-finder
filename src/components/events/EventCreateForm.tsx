@@ -222,7 +222,7 @@ export const EventCreateForm: React.FC<EventCreateFormProps> = ({ onSubmit, isSu
       <div className="flex gap-3 pt-2">
         <Button type="submit" disabled={isSubmitting || isUploading || !title.trim()}>
           <Plus className="h-4 w-4 mr-2" />
-          {isUploading ? 'Uploading...' : isSubmitting ? 'Creating...' : 'Create Event'}
+          {isUploading ? 'Uploading...' : isSubmitting ? (isEditing ? 'Saving...' : 'Creating...') : (isEditing ? 'Save Changes' : 'Create Event')}
         </Button>
         <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
       </div>
