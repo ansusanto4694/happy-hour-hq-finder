@@ -35,7 +35,7 @@ const MerchantPortal: React.FC = () => {
   });
 
   const { canManage, isLoading: ownershipLoading } = useMerchantOwnership(merchantId);
-  const { events, isLoading: eventsLoading, createEvent, deleteEvent, toggleActive } = useManageEvents(merchantId);
+  const { events, isLoading: eventsLoading, createEvent, updateEvent, deleteEvent, toggleActive } = useManageEvents(merchantId);
 
   if (!user) return <Navigate to="/auth" replace />;
   if (merchantLoading || ownershipLoading) {
