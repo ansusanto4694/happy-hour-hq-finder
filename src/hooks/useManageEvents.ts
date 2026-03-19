@@ -110,10 +110,12 @@ export const useManageEvents = (merchantId: number) => {
         updateData.event_date = formData.event_date || null;
         updateData.recurrence_rule = null;
         updateData.recurrence_day = null;
+        updateData.repeat_until = null;
       } else {
         updateData.recurrence_rule = formData.recurrence_rule || 'weekly';
         updateData.recurrence_day = formData.recurrence_day ?? null;
         updateData.event_date = null;
+        updateData.repeat_until = formData.repeat_until || null;
       }
 
       const { error } = await supabase
