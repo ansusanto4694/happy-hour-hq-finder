@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -7,9 +7,10 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CalendarIcon, Plus } from 'lucide-react';
+import { CalendarIcon, Plus, Upload, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 import { EVENT_CATEGORIES, DAY_NAMES, type EventFormData } from '@/hooks/useManageEvents';
 
 interface EventCreateFormProps {
@@ -22,7 +23,10 @@ export const EventCreateForm: React.FC<EventCreateFormProps> = ({ onSubmit, isSu
   const [eventType, setEventType] = useState<'one_time' | 'recurring'>('one_time');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [eventDate, setEventDate] = useState<Date>();
   const [recurrenceRule, setRecurrenceRule] = useState('weekly');
   const [recurrenceDay, setRecurrenceDay] = useState<number>(1);
@@ -34,14 +38,45 @@ export const EventCreateForm: React.FC<EventCreateFormProps> = ({ onSubmit, isSu
     setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setImagePreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const uploadImage = async (): Promise<string | undefined> => {
+    if (!imageFile) return undefined;
+    setIsUploading(true);
+    try {
+      const ext = imageFile.name.split('.').pop();
+      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from('event-images').upload(path, imageFile);
+      if (error) throw error;
+      const { data: { publicUrl } } = supabase.storage.from('event-images').getPublicUrl(path);
+      return publicUrl;
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
 
+    const uploadedUrl = await uploadImage();
     onSubmit({
       title: title.trim(),
       description: description.trim() || undefined,
-      image_url: imageUrl.trim() || undefined,
+      image_url: uploadedUrl,
       event_type: eventType,
       event_date: eventType === 'one_time' && eventDate ? eventDate.toISOString() : undefined,
       recurrence_rule: eventType === 'recurring' ? recurrenceRule : undefined,
@@ -79,10 +114,23 @@ export const EventCreateForm: React.FC<EventCreateFormProps> = ({ onSubmit, isSu
         <Textarea id="event-desc" value={description} onChange={e => setDescription(e.target.value)} placeholder="Tell people what to expect..." rows={3} />
       </div>
 
-      {/* Image URL */}
+      {/* Image Upload */}
       <div className="space-y-2">
-        <Label htmlFor="event-img">Image URL</Label>
-        <Input id="event-img" value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="https://..." />
+        <Label>Event Image</Label>
+        <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
+        {imagePreview ? (
+          <div className="relative w-full h-48 rounded-lg overflow-hidden border border-border">
+            <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+            <button type="button" onClick={removeImage} className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1 hover:bg-black/80">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        ) : (
+          <Button type="button" variant="outline" className="w-full h-24 border-dashed" onClick={() => fileInputRef.current?.click()}>
+            <Upload className="h-5 w-5 mr-2 text-muted-foreground" />
+            <span className="text-muted-foreground">Upload image</span>
+          </Button>
+        )}
       </div>
 
       {/* One-time: Date Picker */}
@@ -162,9 +210,9 @@ export const EventCreateForm: React.FC<EventCreateFormProps> = ({ onSubmit, isSu
 
       {/* Actions */}
       <div className="flex gap-3 pt-2">
-        <Button type="submit" disabled={isSubmitting || !title.trim()}>
+        <Button type="submit" disabled={isSubmitting || isUploading || !title.trim()}>
           <Plus className="h-4 w-4 mr-2" />
-          {isSubmitting ? 'Creating...' : 'Create Event'}
+          {isUploading ? 'Uploading...' : isSubmitting ? 'Creating...' : 'Create Event'}
         </Button>
         <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
       </div>
