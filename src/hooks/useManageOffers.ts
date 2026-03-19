@@ -10,6 +10,7 @@ export interface MerchantOffer {
   start_time: string;
   end_time: string;
   is_active: boolean;
+  redemption_pin: string | null;
   created_at: string;
   updated_at: string;
 }
