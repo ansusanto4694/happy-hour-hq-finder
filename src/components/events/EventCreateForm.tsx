@@ -207,7 +207,7 @@ export const EventCreateForm: React.FC<EventCreateFormProps> = ({ onSubmit, isSu
             </Button>
           )}
         </div>
-
+      )}
       {/* Start/End Time */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
