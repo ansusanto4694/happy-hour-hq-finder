@@ -100,6 +100,20 @@ export const OfferForm: React.FC<OfferFormProps> = ({
         </div>
       </div>
 
+      <div className="space-y-2">
+        <Label htmlFor="offer-pin">Redemption PIN (optional)</Label>
+        <Input
+          id="offer-pin"
+          value={pin}
+          onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+          placeholder="e.g. 1234"
+          maxLength={4}
+          inputMode="numeric"
+          className="max-w-[120px]"
+        />
+        <p className="text-xs text-muted-foreground">Staff enters this 4-digit PIN when a customer redeems this offer</p>
+      </div>
+
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       <div className="flex items-center justify-between pt-2">

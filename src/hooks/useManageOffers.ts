@@ -20,6 +20,7 @@ export interface OfferFormData {
   offer_description: string | null;
   start_time: string;
   end_time: string;
+  redemption_pin: string | null;
 }
 
 export const useManageOffers = (merchantId: number) => {
