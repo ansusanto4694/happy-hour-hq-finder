@@ -5,9 +5,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
+import { Switch } from '@/components/ui/switch';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CalendarIcon, Plus, Upload, X } from 'lucide-react';
+import { CalendarIcon, Plus, Upload, X, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,9 +19,12 @@ interface EventCreateFormProps {
   isSubmitting: boolean;
   onCancel: () => void;
   initialData?: MerchantEvent | null;
+  onDelete?: () => void;
+  isDeleting?: boolean;
+  onToggleActive?: (isActive: boolean) => void;
 }
 
-export const EventCreateForm: React.FC<EventCreateFormProps> = ({ onSubmit, isSubmitting, onCancel, initialData }) => {
+export const EventCreateForm: React.FC<EventCreateFormProps> = ({ onSubmit, isSubmitting, onCancel, initialData, onDelete, isDeleting, onToggleActive }) => {
   const isEditing = !!initialData;
   const [eventType, setEventType] = useState<'one_time' | 'recurring'>(
     (initialData?.event_type as 'one_time' | 'recurring') || 'one_time'
@@ -217,6 +221,28 @@ export const EventCreateForm: React.FC<EventCreateFormProps> = ({ onSubmit, isSu
           </Button>
         )}
       </div>
+
+      {/* Active toggle & Delete (edit mode only) */}
+      {isEditing && (
+        <div className="flex items-center justify-between pt-2 border-t border-border">
+          {onToggleActive && (
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={initialData?.is_active ?? true}
+                onCheckedChange={(checked) => onToggleActive(checked)}
+                aria-label="Toggle active"
+              />
+              <Label className="text-sm text-muted-foreground">Active</Label>
+            </div>
+          )}
+          {onDelete && (
+            <Button type="button" variant="ghost" size="sm" onClick={onDelete} disabled={isDeleting} className="text-destructive hover:text-destructive">
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete Event
+            </Button>
+          )}
+        </div>
+      )}
 
       {/* Actions */}
       <div className="flex gap-3 pt-2">

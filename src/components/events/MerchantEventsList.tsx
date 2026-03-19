@@ -2,16 +2,12 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Trash2, Pencil, Calendar, Clock, Repeat } from 'lucide-react';
+import { Pencil, Calendar, Clock, Repeat } from 'lucide-react';
 import { type MerchantEvent, DAY_NAMES } from '@/hooks/useManageEvents';
 
 interface MerchantEventsListProps {
   events: MerchantEvent[];
-  onDelete: (id: number) => void;
   onEdit: (event: MerchantEvent) => void;
-  onToggleActive: (id: number, isActive: boolean) => void;
-  isDeleting: boolean;
 }
 
 const formatTime = (time: string | null) => {
@@ -23,7 +19,7 @@ const formatTime = (time: string | null) => {
   return `${displayHour}:${m} ${ampm}`;
 };
 
-export const MerchantEventsList: React.FC<MerchantEventsListProps> = ({ events, onDelete, onEdit, onToggleActive, isDeleting }) => {
+export const MerchantEventsList: React.FC<MerchantEventsListProps> = ({ events, onEdit }) => {
   if (!events.length) {
     return (
       <div className="text-center py-12 text-muted-foreground">
@@ -37,7 +33,7 @@ export const MerchantEventsList: React.FC<MerchantEventsListProps> = ({ events, 
   return (
     <div className="space-y-4">
       {events.map(event => (
-        <Card key={event.id} className={`transition-opacity ${!event.is_active ? 'opacity-60' : ''}`}>
+        <Card key={event.id} className={`transition-opacity cursor-pointer hover:shadow-md ${!event.is_active ? 'opacity-60' : ''}`} onClick={() => onEdit(event)}>
           <CardContent className="p-4">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 min-w-0 space-y-2">
@@ -48,6 +44,9 @@ export const MerchantEventsList: React.FC<MerchantEventsListProps> = ({ events, 
                       <><Repeat className="h-3 w-3 mr-1" />{event.recurrence_rule}</>
                     ) : 'One-time'}
                   </Badge>
+                  {!event.is_active && (
+                    <Badge variant="outline" className="text-xs text-muted-foreground">Inactive</Badge>
+                  )}
                 </div>
 
                 {event.description && (
@@ -84,30 +83,15 @@ export const MerchantEventsList: React.FC<MerchantEventsListProps> = ({ events, 
                 )}
               </div>
 
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <Switch
-                  checked={event.is_active}
-                  onCheckedChange={(checked) => onToggleActive(event.id, checked)}
-                  aria-label="Toggle active"
-                />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onEdit(event)}
-                  aria-label="Edit event"
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onDelete(event.id)}
-                  disabled={isDeleting}
-                  className="text-destructive hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => { e.stopPropagation(); onEdit(event); }}
+                aria-label="Edit event"
+                className="flex-shrink-0"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
             </div>
           </CardContent>
         </Card>

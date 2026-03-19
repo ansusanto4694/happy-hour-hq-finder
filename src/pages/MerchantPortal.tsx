@@ -100,6 +100,15 @@ const MerchantPortal: React.FC = () => {
                     }}
                     isSubmitting={updateEvent.isPending}
                     onCancel={() => setEditingEvent(null)}
+                    onDelete={() => {
+                      deleteEvent.mutate(editingEvent.id, { onSuccess: () => setEditingEvent(null) });
+                    }}
+                    isDeleting={deleteEvent.isPending}
+                    onToggleActive={(isActive) => {
+                      toggleActive.mutate({ eventId: editingEvent.id, isActive }, {
+                        onSuccess: () => setEditingEvent(prev => prev ? { ...prev, is_active: isActive } : null)
+                      });
+                    }}
                   />
                 ) : showCreateForm ? (
                   <EventCreateForm
@@ -116,10 +125,7 @@ const MerchantPortal: React.FC = () => {
                 ) : (
                   <MerchantEventsList
                     events={events || []}
-                    onDelete={(id) => deleteEvent.mutate(id)}
                     onEdit={(event) => setEditingEvent(event)}
-                    onToggleActive={(id, isActive) => toggleActive.mutate({ eventId: id, isActive })}
-                    isDeleting={deleteEvent.isPending}
                   />
                 )}
               </CardContent>
