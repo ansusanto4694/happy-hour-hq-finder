@@ -974,6 +974,54 @@ export type Database = {
           },
         ]
       }
+      merchant_store_hours: {
+        Row: {
+          close_time: string
+          created_at: string
+          day_of_week: number
+          id: string
+          is_closed: boolean
+          open_time: string
+          store_id: number
+          updated_at: string
+        }
+        Insert: {
+          close_time: string
+          created_at?: string
+          day_of_week: number
+          id?: string
+          is_closed?: boolean
+          open_time: string
+          store_id: number
+          updated_at?: string
+        }
+        Update: {
+          close_time?: string
+          created_at?: string
+          day_of_week?: number
+          id?: string
+          is_closed?: boolean
+          open_time?: string
+          store_id?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_store_hours_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "Merchant"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_store_hours_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
