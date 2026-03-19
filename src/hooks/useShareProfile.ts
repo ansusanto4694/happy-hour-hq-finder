@@ -4,6 +4,7 @@ import { useAnalytics } from '@/hooks/useAnalytics';
 
 interface ShareProfileOptions {
   merchantName?: string;
+  merchantId?: number;
   utmSource?: string;
   utmMedium?: string;
 }
