@@ -52,12 +52,17 @@ export const OfferForm: React.FC<OfferFormProps> = ({
       setError('End time must be after start time.');
       return;
     }
+    if (pin && !/^\d{4}$/.test(pin)) {
+      setError('Redemption PIN must be exactly 4 digits.');
+      return;
+    }
     setError('');
     onSubmit({
       offer_name: name.trim(),
       offer_description: description.trim() || null,
       start_time: start.toISOString(),
       end_time: end.toISOString(),
+      redemption_pin: pin || null,
     });
   };
 
