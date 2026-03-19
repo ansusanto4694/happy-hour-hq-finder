@@ -4,7 +4,7 @@ import { useMerchantStoreHours } from '@/hooks/useMerchantStoreHours';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, Clock, Store, CheckCircle2, AlertCircle, Eye, Globe, MapPin, Phone, UtensilsCrossed, TrendingUp, Share2 } from 'lucide-react';
+import { Calendar, Clock, Store, CheckCircle2, AlertCircle, Eye, Globe, MapPin, Phone, UtensilsCrossed, TrendingUp, Share2, Tag } from 'lucide-react';
 import type { PortalSection } from './PortalSidebar';
 
 interface PortalDashboardProps {
@@ -58,6 +58,21 @@ export const PortalDashboard: React.FC<PortalDashboardProps> = ({ merchantId, me
       if (error) throw error;
       return data;
     },
+  });
+
+  // Redemption count (last 30 days)
+  const { data: redemptionCount } = useQuery({
+    queryKey: ['merchant-redemptions-count', merchantId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('offer_redemptions')
+        .select('id')
+        .eq('store_id', merchantId)
+        .gte('redeemed_at', thirtyDaysAgo);
+      if (error) throw error;
+      return data?.length ?? 0;
+    },
+    staleTime: 5 * 60 * 1000,
   });
 
   // Merchant-specific traffic analytics (last 30 days)
@@ -162,6 +177,7 @@ export const PortalDashboard: React.FC<PortalDashboardProps> = ({ merchantId, me
             <StatCard label="Phone Calls" value={phoneClicks} icon={Phone} />
             <StatCard label="Menu Source Clicks" value={menuSourceClicks} icon={UtensilsCrossed} subtitle="Happy hour menu links" />
             <StatCard label="Profile Shares" value={profileShares} icon={Share2} subtitle="Shared via link" />
+            <StatCard label="Offer Redemptions" value={redemptionCount ?? 0} icon={Tag} subtitle="Last 30 days" />
           </div>
         </CardContent>
       </Card>

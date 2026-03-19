@@ -10,6 +10,7 @@ export interface MerchantOffer {
   start_time: string;
   end_time: string;
   is_active: boolean;
+  redemption_pin: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -19,6 +20,7 @@ export interface OfferFormData {
   offer_description: string | null;
   start_time: string;
   end_time: string;
+  redemption_pin: string | null;
 }
 
 export const useManageOffers = (merchantId: number) => {

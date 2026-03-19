@@ -37,6 +37,7 @@ export const OfferForm: React.FC<OfferFormProps> = ({
   const [description, setDescription] = useState(initialData?.offer_description ?? '');
   const [startTime, setStartTime] = useState(initialData ? toDatetimeLocal(initialData.start_time) : '');
   const [endTime, setEndTime] = useState(initialData ? toDatetimeLocal(initialData.end_time) : '');
+  const [pin, setPin] = useState(initialData?.redemption_pin ?? '');
   const [error, setError] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -51,12 +52,17 @@ export const OfferForm: React.FC<OfferFormProps> = ({
       setError('End time must be after start time.');
       return;
     }
+    if (pin && !/^\d{4}$/.test(pin)) {
+      setError('Redemption PIN must be exactly 4 digits.');
+      return;
+    }
     setError('');
     onSubmit({
       offer_name: name.trim(),
       offer_description: description.trim() || null,
       start_time: start.toISOString(),
       end_time: end.toISOString(),
+      redemption_pin: pin || null,
     });
   };
 
@@ -92,6 +98,20 @@ export const OfferForm: React.FC<OfferFormProps> = ({
           <Label htmlFor="offer-end">End Date & Time *</Label>
           <Input id="offer-end" type="datetime-local" value={endTime} onChange={e => setEndTime(e.target.value)} />
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="offer-pin">Redemption PIN (optional)</Label>
+        <Input
+          id="offer-pin"
+          value={pin}
+          onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+          placeholder="e.g. 1234"
+          maxLength={4}
+          inputMode="numeric"
+          className="max-w-[120px]"
+        />
+        <p className="text-xs text-muted-foreground">Staff enters this 4-digit PIN when a customer redeems this offer</p>
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
