@@ -42,6 +42,9 @@ export const EventCreateForm: React.FC<EventCreateFormProps> = ({ onSubmit, isSu
   );
   const [recurrenceRule, setRecurrenceRule] = useState(initialData?.recurrence_rule || 'weekly');
   const [recurrenceDay, setRecurrenceDay] = useState<number>(initialData?.recurrence_day ?? 1);
+  const [repeatUntil, setRepeatUntil] = useState<Date | undefined>(
+    initialData?.repeat_until ? new Date(initialData.repeat_until) : undefined
+  );
   const [startTime, setStartTime] = useState(initialData?.start_time?.slice(0, 5) || '');
   const [endTime, setEndTime] = useState(initialData?.end_time?.slice(0, 5) || '');
   const [selectedTags, setSelectedTags] = useState<string[]>(initialData?.category_tags || []);
@@ -95,6 +98,7 @@ export const EventCreateForm: React.FC<EventCreateFormProps> = ({ onSubmit, isSu
       event_date: eventType === 'one_time' && eventDate ? eventDate.toISOString() : undefined,
       recurrence_rule: eventType === 'recurring' ? recurrenceRule : undefined,
       recurrence_day: eventType === 'recurring' ? recurrenceDay : undefined,
+      repeat_until: eventType === 'recurring' && repeatUntil ? repeatUntil.toISOString().split('T')[0] : undefined,
       start_time: startTime || undefined,
       end_time: endTime || undefined,
       category_tags: selectedTags,
@@ -175,6 +179,35 @@ export const EventCreateForm: React.FC<EventCreateFormProps> = ({ onSubmit, isSu
         </div>
       )}
 
+      {/* Recurring: Repeat Until */}
+      {eventType === 'recurring' && (
+        <div className="space-y-2">
+          <Label>Repeat Until</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !repeatUntil && "text-muted-foreground")}>
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {repeatUntil ? format(repeatUntil, 'PPP') : 'No end date'}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={repeatUntil}
+                onSelect={setRepeatUntil}
+                disabled={(date) => date < new Date()}
+                initialFocus
+                className="p-3 pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+          {repeatUntil && (
+            <Button type="button" variant="ghost" size="sm" onClick={() => setRepeatUntil(undefined)} className="text-xs text-muted-foreground">
+              Clear end date
+            </Button>
+          )}
+        </div>
+      )}
       {/* Start/End Time */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">

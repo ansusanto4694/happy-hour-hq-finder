@@ -16,6 +16,7 @@ export interface MerchantEvent {
   end_time: string | null;
   category_tags: string[];
   is_active: boolean;
+  repeat_until: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -31,6 +32,7 @@ export interface EventFormData {
   start_time?: string;
   end_time?: string;
   category_tags: string[];
+  repeat_until?: string;
 }
 
 export const EVENT_CATEGORIES = [
@@ -72,6 +74,7 @@ export const useManageEvents = (merchantId: number) => {
       } else {
         insertData.recurrence_rule = formData.recurrence_rule || 'weekly';
         insertData.recurrence_day = formData.recurrence_day ?? null;
+        insertData.repeat_until = formData.repeat_until || null;
       }
 
       insertData.start_time = formData.start_time || null;
@@ -107,10 +110,12 @@ export const useManageEvents = (merchantId: number) => {
         updateData.event_date = formData.event_date || null;
         updateData.recurrence_rule = null;
         updateData.recurrence_day = null;
+        updateData.repeat_until = null;
       } else {
         updateData.recurrence_rule = formData.recurrence_rule || 'weekly';
         updateData.recurrence_day = formData.recurrence_day ?? null;
         updateData.event_date = null;
+        updateData.repeat_until = formData.repeat_until || null;
       }
 
       const { error } = await supabase
