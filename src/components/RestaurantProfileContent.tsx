@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Share, Utensils, PenLine, Star, MapPin } from 'lucide-react';
+import { Share, Utensils, PenLine, Star, MapPin, Settings } from 'lucide-react';
 import { GoogleRatingBadge } from '@/components/GoogleRatingBadge';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { RestaurantBasicInfo } from '@/components/RestaurantBasicInfo';
@@ -22,6 +22,7 @@ import { useMerchantRating } from '@/hooks/useMerchantRating';
 import { useAuth } from '@/hooks/useAuth';
 import { useShareProfile } from '@/hooks/useShareProfile';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useMerchantOwnership } from '@/hooks/useMerchantOwnership';
 
 interface Restaurant {
   id: number;
@@ -64,6 +65,7 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
   const { data: ratingData } = useMerchantRating(restaurant.id);
   const { handleShare: handleShareProfile } = useShareProfile({ merchantName: restaurant.restaurant_name });
   const isMobile = useIsMobile();
+  const { canManage } = useMerchantOwnership(restaurant.id);
 
   // Use slug for URLs when available for SEO
   const merchantUrlId = restaurant.slug || restaurant.id;
@@ -137,10 +139,15 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
                 </div>
               )}
 
-              {/* Action Buttons - Admin Only */}
-              {isAdmin && (
-                <div className="flex items-center justify-center pt-2">
+              {/* Action Buttons - Admin/Owner */}
+              {canManage && (
+                <div className="flex items-center justify-center gap-2 pt-2">
                   <RestaurantProfileEditor restaurant={restaurantWithIds} />
+                  <Button asChild variant="outline" size="sm">
+                    <Link to={`/merchant/${restaurant.id}/manage`}>
+                      <Settings className="h-4 w-4 mr-2" />Manage
+                    </Link>
+                  </Button>
                 </div>
               )}
             </div>
@@ -211,8 +218,15 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
                   >
                     <Share className="h-4 w-4" />
                   </Button>
-                  {isAdmin ? (
-                    <RestaurantProfileEditor restaurant={restaurantWithIds} />
+                  {canManage ? (
+                    <div className="flex items-center gap-2">
+                      <Button asChild variant="outline" size="sm">
+                        <Link to={`/merchant/${restaurant.id}/manage`}>
+                          <Settings className="h-4 w-4 mr-2" />Manage
+                        </Link>
+                      </Button>
+                      <RestaurantProfileEditor restaurant={restaurantWithIds} />
+                    </div>
                   ) : (
                     <div className="hidden sm:block">
                       <ReportIssueModal
@@ -264,8 +278,8 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
               </CardContent>
             </Card>
 
-            {/* Restaurant Events Feed - Hidden until we have restaurant partners */}
-            {/* <RestaurantEventsFeed restaurantId={restaurant.id} /> */}
+            {/* Restaurant Events Feed */}
+            <RestaurantEventsFeed restaurantId={restaurant.id} />
 
             {/* Reviews Section */}
             <Card className="shadow-lg border-l-4 border-amber-500 bg-white">

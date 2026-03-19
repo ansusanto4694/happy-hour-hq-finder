@@ -29,6 +29,7 @@ const Analytics = lazy(() => import("./pages/Analytics"));
 const Favorites = lazy(() => import("./pages/Favorites"));
 const Account = lazy(() => import("./pages/Account"));
 const LocationLanding = lazy(() => import("./pages/LocationLanding").then(m => ({ default: m.LocationLanding })));
+const MerchantPortal = lazy(() => import("./pages/MerchantPortal"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Loading fallback component
@@ -158,6 +159,7 @@ const App = () => (
                 <Route path="/account" element={<Account />} />
                 <Route path="/happy-hour/:citySlug" element={<LocationLanding />} />
                 <Route path="/happy-hour/:citySlug/:neighborhoodSlug" element={<LocationLanding />} />
+                <Route path="/merchant/:id/manage" element={<MerchantPortal />} />
                 {/* Redirect for broken Facebook link typo */}
                 <Route path="/We" element={<Navigate to="/" replace />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

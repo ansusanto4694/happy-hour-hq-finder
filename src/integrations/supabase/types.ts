@@ -535,32 +535,59 @@ export type Database = {
       }
       merchant_events: {
         Row: {
+          category_tags: string[] | null
+          city: string | null
           created_at: string
           description: string | null
+          end_time: string | null
           event_date: string | null
+          event_type: string
           id: number
           image_url: string | null
+          is_active: boolean
+          neighborhood: string | null
+          recurrence_day: number | null
+          recurrence_rule: string | null
           restaurant_id: number
+          start_time: string | null
           title: string
           updated_at: string
         }
         Insert: {
+          category_tags?: string[] | null
+          city?: string | null
           created_at?: string
           description?: string | null
+          end_time?: string | null
           event_date?: string | null
+          event_type?: string
           id?: number
           image_url?: string | null
+          is_active?: boolean
+          neighborhood?: string | null
+          recurrence_day?: number | null
+          recurrence_rule?: string | null
           restaurant_id: number
+          start_time?: string | null
           title: string
           updated_at?: string
         }
         Update: {
+          category_tags?: string[] | null
+          city?: string | null
           created_at?: string
           description?: string | null
+          end_time?: string | null
           event_date?: string | null
+          event_type?: string
           id?: number
           image_url?: string | null
+          is_active?: boolean
+          neighborhood?: string | null
+          recurrence_day?: number | null
+          recurrence_rule?: string | null
           restaurant_id?: number
+          start_time?: string | null
           title?: string
           updated_at?: string
         }
@@ -770,6 +797,45 @@ export type Database = {
           {
             foreignKeyName: "merchant_offers_store_id_fkey"
             columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_owners: {
+        Row: {
+          created_at: string
+          id: string
+          merchant_id: number
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          merchant_id: number
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          merchant_id?: number
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_owners_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "Merchant"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_owners_merchant_id_fkey"
+            columns: ["merchant_id"]
             isOneToOne: false
             referencedRelation: "restaurants_public"
             referencedColumns: ["id"]
@@ -1343,6 +1409,7 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
+      is_merchant_owner: { Args: { _merchant_id: number }; Returns: boolean }
       maintain_user_events_partitions: { Args: never; Returns: undefined }
       slugify: { Args: { input_text: string }; Returns: string }
       update_merchant_coordinates: {
