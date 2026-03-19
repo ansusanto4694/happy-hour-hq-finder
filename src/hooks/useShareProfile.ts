@@ -16,10 +16,12 @@ interface ShareProfileOptions {
  */
 export const useShareProfile = ({
   merchantName,
+  merchantId,
   utmSource = 'share',
   utmMedium = 'profile',
 }: ShareProfileOptions = {}) => {
   const { toast } = useToast();
+  const { track } = useAnalytics();
 
   const buildShareUrl = useCallback(() => {
     // Route through the og-meta proxy so bots/crawlers see correct OG tags
