@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 interface ShareProfileOptions {
   merchantName?: string;
