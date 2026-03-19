@@ -93,6 +93,14 @@ export const MerchantEventsList: React.FC<MerchantEventsListProps> = ({ events, 
                 <Button
                   variant="ghost"
                   size="icon"
+                  onClick={() => onEdit(event)}
+                  aria-label="Edit event"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={() => onDelete(event.id)}
                   disabled={isDeleting}
                   className="text-destructive hover:text-destructive"

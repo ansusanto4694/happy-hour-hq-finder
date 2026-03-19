@@ -162,5 +162,5 @@ export const useManageEvents = (merchantId: number) => {
     },
   });
 
-  return { events, isLoading, createEvent, deleteEvent, toggleActive };
+  return { events, isLoading, createEvent, updateEvent, deleteEvent, toggleActive };
 };
