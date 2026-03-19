@@ -9,6 +9,7 @@ import { type MerchantEvent, DAY_NAMES } from '@/hooks/useManageEvents';
 interface MerchantEventsListProps {
   events: MerchantEvent[];
   onDelete: (id: number) => void;
+  onEdit: (event: MerchantEvent) => void;
   onToggleActive: (id: number, isActive: boolean) => void;
   isDeleting: boolean;
 }
