@@ -1,31 +1,31 @@
 import React, { useState } from 'react';
-import { useParams, Navigate, Link } from 'react-router-dom';
+import { useParams, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useMerchantOwnership } from '@/hooks/useMerchantOwnership';
-import { useManageEvents, type MerchantEvent } from '@/hooks/useManageEvents';
-import { EventCreateForm } from '@/components/events/EventCreateForm';
-import { MerchantEventsList } from '@/components/events/MerchantEventsList';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, Plus, Calendar, Tag, Loader2 } from 'lucide-react';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { PortalSidebar, type PortalSection } from '@/components/merchant-portal/PortalSidebar';
+import { PortalDashboard } from '@/components/merchant-portal/PortalDashboard';
+import { PortalEvents } from '@/components/merchant-portal/PortalEvents';
+import { PortalHappyHours } from '@/components/merchant-portal/PortalHappyHours';
+import { PortalStoreHours } from '@/components/merchant-portal/PortalStoreHours';
+import { PortalSettings } from '@/components/merchant-portal/PortalSettings';
+import { Card, CardContent } from '@/components/ui/card';
+import { Tag, Loader2 } from 'lucide-react';
 
 const MerchantPortal: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const merchantId = Number(id);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [editingEvent, setEditingEvent] = useState<MerchantEvent | null>(null);
+  const [activeSection, setActiveSection] = useState<PortalSection>('dashboard');
 
-  // Fetch merchant info
   const { data: merchant, isLoading: merchantLoading } = useQuery({
     queryKey: ['merchant-portal', merchantId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('Merchant')
-        .select('id, restaurant_name, logo_url, neighborhood, city, slug')
+        .select('id, restaurant_name, logo_url, neighborhood, city, slug, street_address, street_address_line_2, state, zip_code, phone_number, website')
         .eq('id', merchantId)
         .single();
       if (error) throw error;
@@ -35,7 +35,6 @@ const MerchantPortal: React.FC = () => {
   });
 
   const { canManage, isLoading: ownershipLoading } = useMerchantOwnership(merchantId);
-  const { events, isLoading: eventsLoading, createEvent, updateEvent, deleteEvent, toggleActive } = useManageEvents(merchantId);
 
   if (!user) return <Navigate to="/auth" replace />;
   if (merchantLoading || ownershipLoading) {
@@ -50,99 +49,60 @@ const MerchantPortal: React.FC = () => {
 
   const merchantUrl = `/restaurant/${merchant.slug || merchantId}`;
 
-  return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-4xl mx-auto px-4 py-8 pt-24 sm:pt-8">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Link to={merchantUrl}>
-            <Button variant="ghost" size="icon"><ArrowLeft className="h-5 w-5" /></Button>
-          </Link>
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            {merchant.logo_url && (
-              <img src={merchant.logo_url} alt="" className="w-10 h-10 rounded-lg object-contain border" />
-            )}
-            <div className="min-w-0">
-              <h1 className="text-xl font-bold text-foreground truncate">{merchant.restaurant_name}</h1>
-              <p className="text-sm text-muted-foreground">Merchant Portal</p>
+  const renderContent = () => {
+    switch (activeSection) {
+      case 'dashboard':
+        return <PortalDashboard merchantId={merchantId} merchantName={merchant.restaurant_name} onNavigate={setActiveSection} />;
+      case 'events':
+        return <PortalEvents merchantId={merchantId} />;
+      case 'offers':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-bold text-foreground">Offers</h2>
+              <p className="text-sm text-muted-foreground mt-1">Manage time-bounded deals and promotions</p>
             </div>
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <Tabs defaultValue="events">
-          <TabsList className="mb-6">
-            <TabsTrigger value="events" className="gap-2">
-              <Calendar className="h-4 w-4" />Events
-            </TabsTrigger>
-            <TabsTrigger value="offers" className="gap-2" disabled>
-              <Tag className="h-4 w-4" />Offers
-              <span className="text-xs text-muted-foreground ml-1">(Coming soon)</span>
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="events">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-                <CardTitle className="text-lg">{editingEvent ? 'Edit Event' : 'Events'}</CardTitle>
-                {!showCreateForm && !editingEvent && (
-                  <Button size="sm" onClick={() => setShowCreateForm(true)}>
-                    <Plus className="h-4 w-4 mr-2" />Add Event
-                  </Button>
-                )}
-              </CardHeader>
-              <CardContent>
-                {editingEvent ? (
-                  <EventCreateForm
-                    initialData={editingEvent}
-                    onSubmit={(data) => {
-                      updateEvent.mutate({ eventId: editingEvent.id, formData: data }, { onSuccess: () => setEditingEvent(null) });
-                    }}
-                    isSubmitting={updateEvent.isPending}
-                    onCancel={() => setEditingEvent(null)}
-                    onDelete={() => {
-                      deleteEvent.mutate(editingEvent.id, { onSuccess: () => setEditingEvent(null) });
-                    }}
-                    isDeleting={deleteEvent.isPending}
-                    onToggleActive={(isActive) => {
-                      toggleActive.mutate({ eventId: editingEvent.id, isActive }, {
-                        onSuccess: () => setEditingEvent(prev => prev ? { ...prev, is_active: isActive } : null)
-                      });
-                    }}
-                  />
-                ) : showCreateForm ? (
-                  <EventCreateForm
-                    onSubmit={(data) => {
-                      createEvent.mutate(data, { onSuccess: () => setShowCreateForm(false) });
-                    }}
-                    isSubmitting={createEvent.isPending}
-                    onCancel={() => setShowCreateForm(false)}
-                  />
-                ) : eventsLoading ? (
-                  <div className="flex justify-center py-8">
-                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                  </div>
-                ) : (
-                  <MerchantEventsList
-                    events={events || []}
-                    onEdit={(event) => setEditingEvent(event)}
-                  />
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="offers">
-            <Card>
-              <CardContent className="py-12 text-center text-muted-foreground">
+              <CardContent className="py-16 text-center text-muted-foreground">
                 <Tag className="h-12 w-12 mx-auto mb-3 opacity-40" />
-                <p className="font-medium">Offers management coming soon</p>
+                <p className="font-medium text-foreground">Coming soon</p>
+                <p className="text-sm mt-1">Offer management is on the way.</p>
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
+          </div>
+        );
+      case 'happy-hours':
+        return <PortalHappyHours merchantId={merchantId} />;
+      case 'store-hours':
+        return <PortalStoreHours merchantId={merchantId} />;
+      case 'settings':
+        return <PortalSettings merchant={merchant} />;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-background">
+        <PortalSidebar
+          activeSection={activeSection}
+          onSectionChange={setActiveSection}
+          merchantName={merchant.restaurant_name}
+          merchantLogoUrl={merchant.logo_url}
+          merchantUrl={merchantUrl}
+        />
+        <div className="flex-1 flex flex-col min-w-0">
+          <header className="h-14 flex items-center border-b border-border px-4 bg-background sticky top-0 z-10">
+            <SidebarTrigger className="mr-4" />
+            <h1 className="text-lg font-semibold text-foreground truncate">{merchant.restaurant_name}</h1>
+          </header>
+          <main className="flex-1 p-6 max-w-5xl">
+            {renderContent()}
+          </main>
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 
