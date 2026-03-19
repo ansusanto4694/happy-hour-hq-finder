@@ -5,9 +5,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
+import { Switch } from '@/components/ui/switch';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CalendarIcon, Plus, Upload, X } from 'lucide-react';
+import { CalendarIcon, Plus, Upload, X, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,9 +19,12 @@ interface EventCreateFormProps {
   isSubmitting: boolean;
   onCancel: () => void;
   initialData?: MerchantEvent | null;
+  onDelete?: () => void;
+  isDeleting?: boolean;
+  onToggleActive?: (isActive: boolean) => void;
 }
 
-export const EventCreateForm: React.FC<EventCreateFormProps> = ({ onSubmit, isSubmitting, onCancel, initialData }) => {
+export const EventCreateForm: React.FC<EventCreateFormProps> = ({ onSubmit, isSubmitting, onCancel, initialData, onDelete, isDeleting, onToggleActive }) => {
   const isEditing = !!initialData;
   const [eventType, setEventType] = useState<'one_time' | 'recurring'>(
     (initialData?.event_type as 'one_time' | 'recurring') || 'one_time'
