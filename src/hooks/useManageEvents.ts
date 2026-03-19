@@ -32,6 +32,7 @@ export interface EventFormData {
   start_time?: string;
   end_time?: string;
   category_tags: string[];
+  repeat_until?: string;
 }
 
 export const EVENT_CATEGORIES = [
