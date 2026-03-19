@@ -57,6 +57,7 @@ export const EventCreateForm: React.FC<EventCreateFormProps> = ({ onSubmit, isSu
   const removeImage = () => {
     setImageFile(null);
     setImagePreview(null);
+    setExistingImageUrl(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
