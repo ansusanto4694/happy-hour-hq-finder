@@ -11,28 +11,35 @@ import { CalendarIcon, Plus, Upload, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
-import { EVENT_CATEGORIES, DAY_NAMES, type EventFormData } from '@/hooks/useManageEvents';
+import { EVENT_CATEGORIES, DAY_NAMES, type EventFormData, type MerchantEvent } from '@/hooks/useManageEvents';
 
 interface EventCreateFormProps {
   onSubmit: (data: EventFormData) => void;
   isSubmitting: boolean;
   onCancel: () => void;
+  initialData?: MerchantEvent | null;
 }
 
-export const EventCreateForm: React.FC<EventCreateFormProps> = ({ onSubmit, isSubmitting, onCancel }) => {
-  const [eventType, setEventType] = useState<'one_time' | 'recurring'>('one_time');
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+export const EventCreateForm: React.FC<EventCreateFormProps> = ({ onSubmit, isSubmitting, onCancel, initialData }) => {
+  const isEditing = !!initialData;
+  const [eventType, setEventType] = useState<'one_time' | 'recurring'>(
+    (initialData?.event_type as 'one_time' | 'recurring') || 'one_time'
+  );
+  const [title, setTitle] = useState(initialData?.title || '');
+  const [description, setDescription] = useState(initialData?.description || '');
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(initialData?.image_url || null);
+  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(initialData?.image_url || null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [eventDate, setEventDate] = useState<Date>();
-  const [recurrenceRule, setRecurrenceRule] = useState('weekly');
-  const [recurrenceDay, setRecurrenceDay] = useState<number>(1);
-  const [startTime, setStartTime] = useState('');
-  const [endTime, setEndTime] = useState('');
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [eventDate, setEventDate] = useState<Date | undefined>(
+    initialData?.event_date ? new Date(initialData.event_date) : undefined
+  );
+  const [recurrenceRule, setRecurrenceRule] = useState(initialData?.recurrence_rule || 'weekly');
+  const [recurrenceDay, setRecurrenceDay] = useState<number>(initialData?.recurrence_day ?? 1);
+  const [startTime, setStartTime] = useState(initialData?.start_time?.slice(0, 5) || '');
+  const [endTime, setEndTime] = useState(initialData?.end_time?.slice(0, 5) || '');
+  const [selectedTags, setSelectedTags] = useState<string[]>(initialData?.category_tags || []);
 
   const toggleTag = (tag: string) => {
     setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
@@ -50,6 +57,7 @@ export const EventCreateForm: React.FC<EventCreateFormProps> = ({ onSubmit, isSu
   const removeImage = () => {
     setImageFile(null);
     setImagePreview(null);
+    setExistingImageUrl(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -73,10 +81,11 @@ export const EventCreateForm: React.FC<EventCreateFormProps> = ({ onSubmit, isSu
     if (!title.trim()) return;
 
     const uploadedUrl = await uploadImage();
+    const finalImageUrl = uploadedUrl || existingImageUrl || undefined;
     onSubmit({
       title: title.trim(),
       description: description.trim() || undefined,
-      image_url: uploadedUrl,
+      image_url: finalImageUrl,
       event_type: eventType,
       event_date: eventType === 'one_time' && eventDate ? eventDate.toISOString() : undefined,
       recurrence_rule: eventType === 'recurring' ? recurrenceRule : undefined,
@@ -213,7 +222,7 @@ export const EventCreateForm: React.FC<EventCreateFormProps> = ({ onSubmit, isSu
       <div className="flex gap-3 pt-2">
         <Button type="submit" disabled={isSubmitting || isUploading || !title.trim()}>
           <Plus className="h-4 w-4 mr-2" />
-          {isUploading ? 'Uploading...' : isSubmitting ? 'Creating...' : 'Create Event'}
+          {isUploading ? 'Uploading...' : isSubmitting ? (isEditing ? 'Saving...' : 'Creating...') : (isEditing ? 'Save Changes' : 'Create Event')}
         </Button>
         <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
       </div>

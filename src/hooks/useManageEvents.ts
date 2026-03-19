@@ -91,6 +91,45 @@ export const useManageEvents = (merchantId: number) => {
     },
   });
 
+  const updateEvent = useMutation({
+    mutationFn: async ({ eventId, formData }: { eventId: number; formData: EventFormData }) => {
+      const updateData: any = {
+        title: formData.title,
+        description: formData.description || null,
+        image_url: formData.image_url || null,
+        event_type: formData.event_type,
+        category_tags: formData.category_tags,
+        start_time: formData.start_time || null,
+        end_time: formData.end_time || null,
+      };
+
+      if (formData.event_type === 'one_time') {
+        updateData.event_date = formData.event_date || null;
+        updateData.recurrence_rule = null;
+        updateData.recurrence_day = null;
+      } else {
+        updateData.recurrence_rule = formData.recurrence_rule || 'weekly';
+        updateData.recurrence_day = formData.recurrence_day ?? null;
+        updateData.event_date = null;
+      }
+
+      const { error } = await supabase
+        .from('merchant_events')
+        .update(updateData)
+        .eq('id', eventId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['merchant-events-manage', merchantId] });
+      queryClient.invalidateQueries({ queryKey: ['restaurant-events', merchantId] });
+      toast({ title: 'Event updated successfully' });
+    },
+    onError: (error) => {
+      console.error('Error updating event:', error);
+      toast({ title: 'Failed to update event', variant: 'destructive' });
+    },
+  });
+
   const deleteEvent = useMutation({
     mutationFn: async (eventId: number) => {
       const { error } = await supabase.from('merchant_events').delete().eq('id', eventId);
@@ -123,5 +162,5 @@ export const useManageEvents = (merchantId: number) => {
     },
   });
 
-  return { events, isLoading, createEvent, deleteEvent, toggleActive };
+  return { events, isLoading, createEvent, updateEvent, deleteEvent, toggleActive };
 };

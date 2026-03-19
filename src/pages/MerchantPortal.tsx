@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useMerchantOwnership } from '@/hooks/useMerchantOwnership';
-import { useManageEvents } from '@/hooks/useManageEvents';
+import { useManageEvents, type MerchantEvent } from '@/hooks/useManageEvents';
 import { EventCreateForm } from '@/components/events/EventCreateForm';
 import { MerchantEventsList } from '@/components/events/MerchantEventsList';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -17,6 +17,7 @@ const MerchantPortal: React.FC = () => {
   const { user } = useAuth();
   const merchantId = Number(id);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<MerchantEvent | null>(null);
 
   // Fetch merchant info
   const { data: merchant, isLoading: merchantLoading } = useQuery({
@@ -34,7 +35,7 @@ const MerchantPortal: React.FC = () => {
   });
 
   const { canManage, isLoading: ownershipLoading } = useMerchantOwnership(merchantId);
-  const { events, isLoading: eventsLoading, createEvent, deleteEvent, toggleActive } = useManageEvents(merchantId);
+  const { events, isLoading: eventsLoading, createEvent, updateEvent, deleteEvent, toggleActive } = useManageEvents(merchantId);
 
   if (!user) return <Navigate to="/auth" replace />;
   if (merchantLoading || ownershipLoading) {
@@ -83,15 +84,24 @@ const MerchantPortal: React.FC = () => {
           <TabsContent value="events">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-                <CardTitle className="text-lg">Events</CardTitle>
-                {!showCreateForm && (
+                <CardTitle className="text-lg">{editingEvent ? 'Edit Event' : 'Events'}</CardTitle>
+                {!showCreateForm && !editingEvent && (
                   <Button size="sm" onClick={() => setShowCreateForm(true)}>
                     <Plus className="h-4 w-4 mr-2" />Add Event
                   </Button>
                 )}
               </CardHeader>
               <CardContent>
-                {showCreateForm ? (
+                {editingEvent ? (
+                  <EventCreateForm
+                    initialData={editingEvent}
+                    onSubmit={(data) => {
+                      updateEvent.mutate({ eventId: editingEvent.id, formData: data }, { onSuccess: () => setEditingEvent(null) });
+                    }}
+                    isSubmitting={updateEvent.isPending}
+                    onCancel={() => setEditingEvent(null)}
+                  />
+                ) : showCreateForm ? (
                   <EventCreateForm
                     onSubmit={(data) => {
                       createEvent.mutate(data, { onSuccess: () => setShowCreateForm(false) });
@@ -107,6 +117,7 @@ const MerchantPortal: React.FC = () => {
                   <MerchantEventsList
                     events={events || []}
                     onDelete={(id) => deleteEvent.mutate(id)}
+                    onEdit={(event) => setEditingEvent(event)}
                     onToggleActive={(id, isActive) => toggleActive.mutate({ eventId: id, isActive })}
                     isDeleting={deleteEvent.isPending}
                   />

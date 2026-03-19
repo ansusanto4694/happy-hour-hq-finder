@@ -3,12 +3,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Trash2, Calendar, Clock, Repeat } from 'lucide-react';
+import { Trash2, Pencil, Calendar, Clock, Repeat } from 'lucide-react';
 import { type MerchantEvent, DAY_NAMES } from '@/hooks/useManageEvents';
 
 interface MerchantEventsListProps {
   events: MerchantEvent[];
   onDelete: (id: number) => void;
+  onEdit: (event: MerchantEvent) => void;
   onToggleActive: (id: number, isActive: boolean) => void;
   isDeleting: boolean;
 }
@@ -22,7 +23,7 @@ const formatTime = (time: string | null) => {
   return `${displayHour}:${m} ${ampm}`;
 };
 
-export const MerchantEventsList: React.FC<MerchantEventsListProps> = ({ events, onDelete, onToggleActive, isDeleting }) => {
+export const MerchantEventsList: React.FC<MerchantEventsListProps> = ({ events, onDelete, onEdit, onToggleActive, isDeleting }) => {
   if (!events.length) {
     return (
       <div className="text-center py-12 text-muted-foreground">
@@ -89,6 +90,14 @@ export const MerchantEventsList: React.FC<MerchantEventsListProps> = ({ events, 
                   onCheckedChange={(checked) => onToggleActive(event.id, checked)}
                   aria-label="Toggle active"
                 />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onEdit(event)}
+                  aria-label="Edit event"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
                 <Button
                   variant="ghost"
                   size="icon"
