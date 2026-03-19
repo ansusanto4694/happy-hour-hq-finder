@@ -237,10 +237,28 @@ export const EventCreateForm: React.FC<EventCreateFormProps> = ({ onSubmit, isSu
             </div>
           )}
           {onDelete && (
-            <Button type="button" variant="ghost" size="sm" onClick={onDelete} disabled={isDeleting} className="text-destructive hover:text-destructive">
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete Event
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button type="button" variant="ghost" size="sm" disabled={isDeleting} className="text-destructive hover:text-destructive">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Event
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete this event?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete "{initialData?.title}". This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={onDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
         </div>
       )}
