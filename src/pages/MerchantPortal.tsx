@@ -84,8 +84,8 @@ const MerchantPortal: React.FC = () => {
           <TabsContent value="events">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-                <CardTitle className="text-lg">Events</CardTitle>
-                {!showCreateForm && (
+                <CardTitle className="text-lg">{editingEvent ? 'Edit Event' : 'Events'}</CardTitle>
+                {!showCreateForm && !editingEvent && (
                   <Button size="sm" onClick={() => setShowCreateForm(true)}>
                     <Plus className="h-4 w-4 mr-2" />Add Event
                   </Button>
