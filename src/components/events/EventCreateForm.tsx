@@ -222,6 +222,28 @@ export const EventCreateForm: React.FC<EventCreateFormProps> = ({ onSubmit, isSu
         )}
       </div>
 
+      {/* Active toggle & Delete (edit mode only) */}
+      {isEditing && (
+        <div className="flex items-center justify-between pt-2 border-t border-border">
+          {onToggleActive && (
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={initialData?.is_active ?? true}
+                onCheckedChange={(checked) => onToggleActive(checked)}
+                aria-label="Toggle active"
+              />
+              <Label className="text-sm text-muted-foreground">Active</Label>
+            </div>
+          )}
+          {onDelete && (
+            <Button type="button" variant="ghost" size="sm" onClick={onDelete} disabled={isDeleting} className="text-destructive hover:text-destructive">
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete Event
+            </Button>
+          )}
+        </div>
+      )}
+
       {/* Actions */}
       <div className="flex gap-3 pt-2">
         <Button type="submit" disabled={isSubmitting || isUploading || !title.trim()}>
