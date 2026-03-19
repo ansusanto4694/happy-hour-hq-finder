@@ -116,26 +116,6 @@ export const EventCreateForm: React.FC<EventCreateFormProps> = ({ onSubmit, isSu
 
 
 
-      {/* Image Upload */}
-      <div className="space-y-2">
-        <Label>Event Image</Label>
-        <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
-        {imagePreview ? (
-          <div className="relative w-full h-48 rounded-lg overflow-hidden border border-border">
-            <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-            <button type="button" onClick={removeImage} className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1 hover:bg-black/80">
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        ) : (
-          <Button type="button" variant="outline" className="w-full h-24 border-dashed" onClick={() => fileInputRef.current?.click()}>
-            <Upload className="h-5 w-5 mr-2 text-muted-foreground" />
-            <span className="text-muted-foreground">Upload image</span>
-          </Button>
-        )}
-      </div>
-
-
       {/* One-time: Date Picker */}
       {eventType === 'one_time' && (
         <div className="space-y-2">
