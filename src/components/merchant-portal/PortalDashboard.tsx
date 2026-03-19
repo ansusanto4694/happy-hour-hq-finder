@@ -177,6 +177,7 @@ export const PortalDashboard: React.FC<PortalDashboardProps> = ({ merchantId, me
             <StatCard label="Phone Calls" value={phoneClicks} icon={Phone} />
             <StatCard label="Menu Source Clicks" value={menuSourceClicks} icon={UtensilsCrossed} subtitle="Happy hour menu links" />
             <StatCard label="Profile Shares" value={profileShares} icon={Share2} subtitle="Shared via link" />
+            <StatCard label="Offer Redemptions" value={redemptionCount ?? 0} icon={Tag} subtitle="Last 30 days" />
           </div>
         </CardContent>
       </Card>

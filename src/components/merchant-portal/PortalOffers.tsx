@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Loader2, Tag } from 'lucide-react';
 import { format } from 'date-fns';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PortalOffersProps {
   merchantId: number;
@@ -25,6 +27,23 @@ export const PortalOffers: React.FC<PortalOffersProps> = ({ merchantId }) => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingOffer, setEditingOffer] = useState<MerchantOffer | null>(null);
   const { offers, isLoading, createOffer, updateOffer, deleteOffer, toggleActive } = useManageOffers(merchantId);
+
+  // Fetch redemption counts
+  const { data: redemptionCounts } = useQuery({
+    queryKey: ['offer-redemption-counts', merchantId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('offer_redemptions')
+        .select('offer_id')
+        .eq('store_id', merchantId);
+      if (error) throw error;
+      const counts: Record<string, number> = {};
+      data?.forEach(r => {
+        counts[r.offer_id] = (counts[r.offer_id] || 0) + 1;
+      });
+      return counts;
+    },
+  });
 
   return (
     <div className="space-y-6">
@@ -90,6 +109,7 @@ export const PortalOffers: React.FC<PortalOffersProps> = ({ merchantId }) => {
             <div className="space-y-2">
               {offers.map(offer => {
                 const status = getOfferStatus(offer);
+                const count = redemptionCounts?.[offer.id] ?? 0;
                 return (
                   <button
                     key={offer.id}
@@ -102,7 +122,12 @@ export const PortalOffers: React.FC<PortalOffersProps> = ({ merchantId }) => {
                         {format(new Date(offer.start_time), 'MMM d, yyyy h:mm a')} — {format(new Date(offer.end_time), 'MMM d, yyyy h:mm a')}
                       </p>
                     </div>
-                    <Badge variant={status.variant} className="flex-shrink-0">{status.label}</Badge>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {count > 0 && (
+                        <span className="text-xs font-medium text-primary">{count} redeemed</span>
+                      )}
+                      <Badge variant={status.variant}>{status.label}</Badge>
+                    </div>
                   </button>
                 );
               })}
