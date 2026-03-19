@@ -11,12 +11,13 @@ import { CalendarIcon, Plus, Upload, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
-import { EVENT_CATEGORIES, DAY_NAMES, type EventFormData } from '@/hooks/useManageEvents';
+import { EVENT_CATEGORIES, DAY_NAMES, type EventFormData, type MerchantEvent } from '@/hooks/useManageEvents';
 
 interface EventCreateFormProps {
   onSubmit: (data: EventFormData) => void;
   isSubmitting: boolean;
   onCancel: () => void;
+  initialData?: MerchantEvent | null;
 }
 
 export const EventCreateForm: React.FC<EventCreateFormProps> = ({ onSubmit, isSubmitting, onCancel }) => {
