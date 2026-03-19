@@ -218,8 +218,15 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
                   >
                     <Share className="h-4 w-4" />
                   </Button>
-                  {isAdmin ? (
-                    <RestaurantProfileEditor restaurant={restaurantWithIds} />
+                  {canManage ? (
+                    <div className="flex items-center gap-2">
+                      <Button asChild variant="outline" size="sm">
+                        <Link to={`/merchant/${restaurant.id}/manage`}>
+                          <Settings className="h-4 w-4 mr-2" />Manage
+                        </Link>
+                      </Button>
+                      <RestaurantProfileEditor restaurant={restaurantWithIds} />
+                    </div>
                   ) : (
                     <div className="hidden sm:block">
                       <ReportIssueModal
