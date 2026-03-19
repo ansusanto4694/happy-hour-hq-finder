@@ -23,7 +23,7 @@ const formatTime = (time: string | null) => {
   return `${displayHour}:${m} ${ampm}`;
 };
 
-export const MerchantEventsList: React.FC<MerchantEventsListProps> = ({ events, onDelete, onToggleActive, isDeleting }) => {
+export const MerchantEventsList: React.FC<MerchantEventsListProps> = ({ events, onDelete, onEdit, onToggleActive, isDeleting }) => {
   if (!events.length) {
     return (
       <div className="text-center py-12 text-muted-foreground">
