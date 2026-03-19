@@ -79,6 +79,7 @@ export const PortalDashboard: React.FC<PortalDashboardProps> = ({ merchantId, me
           'deal_source_clicked',
           'result_card_clicked',
           'map_marker_clicked',
+          'profile_shared',
         ]);
       if (error) throw error;
 
