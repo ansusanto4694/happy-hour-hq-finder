@@ -47,3 +47,6 @@ verify_jwt = false
 
 [functions.fetch-google-places]
 verify_jwt = false
+
+[functions.deactivate-expired-events]
+verify_jwt = false
