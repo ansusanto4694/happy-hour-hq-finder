@@ -100,9 +100,9 @@ export const PortalDashboard: React.FC<PortalDashboardProps> = ({ merchantId, me
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-bold text-foreground">{card.value}</span>
                 {card.status === 'good' ? (
-                  <CheckCircle2 className="h-4 w-4 text-green-500" />
+                  <CheckCircle2 className="h-4 w-4 text-primary" />
                 ) : (
-                  <AlertCircle className="h-4 w-4 text-amber-500" />
+                  <AlertCircle className="h-4 w-4 text-destructive" />
                 )}
               </div>
               <p className="text-xs text-muted-foreground mt-1">{card.hint}</p>
