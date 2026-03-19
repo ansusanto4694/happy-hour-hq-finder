@@ -20,20 +20,26 @@ interface EventCreateFormProps {
   initialData?: MerchantEvent | null;
 }
 
-export const EventCreateForm: React.FC<EventCreateFormProps> = ({ onSubmit, isSubmitting, onCancel }) => {
-  const [eventType, setEventType] = useState<'one_time' | 'recurring'>('one_time');
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+export const EventCreateForm: React.FC<EventCreateFormProps> = ({ onSubmit, isSubmitting, onCancel, initialData }) => {
+  const isEditing = !!initialData;
+  const [eventType, setEventType] = useState<'one_time' | 'recurring'>(
+    (initialData?.event_type as 'one_time' | 'recurring') || 'one_time'
+  );
+  const [title, setTitle] = useState(initialData?.title || '');
+  const [description, setDescription] = useState(initialData?.description || '');
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(initialData?.image_url || null);
+  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(initialData?.image_url || null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [eventDate, setEventDate] = useState<Date>();
-  const [recurrenceRule, setRecurrenceRule] = useState('weekly');
-  const [recurrenceDay, setRecurrenceDay] = useState<number>(1);
-  const [startTime, setStartTime] = useState('');
-  const [endTime, setEndTime] = useState('');
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [eventDate, setEventDate] = useState<Date | undefined>(
+    initialData?.event_date ? new Date(initialData.event_date) : undefined
+  );
+  const [recurrenceRule, setRecurrenceRule] = useState(initialData?.recurrence_rule || 'weekly');
+  const [recurrenceDay, setRecurrenceDay] = useState<number>(initialData?.recurrence_day ?? 1);
+  const [startTime, setStartTime] = useState(initialData?.start_time?.slice(0, 5) || '');
+  const [endTime, setEndTime] = useState(initialData?.end_time?.slice(0, 5) || '');
+  const [selectedTags, setSelectedTags] = useState<string[]>(initialData?.category_tags || []);
 
   const toggleTag = (tag: string) => {
     setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
