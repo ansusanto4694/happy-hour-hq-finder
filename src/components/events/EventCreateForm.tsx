@@ -76,7 +76,7 @@ export const EventCreateForm: React.FC<EventCreateFormProps> = ({ onSubmit, isSu
     onSubmit({
       title: title.trim(),
       description: description.trim() || undefined,
-      image_url: imageUrl.trim() || undefined,
+      image_url: uploadedUrl,
       event_type: eventType,
       event_date: eventType === 'one_time' && eventDate ? eventDate.toISOString() : undefined,
       recurrence_rule: eventType === 'recurring' ? recurrenceRule : undefined,
