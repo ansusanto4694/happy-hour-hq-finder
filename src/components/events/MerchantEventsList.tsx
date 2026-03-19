@@ -105,7 +105,7 @@ export const MerchantEventsList: React.FC<MerchantEventsListProps> = ({ events, 
                 size="icon"
                 onClick={(e) => { e.stopPropagation(); onEdit(event); }}
                 aria-label="Edit event"
-                className="flex-shrink-0"
+                className="flex-shrink-0 self-start"
               >
                 <Pencil className="h-4 w-4" />
               </Button>
