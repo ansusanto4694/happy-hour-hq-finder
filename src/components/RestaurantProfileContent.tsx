@@ -65,6 +65,7 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
   const { data: ratingData } = useMerchantRating(restaurant.id);
   const { handleShare: handleShareProfile } = useShareProfile({ merchantName: restaurant.restaurant_name });
   const isMobile = useIsMobile();
+  const { canManage } = useMerchantOwnership(restaurant.id);
 
   // Use slug for URLs when available for SEO
   const merchantUrlId = restaurant.slug || restaurant.id;

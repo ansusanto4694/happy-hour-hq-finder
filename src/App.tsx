@@ -159,6 +159,7 @@ const App = () => (
                 <Route path="/account" element={<Account />} />
                 <Route path="/happy-hour/:citySlug" element={<LocationLanding />} />
                 <Route path="/happy-hour/:citySlug/:neighborhoodSlug" element={<LocationLanding />} />
+                <Route path="/merchant/:id/manage" element={<MerchantPortal />} />
                 {/* Redirect for broken Facebook link typo */}
                 <Route path="/We" element={<Navigate to="/" replace />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
