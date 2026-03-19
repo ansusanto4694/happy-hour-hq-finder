@@ -35,7 +35,24 @@ export const MerchantEventsList: React.FC<MerchantEventsListProps> = ({ events, 
       {events.map(event => (
         <Card key={event.id} className={`transition-opacity cursor-pointer hover:shadow-md ${!event.is_active ? 'opacity-60' : ''}`} onClick={() => onEdit(event)}>
           <CardContent className="p-4">
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-4">
+              {/* Event Image */}
+              <div className="flex-shrink-0">
+                <div className={`w-20 h-20 ${event.image_url ? 'bg-white' : 'bg-gradient-to-br from-primary/10 to-secondary/10'} border border-border rounded-lg shadow-sm flex items-center justify-center overflow-hidden`}>
+                  {event.image_url ? (
+                    <img
+                      src={event.image_url}
+                      alt={event.title}
+                      className="w-full h-full object-contain"
+                      width={80}
+                      height={80}
+                      loading="lazy"
+                    />
+                  ) : (
+                    <ImageIcon className="h-6 w-6 text-muted-foreground/40" />
+                  )}
+                </div>
+              </div>
               <div className="flex-1 min-w-0 space-y-2">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="font-semibold text-foreground truncate">{event.title}</h3>
