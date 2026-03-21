@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { MerchantOffer } from './types';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { AuthRequiredModal } from '@/components/AuthRequiredModal';
 
 interface OfferDetailsModalProps {
   offer: MerchantOffer | null;
@@ -22,7 +24,9 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
 }) => {
   const [state, setState] = useState<ModalState>('details');
   const [pin, setPin] = useState(['', '', '', '']);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const { user } = useAuth();
 
   // Reset state when modal opens/closes
   useEffect(() => {
@@ -54,7 +58,6 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
     if (!offer) return;
     const entered = pin.join('');
     if (entered === offer.redemption_pin) {
-      // Log redemption
       const { data: { session } } = await supabase.auth.getSession();
       await supabase.from('offer_redemptions').insert({
         offer_id: offer.id,
@@ -85,6 +88,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
   const enteredFull = pin.every(d => d !== '');
 
   return (
+    <>
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open && state !== 'success') onClose(); }}>
       <DialogContent className="max-w-md">
         {state === 'details' && (
@@ -120,7 +124,13 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                 </div>
               </div>
               {offer.redemption_pin && (
-                <Button className="w-full mt-2" onClick={() => setState('pin-entry')}>
+                <Button className="w-full mt-2" onClick={() => {
+                  if (!user) {
+                    setShowAuthModal(true);
+                  } else {
+                    setState('pin-entry');
+                  }
+                }}>
                   Redeem Offer
                 </Button>
               )}
@@ -181,5 +191,13 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
         )}
       </DialogContent>
     </Dialog>
+
+    <AuthRequiredModal
+      open={showAuthModal}
+      onOpenChange={setShowAuthModal}
+      action="redeem this offer"
+      merchantId={offer.store_id}
+    />
+    </>
   );
 };
