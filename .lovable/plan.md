@@ -1,64 +1,52 @@
 
 
-## Offer Redemption with 4-Digit PIN Verification
+## Offer Redemption Analytics in Merchant Portal
 
-### How It Works
+### What Merchants Will See
 
-1. Merchant sets a 4-digit redemption PIN when creating/editing an offer in the portal
-2. Customer taps an offer on the restaurant profile page, sees the offer details modal
-3. Modal now has a "Redeem" button at the bottom
-4. Tapping "Redeem" shows a PIN entry screen (4 digit inputs) within the same modal
-5. Correct PIN → green "Offer Redeemed" success state; incorrect → red "Incorrect PIN" message, inputs cleared
-6. Each successful redemption is logged to a new `offer_redemptions` table, giving merchants a redemption count in their portal
+When a merchant clicks on an offer in their Offers list, they currently see the edit form. We'll add a **Redemption History** section below the form (when editing) that shows:
+
+- A count summary: "X total redemptions"
+- A table/list of each redemption with:
+  - **Who**: user's first name + last initial (from `profile_display_names` view), or "Guest" if anonymous
+  - **When**: formatted date and time of redemption
+
+The existing redemption count badge on the offer list item already shows the aggregate — this adds the detailed breakdown when viewing a specific offer.
 
 ### Changes
 
-**1. Database migration**
+**1. Update `PortalOffers.tsx` — fetch detailed redemptions when editing**
 
-- Add `redemption_pin` column (text, nullable) to `merchant_offers` — 4-digit PIN, nullable so existing offers aren't broken
-- Create `offer_redemptions` table:
-  - `id` (uuid, PK)
-  - `offer_id` (uuid, FK → merchant_offers.id)
-  - `store_id` (integer) — denormalized for easy merchant querying
-  - `redeemed_at` (timestamptz, default now())
-  - `user_id` (uuid, nullable) — if logged in
-  - `session_id` (text, nullable) — anonymous tracking
-- RLS: anyone can insert redemptions (customers may be anonymous); merchants can select their own (`is_merchant_owner(store_id)`); admins can select all
+When `editingOffer` is set, query `offer_redemptions` for that specific offer, joined with `profile_display_names` to get user display names. Show a "Redemption History" card below the `OfferForm`.
 
-**2. Update `OfferForm.tsx` (merchant portal)**
+The query:
+```sql
+SELECT r.id, r.redeemed_at, r.user_id, 
+       p.first_name, p.last_name_initial
+FROM offer_redemptions r
+LEFT JOIN profile_display_names p ON p.id = r.user_id
+WHERE r.offer_id = :offerId
+ORDER BY r.redeemed_at DESC
+```
 
-- Add a "Redemption PIN" field — 4-digit numeric input, optional
-- Validation: must be exactly 4 digits if provided
-- Update `OfferFormData` type and `useManageOffers` to include `redemption_pin`
+**2. New component — `src/components/merchant-portal/OfferRedemptionHistory.tsx`**
 
-**3. Update `OfferDetailsModal.tsx` (customer-facing)**
+A simple card component that receives an offer ID and merchant ID, fetches redemptions, and renders:
+- Header with total count
+- Scrollable list of redemption rows (user name + timestamp)
+- Empty state if no redemptions yet
 
-- Add a "Redeem Offer" button at the bottom of the modal (only shown if the offer has a PIN set)
-- Three states within the modal:
-  - **Details** (default): offer info + "Redeem" button
-  - **PIN Entry**: four individual digit inputs, "Submit" button
-  - **Result**: "Offer Redeemed" (green checkmark) or "Incorrect PIN" (red, with retry/clear)
-- On correct PIN: insert a row into `offer_redemptions`, show success state
-- On incorrect PIN: show error, clear inputs after a brief delay
-- PIN verification happens client-side by comparing against `redemption_pin` from the offer record (it's a convenience PIN, not a security secret)
+**3. No database changes needed**
 
-**4. Update merchant_offers SELECT RLS**
-
-- Need to ensure the `redemption_pin` is readable by public/anon for client-side verification. Since merchant_offers already has a public SELECT policy for active offers, the PIN will be included. This is acceptable because the PIN is a staff-convenience tool, not a security credential — it prevents accidental redemptions, not fraud.
-
-**5. Add redemption count to `PortalOffers.tsx`**
-
-- Query `offer_redemptions` grouped by `offer_id` to show a redemption count badge next to each offer in the merchant's list view
-
-**6. Add redemption count to `PortalDashboard.tsx`**
-
-- Add a "Total Redemptions" stat card showing total redemptions across all offers in the last 30 days
+- `offer_redemptions` table already exists with the right columns
+- `profile_display_names` view is already public and provides safe display names
+- RLS already allows merchant owners to SELECT their own redemptions via `is_merchant_owner(store_id)`
 
 ### Technical Details
 
-- PIN input uses 4 individual controlled `<input>` elements with auto-focus advance (type each digit, cursor moves to next)
-- The `redemption_pin` column is stored as plain text (not hashed) — it's a 4-digit convenience code, not a password
-- Client-side comparison: `enteredPin === offer.redemption_pin`
-- On success, the modal transitions to a non-dismissable success state for 3 seconds, then closes
-- The redemption insert uses the anon/authenticated Supabase client directly
+- Uses `useQuery` with key `['offer-redemptions-detail', offerId]` 
+- Joins against `profile_display_names` view — since this is a Postgres view, we'll do two queries: one for redemptions, one for the user IDs found, then merge client-side (Supabase JS doesn't support cross-table joins on unrelated tables easily)
+- Alternatively, fetch redemptions then batch-fetch display names for the unique user_ids — simpler and avoids RLS complications
+- Timestamps formatted as "Mar 21, 2026 at 2:30 PM"
+- Anonymous redemptions (null user_id) show as "Guest"
 
