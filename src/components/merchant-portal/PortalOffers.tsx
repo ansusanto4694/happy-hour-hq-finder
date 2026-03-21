@@ -8,6 +8,7 @@ import { Plus, Loader2, Tag } from 'lucide-react';
 import { format } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { OfferRedemptionHistory } from './OfferRedemptionHistory';
 
 interface PortalOffersProps {
   merchantId: number;
@@ -67,23 +68,26 @@ export const PortalOffers: React.FC<PortalOffersProps> = ({ merchantId }) => {
         </CardHeader>
         <CardContent>
           {editingOffer ? (
-            <OfferForm
-              initialData={editingOffer}
-              onSubmit={(data) => {
-                updateOffer.mutate({ offerId: editingOffer.id, formData: data }, { onSuccess: () => setEditingOffer(null) });
-              }}
-              isSubmitting={updateOffer.isPending}
-              onCancel={() => setEditingOffer(null)}
-              onDelete={() => {
-                deleteOffer.mutate(editingOffer.id, { onSuccess: () => setEditingOffer(null) });
-              }}
-              isDeleting={deleteOffer.isPending}
-              onToggleActive={(isActive) => {
-                toggleActive.mutate({ offerId: editingOffer.id, isActive }, {
-                  onSuccess: () => setEditingOffer(prev => prev ? { ...prev, is_active: isActive } : null)
-                });
-              }}
-            />
+            <>
+              <OfferForm
+                initialData={editingOffer}
+                onSubmit={(data) => {
+                  updateOffer.mutate({ offerId: editingOffer.id, formData: data }, { onSuccess: () => setEditingOffer(null) });
+                }}
+                isSubmitting={updateOffer.isPending}
+                onCancel={() => setEditingOffer(null)}
+                onDelete={() => {
+                  deleteOffer.mutate(editingOffer.id, { onSuccess: () => setEditingOffer(null) });
+                }}
+                isDeleting={deleteOffer.isPending}
+                onToggleActive={(isActive) => {
+                  toggleActive.mutate({ offerId: editingOffer.id, isActive }, {
+                    onSuccess: () => setEditingOffer(prev => prev ? { ...prev, is_active: isActive } : null)
+                  });
+                }}
+              />
+              <OfferRedemptionHistory offerId={editingOffer.id} storeId={merchantId} />
+            </>
           ) : showCreateForm ? (
             <OfferForm
               onSubmit={(data) => {
