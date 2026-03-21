@@ -28,7 +28,6 @@ export const AuthRequiredModal = ({
   const { track } = useAnalytics();
 
   const handleSignIn = () => {
-    // Track that user chose to sign in after auth-required action
     track({
       eventType: 'conversion',
       eventCategory: 'authentication',
@@ -37,14 +36,26 @@ export const AuthRequiredModal = ({
       merchantId,
     });
     
-    // Pass current path as returnTo so user comes back after auth
     const returnTo = window.location.pathname;
     navigate(`/auth?returnTo=${encodeURIComponent(returnTo)}`);
     onOpenChange(false);
   };
 
+  const handleSignUp = () => {
+    track({
+      eventType: 'conversion',
+      eventCategory: 'authentication',
+      eventAction: 'auth_required_signup_clicked',
+      eventLabel: action,
+      merchantId,
+    });
+    
+    const returnTo = window.location.pathname;
+    navigate(`/auth?mode=signup&returnTo=${encodeURIComponent(returnTo)}`);
+    onOpenChange(false);
+  };
+
   const handleCancel = () => {
-    // Track dismissal of auth prompt
     track({
       eventType: 'interaction',
       eventCategory: 'authentication',
@@ -65,10 +76,16 @@ export const AuthRequiredModal = ({
             You need to be signed in to {action}. Create a free account or sign in to continue.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter>
+        <AlertDialogFooter className="flex-col sm:flex-row gap-2">
           <AlertDialogCancel onClick={handleCancel}>Cancel</AlertDialogCancel>
           <AlertDialogAction onClick={handleSignIn}>Sign In</AlertDialogAction>
         </AlertDialogFooter>
+        <p className="text-center text-sm text-muted-foreground -mt-2 pb-2">
+          Don't have an account?{' '}
+          <button onClick={handleSignUp} className="text-primary font-medium hover:underline">
+            Sign Up
+          </button>
+        </p>
       </AlertDialogContent>
     </AlertDialog>
   );
