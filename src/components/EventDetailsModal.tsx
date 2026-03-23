@@ -36,12 +36,21 @@ interface EventDetailsModalProps {
 export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({ event, open, onOpenChange }) => {
   if (!event) return null;
 
-  const handleShare = () => {
+  const [shared, setShared] = useState(false);
+
+  const handleShare = async () => {
     const shareUrl = window.location.href;
-    if (navigator.share) {
-      navigator.share({ title: event.title, text: event.description || '', url: shareUrl });
-    } else {
-      navigator.clipboard.writeText(`${event.title} - ${shareUrl}`);
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: event.title, text: event.description || '', url: shareUrl });
+      } else {
+        await navigator.clipboard.writeText(`${event.title} - ${shareUrl}`);
+      }
+      setShared(true);
+      toast({ title: 'Link copied!', description: 'Event link copied to clipboard.' });
+      setTimeout(() => setShared(false), 2000);
+    } catch (err) {
+      // User cancelled share dialog — no feedback needed
     }
   };
 
