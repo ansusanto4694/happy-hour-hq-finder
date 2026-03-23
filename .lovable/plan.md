@@ -1,58 +1,52 @@
 
 
-## Refactor Events & Updates on Restaurant Profile
+## Offer Redemption Analytics in Merchant Portal
 
-### Current State
-The events feed renders each event as a full card with image thumbnail, description, badges, time info, category tags, and a share button — all visible inline. On a 390px mobile viewport this is verbose and pushes content down significantly.
+### What Merchants Will See
 
-### Proposed Design: Compact List + Detail Modal
+When a merchant clicks on an offer in their Offers list, they currently see the edit form. We'll add a **Redemption History** section below the form (when editing) that shows:
 
-**Compact list items** — each event becomes a slim, tappable row:
-- Left: small thumbnail (w-12 h-12) or category icon if no image
-- Center: event title (single line, truncated), next date + time on a second line
-- Right: chevron icon indicating tappability
-- No description, no category tags, no share button visible in the list
-- Dividers between items instead of card borders (matching the mobile-redesign flat style)
+- A count summary: "X total redemptions"
+- A table/list of each redemption with:
+  - **Who**: user's first name + last initial (from `profile_display_names` view), or "Guest" if anonymous
+  - **When**: formatted date and time of redemption
 
-**Event detail modal** — tapping a row opens a Dialog with full details:
-- Event image displayed larger at the top (if present)
-- Title, recurring/one-time badge
-- Full description (no line clamp)
-- Next occurrence date, recurrence pattern, time range
-- Category tags
-- Share button in the modal footer
-
-This mirrors the pattern already used for offers (tap card → `OfferDetailsModal`).
+The existing redemption count badge on the offer list item already shows the aggregate — this adds the detailed breakdown when viewing a specific offer.
 
 ### Changes
 
-**1. New component — `src/components/events/EventDetailsModal.tsx`**
+**1. Update `PortalOffers.tsx` — fetch detailed redemptions when editing**
 
-A Dialog that receives an event object and `isOpen`/`onClose` props. Renders:
-- Large image or gradient placeholder at top
-- Title + type badge
-- Full description
-- Date/time/recurrence details
-- Category tags
-- Share button
+When `editingOffer` is set, query `offer_redemptions` for that specific offer, joined with `profile_display_names` to get user display names. Show a "Redemption History" card below the `OfferForm`.
 
-**2. Refactor `RestaurantEventsFeed.tsx`**
+The query:
+```sql
+SELECT r.id, r.redeemed_at, r.user_id, 
+       p.first_name, p.last_name_initial
+FROM offer_redemptions r
+LEFT JOIN profile_display_names p ON p.id = r.user_id
+WHERE r.offer_id = :offerId
+ORDER BY r.redeemed_at DESC
+```
 
-- Replace the nested Card-per-event layout with compact rows
-- Each row: thumbnail, title, date+time summary — all clickable
-- Remove the outer Card wrapper with the amber border — use a simple section header instead
-- Add state for `selectedEvent` and render `EventDetailsModal`
-- Move share logic into the modal
+**2. New component — `src/components/merchant-portal/OfferRedemptionHistory.tsx`**
 
-**3. No database or data changes needed**
+A simple card component that receives an offer ID and merchant ID, fetches redemptions, and renders:
+- Header with total count
+- Scrollable list of redemption rows (user name + timestamp)
+- Empty state if no redemptions yet
 
-The query, sorting, and `eventUtils` logic remain the same.
+**3. No database changes needed**
+
+- `offer_redemptions` table already exists with the right columns
+- `profile_display_names` view is already public and provides safe display names
+- RLS already allows merchant owners to SELECT their own redemptions via `is_merchant_owner(store_id)`
 
 ### Technical Details
 
-- Compact rows use `py-3` padding with `border-b border-border` dividers
-- Thumbnail: `w-12 h-12 rounded-md` with `object-cover`
-- Date line combines next date + time into one string (e.g. "Wed, Mar 19 · 7:00 PM")
-- Modal uses the existing `Dialog`/`DialogContent` components
-- The section heading "Events & Updates" stays, but without the heavy amber-bordered Card container
+- Uses `useQuery` with key `['offer-redemptions-detail', offerId]` 
+- Joins against `profile_display_names` view — since this is a Postgres view, we'll do two queries: one for redemptions, one for the user IDs found, then merge client-side (Supabase JS doesn't support cross-table joins on unrelated tables easily)
+- Alternatively, fetch redemptions then batch-fetch display names for the unique user_ids — simpler and avoids RLS complications
+- Timestamps formatted as "Mar 21, 2026 at 2:30 PM"
+- Anonymous redemptions (null user_id) show as "Guest"
 
