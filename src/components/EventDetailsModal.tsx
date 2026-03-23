@@ -129,13 +129,16 @@ export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({ event, ope
 
           {/* Share */}
           <Button
-            variant="outline"
+            variant={shared ? "default" : "outline"}
             size="sm"
             onClick={handleShare}
-            className="w-full"
+            className="w-full transition-all"
           >
-            <Share className="h-4 w-4 mr-2" />
-            Share Event
+            {shared ? (
+              <><Check className="h-4 w-4 mr-2" />Copied!</>
+            ) : (
+              <><Share className="h-4 w-4 mr-2" />Share Event</>
+            )}
           </Button>
         </div>
       </DialogContent>
