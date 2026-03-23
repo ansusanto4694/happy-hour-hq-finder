@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar, Clock, Repeat, Share, ImageIcon } from 'lucide-react';
 import { formatNextDate } from '@/utils/eventUtils';
+import { useToast } from '@/hooks/use-toast';
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
