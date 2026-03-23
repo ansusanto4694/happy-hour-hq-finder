@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, Share, Repeat, ImageIcon } from 'lucide-react';
+import { Calendar, Clock, Share, Repeat, ImageIcon, Check } from 'lucide-react';
 import { formatNextDate } from '@/utils/eventUtils';
+import { toast } from '@/hooks/use-toast';
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -33,14 +34,23 @@ interface EventDetailsModalProps {
 }
 
 export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({ event, open, onOpenChange }) => {
+  const [shared, setShared] = useState(false);
+
   if (!event) return null;
 
-  const handleShare = () => {
+  const handleShare = async () => {
     const shareUrl = window.location.href;
-    if (navigator.share) {
-      navigator.share({ title: event.title, text: event.description || '', url: shareUrl });
-    } else {
-      navigator.clipboard.writeText(`${event.title} - ${shareUrl}`);
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: event.title, text: event.description || '', url: shareUrl });
+      } else {
+        await navigator.clipboard.writeText(`${event.title} - ${shareUrl}`);
+      }
+      setShared(true);
+      toast({ title: 'Link copied!', description: 'Event link copied to clipboard.' });
+      setTimeout(() => setShared(false), 2000);
+    } catch (err) {
+      // User cancelled share dialog — no feedback needed
     }
   };
 
@@ -119,13 +129,16 @@ export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({ event, ope
 
           {/* Share */}
           <Button
-            variant="outline"
+            variant={shared ? "default" : "outline"}
             size="sm"
             onClick={handleShare}
-            className="w-full"
+            className="w-full transition-all"
           >
-            <Share className="h-4 w-4 mr-2" />
-            Share Event
+            {shared ? (
+              <><Check className="h-4 w-4 mr-2" />Copied!</>
+            ) : (
+              <><Share className="h-4 w-4 mr-2" />Share Event</>
+            )}
           </Button>
         </div>
       </DialogContent>
