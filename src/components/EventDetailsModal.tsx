@@ -34,9 +34,9 @@ interface EventDetailsModalProps {
 }
 
 export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({ event, open, onOpenChange }) => {
-  if (!event) return null;
-
   const [shared, setShared] = useState(false);
+
+  if (!event) return null;
 
   const handleShare = async () => {
     const shareUrl = window.location.href;
