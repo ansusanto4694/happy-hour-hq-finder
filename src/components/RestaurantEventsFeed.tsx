@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { toast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -61,12 +62,23 @@ export const RestaurantEventsFeed: React.FC<RestaurantEventsFeedProps> = ({ rest
     return sortEventsByNextOccurrence(events);
   }, [events]);
 
-  const handleShare = (event: any) => {
+  const handleShare = async (event: any) => {
     const shareUrl = window.location.href;
-    if (navigator.share) {
-      navigator.share({ title: event.title, text: event.description, url: shareUrl });
-    } else {
-      navigator.clipboard.writeText(`${event.title} - ${shareUrl}`);
+    const shareText = `${event.title} - ${shareUrl}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: event.title, text: event.description || '', url: shareUrl });
+        toast({ title: 'Shared!', description: 'Event shared successfully.' });
+        return;
+      }
+    } catch {
+      // navigator.share denied — fall through to clipboard
+    }
+    try {
+      await navigator.clipboard.writeText(shareText);
+      toast({ title: 'Link copied!', description: 'Event link copied to clipboard.' });
+    } catch {
+      toast({ title: 'Unable to share', description: 'Please copy the URL manually.', variant: 'destructive' });
     }
   };
 
