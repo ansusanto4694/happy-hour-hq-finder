@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar, Clock, Repeat, Share, ImageIcon } from 'lucide-react';
 import { formatNextDate } from '@/utils/eventUtils';
+import { useToast } from '@/hooks/use-toast';
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -24,12 +25,23 @@ interface EventDetailsModalProps {
 export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({ event, isOpen, onClose }) => {
   if (!event) return null;
 
-  const handleShare = () => {
+  const { toast } = useToast();
+
+  const handleShare = async () => {
     const shareUrl = window.location.href;
     if (navigator.share) {
-      navigator.share({ title: event.title, text: event.description, url: shareUrl });
-    } else {
-      navigator.clipboard.writeText(`${event.title} - ${shareUrl}`);
+      try {
+        await navigator.share({ title: event.title, text: event.description, url: shareUrl });
+        return;
+      } catch (err) {
+        if ((err as DOMException)?.name === 'AbortError') return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(`${event.title} - ${shareUrl}`);
+      toast({ title: 'Link copied!', description: 'Event link has been copied to your clipboard.' });
+    } catch {
+      toast({ title: 'Copy failed', description: 'Unable to copy link. Please try again.', variant: 'destructive' });
     }
   };
 
