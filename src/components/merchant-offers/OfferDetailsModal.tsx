@@ -28,7 +28,6 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const { user } = useAuth();
 
-  // Reset state when modal opens/closes
   useEffect(() => {
     if (!isOpen) {
       setState('details');
@@ -57,19 +56,36 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
   const handleSubmitPin = useCallback(async () => {
     if (!offer) return;
     const entered = pin.join('');
-    if (entered === offer.redemption_pin) {
-      const { data: { session } } = await supabase.auth.getSession();
-      await supabase.from('offer_redemptions').insert({
-        offer_id: offer.id,
-        store_id: offer.store_id,
-        user_id: session?.user?.id ?? null,
-        session_id: null,
+
+    try {
+      const { data, error } = await supabase.functions.invoke('verify-offer-pin', {
+        body: { offer_id: offer.id, pin: entered },
       });
-      setState('success');
-      setTimeout(() => {
-        onClose();
-      }, 3000);
-    } else {
+
+      if (error) {
+        setState('error');
+        setTimeout(() => {
+          setPin(['', '', '', '']);
+          setState('pin-entry');
+          inputRefs.current[0]?.focus();
+        }, 1500);
+        return;
+      }
+
+      if (data?.valid) {
+        setState('success');
+        setTimeout(() => {
+          onClose();
+        }, 3000);
+      } else {
+        setState('error');
+        setTimeout(() => {
+          setPin(['', '', '', '']);
+          setState('pin-entry');
+          inputRefs.current[0]?.focus();
+        }, 1500);
+      }
+    } catch {
       setState('error');
       setTimeout(() => {
         setPin(['', '', '', '']);
@@ -123,17 +139,15 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                   </div>
                 </div>
               </div>
-              {offer.redemption_pin && (
-                <Button className="w-full mt-2" onClick={() => {
-                  if (!user) {
-                    setShowAuthModal(true);
-                  } else {
-                    setState('pin-entry');
-                  }
-                }}>
-                  Redeem Offer
-                </Button>
-              )}
+              <Button className="w-full mt-2" onClick={() => {
+                if (!user) {
+                  setShowAuthModal(true);
+                } else {
+                  setState('pin-entry');
+                }
+              }}>
+                Redeem Offer
+              </Button>
             </div>
           </>
         )}
