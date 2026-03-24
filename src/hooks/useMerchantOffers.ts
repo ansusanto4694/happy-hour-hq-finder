@@ -15,7 +15,7 @@ export const useMerchantOffers = (restaurantId: number) => {
         .order('start_time', { ascending: true });
 
       if (error) throw error;
-      return data as MerchantOffer[];
+      return (data ?? []) as unknown as MerchantOffer[];
     },
   });
 };
