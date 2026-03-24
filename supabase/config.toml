@@ -50,3 +50,6 @@ verify_jwt = false
 
 [functions.deactivate-expired-events]
 verify_jwt = false
+
+[functions.verify-offer-pin]
+verify_jwt = false
