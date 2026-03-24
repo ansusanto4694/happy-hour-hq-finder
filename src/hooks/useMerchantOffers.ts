@@ -7,7 +7,7 @@ export const useMerchantOffers = (restaurantId: number) => {
     queryKey: ['merchant-offers', restaurantId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('merchant_offers')
+        .from('merchant_offers_public' as any)
         .select('*')
         .eq('store_id', restaurantId)
         .eq('is_active', true)
@@ -15,7 +15,7 @@ export const useMerchantOffers = (restaurantId: number) => {
         .order('start_time', { ascending: true });
 
       if (error) throw error;
-      return data as MerchantOffer[];
+      return (data ?? []) as unknown as MerchantOffer[];
     },
   });
 };

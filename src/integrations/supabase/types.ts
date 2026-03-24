@@ -1058,6 +1058,13 @@ export type Database = {
             referencedRelation: "merchant_offers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "offer_redemptions_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_offers_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       profiles: {
@@ -1368,6 +1375,57 @@ export type Database = {
       }
     }
     Views: {
+      merchant_offers_public: {
+        Row: {
+          created_at: string | null
+          end_time: string | null
+          id: string | null
+          is_active: boolean | null
+          offer_description: string | null
+          offer_name: string | null
+          start_time: string | null
+          store_id: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          end_time?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          offer_description?: string | null
+          offer_name?: string | null
+          start_time?: string | null
+          store_id?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          end_time?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          offer_description?: string | null
+          offer_name?: string | null
+          start_time?: string | null
+          store_id?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_offers_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "Merchant"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_offers_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profile_display_names: {
         Row: {
           first_name: string | null
