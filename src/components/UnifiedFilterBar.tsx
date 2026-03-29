@@ -257,11 +257,8 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
     }
   };
 
-  if (isLoading) {
-    return <div className="text-sm text-gray-500">Loading filters...</div>;
-  }
-
-  const parentCategories = getParentCategories();
+  const dimensions = getCategoryDimensions();
+  const allCats = categories || [];
   const hasAnyFilters = selectedCategories.length > 0 || selectedRadius !== smartDefault || showOffersOnly || selectedDays.length > 0 || startTime || endTime || selectedMenuType !== 'all' || happeningNow || happeningToday || !!selectedNeighborhood;
 
   return (
@@ -359,8 +356,7 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
           {selectedCategories.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {selectedCategories.map(categoryId => {
-                const category = [...parentCategories, ...parentCategories.flatMap(p => getSubCategories(p.id))]
-                  .find(c => c.id === categoryId);
+                const category = allCats.find(c => c.id === categoryId);
                 return category ? (
                   <Badge key={categoryId} variant="secondary" className="cursor-pointer" 
                     onClick={() => toggleCategory(categoryId)}>
@@ -371,62 +367,81 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
             </div>
           )}
 
-          {/* Categories section */}
-          <div className="space-y-3">
-            <h4 className="font-medium text-sm">Categories</h4>
-            <div className={vertical ? "space-y-3" : "grid grid-cols-1 gap-3"}>
-                {parentCategories.map(parent => {
-                  const subCategories = getSubCategories(parent.id);
-                  const isExpanded = expandedCategories.includes(parent.id);
-                  const hasSubCategories = subCategories.length > 0;
+          {/* Category dimensions */}
+          {dimensions.map(dim => {
+            if (dim.parents.length === 0 && dim.children.length === 0) return null;
+            const isExpanded = expandedSections.includes(dim.type);
+            
+            return (
+              <div key={dim.type} className="space-y-3">
+                <div className="border rounded-lg p-2 bg-white">
+                  <div className="flex items-center justify-between mb-1">
+                    <h4 className="font-medium text-sm">{dim.label}</h4>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleSectionExpanded(dim.type)}
+                      className="h-5 w-5 p-0"
+                    >
+                      {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                    </Button>
+                  </div>
 
-                  return (
-                    <div key={parent.id} className="border rounded-lg p-2 bg-white">
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="flex items-center space-x-2 cursor-pointer flex-1">
-                          <input
-                            type="checkbox"
-                            checked={selectedCategories.includes(parent.id)}
-                            onChange={() => toggleCategory(parent.id)}
-                            className="rounded"
-                          />
-                          <span className="font-medium text-sm">{parent.name}</span>
-                        </label>
-                        
-                        {hasSubCategories && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => toggleCategoryExpanded(parent.id)}
-                            className="h-5 w-5 p-0"
-                          >
-                            {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-                          </Button>
-                        )}
-                      </div>
+                  <Collapsible open={isExpanded}>
+                    <CollapsibleContent className="space-y-1">
+                      {dim.parents.map(parent => {
+                        const subs = getSubCategories(parent.id);
+                        const hasSubs = subs.length > 0;
 
-                      {hasSubCategories && (
-                        <Collapsible open={isExpanded}>
-                          <CollapsibleContent className="space-y-1">
-                            {subCategories.map(sub => (
-                              <label key={sub.id} className="flex items-center space-x-2 cursor-pointer pl-2">
-                                <input
-                                  type="checkbox"
-                                  checked={selectedCategories.includes(sub.id)}
-                                  onChange={() => toggleCategory(sub.id)}
-                                  className="rounded"
-                                />
-                                <span className="text-xs">{sub.name}</span>
-                              </label>
-                            ))}
-                          </CollapsibleContent>
-                        </Collapsible>
-                      )}
-                    </div>
-                  );
-                })}
+                        if (!hasSubs) {
+                          // Standalone parent (e.g. Cafe)
+                          return (
+                            <label key={parent.id} className="flex items-center space-x-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={selectedCategories.includes(parent.id)}
+                                onChange={() => toggleCategory(parent.id)}
+                                className="rounded"
+                              />
+                              <span className="text-xs font-medium">{parent.name}</span>
+                            </label>
+                          );
+                        }
+
+                        // Parent with children (e.g. Bar → Cocktail Bar, etc.)
+                        return (
+                          <div key={parent.id} className="mb-1">
+                            <label className="flex items-center space-x-2 cursor-pointer mb-1">
+                              <input
+                                type="checkbox"
+                                checked={selectedCategories.includes(parent.id)}
+                                onChange={() => toggleCategory(parent.id)}
+                                className="rounded"
+                              />
+                              <span className="text-xs font-semibold">{parent.name}</span>
+                            </label>
+                            <div className="pl-4 space-y-1">
+                              {subs.map(sub => (
+                                <label key={sub.id} className="flex items-center space-x-2 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedCategories.includes(sub.id)}
+                                    onChange={() => toggleCategory(sub.id)}
+                                    className="rounded"
+                                  />
+                                  <span className="text-xs">{sub.name}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </CollapsibleContent>
+                  </Collapsible>
+                </div>
               </div>
-            </div>
+            );
+          })}
 
           {/* Time filters */}
           <div className="space-y-3">
