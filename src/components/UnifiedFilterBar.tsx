@@ -102,9 +102,9 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
     }
     return BASE_RADIUS_OPTIONS;
   }, [isNeighborhoodPage]);
-  const { getParentCategories, getSubCategories, isLoading } = useCategoriesHierarchy();
+  const { categories, getSubCategories, getCategoryDimensions, isLoading } = useCategoriesHierarchy();
   const { track } = useAnalytics();
-  const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
+  const [expandedSections, setExpandedSections] = useState<string[]>(['venue_type']);
   const [isDistanceExpanded, setIsDistanceExpanded] = useState(false);
   const [isDaysExpanded, setIsDaysExpanded] = useState(false);
   const [isTimeExpanded, setIsTimeExpanded] = useState(false);
