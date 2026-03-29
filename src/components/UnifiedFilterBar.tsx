@@ -257,6 +257,10 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
     }
   };
 
+  if (isLoading) {
+    return <div className="text-sm text-muted-foreground">Loading filters...</div>;
+  }
+
   const dimensions = getCategoryDimensions();
   const allCats = categories || [];
   const hasAnyFilters = selectedCategories.length > 0 || selectedRadius !== smartDefault || showOffersOnly || selectedDays.length > 0 || startTime || endTime || selectedMenuType !== 'all' || happeningNow || happeningToday || !!selectedNeighborhood;
