@@ -133,11 +133,11 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
     onCategoryChange(newSelected);
   };
 
-  const toggleCategoryExpanded = (categoryId: string) => {
-    setExpandedCategories(prev =>
-      prev.includes(categoryId)
-        ? prev.filter(id => id !== categoryId)
-        : [...prev, categoryId]
+  const toggleSectionExpanded = (sectionKey: string) => {
+    setExpandedSections(prev =>
+      prev.includes(sectionKey)
+        ? prev.filter(k => k !== sectionKey)
+        : [...prev, sectionKey]
     );
   };
 
