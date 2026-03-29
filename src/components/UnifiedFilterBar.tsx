@@ -7,7 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChevronDown, ChevronRight, Clock, CalendarDays } from 'lucide-react';
-import { useCategoriesHierarchy } from '@/hooks/useCategories';
+import { useCategoriesHierarchy, type CategoryType } from '@/hooks/useCategories';
 import { RadiusOption, getSmartDefaultRadius } from './RadiusFilter';
 import { TimeDropdown } from './TimeDropdown';
 import { NeighborhoodFilter } from './NeighborhoodFilter';
