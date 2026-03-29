@@ -1,5 +1,3 @@
-
-
 ## Security Hardening Plan — Fix All Vulnerabilities
 
 ### Critical Fixes
@@ -85,3 +83,21 @@ FROM public.merchant_offers;
 - Modified: `src/hooks/useMerchantOffers.ts`
 - Modified: `src/hooks/useAnalytics.ts` (if session upsert relies on SELECT)
 
+## Restructure Merchant Categories — IMPLEMENTED
+
+### Summary
+
+Migration applied successfully. Categories restructured into 5 dimensions:
+
+- **Venue Type**: Bar (17 subcategories), Restaurant (5 subcategories), Cafe
+- **Cuisine**: 51 categories (African through Vietnamese)
+- **Experience**: 7 categories (Brunch, Dance Floor, Trivia Night, etc.)
+- **Dietary**: 5 categories (Vegan, Vegetarian, Gluten-free, Farm-to-table, Organic)
+- **Beverage**: 4 categories (Coffee, Tea, Craft Beer, Natural Wine)
+
+### Changes Made
+
+- Database: Added `category_type` column, created new L1 parents, reparented existing items, inserted all new categories
+- `src/hooks/useCategories.ts` — Added `category_type` to type, added `getCategoryDimensions()` helper
+- `src/components/UnifiedFilterBar.tsx` — Grouped filters by dimension (Venue Type, Cuisine, Experience, Dietary, Beverage)
+- MobileFilterDrawerV2 passes through to UnifiedFilterBar (no changes needed)
