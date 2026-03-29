@@ -1,87 +1,62 @@
 
 
-## Security Hardening Plan — Fix All Vulnerabilities
+## Restructure Merchant Categories — Updated Plan (Cuisine Finalized)
 
-### Critical Fixes
+### Bar Subcategories (Finalized — 17)
 
-**1. Hide `redemption_pin` from public queries on `merchant_offers`**
+Cocktail Bar, Wine Bar, Sports Bar, Pub, Dive Bar, Speakeasy, Lounge, Nightclub, Hotel Bar, Rooftop Bar, Tiki Bar, Brewery/Brewpub, Beer Garden, Karaoke Bar, Piano Bar, Pool Hall, Hookah Lounge
 
-The current SELECT policy lets anonymous users see all columns including `redemption_pin`. Fix: create a database view that excludes the PIN column, and update the public-facing query to use it. Merchants/admins still query the table directly (RLS already scopes that).
+### Cuisine (Finalized — 51)
 
-- Create a `merchant_offers_public` view (security_invoker = on) that selects all columns except `redemption_pin`
-- Update `src/components/merchant-offers/MerchantOffersSection.tsx` and `src/hooks/useMerchantOffers.ts` to query the view instead of the table
-- Keep `OfferDetailsModal` PIN verification working by moving PIN check to an edge function (server-side only)
+African, American, Argentine, Asian, BBQ, Brazilian, Cajun/Creole, Caribbean, Chinese, Colombian, Cuban, Dim Sum, Dominican, Ethiopian, Filipino, French, German, Greek, Hawaiian/Polynesian, Indian, Indonesian, Italian, Jamaican, Japanese, Korean, Latin, Lebanese, Malaysian, Mediterranean, Mexican, Middle Eastern, Moroccan, Persian, Peruvian, Pizza, Puerto Rican, Ramen, Salvadoran, Seafood, Soul Food, Southern, Spanish, Steakhouse, Sushi, Tacos, Taiwanese, Tex-Mex, Thai, Turkish, Vietnamese
 
-**2. Lock down `user_events` SELECT policy**
+### Restaurant Subcategories (Pending Review — 5)
 
-Current policy `"Anyone can view events by session_id"` uses `USING (session_id IS NOT NULL)` which is always true — every row has a session_id. This exposes 60k+ behavioral records.
+Fine Dining, Casual Dining, Fast Casual, Bistro, Gastropub
 
-- Drop the `"Anyone can view events by session_id"` policy
-- The admin SELECT policy already covers analytics needs
-- Client-side event insertion still works (INSERT policy unchanged)
+### Experience (Pending Review — 7)
 
-**3. Lock down `user_sessions` SELECT and UPDATE policies**
+Brunch, Dance Floor, Trivia Night, Karaoke Night, Sports Viewing, Live Music, Rooftop Dining
 
-Current SELECT policy `"Anyone can view sessions by session_id"` is always true. UPDATE policy similarly too broad.
+### Dietary (Pending Review — 5)
 
-- Drop `"Anyone can view sessions by session_id"` SELECT policy
-- Replace UPDATE policy: restrict to rows matching the client's own `session_id` by requiring the session_id in the filter (keep `USING (session_id IS NOT NULL)` but scope the client code to only update its own session)
-- Since the client needs to upsert its own session, add a narrow SELECT policy: `USING (session_id = current_setting('request.headers')::json->>'x-session-id')` — or accept the trade-off per the existing risk acceptance note and keep the UPDATE as-is but remove the broad SELECT
+Vegan, Vegetarian, Gluten-free, Farm-to-table, Organic
 
-Given the existing risk acceptance for anonymous tracking, the pragmatic fix:
-- Remove the public SELECT policy (admin SELECT remains)
-- Keep the UPDATE policy (required for session tracking upserts — already accepted risk)
-- Adjust client code to not rely on SELECT for upserts (use `INSERT ... ON CONFLICT` via raw SQL or handle errors gracefully)
+### Beverage (Pending Review — 4)
 
-**4. Add RLS to `profile_display_names`**
+Coffee, Tea, Craft Beer, Natural Wine
 
-This is a view with `security_invoker = on`, so it inherits RLS from the underlying `profiles` table. The existing `profiles` policies already restrict access. No action needed — this is a false positive.
+### Standalone Venue
 
-### Medium Priority
+Cafe
 
-**5. Create edge function for PIN verification**
+---
 
-Move the PIN check server-side so the client never receives the PIN value:
-- New edge function `verify-offer-pin` that accepts `{offer_id, pin}` and returns `{valid: boolean}`
-- Records the redemption server-side if valid
-- Update `OfferDetailsModal` to call the edge function instead of comparing client-side
+### Implementation Plan
 
-### Migration SQL (single migration)
+**Phase 1 — Database migration:**
+- Add `category_type` column to `categories` table (text, default `'venue_type'`)
+- Create new L1 parents: Cuisine, Dietary, Experience, Beverage, Cafe
+- Insert all new L2 categories under correct parents
+- Reparent existing cuisine rows from Restaurant to the new Cuisine parent
+- Reparent dietary/beverage/experience items to their new parents
+- Set `category_type` on all rows
 
-```sql
--- 1. Drop overly permissive SELECT on user_events
-DROP POLICY "Anyone can view events by session_id" ON public.user_events;
-
--- 2. Drop overly permissive SELECT on user_sessions
-DROP POLICY "Anyone can view sessions by session_id" ON public.user_sessions;
-
--- 3. Create public view for merchant_offers without PIN
-CREATE OR REPLACE VIEW public.merchant_offers_public
-WITH (security_invoker = on) AS
-SELECT id, store_id, offer_name, offer_description,
-       start_time, end_time, is_active, created_at, updated_at
-FROM public.merchant_offers;
-```
-
-### Edge Function: `verify-offer-pin`
-
-- Accepts POST `{offer_id, pin}`
-- Requires authenticated user (JWT check)
-- Uses service role to read the actual PIN from `merchant_offers`
-- Compares, records redemption if match, returns result
-- Client never sees the PIN
-
-### Client Code Changes
-
-- `useMerchantOffers.ts` — query `merchant_offers_public` view instead of `merchant_offers`
-- `OfferDetailsModal.tsx` — call `verify-offer-pin` edge function instead of client-side PIN comparison
-- `useAnalytics.ts` / session tracking — handle potential SELECT failures gracefully since the broad SELECT policy is removed
+**Phase 2 — Frontend updates:**
+- `useCategories.ts` — add `category_type` to the Category type, add `getCategoriesByType()` helper
+- `UnifiedFilterBar.tsx` — group filter chips by category type (Venue Type, Cuisine, Experience, etc.)
+- `MobileFilterDrawerV2.tsx` — same grouped filter layout for mobile
+- No changes needed to `useMerchants.ts` or `merchant_categories` — category IDs work the same
 
 ### Files Affected
 
-- New: `supabase/functions/verify-offer-pin/index.ts`
-- New: 1 database migration
-- Modified: `src/components/merchant-offers/OfferDetailsModal.tsx`
-- Modified: `src/hooks/useMerchantOffers.ts`
-- Modified: `src/hooks/useAnalytics.ts` (if session upsert relies on SELECT)
+- 1 new SQL migration
+- `src/hooks/useCategories.ts`
+- `src/components/UnifiedFilterBar.tsx`
+- `src/components/MobileFilterDrawerV2.tsx`
+- `src/integrations/supabase/types.ts` (auto-updated)
+
+### Next Step
+
+Shall we review **Restaurant**, **Experience**, **Dietary**, and **Beverage** now, or are you happy with those as-is and ready to implement?
 
