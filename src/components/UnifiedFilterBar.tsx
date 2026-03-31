@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChevronDown, ChevronRight, Clock, CalendarDays } from 'lucide-react';
 import { useCategoriesHierarchy, type CategoryType } from '@/hooks/useCategories';
+import { useCategoriesWithMerchants } from '@/hooks/useCategoriesWithMerchants';
 import { RadiusOption, getSmartDefaultRadius } from './RadiusFilter';
 import { TimeDropdown } from './TimeDropdown';
 import { NeighborhoodFilter } from './NeighborhoodFilter';
@@ -103,6 +104,7 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
     return BASE_RADIUS_OPTIONS;
   }, [isNeighborhoodPage]);
   const { categories, getSubCategories, getCategoryDimensions, isLoading } = useCategoriesHierarchy();
+  const { data: activeCategoryIds } = useCategoriesWithMerchants();
   const { track } = useAnalytics();
   const [expandedSections, setExpandedSections] = useState<string[]>(['venue_type']);
   const [isDistanceExpanded, setIsDistanceExpanded] = useState(false);
@@ -395,7 +397,15 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
                     <CollapsibleContent className="space-y-1">
                       {dim.parents.map(parent => {
                         const subs = getSubCategories(parent.id);
-                        const hasSubs = subs.length > 0;
+                        // Filter subs to only those with active merchants
+                        const visibleSubs = activeCategoryIds
+                          ? subs.filter(s => activeCategoryIds.has(s.id))
+                          : subs;
+                        const hasSubs = visibleSubs.length > 0;
+                        const parentHasMerchants = !activeCategoryIds || activeCategoryIds.has(parent.id);
+
+                        // Hide parent if it has no merchants and no visible children
+                        if (!parentHasMerchants && !hasSubs) return null;
 
                         if (!hasSubs) {
                           // Standalone parent (e.g. Cafe)
@@ -425,7 +435,7 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
                               <span className="text-xs font-semibold">{parent.name}</span>
                             </label>
                             <div className="pl-4 space-y-1">
-                              {subs.map(sub => (
+                              {visibleSubs.map(sub => (
                                 <label key={sub.id} className="flex items-center space-x-2 cursor-pointer">
                                   <input
                                     type="checkbox"
