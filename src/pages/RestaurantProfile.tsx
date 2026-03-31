@@ -8,7 +8,7 @@ import { RestaurantHeader } from '@/components/RestaurantHeader';
 import { PageHeader } from '@/components/PageHeader';
 import { RestaurantProfileContent } from '@/components/RestaurantProfileContent';
 import { SEOHead } from '@/components/SEOHead';
-import { trackFunnelStep } from '@/utils/analytics';
+import { trackFunnelStep, trackPageView } from '@/utils/analytics';
 import { Footer } from '@/components/Footer';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -253,10 +253,11 @@ const RestaurantProfile = () => {
     }
   }, [isNumericId, restaurant?.slug, navigate, isFetching, dataUpdatedAt, mountedAt]);
   
-  // Track funnel step and save to recently viewed after we have the restaurant data
+  // Track funnel step, page view with merchantId, and save to recently viewed
   useEffect(() => {
     if (restaurant?.id) {
       trackFunnelStep({ funnelStep: 'profile_viewed', merchantId: restaurant.id, stepOrder: 5 });
+      trackPageView({ merchantId: restaurant.id });
       // Wrap merchant_google_ratings in array since Supabase returns single object for 1:1 relations
       const merchantForRecent = {
         ...restaurant,
