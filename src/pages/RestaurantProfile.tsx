@@ -8,7 +8,7 @@ import { RestaurantHeader } from '@/components/RestaurantHeader';
 import { PageHeader } from '@/components/PageHeader';
 import { RestaurantProfileContent } from '@/components/RestaurantProfileContent';
 import { SEOHead } from '@/components/SEOHead';
-import { trackFunnelStep } from '@/utils/analytics';
+import { trackFunnelStep, trackPageView } from '@/utils/analytics';
 import { Footer } from '@/components/Footer';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useIsMobile } from '@/hooks/use-mobile';
