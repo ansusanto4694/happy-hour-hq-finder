@@ -1,103 +1,94 @@
-## Security Hardening Plan — Fix All Vulnerabilities
 
-### Critical Fixes
+Diagnosis
 
-**1. Hide `redemption_pin` from public queries on `merchant_offers`**
-
-The current SELECT policy lets anonymous users see all columns including `redemption_pin`. Fix: create a database view that excludes the PIN column, and update the public-facing query to use it. Merchants/admins still query the table directly (RLS already scopes that).
-
-- Create a `merchant_offers_public` view (security_invoker = on) that selects all columns except `redemption_pin`
-- Update `src/components/merchant-offers/MerchantOffersSection.tsx` and `src/hooks/useMerchantOffers.ts` to query the view instead of the table
-- Keep `OfferDetailsModal` PIN verification working by moving PIN check to an edge function (server-side only)
-
-**2. Lock down `user_events` SELECT policy**
-
-Current policy `"Anyone can view events by session_id"` uses `USING (session_id IS NOT NULL)` which is always true — every row has a session_id. This exposes 60k+ behavioral records.
-
-- Drop the `"Anyone can view events by session_id"` policy
-- The admin SELECT policy already covers analytics needs
-- Client-side event insertion still works (INSERT policy unchanged)
-
-**3. Lock down `user_sessions` SELECT and UPDATE policies**
-
-Current SELECT policy `"Anyone can view sessions by session_id"` is always true. UPDATE policy similarly too broad.
-
-- Drop `"Anyone can view sessions by session_id"` SELECT policy
-- Replace UPDATE policy: restrict to rows matching the client's own `session_id` by requiring the session_id in the filter (keep `USING (session_id IS NOT NULL)` but scope the client code to only update its own session)
-- Since the client needs to upsert its own session, add a narrow SELECT policy: `USING (session_id = current_setting('request.headers')::json->>'x-session-id')` — or accept the trade-off per the existing risk acceptance note and keep the UPDATE as-is but remove the broad SELECT
-
-Given the existing risk acceptance for anonymous tracking, the pragmatic fix:
-- Remove the public SELECT policy (admin SELECT remains)
-- Keep the UPDATE policy (required for session tracking upserts — already accepted risk)
-- Adjust client code to not rely on SELECT for upserts (use `INSERT ... ON CONFLICT` via raw SQL or handle errors gracefully)
-
-**4. Add RLS to `profile_display_names`**
-
-This is a view with `security_invoker = on`, so it inherits RLS from the underlying `profiles` table. The existing `profiles` policies already restrict access. No action needed — this is a false positive.
-
-### Medium Priority
-
-**5. Create edge function for PIN verification**
-
-Move the PIN check server-side so the client never receives the PIN value:
-- New edge function `verify-offer-pin` that accepts `{offer_id, pin}` and returns `{valid: boolean}`
-- Records the redemption server-side if valid
-- Update `OfferDetailsModal` to call the edge function instead of comparing client-side
-
-### Migration SQL (single migration)
+Your query returns no rows because the filter is correct for current page-view events, but this condition removes everything:
 
 ```sql
--- 1. Drop overly permissive SELECT on user_events
-DROP POLICY "Anyone can view events by session_id" ON public.user_events;
-
--- 2. Drop overly permissive SELECT on user_sessions
-DROP POLICY "Anyone can view sessions by session_id" ON public.user_sessions;
-
--- 3. Create public view for merchant_offers without PIN
-CREATE OR REPLACE VIEW public.merchant_offers_public
-WITH (security_invoker = on) AS
-SELECT id, store_id, offer_name, offer_description,
-       start_time, end_time, is_active, created_at, updated_at
-FROM public.merchant_offers;
+AND ue.merchant_id IS NOT NULL
 ```
 
-### Edge Function: `verify-offer-pin`
+What I verified
+- `user_events` has current data through `2026-03-31`
+- There are many recent restaurant profile page loads:
+  - `event_type = 'page_view'`
+  - `event_category = 'page_view'`
+  - `event_action = 'page_load'`
+  - `page_path LIKE '/restaurant/%'`
+- But for those rows:
+  - `merchant_id IS NULL` on all recent restaurant page loads
+  - count with `merchant_id IS NOT NULL` = `0`
+  - count with `merchant_id IS NULL` = `11103`
 
-- Accepts POST `{offer_id, pin}`
-- Requires authenticated user (JWT check)
-- Uses service role to read the actual PIN from `merchant_offers`
-- Compares, records redemption if match, returns result
-- Client never sees the PIN
+Why this is happening in the app
+- In `src/App.tsx`, page views are tracked globally with `trackPageView()` on route change
+- In `src/utils/analytics.ts`, `trackPageView()` only includes `merchant_id` if it is explicitly passed in
+- In `src/pages/RestaurantProfile.tsx`, the app tracks:
+  - `funnel_events.profile_viewed` with `merchantId`
+  - `scroll_depth` with `merchantId`
+- But it does not call `trackPageView({ merchantId: restaurant.id })`
 
-### Client Code Changes
+So:
+- restaurant page views are being logged
+- but they are logged with the merchant encoded in `page_path`, not in `user_events.merchant_id`
 
-- `useMerchantOffers.ts` — query `merchant_offers_public` view instead of `merchant_offers`
-- `OfferDetailsModal.tsx` — call `verify-offer-pin` edge function instead of client-side PIN comparison
-- `useAnalytics.ts` / session tracking — handle potential SELECT failures gracefully since the broad SELECT policy is removed
+Use this query instead
 
-### Files Affected
+This preserves your output shape and derives the merchant from the restaurant slug in the URL:
 
-- New: `supabase/functions/verify-offer-pin/index.ts`
-- New: 1 database migration
-- Modified: `src/components/merchant-offers/OfferDetailsModal.tsx`
-- Modified: `src/hooks/useMerchantOffers.ts`
-- Modified: `src/hooks/useAnalytics.ts` (if session upsert relies on SELECT)
+```sql
+SELECT
+  DATE(ue.created_at) AS day_of,
+  CASE WHEN us.is_bot THEN 'bot' ELSE 'human' END AS user_type,
+  m.id AS merchant_id,
+  m.restaurant_name AS merchant_name,
+  COUNT(*) AS view_count
+FROM public.user_events ue
+LEFT JOIN public.user_sessions us
+  ON us.session_id = ue.session_id
+LEFT JOIN public."Merchant" m
+  ON m.slug = regexp_replace(ue.page_path, '^/restaurant/', '')
+WHERE ue.event_type = 'page_view'
+  AND ue.event_category = 'page_view'
+  AND ue.event_action = 'page_load'
+  AND ue.page_path LIKE '/restaurant/%'
+  AND m.id IS NOT NULL
+GROUP BY 1, 2, 3, 4
+ORDER BY day_of DESC;
+```
 
-## Restructure Merchant Categories — IMPLEMENTED
+Why this one works
+- it uses the actual current page-view event definition
+- it maps `/restaurant/{slug}` back to the merchant record
+- I verified this returns rows for recent dates including `2026-03-31`
 
-### Summary
+Important caveat
+- This query depends on the current slug matching the slug that was in the URL when the event was recorded
+- If a merchant slug changes later, some historical rows may stop matching
 
-Migration applied successfully. Categories restructured into 5 dimensions:
+More durable alternative
+If you want a merchant-linked metric that already stores `merchant_id`, use `funnel_events`:
 
-- **Venue Type**: Bar (17 subcategories), Restaurant (5 subcategories), Cafe
-- **Cuisine**: 51 categories (African through Vietnamese)
-- **Experience**: 7 categories (Brunch, Dance Floor, Trivia Night, etc.)
-- **Dietary**: 5 categories (Vegan, Vegetarian, Gluten-free, Farm-to-table, Organic)
-- **Beverage**: 4 categories (Coffee, Tea, Craft Beer, Natural Wine)
+```sql
+SELECT
+  DATE(fe.created_at) AS day_of,
+  'human' AS user_type,
+  fe.merchant_id,
+  m.restaurant_name AS merchant_name,
+  COUNT(*) AS view_count
+FROM public.funnel_events fe
+LEFT JOIN public."Merchant" m
+  ON m.id = fe.merchant_id
+WHERE fe.funnel_step = 'profile_viewed'
+  AND fe.merchant_id IS NOT NULL
+GROUP BY 1, 2, 3, 4
+ORDER BY day_of DESC;
+```
 
-### Changes Made
+Recommended next implementation
+If you want this reporting to be stable long-term, the app should be updated so restaurant page views call:
 
-- Database: Added `category_type` column, created new L1 parents, reparented existing items, inserted all new categories
-- `src/hooks/useCategories.ts` — Added `category_type` to type, added `getCategoryDimensions()` helper
-- `src/components/UnifiedFilterBar.tsx` — Grouped filters by dimension (Venue Type, Cuisine, Experience, Dietary, Beverage)
-- MobileFilterDrawerV2 passes through to UnifiedFilterBar (no changes needed)
+```ts
+trackPageView({ merchantId: restaurant.id })
+```
+
+That would let future reporting use `user_events.merchant_id` directly without reconstructing from the URL.
