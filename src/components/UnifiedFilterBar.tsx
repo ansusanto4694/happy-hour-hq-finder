@@ -104,6 +104,7 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
     return BASE_RADIUS_OPTIONS;
   }, [isNeighborhoodPage]);
   const { categories, getSubCategories, getCategoryDimensions, isLoading } = useCategoriesHierarchy();
+  const { data: activeCategoryIds } = useCategoriesWithMerchants();
   const { track } = useAnalytics();
   const [expandedSections, setExpandedSections] = useState<string[]>(['venue_type']);
   const [isDistanceExpanded, setIsDistanceExpanded] = useState(false);
