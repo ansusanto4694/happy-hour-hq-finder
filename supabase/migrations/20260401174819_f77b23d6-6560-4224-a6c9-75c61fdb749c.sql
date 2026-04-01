@@ -1,0 +1,1 @@
+UPDATE merchant_google_ratings SET match_confidence = 'low', updated_at = now() WHERE match_confidence = 'no_match' AND google_place_id IS NOT NULL;
