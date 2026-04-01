@@ -98,7 +98,7 @@ export const useHappyHourDeals = (restaurantId: number) => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['happy-hour-deals', restaurantId] });
+      queryClient.invalidateQueries({ queryKey: ['happy-hour-deals-manage', restaurantId] });
       toast({ title: 'Success', description: 'Deal deleted successfully!' });
     },
     onError: (error) => {
