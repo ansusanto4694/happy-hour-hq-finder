@@ -127,7 +127,7 @@ export const useHappyHourDeals = (restaurantId: number) => {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['happy-hour-deals', restaurantId] });
+      queryClient.invalidateQueries({ queryKey: ['happy-hour-deals-manage', restaurantId] });
       toast({ title: 'Success', description: 'Deals reordered successfully!' });
     },
     onError: (error) => {
