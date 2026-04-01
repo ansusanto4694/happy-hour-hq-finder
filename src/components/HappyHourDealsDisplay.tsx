@@ -22,6 +22,7 @@ interface HappyHourDeal {
   verified_at: string | null;
   source_url: string | null;
   source_label: string | null;
+  menu_type: string | null;
 }
 
 export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ restaurantId }) => {
@@ -34,7 +35,7 @@ export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ re
     queryFn: async () => {
       const { data, error } = await supabase
         .from('happy_hour_deals')
-        .select('id, deal_title, deal_description, active, is_verified, verified_at, source_url, source_label')
+        .select('id, deal_title, deal_description, active, is_verified, verified_at, source_url, source_label, menu_type')
         .eq('restaurant_id', restaurantId)
         .eq('active', true)
         .order('display_order', { ascending: true })
