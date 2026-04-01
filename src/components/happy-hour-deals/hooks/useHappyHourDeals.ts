@@ -10,7 +10,7 @@ export const useHappyHourDeals = (restaurantId: number) => {
 
   // Fetch happy hour deals for this restaurant
   const { data: deals, isLoading } = useQuery({
-    queryKey: ['happy-hour-deals', restaurantId],
+    queryKey: ['happy-hour-deals-manage', restaurantId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('happy_hour_deals')
