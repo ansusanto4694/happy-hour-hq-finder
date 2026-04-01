@@ -10,7 +10,7 @@ export const useHappyHourDeals = (restaurantId: number) => {
 
   // Fetch happy hour deals for this restaurant
   const { data: deals, isLoading } = useQuery({
-    queryKey: ['happy-hour-deals', restaurantId],
+    queryKey: ['happy-hour-deals-manage', restaurantId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('happy_hour_deals')
@@ -55,7 +55,7 @@ export const useHappyHourDeals = (restaurantId: number) => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['happy-hour-deals', restaurantId] });
+      queryClient.invalidateQueries({ queryKey: ['happy-hour-deals-manage', restaurantId] });
       toast({ title: 'Success', description: 'Deal created successfully!' });
     },
     onError: (error) => {
@@ -78,7 +78,7 @@ export const useHappyHourDeals = (restaurantId: number) => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['happy-hour-deals', restaurantId] });
+      queryClient.invalidateQueries({ queryKey: ['happy-hour-deals-manage', restaurantId] });
       toast({ title: 'Success', description: 'Deal updated successfully!' });
     },
     onError: (error) => {
@@ -98,7 +98,7 @@ export const useHappyHourDeals = (restaurantId: number) => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['happy-hour-deals', restaurantId] });
+      queryClient.invalidateQueries({ queryKey: ['happy-hour-deals-manage', restaurantId] });
       toast({ title: 'Success', description: 'Deal deleted successfully!' });
     },
     onError: (error) => {
@@ -127,7 +127,7 @@ export const useHappyHourDeals = (restaurantId: number) => {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['happy-hour-deals', restaurantId] });
+      queryClient.invalidateQueries({ queryKey: ['happy-hour-deals-manage', restaurantId] });
       toast({ title: 'Success', description: 'Deals reordered successfully!' });
     },
     onError: (error) => {

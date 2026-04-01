@@ -31,7 +31,7 @@ export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ re
   const merchantId = id ? parseInt(id, 10) : restaurantId;
 
   const { data: deals, isLoading } = useQuery({
-    queryKey: ['happy-hour-deals', restaurantId],
+    queryKey: ['happy-hour-deals-display', restaurantId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('happy_hour_deals')
