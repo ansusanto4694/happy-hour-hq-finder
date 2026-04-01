@@ -31,7 +31,7 @@ function haversineMeters(
 function getConfidence(distanceMeters: number): string {
   if (distanceMeters <= 100) return "high";
   if (distanceMeters <= 500) return "medium";
-  if (distanceMeters <= 2000) return "low";
+  if (distanceMeters <= 5000) return "low";
   return "no_match";
 }
 
