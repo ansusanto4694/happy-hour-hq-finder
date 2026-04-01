@@ -22,6 +22,7 @@ interface HappyHourDeal {
   verified_at: string | null;
   source_url: string | null;
   source_label: string | null;
+  menu_type: string | null;
 }
 
 export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ restaurantId }) => {
