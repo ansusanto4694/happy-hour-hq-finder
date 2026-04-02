@@ -1,34 +1,23 @@
 
 
-## Bug #2: WriteReview page — Remaining issues with slug URLs
+## Bug #3: MobileCTABar — Dead code cleanup (Yellow severity)
 
-### What was already fixed
-The merchant lookup query in WriteReview already supports both numeric IDs and slugs (lines 62-83). That part is working.
+### Issues
 
-### Issues still present
+1. **`buttonCount` (line 103)** — Declared but never used anywhere. It was likely intended for dynamic sizing but never wired up.
 
-**Issue A: `useReview(merchantId)` fires with `merchantId = 0` before merchant data loads**
+2. **`cn()` wrapping single strings (lines 113, 128, 144)** — `cn()` is a classname merger utility. When called with a single static string (no conditionals, no merging), it's a no-op wrapper. Since `buttonCount` is unused, there's no conditional logic to justify `cn()` here.
 
-On line 86: `const merchantId = merchant?.id ?? 0;`
+3. **`React` import (line 2)** — Not needed in React 18 with the JSX transform. Minor but worth cleaning up.
 
-The `useReview` hook is called immediately with `merchantId = 0`. Inside the hook (line 135), it queries `merchant_reviews` with `merchant_id = 0`, which will never match anything. This means:
-- The hook's loading state resolves before the real merchant ID is known
-- If auto-save triggers before the merchant query resolves, it inserts a review with `merchant_id: 0`
+### Fix
 
-**Fix:** Guard the `useReview` hook's internal `loadExistingReview` effect and `saveReviewInternal` function against `merchantId === 0`. The load effect (line 123) should add `if (!merchantId) { setIsLoading(false); return; }`, and the save function (line 46) should add `if (!merchantId) return false;` at the top.
+**File: `src/components/MobileCTABar.tsx`**
 
-**Issue B: "Back to Restaurant" link uses numeric ID instead of slug**
+- **Remove** line 2: `import React from 'react';`
+- **Remove** line 7: `import { cn } from '@/lib/utils';`
+- **Remove** line 103: `const buttonCount = ...`
+- **Replace** `className={cn("flex-1 bg-success...")}` with `className="flex-1 bg-success..."` on all three buttons (lines 113, 128, 144)
 
-Line 159: `to={/restaurant/${merchantId}}` navigates to `/restaurant/69` instead of `/restaurant/mommys-bar-east-williamsburg-brooklyn`. While this works (the profile page handles numeric-to-slug redirects), it causes an unnecessary redirect hop.
-
-**Fix:** Change to `to={/restaurant/${merchant.slug || merchantId}}` to use the slug directly since it's already fetched in the merchant query.
-
-### Files to change
-
-**`src/hooks/useReview.ts`** — Two guards:
-1. In `saveReviewInternal` (line 46): add `if (!merchantId) return false;` before the content check
-2. In `loadExistingReview` effect (line 123): add `merchantId` to the dependency array and guard with `if (!merchantId)` early return
-
-**`src/pages/WriteReview.tsx`** — One change:
-1. Line 159: Change `to={/restaurant/${merchantId}}` to `to={/restaurant/${merchant?.slug || id}}`
+No behavioral changes. Pure cleanup — removes dead code and unnecessary abstractions.
 
