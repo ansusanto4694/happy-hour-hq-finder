@@ -120,9 +120,7 @@ export const MobileCTABar: React.FC<MobileCTABarProps> = ({
         <Button
           asChild
           size="mobile"
-          className={cn(
-            "flex-1 bg-amber-500 hover:bg-amber-600 text-white shadow-md font-semibold text-xs h-14"
-          )}
+          className="flex-1 bg-amber-500 hover:bg-amber-600 text-white shadow-md font-semibold text-xs h-14"
           >
             <a href={directionsUrl} target="_blank" rel="noopener noreferrer" onClick={handleDirectionsClick} className="flex flex-col items-center justify-center gap-1">
             <MapPin className="h-4 w-4" />
