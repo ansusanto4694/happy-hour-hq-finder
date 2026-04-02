@@ -20,6 +20,7 @@ interface LazyResultsMapProps {
   hoveredRestaurantId?: number | null;
   searchLocation?: string;
   isLoading?: boolean;
+  skipAutoFit?: boolean;
 }
 
 // Loading fallback for JS bundle loading (Suspense)
