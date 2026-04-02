@@ -11,6 +11,7 @@ import { trackPageView } from "@/utils/analytics";
 import { initPerformanceMonitoring } from "@/utils/performanceMonitoring";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AdminRoute } from "@/components/AdminRoute";
+import { RouteErrorBoundary } from "@/components/RouteErrorBoundary";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { ScrollRestoration } from "@/hooks/useScrollRestoration";
 import { Loader2 } from "lucide-react";
