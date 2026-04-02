@@ -182,7 +182,7 @@ export const useReview = (merchantId: number) => {
     };
 
     loadExistingReview();
-  }, [user, merchantId]);
+  }, [user, merchantId]); // merchantId in deps ensures re-load when it changes from 0
 
   const uploadMedia = async (reviewId: string, files: MediaFile[]) => {
     const uploadedMedia: Array<{ storage_path: string; media_type: string; display_order: number }> = [];

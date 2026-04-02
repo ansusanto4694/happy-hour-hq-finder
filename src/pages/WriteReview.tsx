@@ -156,7 +156,7 @@ const WriteReview: React.FC = () => {
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <Link
-                to={`/restaurant/${merchantId}`}
+                to={`/restaurant/${merchant?.slug || id}`}
                 className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
               >
                 <ArrowLeft className="h-4 w-4 mr-1" />
