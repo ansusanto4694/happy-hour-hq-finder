@@ -17,6 +17,7 @@ interface MobileCTABarProps {
   };
   website?: string | null;
   googleMapsUrl?: string | null;
+  merchantId?: number;
 }
 
 export const MobileCTABar: React.FC<MobileCTABarProps> = ({
