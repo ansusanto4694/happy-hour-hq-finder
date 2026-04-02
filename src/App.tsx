@@ -147,7 +147,7 @@ const App = () => (
   <ErrorBoundary>
     <PersistQueryClientProvider
       client={queryClient}
-      persistOptions={{ persister, buster: 'v9' }}
+      persistOptions={{ persister, buster: 'v9', dehydrateOptions: { shouldDehydrateQuery } }}
     >
       <AuthProvider>
         <TooltipProvider>
