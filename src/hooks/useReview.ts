@@ -44,7 +44,7 @@ export const useReview = (merchantId: number) => {
 
   // Internal save function for auto-save (no toasts, no navigation)
   const saveReviewInternal = useCallback(async (): Promise<boolean> => {
-    if (!user) return false;
+    if (!user || !merchantId) return false;
     
     // Don't auto-save if there's nothing to save
     const hasContent = reviewText.trim() || Object.values(ratings).some(r => r !== null);
