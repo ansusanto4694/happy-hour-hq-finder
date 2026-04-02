@@ -72,7 +72,6 @@ export const MobileCTABar: React.FC<MobileCTABarProps> = ({
   };
 
   const handleWebsiteClick = () => {
-    const merchantId = id ? parseInt(id) : undefined;
     
     track({
       eventType: 'click',
