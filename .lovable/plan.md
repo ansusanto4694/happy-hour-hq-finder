@@ -1,139 +1,80 @@
 
 
-## Comprehensive Site Reliability Audit Plan
+## Phase 5: Navigation & URL Handling Audit
 
-### Goal
-Systematically identify and fix any issues that prevent users from successfully browsing the site — from landing on the homepage to viewing a merchant profile.
+### What we're checking and why
 
----
-
-### The 5 Core User Journeys to Audit
-
-```text
-Journey 1: Homepage → City Landing Page → Merchant Profile
-Journey 2: Homepage → Search Results → Merchant Profile
-Journey 3: Direct link to City Landing Page (e.g. from Google)
-Journey 4: Direct link to Merchant Profile (e.g. shared link)
-Journey 5: Mobile versions of all above
-```
+Phase 5 is about making sure users don't hit dead ends, broken pages, or confusing errors when navigating via URLs — whether they click a link on the site, come from Google, or share a link with a friend.
 
 ---
 
-### Phase 1: Crash-Proofing (Defensive Code Audit)
+### Issue 1: Inconsistent city/state data causes broken location pages
 
-**What we're checking:** Every place the app accesses nested data from the database without safety checks. If even one record is malformed, it can crash the whole page.
+**The problem:** The database has inconsistent city/state formatting:
+- 25 Brooklyn merchants have state = "New York" instead of "NY"
+- 14 Long Island City merchants have state = "New York"
+- Some cities are lowercase ("ardmore", "miami", "coral gables")
+- One entry has a leading space in state (" NY")
 
-**Specific areas to audit:**
-- `CarouselCard.tsx` and `MobileCarouselCard.tsx` — do they safely handle merchants with missing categories, ratings, or happy hours?
-- `HomepageCarousel.tsx` — does it crash if a carousel has zero merchants or a merchant reference is broken?
-- `RestaurantProfile.tsx` — the main query joins 6+ related tables; if any join returns unexpected data, does the page survive?
-- `MerchantReviews.tsx` — does it handle reviews with missing rating dimensions?
-- `RestaurantHappyHours.tsx` and `RestaurantDealsSection.tsx` — do they handle empty or null arrays?
-- `ResultsMap.tsx` / `LazyResultsMap.tsx` — does the map crash if a merchant has null lat/lng?
+**Why it matters:** The location landing page URL format is `/happy-hour/new-york-ny`. It parses the last segment as the state code. If a user navigates to `/happy-hour/brooklyn-new-york`, the parser splits this as city="Brooklyn New" and state="YORK" — which matches nothing.
 
-**Action:** Add optional chaining (`?.`) and array filtering everywhere nested database relations are rendered. We already fixed `SearchResultCard` and `RestaurantProfileContent` — this extends that pattern to every other component.
-
----
-
-### Phase 2: Error Boundary Improvements
-
-**Current state:** One global `ErrorBoundary` catches everything and shows "Something went wrong." Users have no idea what happened or which page broke.
-
-**Improvements:**
-1. Add **route-level error boundaries** around each major page (Results, LocationLanding, RestaurantProfile) so a crash on one page doesn't require going back to the homepage
-2. Make the error message more helpful — e.g., "This page couldn't load. Try refreshing or go back to search results"
-3. Add a **"Refresh this page"** button that reloads just the current route (not the whole app)
-4. Log which route/component crashed to analytics so we can track problem areas
+**Fix:**
+1. Run a database migration to normalize all state values to 2-letter uppercase codes and capitalize city names properly
+2. Add a fallback in `LocationLanding.tsx` slug parser to handle multi-word states (e.g., treat "new-york" as state "NY")
 
 ---
 
-### Phase 3: Data Query Resilience
+### Issue 2: Special characters in neighborhood names get mangled in URLs
 
-**What we're checking:** How the app behaves when database queries fail or return unexpected results.
+**The problem:** The `displayNameToSlug` function only strips apostrophes and spaces. Characters like `&`, parentheses, or accents in neighborhood names (e.g., "Child's Heights") could produce unexpected slugs. Going the reverse direction, `slugToDisplayName` naively capitalizes every word after splitting on `-`, so "hell-s-kitchen" becomes "Hell S Kitchen" instead of "Hell's Kitchen".
 
-**Specific scenarios:**
-- Supabase is temporarily slow or returns a timeout — does the user see a loading spinner forever, or a helpful message?
-- A merchant ID in the URL doesn't exist (deleted or deactivated) — does the profile page show a clear "not found" message?
-- The `useMerchants` hook returns an empty array for a valid city — is the "no results" state clear and helpful?
-- Network goes offline mid-browse — does the cached data (from React Query persistence) still work, or does it crash?
+**Why it matters:** When a user selects a neighborhood filter, the app navigates to a slug URL. If that slug can't be decoded back to the original neighborhood name, the database query finds no matches and shows a 404.
 
-**Action:** Review error and empty states across `SearchResults`, `LocationLanding`, `RestaurantProfile`, and homepage carousels. Ensure every query has proper `isLoading`, `error`, and "empty" handling.
+**Fix:**
+1. Improve `displayNameToSlug` to strip `&`, parentheses, and other punctuation
+2. For neighborhood matching, use `ilike` fuzzy matching in the Supabase query instead of relying on exact slug-to-name roundtripping
 
 ---
 
-### Phase 4: Mobile-Specific Testing
+### Issue 3: Invalid city slugs show an empty page instead of a clear 404
 
-**Why separate:** Your analytics show mobile is a major traffic source, and mobile has unique components (`MobileCarousel`, `MobileListDrawer`, `MobileBottomNav`, `MobileCTABar`).
+**The problem:** If someone visits `/happy-hour/fakecity-xx`, the page loads, queries for "Fakecity, XX", gets zero results, and shows an empty results state — not a 404. The `isInvalidLocation` logic only triggers for invalid *neighborhood* slugs, not invalid city slugs.
 
-**What to test:**
-- Does the mobile drawer open/close reliably on city landing pages with 100+ results?
-- Does scroll position restore correctly when navigating back from a merchant profile?
-- Do touch interactions work on carousel cards?
-- Does the map view toggle work without crashing on mobile?
-- Is the mobile search bar functional from the results page?
+**Fix:** Extend `isInvalidLocation` to also return true when the city-level query returns zero results and no filters are active.
 
 ---
 
-### Phase 5: Navigation & URL Handling
+### Issue 4: Back/forward browser navigation and scroll restoration
 
-**What we're checking:** Broken or unexpected URLs that users might hit.
+**The problem:** The `ScrollRestoration` hook and `useLayoutEffect` in `LocationLanding` both force scroll to top. When a user hits the back button from a merchant profile, they lose their scroll position in the results list.
 
-**Specific scenarios:**
-- Merchant slugs with special characters (apostrophes, ampersands, accents)
-- City slugs that don't match any data in the database
-- Neighborhood slugs that exist but have zero active merchants
-- The `URLSanitizer` component — does it handle all edge cases with encoded query params?
-- Back/forward browser navigation — does state restore correctly?
+**Fix:** Audit `ScrollRestoration` to ensure it respects browser history navigation (back/forward) and doesn't forcibly reset scroll on pop-state events.
 
 ---
 
-### Phase 6: Performance Under Load
+### Issue 5: Map crashes on null coordinates
 
-**What we're checking:** Pages with lots of data that might be slow or unresponsive.
+**The problem:** `ResultsMap.tsx` renders markers for all merchants. If a merchant has `null` latitude or longitude, the Mapbox marker component may throw.
 
-**Key pages:**
-- NYC landing page (likely 200+ merchants) — does pagination/infinite scroll work?
-- Merchant profiles with many reviews, events, and deals
-- Homepage with multiple carousels, each containing many merchants
-
-**Action:** Verify that large result sets don't cause React to render thousands of DOM elements at once.
+**Fix:** Filter out merchants with null lat/lng before passing to the map component (same defensive pattern from Phase 1).
 
 ---
 
-### Implementation Order
+### Implementation plan
 
-| Priority | Phase | Effort | Impact |
-|----------|-------|--------|--------|
-| 1 | Phase 1: Crash-proofing | Medium | High — directly prevents "Something went wrong" |
-| 2 | Phase 2: Error boundaries | Medium | High — better recovery when things do break |
-| 3 | Phase 3: Query resilience | Small | Medium — handles edge cases gracefully |
-| 4 | Phase 5: URL handling | Small | Medium — prevents confusion from bad URLs |
-| 5 | Phase 4: Mobile testing | Manual | High — large user segment |
-| 6 | Phase 6: Performance | Medium | Medium — affects large cities |
+| Step | What | File(s) |
+|------|------|---------|
+| 1 | Normalize city/state data in DB | New SQL migration |
+| 2 | Add multi-word state fallback to slug parser | `LocationLanding.tsx` |
+| 3 | Harden `displayNameToSlug` / `slugToDisplayName` for special chars | `LocationLanding.tsx` |
+| 4 | Extend 404 detection to city-level (not just neighborhoods) | `LocationLanding.tsx` |
+| 5 | Audit scroll restoration for back/forward | `useScrollRestoration.ts`, `LocationLanding.tsx` |
+| 6 | Filter null-coordinate merchants before map render | `ResultsMap.tsx` |
 
----
+### Data cleanup (migration)
 
-### How We'll Know It's Working
-
-1. **Before:** Track how many "error_boundary_triggered" events fire per day in analytics (already logging this)
-2. **After:** That number should drop to near zero
-3. Add a simple dashboard counter on the `/analytics` page showing error boundary triggers over the last 7 days
-
----
-
-### Files Likely Affected
-
-- `src/components/CarouselCard.tsx`
-- `src/components/MobileCarouselCard.tsx`
-- `src/components/HomepageCarousel.tsx`
-- `src/components/MobileCarousel.tsx`
-- `src/components/RestaurantHappyHours.tsx`
-- `src/components/RestaurantDealsSection.tsx`
-- `src/components/RestaurantEventsFeed.tsx`
-- `src/components/MerchantReviews.tsx`
-- `src/components/ResultsMap.tsx`
-- `src/components/ErrorBoundary.tsx`
-- `src/pages/LocationLanding.tsx`
-- `src/pages/Results.tsx`
-- `src/pages/RestaurantProfile.tsx`
+Normalize the 40+ inconsistent records:
+- `UPDATE "Merchant" SET state = 'NY' WHERE state = 'New York'`
+- `UPDATE "Merchant" SET city = initcap(city) WHERE city = lower(city)`
+- `UPDATE "Merchant" SET state = trim(state) WHERE state != trim(state)`
 
