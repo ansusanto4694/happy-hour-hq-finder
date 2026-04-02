@@ -29,6 +29,7 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
   const { track, trackFunnel } = useAnalytics();
   const cardRef = useRef<HTMLDivElement>(null);
   const [hasTrackedImpression, setHasTrackedImpression] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   // Calculate aggregate rating from reviews - memoized to avoid recalculation
   const ratingData = useMemo(() => {
