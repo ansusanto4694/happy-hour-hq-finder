@@ -113,9 +113,8 @@ export const MobileCTABar: React.FC<MobileCTABarProps> = ({
             className={cn(
               "flex-1 bg-success hover:bg-success/90 text-success-foreground shadow-md font-semibold text-xs h-14"
             )}
-            onClick={handlePhoneClick}
           >
-            <a href={`tel:${phoneNumber}`} className="flex flex-col items-center justify-center gap-1">
+            <a href={`tel:${phoneNumber}`} onClick={handlePhoneClick} className="flex flex-col items-center justify-center gap-1">
               <Phone className="h-4 w-4" />
               <span>Call</span>
             </a>
@@ -129,9 +128,8 @@ export const MobileCTABar: React.FC<MobileCTABarProps> = ({
           className={cn(
             "flex-1 bg-amber-500 hover:bg-amber-600 text-white shadow-md font-semibold text-xs h-14"
           )}
-          onClick={handleDirectionsClick}
-        >
-          <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center gap-1">
+          >
+            <a href={directionsUrl} target="_blank" rel="noopener noreferrer" onClick={handleDirectionsClick} className="flex flex-col items-center justify-center gap-1">
             <MapPin className="h-4 w-4" />
             <span>Directions</span>
           </a>
@@ -146,9 +144,8 @@ export const MobileCTABar: React.FC<MobileCTABarProps> = ({
             className={cn(
               "flex-1 shadow-md font-semibold text-xs h-14"
             )}
-            onClick={handleWebsiteClick}
           >
-            <a href={formattedWebsite} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center gap-1">
+            <a href={formattedWebsite} target="_blank" rel="noopener noreferrer" onClick={handleWebsiteClick} className="flex flex-col items-center justify-center gap-1">
               <Globe className="h-4 w-4" />
               <span>Website</span>
             </a>
