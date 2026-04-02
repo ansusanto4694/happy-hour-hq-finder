@@ -1,10 +1,7 @@
 // Mobile CTA Bar - Call, Directions, Website buttons for restaurant pages
-import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Phone, MapPin, Globe } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
-
-import { cn } from '@/lib/utils';
 import { getDeviceType } from '@/utils/analytics';
 
 interface MobileCTABarProps {
