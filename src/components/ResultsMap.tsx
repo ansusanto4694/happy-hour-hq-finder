@@ -311,10 +311,8 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
             />
           )}
           
-          {/* Restaurant Markers - Only show if coordinates exist */}
-          {restaurants
-            .filter(restaurant => restaurant.latitude && restaurant.longitude)
-            .map((restaurant) => (
+          {/* Restaurant Markers - Viewport-filtered for performance */}
+          {visibleRestaurants.map((restaurant) => (
               <RestaurantMarker
                 key={restaurant.id}
                 restaurant={{
