@@ -1,37 +1,34 @@
 
 
-## Bug: MobileCTABar — Mobile conversion tracking silently broken
+## Bug #2: WriteReview page — Remaining issues with slug URLs
 
-### Root Cause
+### What was already fixed
+The merchant lookup query in WriteReview already supports both numeric IDs and slugs (lines 62-83). That part is working.
 
-All three buttons (Call, Directions, Website) use Radix's `asChild` prop, which replaces the `Button` element with the child `<a>` tag. When `asChild` is used, the `onClick` handler placed on `<Button>` is **not forwarded** to the rendered `<a>` element — it's silently discarded. This means `handlePhoneClick`, `handleDirectionsClick`, and `handleWebsiteClick` never execute.
+### Issues still present
 
-Zero mobile conversion events (calls, directions, website clicks) are being recorded from this component.
+**Issue A: `useReview(merchantId)` fires with `merchantId = 0` before merchant data loads**
 
-### Fix
+On line 86: `const merchantId = merchant?.id ?? 0;`
 
-Move the `onClick` handler from the `<Button>` to the child `<a>` element for all three buttons. This ensures the click handler is on the actual rendered DOM element.
+The `useReview` hook is called immediately with `merchantId = 0`. Inside the hook (line 135), it queries `merchant_reviews` with `merchant_id = 0`, which will never match anything. This means:
+- The hook's loading state resolves before the real merchant ID is known
+- If auto-save triggers before the merchant query resolves, it inserts a review with `merchant_id: 0`
 
-**File: `src/components/MobileCTABar.tsx`**
+**Fix:** Guard the `useReview` hook's internal `loadExistingReview` effect and `saveReviewInternal` function against `merchantId === 0`. The load effect (line 123) should add `if (!merchantId) { setIsLoading(false); return; }`, and the save function (line 46) should add `if (!merchantId) return false;` at the top.
 
-For each of the three buttons, change from:
+**Issue B: "Back to Restaurant" link uses numeric ID instead of slug**
 
-```tsx
-<Button asChild onClick={handlePhoneClick}>
-  <a href={...} className="...">
-```
+Line 159: `to={/restaurant/${merchantId}}` navigates to `/restaurant/69` instead of `/restaurant/mommys-bar-east-williamsburg-brooklyn`. While this works (the profile page handles numeric-to-slug redirects), it causes an unnecessary redirect hop.
 
-To:
+**Fix:** Change to `to={/restaurant/${merchant.slug || merchantId}}` to use the slug directly since it's already fetched in the merchant query.
 
-```tsx
-<Button asChild>
-  <a href={...} onClick={handlePhoneClick} className="...">
-```
+### Files to change
 
-This applies to:
-- **Call button** (line 116→118): move `onClick={handlePhoneClick}` to the `<a>` tag
-- **Directions button** (line 132→134): move `onClick={handleDirectionsClick}` to the `<a>` tag
-- **Website button** (line 149→151): move `onClick={handleWebsiteClick}` to the `<a>` tag
+**`src/hooks/useReview.ts`** — Two guards:
+1. In `saveReviewInternal` (line 46): add `if (!merchantId) return false;` before the content check
+2. In `loadExistingReview` effect (line 123): add `merchantId` to the dependency array and guard with `if (!merchantId)` early return
 
-No other files need changes. The `merchantId` prop is already correctly passed from `RestaurantProfileContent`.
+**`src/pages/WriteReview.tsx`** — One change:
+1. Line 159: Change `to={/restaurant/${merchantId}}` to `to={/restaurant/${merchant?.slug || id}}`
 
