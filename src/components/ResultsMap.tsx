@@ -45,6 +45,7 @@ interface ResultsMapProps {
   hoveredRestaurantId?: number | null;
   searchLocation?: string;
   isLoading?: boolean;
+  skipAutoFit?: boolean;
 }
 
 const ResultsMapComponent: React.FC<ResultsMapProps> = ({ 
@@ -57,7 +58,8 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
   onViewStateChange,
   isMobile: mobileOverride,
   hoveredRestaurantId,
-  searchLocation
+  searchLocation,
+  skipAutoFit = false,
 }) => {
   const [viewState, setViewState] = useState(externalViewState || {
     longitude: -73.9712,
@@ -203,6 +205,9 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
   useEffect(() => {
     // Skip automatic centering/zooming if user is using manual map search
     if (isUsingMapSearch) return;
+    
+    // Skip auto-fit when restoring a saved map position (e.g. back navigation)
+    if (skipAutoFit) return;
     
     // Wait for map to be loaded
     if (!mapLoaded || !mapRef.current) return;
