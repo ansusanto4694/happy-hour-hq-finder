@@ -209,6 +209,9 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
     // Skip auto-fit when restoring a saved map position (e.g. back navigation)
     if (skipAutoFit) return;
     
+    // Wait for map to be loaded
+    if (!mapLoaded || !mapRef.current) return;
+    
     const restaurantsWithCoords = restaurants.filter(
       restaurant => restaurant.latitude && restaurant.longitude
     );
