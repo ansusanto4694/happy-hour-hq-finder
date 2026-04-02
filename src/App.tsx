@@ -55,6 +55,19 @@ const persister = createSyncStoragePersister({
   storage: window.localStorage,
 });
 
+// Only persist specific, JSON-safe query keys that benefit from cross-session caching
+const PERSISTED_QUERY_KEYS = new Set([
+  'categories',
+  'categories-with-merchants',
+  'merchants',
+  'homepage-carousels',
+]);
+
+const shouldDehydrateQuery = (query: { queryKey: readonly unknown[] }) => {
+  const firstKey = query.queryKey[0];
+  return typeof firstKey === 'string' && PERSISTED_QUERY_KEYS.has(firstKey);
+};
+
 const RouteTracker = () => {
   const location = useLocation();
 
@@ -134,7 +147,7 @@ const App = () => (
   <ErrorBoundary>
     <PersistQueryClientProvider
       client={queryClient}
-      persistOptions={{ persister, buster: 'v9' }}
+      persistOptions={{ persister, buster: 'v9', dehydrateOptions: { shouldDehydrateQuery } }}
     >
       <AuthProvider>
         <TooltipProvider>
