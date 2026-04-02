@@ -58,7 +58,8 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
   onViewStateChange,
   isMobile: mobileOverride,
   hoveredRestaurantId,
-  searchLocation
+  searchLocation,
+  skipAutoFit = false,
 }) => {
   const [viewState, setViewState] = useState(externalViewState || {
     longitude: -73.9712,
