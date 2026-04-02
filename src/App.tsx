@@ -133,7 +133,7 @@ const App = () => (
   <ErrorBoundary>
     <PersistQueryClientProvider
       client={queryClient}
-      persistOptions={{ persister, buster: 'v3' }}
+      persistOptions={{ persister, buster: 'v4' }}
     >
       <AuthProvider>
         <TooltipProvider>
