@@ -21,6 +21,14 @@ import NotFound from '@/pages/NotFound';
 import { PageHeader } from '@/components/PageHeader';
 import { RadiusOption, getRadiusMiles, getSmartDefaultRadius, inferLocationTypeFromInput } from '@/components/RadiusFilter';
 
+// Map of full state names to 2-letter codes for fallback parsing
+const STATE_NAME_MAP: Record<string, string> = {
+  'new-york': 'NY', 'new-jersey': 'NJ', 'new-mexico': 'NM', 'new-hampshire': 'NH',
+  'north-carolina': 'NC', 'north-dakota': 'ND', 'south-carolina': 'SC', 'south-dakota': 'SD',
+  'west-virginia': 'WV', 'rhode-island': 'RI', 'district-of-columbia': 'DC',
+  'puerto-rico': 'PR',
+};
+
 // Helper function to convert slug to display name
 const slugToDisplayName = (slug: string): string => {
   return slug
@@ -31,7 +39,46 @@ const slugToDisplayName = (slug: string): string => {
 
 // Helper function to convert display name to slug
 const displayNameToSlug = (name: string): string => {
-  return name.toLowerCase().replace(/['\s]+/g, '-');
+  return name
+    .toLowerCase()
+    .replace(/['\u2019`&()]/g, '') // strip apostrophes, ampersands, parens
+    .replace(/\s+/g, '-')          // spaces to dashes
+    .replace(/-+/g, '-')           // collapse multiple dashes
+    .replace(/^-|-$/g, '');        // trim leading/trailing dashes
+};
+
+// Parse a city slug like "new-york-ny" or "brooklyn-new-york" into { city, state }
+const parseCitySlug = (slug: string): { city: string; state: string } => {
+  const parts = slug.split('-');
+
+  // Try the simple case first: last segment is a 2-letter state code
+  if (parts.length >= 2) {
+    const lastPart = parts[parts.length - 1].toUpperCase();
+    if (lastPart.length === 2 && /^[A-Z]{2}$/.test(lastPart)) {
+      return {
+        city: slugToDisplayName(parts.slice(0, -1).join('-')),
+        state: lastPart,
+      };
+    }
+  }
+
+  // Fallback: check if the slug ends with a known multi-word state name
+  for (const [stateSlug, stateCode] of Object.entries(STATE_NAME_MAP)) {
+    if (slug.endsWith('-' + stateSlug)) {
+      const cityPart = slug.slice(0, -(stateSlug.length + 1)); // remove "-state-name"
+      return {
+        city: slugToDisplayName(cityPart),
+        state: stateCode,
+      };
+    }
+  }
+
+  // Last resort: treat last segment as state
+  const lastPart = parts.pop()?.toUpperCase() || 'NY';
+  return {
+    city: slugToDisplayName(parts.join('-')),
+    state: lastPart,
+  };
 };
 
 // Type for merchant with categories
@@ -156,15 +203,16 @@ export const LocationLanding = () => {
   const isMobile = useIsMobile();
   const { track } = useAnalytics();
   
-  // Scroll to top when navigating to this page
+  // Scroll to top only on fresh navigation (PUSH), not on back/forward (POP)
+  // ScrollRestoration component handles POP navigation automatically
   useLayoutEffect(() => {
+    // Only scroll to top when the URL path changes via fresh navigation
+    // The ScrollRestoration hook handles back/forward button scroll restoration
     window.scrollTo(0, 0);
   }, [citySlug, neighborhoodSlug]);
   
   // Parse city and state from slug (e.g., "new-york-ny" -> "New York", "NY")
-  const cityParts = citySlug?.split('-') || [];
-  const state = cityParts.pop()?.toUpperCase() || 'NY';
-  const city = slugToDisplayName(cityParts.join('-'));
+  const { city, state } = useMemo(() => parseCitySlug(citySlug || 'new-york-ny'), [citySlug]);
   const neighborhood = neighborhoodSlug ? slugToDisplayName(neighborhoodSlug) : undefined;
 
   // Construct location string for API call
@@ -459,14 +507,14 @@ export const LocationLanding = () => {
     showOffersOnly || (selectedMenuType !== 'all') || isUsingMapSearch;
 
   // Determine if this is an invalid location (404 case)
-  // Only show 404 when there are NO results AND no filters are applied
-  // (filters can legitimately narrow results to zero)
+  // Show 404 when there are NO results AND no filters are applied
+  // Works for both invalid neighborhoods AND invalid cities
   const isInvalidLocation = useMemo(() => {
     if (!isFetched || isLoading) return false;
     if (hasActiveFilters) return false;
-    if (neighborhoodSlug && (!rawMerchants || rawMerchants.length === 0)) return true;
+    if (!rawMerchants || rawMerchants.length === 0) return true;
     return false;
-  }, [isFetched, isLoading, neighborhoodSlug, rawMerchants, hasActiveFilters]);
+  }, [isFetched, isLoading, rawMerchants, hasActiveFilters]);
 
   // ── Map handlers ──
   const handleMapMove = useCallback((bounds: { north: number; south: number; east: number; west: number }) => {

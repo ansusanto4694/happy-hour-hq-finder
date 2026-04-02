@@ -105,6 +105,7 @@ export const useScrollRestoration = () => {
       console.log('[ScrollRestoration] PUSH navigation - scrolling to top');
       window.scrollTo(0, 0);
     }
+    // For REPLACE navigation, do nothing — let the page stay where it is
     
     return () => {
       restoreAttempts.current.forEach(clearTimeout);
