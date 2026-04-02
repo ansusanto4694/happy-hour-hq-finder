@@ -722,6 +722,7 @@ export const LocationLanding = () => {
                 selectedNeighborhood={selectedNeighborhood}
                 onNeighborhoodChange={setSelectedNeighborhood}
                 isNeighborhoodPage={!!neighborhood}
+                onMerchantNavigate={(id) => setLastClickedId(id)}
               />
             </div>
           </>
