@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { useAnalytics } from '@/hooks/useAnalytics';
-import { useParams } from 'react-router-dom';
 import { MapPin, Phone, Globe } from 'lucide-react';
 import { RestaurantMapPreview } from './RestaurantMapPreview';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -20,6 +19,7 @@ interface RestaurantContactInfoProps {
   restaurantName: string;
   neighborhood?: string | null;
   googleMapsUrl?: string | null;
+  merchantId?: number;
 }
 
 export const RestaurantContactInfo: React.FC<RestaurantContactInfoProps> = ({
@@ -34,11 +34,10 @@ export const RestaurantContactInfo: React.FC<RestaurantContactInfoProps> = ({
   longitude,
   restaurantName,
   neighborhood,
-  googleMapsUrl
+  googleMapsUrl,
+  merchantId
 }) => {
   const { track, trackFunnel } = useAnalytics();
-  const { id } = useParams();
-  const merchantId = id ? parseInt(id, 10) : undefined;
   const isMobile = useIsMobile();
 
   const handlePhoneClick = () => {

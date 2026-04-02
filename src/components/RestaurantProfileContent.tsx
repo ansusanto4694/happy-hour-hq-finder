@@ -319,6 +319,7 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
               restaurantName={restaurant.restaurant_name}
               neighborhood={restaurant.neighborhood}
               googleMapsUrl={ratingData?.googleRatingUrl}
+              merchantId={restaurant.id}
             />
                 </CardContent>
               </Card>
