@@ -87,6 +87,37 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
     [restaurants]
   );
 
+  // Viewport-based marker filtering: only render markers within visible bounds + 20% buffer
+  // This cuts ~600 mounted React components down to ~30-80 for dense cities like NYC
+  const visibleRestaurants = useMemo(() => {
+    const restaurantsWithCoords = restaurants.filter(r => r.latitude && r.longitude);
+    
+    // Estimate visible bounds from viewState using zoom-level math
+    // At zoom 0, the world is ~360° wide. Each zoom level halves the visible area.
+    const zoomFactor = Math.pow(2, viewState.zoom);
+    const lngSpan = 360 / zoomFactor;
+    const latSpan = 180 / zoomFactor;
+    
+    // Add 20% buffer so markers don't pop in/out at the edge
+    const buffer = 0.2;
+    const halfLng = (lngSpan / 2) * (1 + buffer);
+    const halfLat = (latSpan / 2) * (1 + buffer);
+    
+    const bounds = {
+      north: viewState.latitude + halfLat,
+      south: viewState.latitude - halfLat,
+      east: viewState.longitude + halfLng,
+      west: viewState.longitude - halfLng,
+    };
+    
+    return restaurantsWithCoords.filter(r => 
+      r.latitude! >= bounds.south &&
+      r.latitude! <= bounds.north &&
+      r.longitude! >= bounds.west &&
+      r.longitude! <= bounds.east
+    );
+  }, [restaurants, viewState.latitude, viewState.longitude, viewState.zoom]);
+
   // Handle restaurant marker click
   const handleRestaurantClick = useCallback(async (restaurant: Restaurant) => {
     await track({
@@ -280,10 +311,8 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
             />
           )}
           
-          {/* Restaurant Markers - Only show if coordinates exist */}
-          {restaurants
-            .filter(restaurant => restaurant.latitude && restaurant.longitude)
-            .map((restaurant) => (
+          {/* Restaurant Markers - Viewport-filtered for performance */}
+          {visibleRestaurants.map((restaurant) => (
               <RestaurantMarker
                 key={restaurant.id}
                 restaurant={{
@@ -367,10 +396,8 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
               />
             )}
             
-            {/* Restaurant Markers - Only show if coordinates exist */}
-            {restaurants
-              .filter(restaurant => restaurant.latitude && restaurant.longitude)
-              .map((restaurant) => (
+            {/* Restaurant Markers - Viewport-filtered for performance */}
+            {visibleRestaurants.map((restaurant) => (
                 <RestaurantMarker
                   key={restaurant.id}
                   restaurant={{
