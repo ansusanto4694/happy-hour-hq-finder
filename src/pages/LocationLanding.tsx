@@ -396,7 +396,7 @@ export const LocationLanding = () => {
 
   // Mobile-only state
   const [view, setView] = useState<'list' | 'map'>('list');
-  const { isOpen: isListDrawerOpen, setIsOpen: setIsListDrawerOpen, setLastClickedId } = useDrawerScrollRestoration({ isContentReady: !isLoading });
+  const { isOpen: isListDrawerOpen, setIsOpen: setIsListDrawerOpen, setLastClickedId } = useDrawerScrollRestoration();
   const [showSearchThisAreaMobile, setShowSearchThisAreaMobile] = useState(false);
 
   const radiusMiles = getRadiusMiles(selectedRadius);
