@@ -25,12 +25,11 @@ export const MobileCTABar: React.FC<MobileCTABarProps> = ({
   address,
   website,
   googleMapsUrl,
+  merchantId,
 }) => {
   const { track, trackFunnel } = useAnalytics();
-  const { id } = useParams();
 
   const handlePhoneClick = () => {
-    const merchantId = id ? parseInt(id) : undefined;
     
     track({
       eventType: 'click',
