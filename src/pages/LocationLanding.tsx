@@ -656,15 +656,17 @@ export const LocationLanding = () => {
                     const deltaY = startY - currentY;
                     if (deltaY > 50) {
                       setIsListDrawerOpen(true);
-                      document.removeEventListener('touchmove', handleTouchMove);
+                      cleanup();
                     }
                   };
-                  const handleTouchEnd = () => {
+                  const cleanup = () => {
                     document.removeEventListener('touchmove', handleTouchMove);
-                    document.removeEventListener('touchend', handleTouchEnd);
+                    document.removeEventListener('touchend', cleanup);
+                    document.removeEventListener('touchcancel', cleanup);
                   };
                   document.addEventListener('touchmove', handleTouchMove);
-                  document.addEventListener('touchend', handleTouchEnd);
+                  document.addEventListener('touchend', cleanup);
+                  document.addEventListener('touchcancel', cleanup);
                 }}
                 onClick={() => setIsListDrawerOpen(true)}
               >
