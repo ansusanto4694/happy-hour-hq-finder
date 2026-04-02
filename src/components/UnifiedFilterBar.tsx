@@ -399,10 +399,10 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
                         const subs = getSubCategories(parent.id);
                         // Filter subs to only those with active merchants
                         const visibleSubs = activeCategoryIds
-                          ? subs.filter(s => activeCategoryIds.has(s.id))
+                          ? subs.filter(s => activeCategoryIds.includes(s.id))
                           : subs;
                         const hasSubs = visibleSubs.length > 0;
-                        const parentHasMerchants = !activeCategoryIds || activeCategoryIds.has(parent.id);
+                        const parentHasMerchants = !activeCategoryIds || activeCategoryIds.includes(parent.id);
 
                         // Hide parent if it has no merchants and no visible children
                         if (!parentHasMerchants && !hasSubs) return null;
