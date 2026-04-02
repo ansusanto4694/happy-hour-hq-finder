@@ -206,8 +206,8 @@ const ResultsMapComponent: React.FC<ResultsMapProps> = ({
     // Skip automatic centering/zooming if user is using manual map search
     if (isUsingMapSearch) return;
     
-    // Wait for map to be loaded
-    if (!mapLoaded || !mapRef.current) return;
+    // Skip auto-fit when restoring a saved map position (e.g. back navigation)
+    if (skipAutoFit) return;
     
     const restaurantsWithCoords = restaurants.filter(
       restaurant => restaurant.latitude && restaurant.longitude
