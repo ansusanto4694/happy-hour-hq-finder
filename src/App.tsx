@@ -147,19 +147,19 @@ const App = () => (
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<Index />} />
-                <Route path="/results" element={<Results />} />
-                <Route path="/restaurant/:id" element={<RestaurantProfile />} />
-                <Route path="/restaurant/:id/review" element={<WriteReview />} />
+                <Route path="/results" element={<RouteErrorBoundary routeName="Results"><Results /></RouteErrorBoundary>} />
+                <Route path="/restaurant/:id" element={<RouteErrorBoundary routeName="RestaurantProfile"><RestaurantProfile /></RouteErrorBoundary>} />
+                <Route path="/restaurant/:id/review" element={<RouteErrorBoundary routeName="WriteReview"><WriteReview /></RouteErrorBoundary>} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/auth/confirm" element={<AuthConfirm />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/analytics" element={<AdminRoute><Analytics /></AdminRoute>} />
-                <Route path="/favorites" element={<Favorites />} />
+                <Route path="/favorites" element={<RouteErrorBoundary routeName="Favorites"><Favorites /></RouteErrorBoundary>} />
                 <Route path="/account" element={<Account />} />
-                <Route path="/happy-hour/:citySlug" element={<LocationLanding />} />
-                <Route path="/happy-hour/:citySlug/:neighborhoodSlug" element={<LocationLanding />} />
+                <Route path="/happy-hour/:citySlug" element={<RouteErrorBoundary routeName="LocationLanding"><LocationLanding /></RouteErrorBoundary>} />
+                <Route path="/happy-hour/:citySlug/:neighborhoodSlug" element={<RouteErrorBoundary routeName="LocationLanding"><LocationLanding /></RouteErrorBoundary>} />
                 <Route path="/merchant/:id/manage" element={<MerchantPortal />} />
                 {/* Redirect for broken Facebook link typo */}
                 <Route path="/We" element={<Navigate to="/" replace />} />
