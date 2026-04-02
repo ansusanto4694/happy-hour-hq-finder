@@ -69,6 +69,70 @@ const MapDataLoadingFallback: React.FC<{ isMobile?: boolean }> = ({ isMobile }) 
   );
 };
 
+// Dedicated error boundary for map crashes (WebGL context loss, OOM)
+// Prevents full-page "Something went wrong" when only the map fails
+interface MapErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class MapErrorBoundary extends Component<{ children: React.ReactNode; isMobile?: boolean }, MapErrorBoundaryState> {
+  state: MapErrorBoundaryState = { hasError: false, error: null };
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('[MapErrorBoundary] Map crashed:', error.message, errorInfo.componentStack);
+  }
+
+  handleRetry = () => {
+    this.setState({ hasError: false, error: null });
+  };
+
+  render() {
+    if (this.state.hasError) {
+      if (this.props.isMobile) {
+        return (
+          <div className="h-full w-full flex items-center justify-center bg-muted">
+            <div className="flex flex-col items-center gap-3 p-6 text-center">
+              <AlertTriangle className="h-8 w-8 text-muted-foreground" />
+              <p className="text-sm font-medium text-foreground">Map couldn't load</p>
+              <p className="text-xs text-muted-foreground">Try switching to list view or tap retry</p>
+              <Button variant="outline" size="sm" onClick={this.handleRetry} className="gap-2">
+                <RefreshCw className="h-4 w-4" />
+                Try Again
+              </Button>
+            </div>
+          </div>
+        );
+      }
+      return (
+        <Card className="h-full">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg font-semibold">Map View</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            <div className="rounded-lg overflow-hidden h-[75vh] max-h-[900px] flex items-center justify-center bg-muted">
+              <div className="flex flex-col items-center gap-3 text-center">
+                <AlertTriangle className="h-8 w-8 text-muted-foreground" />
+                <p className="text-sm font-medium text-foreground">Map couldn't load</p>
+                <p className="text-xs text-muted-foreground max-w-xs">This can happen on devices with limited memory. Try refreshing or use list view.</p>
+                <Button variant="outline" size="sm" onClick={this.handleRetry} className="gap-2">
+                  <RefreshCw className="h-4 w-4" />
+                  Try Again
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export const LazyResultsMap: React.FC<LazyResultsMapProps> = ({ isLoading, ...props }) => {
   // Show data loading fallback when waiting for initial search results
   if (isLoading && (!props.restaurants || props.restaurants.length === 0)) {
@@ -76,8 +140,10 @@ export const LazyResultsMap: React.FC<LazyResultsMapProps> = ({ isLoading, ...pr
   }
 
   return (
-    <Suspense fallback={<MapLoadingFallback />}>
-      <ResultsMap {...props} isLoading={isLoading} />
-    </Suspense>
+    <MapErrorBoundary isMobile={props.isMobile}>
+      <Suspense fallback={<MapLoadingFallback />}>
+        <ResultsMap {...props} isLoading={isLoading} />
+      </Suspense>
+    </MapErrorBoundary>
   );
 };

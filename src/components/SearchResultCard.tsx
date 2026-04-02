@@ -314,8 +314,8 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
           <div className="flex items-start space-x-4">
             {/* Logo with improved placeholder */}
             <div className="flex-shrink-0">
-              <div className={`w-24 h-24 ${restaurant.logo_url ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100'} border border-gray-200 rounded-lg shadow-sm flex items-center justify-center overflow-hidden`}>
-                {restaurant.logo_url ? (
+              <div className={`w-24 h-24 ${restaurant.logo_url && !imgError ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100'} border border-gray-200 rounded-lg shadow-sm flex items-center justify-center overflow-hidden`}>
+                {restaurant.logo_url && !imgError ? (
                   <img 
                     src={restaurant.logo_url} 
                     alt={`${restaurant.restaurant_name} logo`}
@@ -325,6 +325,7 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
                     loading="lazy"
                     decoding="async"
                     fetchPriority="low"
+                    onError={() => setImgError(true)}
                   />
                 ) : (
                   <Store className="w-10 h-10 text-orange-400" strokeWidth={1.5} />
