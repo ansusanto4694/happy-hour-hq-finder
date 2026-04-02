@@ -889,8 +889,8 @@ export const initializeSession = async (forceReinitialize: boolean = false) => {
       attributionType,
     });
     
-    // Use upsert with ON CONFLICT DO UPDATE to handle race conditions
-    // This prevents duplicate key errors when multiple tabs/requests initialize simultaneously
+    // Use insert for new sessions. If session already exists (e.g. from another tab),
+    // silently succeed via onConflict ignore. Session updates happen via updateSessionActivity.
     const { error } = await supabase.from('user_sessions').upsert({
       session_id: sessionId,
       user_id: userId,
@@ -928,12 +928,12 @@ export const initializeSession = async (forceReinitialize: boolean = false) => {
       is_bounce: true, // Start as bounce, will be updated to false when user engages
     }, {
       onConflict: 'session_id',
-      ignoreDuplicates: false // Update last_seen on conflict
+      ignoreDuplicates: true // For existing sessions, just skip - updateSessionActivity handles updates
     });
     
     if (error) {
       console.warn('[Analytics] Session init failed (non-blocking):', error.message);
-      return; // Don't set flags on error, allow retry
+      // Still set flags to prevent retry loops - the session will work without the DB record
     }
     
     // ONLY set flags after successful database insert
