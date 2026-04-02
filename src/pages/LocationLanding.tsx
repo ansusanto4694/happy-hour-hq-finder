@@ -203,13 +203,14 @@ export const LocationLanding = () => {
   const isMobile = useIsMobile();
   const { track } = useAnalytics();
   
+  const navigationType = useNavigationType();
+  
   // Scroll to top only on fresh navigation (PUSH), not on back/forward (POP)
-  // ScrollRestoration component handles POP navigation automatically
   useLayoutEffect(() => {
-    // Only scroll to top when the URL path changes via fresh navigation
-    // The ScrollRestoration hook handles back/forward button scroll restoration
-    window.scrollTo(0, 0);
-  }, [citySlug, neighborhoodSlug]);
+    if (navigationType === 'PUSH') {
+      window.scrollTo(0, 0);
+    }
+  }, [citySlug, neighborhoodSlug, navigationType]);
   
   // Parse city and state from slug (e.g., "new-york-ny" -> "New York", "NY")
   const { city, state } = useMemo(() => parseCitySlug(citySlug || 'new-york-ny'), [citySlug]);
