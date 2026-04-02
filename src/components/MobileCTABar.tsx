@@ -51,7 +51,6 @@ export const MobileCTABar: React.FC<MobileCTABarProps> = ({
   };
 
   const handleDirectionsClick = () => {
-    const merchantId = id ? parseInt(id) : undefined;
     
     track({
       eventType: 'click',
