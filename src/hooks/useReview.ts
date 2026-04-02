@@ -44,7 +44,7 @@ export const useReview = (merchantId: number) => {
 
   // Internal save function for auto-save (no toasts, no navigation)
   const saveReviewInternal = useCallback(async (): Promise<boolean> => {
-    if (!user) return false;
+    if (!user || !merchantId) return false;
     
     // Don't auto-save if there's nothing to save
     const hasContent = reviewText.trim() || Object.values(ratings).some(r => r !== null);
@@ -122,7 +122,7 @@ export const useReview = (merchantId: number) => {
   // Load existing draft or review
   useEffect(() => {
     const loadExistingReview = async () => {
-      if (!user) {
+      if (!user || !merchantId) {
         setIsLoading(false);
         return;
       }
@@ -182,7 +182,7 @@ export const useReview = (merchantId: number) => {
     };
 
     loadExistingReview();
-  }, [user, merchantId]);
+  }, [user, merchantId]); // merchantId in deps ensures re-load when it changes from 0
 
   const uploadMedia = async (reviewId: string, files: MediaFile[]) => {
     const uploadedMedia: Array<{ storage_path: string; media_type: string; display_order: number }> = [];
