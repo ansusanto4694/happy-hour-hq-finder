@@ -540,6 +540,7 @@ const Results = () => {
               hoveredRestaurantId={hoveredRestaurantId}
               searchLocation={location}
               isLoading={isLoading}
+              skipAutoFit={skipAutoFit}
             />
           </div>
           
