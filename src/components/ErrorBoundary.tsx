@@ -37,6 +37,10 @@ export class ErrorBoundary extends Component<Props, State> {
       eventLabel: error.message,
       errorMessage: error.message,
       errorStack: error.stack,
+      metadata: {
+        pathname: window.location.pathname,
+        search: window.location.search,
+      },
     });
 
     this.setState({

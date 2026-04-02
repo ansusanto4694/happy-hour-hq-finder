@@ -410,9 +410,11 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
               </div>
               
               {/* Category tags on separate line */}
-              {restaurant.merchant_categories && restaurant.merchant_categories.length > 0 && (
+              {(() => {
+                const validCategories = restaurant.merchant_categories?.filter((mc: any) => mc?.categories?.name) || [];
+                return validCategories.length > 0 ? (
                 <div className="flex flex-wrap gap-1.5">
-                  {restaurant.merchant_categories.map((merchantCategory: any) => (
+                  {validCategories.map((merchantCategory: any) => (
                     <Badge 
                       key={merchantCategory.id} 
                       variant="outline" 
@@ -422,7 +424,8 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
                     </Badge>
                   ))}
                 </div>
-              )}
+                ) : null;
+              })()}
             </div>
           </div>
         )}

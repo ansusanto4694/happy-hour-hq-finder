@@ -242,9 +242,11 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
               </div>
 
               {/* Category tags */}
-              {restaurant.merchant_categories && restaurant.merchant_categories.length > 0 && (
+              {(() => {
+                const validCategories = restaurant.merchant_categories?.filter(mc => mc?.categories?.name) || [];
+                return validCategories.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
-                  {restaurant.merchant_categories.map((merchantCategory) => (
+                  {validCategories.map((merchantCategory) => (
                     <Badge 
                       key={merchantCategory.id} 
                       variant="outline" 
@@ -254,7 +256,8 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
                     </Badge>
                   ))}
                 </div>
-              )}
+                ) : null;
+              })()}
             </CardContent>
           </Card>
         )}
