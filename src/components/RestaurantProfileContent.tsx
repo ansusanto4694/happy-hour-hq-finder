@@ -365,6 +365,7 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
             }}
             website={restaurant.website}
             googleMapsUrl={ratingData?.googleRatingUrl}
+            merchantId={restaurant.id}
           />
         )}
       </div>

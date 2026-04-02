@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Phone, MapPin, Globe } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
-import { useParams } from 'react-router-dom';
+
 import { cn } from '@/lib/utils';
 import { getDeviceType } from '@/utils/analytics';
 
@@ -17,6 +17,7 @@ interface MobileCTABarProps {
   };
   website?: string | null;
   googleMapsUrl?: string | null;
+  merchantId?: number;
 }
 
 export const MobileCTABar: React.FC<MobileCTABarProps> = ({
@@ -24,12 +25,11 @@ export const MobileCTABar: React.FC<MobileCTABarProps> = ({
   address,
   website,
   googleMapsUrl,
+  merchantId,
 }) => {
   const { track, trackFunnel } = useAnalytics();
-  const { id } = useParams();
 
   const handlePhoneClick = () => {
-    const merchantId = id ? parseInt(id) : undefined;
     
     track({
       eventType: 'click',
@@ -51,7 +51,6 @@ export const MobileCTABar: React.FC<MobileCTABarProps> = ({
   };
 
   const handleDirectionsClick = () => {
-    const merchantId = id ? parseInt(id) : undefined;
     
     track({
       eventType: 'click',
@@ -73,7 +72,6 @@ export const MobileCTABar: React.FC<MobileCTABarProps> = ({
   };
 
   const handleWebsiteClick = () => {
-    const merchantId = id ? parseInt(id) : undefined;
     
     track({
       eventType: 'click',

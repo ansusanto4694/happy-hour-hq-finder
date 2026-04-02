@@ -59,24 +59,31 @@ const WriteReview: React.FC = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const isMobile = useIsMobile();
-  const merchantId = parseInt(id || '0', 10);
+  const isNumericId = id ? /^\d+$/.test(id) : false;
 
-  // Fetch merchant data
+  // Fetch merchant data - support both numeric ID and slug
   const { data: merchant, isLoading: merchantLoading } = useQuery({
-    queryKey: ['merchant', merchantId],
+    queryKey: ['merchant-review', id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('Merchant')
-        .select('id, restaurant_name, street_address, city, state, zip_code, logo_url')
-        .eq('id', merchantId)
-        .eq('is_active', true)
-        .single();
+        .select('id, restaurant_name, street_address, city, state, zip_code, logo_url, slug')
+        .eq('is_active', true);
 
+      if (isNumericId) {
+        query = query.eq('id', parseInt(id!, 10));
+      } else {
+        query = query.eq('slug', id!);
+      }
+
+      const { data, error } = await query.single();
       if (error) throw error;
       return data;
     },
-    enabled: merchantId > 0,
+    enabled: !!id,
   });
+
+  const merchantId = merchant?.id ?? 0;
 
   const {
     isLoading: reviewLoading,
@@ -98,9 +105,9 @@ const WriteReview: React.FC = () => {
   // Redirect if not logged in
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate(`/auth?redirect=/restaurant/${merchantId}/review`);
+      navigate(`/auth?redirect=/restaurant/${id}/review`);
     }
-  }, [authLoading, user, merchantId, navigate]);
+  }, [authLoading, user, id, navigate]);
 
   const isLoading = authLoading || merchantLoading || reviewLoading;
   const canSubmit = reviewText.trim().length > 0;
