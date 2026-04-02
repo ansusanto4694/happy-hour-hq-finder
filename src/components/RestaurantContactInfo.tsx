@@ -115,6 +115,7 @@ export const RestaurantContactInfo: React.FC<RestaurantContactInfoProps> = ({
           city={city}
           state={state}
           googleMapsUrl={googleMapsUrl}
+          merchantId={merchantId}
         />
       )}
       

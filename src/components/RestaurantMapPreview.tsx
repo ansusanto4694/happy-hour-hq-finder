@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAnalytics } from '@/hooks/useAnalytics';
-import { useParams } from 'react-router-dom';
 
 interface RestaurantMapPreviewProps {
   latitude: number;
@@ -12,6 +11,7 @@ interface RestaurantMapPreviewProps {
   city: string;
   state: string;
   googleMapsUrl?: string | null;
+  merchantId?: number;
 }
 
 export const RestaurantMapPreview: React.FC<RestaurantMapPreviewProps> = ({
@@ -23,12 +23,11 @@ export const RestaurantMapPreview: React.FC<RestaurantMapPreviewProps> = ({
   city,
   state,
   googleMapsUrl,
+  merchantId,
 }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const { track } = useAnalytics();
-  const { id } = useParams();
-  const merchantId = id ? parseInt(id, 10) : undefined;
 
   // Mapbox Static Images API URL
   // Using the same token as the rest of the app

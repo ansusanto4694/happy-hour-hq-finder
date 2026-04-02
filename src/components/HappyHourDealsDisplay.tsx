@@ -6,7 +6,7 @@ import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import { format } from 'date-fns';
 import { useAnalytics } from '@/hooks/useAnalytics';
-import { useParams } from 'react-router-dom';
+
 import { getDeviceType } from '@/utils/analytics';
 
 interface HappyHourDealsDisplayProps {
@@ -27,8 +27,7 @@ interface HappyHourDeal {
 
 export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ restaurantId }) => {
   const { track } = useAnalytics();
-  const { id } = useParams();
-  const merchantId = id ? parseInt(id, 10) : restaurantId;
+  const merchantId = restaurantId;
 
   const { data: deals, isLoading } = useQuery({
     queryKey: ['happy-hour-deals-display', restaurantId],
