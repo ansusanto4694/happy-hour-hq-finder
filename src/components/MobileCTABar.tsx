@@ -107,9 +107,7 @@ export const MobileCTABar: React.FC<MobileCTABarProps> = ({
           <Button
             asChild
             size="mobile"
-            className={cn(
-              "flex-1 bg-success hover:bg-success/90 text-success-foreground shadow-md font-semibold text-xs h-14"
-            )}
+            className="flex-1 bg-success hover:bg-success/90 text-success-foreground shadow-md font-semibold text-xs h-14"
           >
             <a href={`tel:${phoneNumber}`} onClick={handlePhoneClick} className="flex flex-col items-center justify-center gap-1">
               <Phone className="h-4 w-4" />
