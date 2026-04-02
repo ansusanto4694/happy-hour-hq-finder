@@ -6,7 +6,7 @@ import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import { format } from 'date-fns';
 import { useAnalytics } from '@/hooks/useAnalytics';
-import { useParams } from 'react-router-dom';
+
 import { getDeviceType } from '@/utils/analytics';
 
 interface HappyHourDealsDisplayProps {
