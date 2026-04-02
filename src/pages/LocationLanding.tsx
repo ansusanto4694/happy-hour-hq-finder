@@ -504,14 +504,14 @@ export const LocationLanding = () => {
     showOffersOnly || (selectedMenuType !== 'all') || isUsingMapSearch;
 
   // Determine if this is an invalid location (404 case)
-  // Only show 404 when there are NO results AND no filters are applied
-  // (filters can legitimately narrow results to zero)
+  // Show 404 when there are NO results AND no filters are applied
+  // Works for both invalid neighborhoods AND invalid cities
   const isInvalidLocation = useMemo(() => {
     if (!isFetched || isLoading) return false;
     if (hasActiveFilters) return false;
-    if (neighborhoodSlug && (!rawMerchants || rawMerchants.length === 0)) return true;
+    if (!rawMerchants || rawMerchants.length === 0) return true;
     return false;
-  }, [isFetched, isLoading, neighborhoodSlug, rawMerchants, hasActiveFilters]);
+  }, [isFetched, isLoading, rawMerchants, hasActiveFilters]);
 
   // ── Map handlers ──
   const handleMapMove = useCallback((bounds: { north: number; south: number; east: number; west: number }) => {
