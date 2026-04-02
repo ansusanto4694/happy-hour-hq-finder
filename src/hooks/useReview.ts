@@ -122,7 +122,7 @@ export const useReview = (merchantId: number) => {
   // Load existing draft or review
   useEffect(() => {
     const loadExistingReview = async () => {
-      if (!user) {
+      if (!user || !merchantId) {
         setIsLoading(false);
         return;
       }
