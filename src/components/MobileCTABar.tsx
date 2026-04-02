@@ -134,9 +134,7 @@ export const MobileCTABar: React.FC<MobileCTABarProps> = ({
             asChild
             variant="secondary"
             size="mobile"
-            className={cn(
-              "flex-1 shadow-md font-semibold text-xs h-14"
-            )}
+            className="flex-1 shadow-md font-semibold text-xs h-14"
           >
             <a href={formattedWebsite} target="_blank" rel="noopener noreferrer" onClick={handleWebsiteClick} className="flex flex-col items-center justify-center gap-1">
               <Globe className="h-4 w-4" />
