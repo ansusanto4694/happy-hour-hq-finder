@@ -1,5 +1,5 @@
-import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
-import React, { useMemo, useState, useCallback, useLayoutEffect } from 'react';
+import { useParams, Link, useNavigate, useSearchParams, useNavigationType } from 'react-router-dom';
+import React, { useMemo, useState, useCallback, useLayoutEffect, useRef, useEffect } from 'react';
 import { SEOHead } from '@/components/SEOHead';
 import { useMerchants } from '@/hooks/useMerchants';
 import { SearchResults } from '@/components/SearchResults';
@@ -19,6 +19,7 @@ import { MobileResultsSearchBar } from '@/components/MobileResultsSearchBar';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import NotFound from '@/pages/NotFound';
 import { PageHeader } from '@/components/PageHeader';
+import { useDrawerScrollRestoration } from '@/hooks/useDrawerScrollRestoration';
 import { RadiusOption, getRadiusMiles, getSmartDefaultRadius, inferLocationTypeFromInput } from '@/components/RadiusFilter';
 
 // Map of full state names to 2-letter codes for fallback parsing
@@ -203,13 +204,14 @@ export const LocationLanding = () => {
   const isMobile = useIsMobile();
   const { track } = useAnalytics();
   
+  const navigationType = useNavigationType();
+  
   // Scroll to top only on fresh navigation (PUSH), not on back/forward (POP)
-  // ScrollRestoration component handles POP navigation automatically
   useLayoutEffect(() => {
-    // Only scroll to top when the URL path changes via fresh navigation
-    // The ScrollRestoration hook handles back/forward button scroll restoration
-    window.scrollTo(0, 0);
-  }, [citySlug, neighborhoodSlug]);
+    if (navigationType === 'PUSH') {
+      window.scrollTo(0, 0);
+    }
+  }, [citySlug, neighborhoodSlug, navigationType]);
   
   // Parse city and state from slug (e.g., "new-york-ny" -> "New York", "NY")
   const { city, state } = useMemo(() => parseCitySlug(citySlug || 'new-york-ny'), [citySlug]);
@@ -394,7 +396,7 @@ export const LocationLanding = () => {
 
   // Mobile-only state
   const [view, setView] = useState<'list' | 'map'>('list');
-  const [isListDrawerOpen, setIsListDrawerOpen] = useState(false);
+  const { isOpen: isListDrawerOpen, setIsOpen: setIsListDrawerOpen, setLastClickedId } = useDrawerScrollRestoration();
   const [showSearchThisAreaMobile, setShowSearchThisAreaMobile] = useState(false);
 
   const radiusMiles = getRadiusMiles(selectedRadius);
@@ -654,15 +656,17 @@ export const LocationLanding = () => {
                     const deltaY = startY - currentY;
                     if (deltaY > 50) {
                       setIsListDrawerOpen(true);
-                      document.removeEventListener('touchmove', handleTouchMove);
+                      cleanup();
                     }
                   };
-                  const handleTouchEnd = () => {
+                  const cleanup = () => {
                     document.removeEventListener('touchmove', handleTouchMove);
-                    document.removeEventListener('touchend', handleTouchEnd);
+                    document.removeEventListener('touchend', cleanup);
+                    document.removeEventListener('touchcancel', cleanup);
                   };
                   document.addEventListener('touchmove', handleTouchMove);
-                  document.addEventListener('touchend', handleTouchEnd);
+                  document.addEventListener('touchend', cleanup);
+                  document.addEventListener('touchcancel', cleanup);
                 }}
                 onClick={() => setIsListDrawerOpen(true)}
               >
@@ -718,6 +722,7 @@ export const LocationLanding = () => {
                 selectedNeighborhood={selectedNeighborhood}
                 onNeighborhoodChange={setSelectedNeighborhood}
                 isNeighborhoodPage={!!neighborhood}
+                onMerchantNavigate={(id) => setLastClickedId(id)}
               />
             </div>
           </>
