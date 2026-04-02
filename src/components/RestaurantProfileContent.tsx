@@ -71,9 +71,10 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
   const merchantUrlId = restaurant.slug || restaurant.id;
   
   // Transform the merchant_happy_hour data to include IDs for the editor
+  const happyHours = Array.isArray(restaurant.merchant_happy_hour) ? restaurant.merchant_happy_hour : [];
   const restaurantWithIds = {
     ...restaurant,
-    merchant_happy_hour: restaurant.merchant_happy_hour.map(hh => ({
+    merchant_happy_hour: happyHours.map(hh => ({
       ...hh,
       id: `${restaurant.id}-${hh.day_of_week}`,
     }))
