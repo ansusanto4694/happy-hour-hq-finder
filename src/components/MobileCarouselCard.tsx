@@ -134,7 +134,7 @@ export const MobileCarouselCard: React.FC<MobileCarouselCardProps> = ({
             />
           ) : (
             <span className="text-muted-foreground font-bold text-2xl">
-              {merchant.restaurant_name.charAt(0).toUpperCase()}
+              {(merchant.restaurant_name || '?').charAt(0).toUpperCase()}
             </span>
           )}
         </div>
