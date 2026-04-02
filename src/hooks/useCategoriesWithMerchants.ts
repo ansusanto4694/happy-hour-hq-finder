@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 export const useCategoriesWithMerchants = () => {
   return useQuery({
     queryKey: ['categories-with-merchants'],
-    queryFn: async () => {
+    queryFn: async (): Promise<string[]> => {
       const { data, error } = await supabase
         .from('merchant_categories')
         .select('category_id, Merchant!inner(is_active)')
@@ -15,7 +15,10 @@ export const useCategoriesWithMerchants = () => {
         throw error;
       }
 
-      return new Set(data?.map(r => r.category_id) || []);
+      // Return an array (JSON-serializable) instead of a Set,
+      // because react-query-persist-client serializes to localStorage
+      // and Sets become plain objects on deserialization.
+      return [...new Set(data?.map(r => r.category_id) || [])];
     },
     staleTime: 5 * 60 * 1000,
   });
