@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Phone, MapPin, Globe } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
-import { useParams } from 'react-router-dom';
+
 import { cn } from '@/lib/utils';
 import { getDeviceType } from '@/utils/analytics';
 
