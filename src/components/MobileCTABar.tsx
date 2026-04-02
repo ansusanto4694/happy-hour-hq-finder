@@ -113,9 +113,8 @@ export const MobileCTABar: React.FC<MobileCTABarProps> = ({
             className={cn(
               "flex-1 bg-success hover:bg-success/90 text-success-foreground shadow-md font-semibold text-xs h-14"
             )}
-            onClick={handlePhoneClick}
           >
-            <a href={`tel:${phoneNumber}`} className="flex flex-col items-center justify-center gap-1">
+            <a href={`tel:${phoneNumber}`} onClick={handlePhoneClick} className="flex flex-col items-center justify-center gap-1">
               <Phone className="h-4 w-4" />
               <span>Call</span>
             </a>
