@@ -1,10 +1,7 @@
 // Mobile CTA Bar - Call, Directions, Website buttons for restaurant pages
-import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Phone, MapPin, Globe } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
-
-import { cn } from '@/lib/utils';
 import { getDeviceType } from '@/utils/analytics';
 
 interface MobileCTABarProps {
@@ -100,7 +97,7 @@ export const MobileCTABar: React.FC<MobileCTABarProps> = ({
     ? `https://${website}` 
     : website;
 
-  const buttonCount = [phoneNumber, true, website].filter(Boolean).length;
+  
 
   return (
     <div className="fixed bottom-16 left-0 right-0 bg-background border-t border-border shadow-lg z-50 md:hidden">
@@ -110,9 +107,7 @@ export const MobileCTABar: React.FC<MobileCTABarProps> = ({
           <Button
             asChild
             size="mobile"
-            className={cn(
-              "flex-1 bg-success hover:bg-success/90 text-success-foreground shadow-md font-semibold text-xs h-14"
-            )}
+            className="flex-1 bg-success hover:bg-success/90 text-success-foreground shadow-md font-semibold text-xs h-14"
           >
             <a href={`tel:${phoneNumber}`} onClick={handlePhoneClick} className="flex flex-col items-center justify-center gap-1">
               <Phone className="h-4 w-4" />
@@ -125,9 +120,7 @@ export const MobileCTABar: React.FC<MobileCTABarProps> = ({
         <Button
           asChild
           size="mobile"
-          className={cn(
-            "flex-1 bg-amber-500 hover:bg-amber-600 text-white shadow-md font-semibold text-xs h-14"
-          )}
+          className="flex-1 bg-amber-500 hover:bg-amber-600 text-white shadow-md font-semibold text-xs h-14"
           >
             <a href={directionsUrl} target="_blank" rel="noopener noreferrer" onClick={handleDirectionsClick} className="flex flex-col items-center justify-center gap-1">
             <MapPin className="h-4 w-4" />
@@ -141,9 +134,7 @@ export const MobileCTABar: React.FC<MobileCTABarProps> = ({
             asChild
             variant="secondary"
             size="mobile"
-            className={cn(
-              "flex-1 shadow-md font-semibold text-xs h-14"
-            )}
+            className="flex-1 shadow-md font-semibold text-xs h-14"
           >
             <a href={formattedWebsite} target="_blank" rel="noopener noreferrer" onClick={handleWebsiteClick} className="flex flex-col items-center justify-center gap-1">
               <Globe className="h-4 w-4" />
