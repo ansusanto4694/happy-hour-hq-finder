@@ -27,8 +27,7 @@ interface HappyHourDeal {
 
 export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ restaurantId }) => {
   const { track } = useAnalytics();
-  const { id } = useParams();
-  const merchantId = id ? parseInt(id, 10) : restaurantId;
+  const merchantId = restaurantId;
 
   const { data: deals, isLoading } = useQuery({
     queryKey: ['happy-hour-deals-display', restaurantId],
