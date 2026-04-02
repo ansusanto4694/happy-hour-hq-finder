@@ -124,9 +124,11 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
               ) : null}
 
               {/* Centered Category Badges with Icons */}
-              {restaurant.merchant_categories && restaurant.merchant_categories.length > 0 && (
+              {(() => {
+                const validCategories = restaurant.merchant_categories?.filter(mc => mc?.categories?.name) || [];
+                return validCategories.length > 0 ? (
                 <div className="flex flex-wrap justify-center gap-2">
-                  {restaurant.merchant_categories.map((merchantCategory) => (
+                  {validCategories.map((merchantCategory) => (
                     <Badge 
                       key={merchantCategory.id} 
                       variant="outline"
@@ -137,7 +139,8 @@ export const RestaurantProfileContent: React.FC<RestaurantProfileContentProps> =
                     </Badge>
                   ))}
                 </div>
-              )}
+                ) : null;
+              })()}
 
               {/* Action Buttons - Admin/Owner */}
               {canManage && (
