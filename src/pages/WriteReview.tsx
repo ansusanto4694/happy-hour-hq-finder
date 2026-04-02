@@ -105,9 +105,9 @@ const WriteReview: React.FC = () => {
   // Redirect if not logged in
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate(`/auth?redirect=/restaurant/${merchantId}/review`);
+      navigate(`/auth?redirect=/restaurant/${id}/review`);
     }
-  }, [authLoading, user, merchantId, navigate]);
+  }, [authLoading, user, id, navigate]);
 
   const isLoading = authLoading || merchantLoading || reviewLoading;
   const canSubmit = reviewText.trim().length > 0;
