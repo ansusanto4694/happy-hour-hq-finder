@@ -1,45 +1,37 @@
 
 
-## Fix: Persistent Cache Strategy Overhaul
+## Bug: MobileCTABar — Mobile conversion tracking silently broken
 
-### The root problem
+### Root Cause
 
-Every `useQuery` in the app (31 files, 175+ queries) is automatically persisted to `localStorage` because `PersistQueryClientProvider` persists **all** queries by default. This means:
+All three buttons (Call, Directions, Website) use Radix's `asChild` prop, which replaces the `Button` element with the child `<a>` tag. When `asChild` is used, the `onClick` handler placed on `<Button>` is **not forwarded** to the rendered `<a>` element — it's silently discarded. This means `handlePhoneClick`, `handleDirectionsClick`, and `handleWebsiteClick` never execute.
 
-- Non-JSON-safe data (Sets, Maps, Date objects) silently corrupts on deserialization
-- Stale data from old code versions causes crashes after deploys
-- The only fix has been bumping the `buster` version, which nukes **all** cached data for **all** users — a blunt instrument
+Zero mobile conversion events (calls, directions, website clicks) are being recorded from this component.
 
-Most of these queries don't benefit from persistence at all (e.g., analytics, merchant portal data, session-specific results). Only a few slow-changing datasets actually warrant surviving a page reload.
+### Fix
 
-### The fix: Opt-in persistence instead of opt-out
+Move the `onClick` handler from the `<Button>` to the child `<a>` element for all three buttons. This ensures the click handler is on the actual rendered DOM element.
 
-Instead of persisting everything, we'll configure the persister to only cache specific query keys that actually benefit from it.
+**File: `src/components/MobileCTABar.tsx`**
 
-**Step 1: Add a `dehydrate` filter to `PersistQueryClientProvider`**
+For each of the three buttons, change from:
 
-In `src/App.tsx`, add `persistOptions.dehydrateOptions.shouldDehydrateQuery` — a function that returns `true` only for a whitelist of query keys worth persisting:
+```tsx
+<Button asChild onClick={handlePhoneClick}>
+  <a href={...} className="...">
+```
 
-- `categories` — rarely changes, used on every page
-- `categories-with-merchants` — same
-- `merchants` — the main search results (large but valuable to cache)
-- `homepage-carousels` — homepage data
+To:
 
-Everything else (analytics, merchant portal, reviews, events, session data) will use normal in-memory caching only, which is still governed by `staleTime` and `gcTime`.
+```tsx
+<Button asChild>
+  <a href={...} onClick={handlePhoneClick} className="...">
+```
 
-**Step 2: No more buster bumps needed**
+This applies to:
+- **Call button** (line 116→118): move `onClick={handlePhoneClick}` to the `<a>` tag
+- **Directions button** (line 132→134): move `onClick={handleDirectionsClick}` to the `<a>` tag
+- **Website button** (line 149→151): move `onClick={handleWebsiteClick}` to the `<a>` tag
 
-With only simple, JSON-safe arrays being persisted, the serialization corruption class of bugs disappears entirely. We can keep the current `buster: 'v9'` and likely never need to bump it again unless the schema of those specific cached queries changes.
-
-### Files changed
-
-| File | Change |
-|------|--------|
-| `src/App.tsx` | Add `dehydrateOptions.shouldDehydrateQuery` whitelist filter to `persistOptions` |
-
-### What this means for users
-
-- Pages load just as fast (the whitelisted queries still cache across sessions)
-- No more "Something went wrong" crashes from corrupted cache data
-- Deploys no longer require cache-busting that slows down every user's first load
+No other files need changes. The `merchantId` prop is already correctly passed from `RestaurantProfileContent`.
 
