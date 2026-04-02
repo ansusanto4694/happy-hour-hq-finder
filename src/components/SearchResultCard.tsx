@@ -280,9 +280,11 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
               
               {/* Clear CTA indicator */}
               <div className="flex items-center justify-between pt-1">
-                {restaurant.merchant_categories && restaurant.merchant_categories.length > 0 && (
+                {(() => {
+                  const validCategories = restaurant.merchant_categories?.filter((mc: any) => mc?.categories?.name) || [];
+                  return validCategories.length > 0 ? (
                   <div className="flex flex-wrap gap-1">
-                    {restaurant.merchant_categories.slice(0, 2).map((merchantCategory: any) => (
+                    {validCategories.slice(0, 2).map((merchantCategory: any) => (
                       <Badge 
                         key={merchantCategory.id} 
                         variant="outline" 
@@ -291,16 +293,17 @@ const SearchResultCardComponent: React.FC<SearchResultCardProps> = ({
                         {merchantCategory.categories.name}
                       </Badge>
                     ))}
-                    {restaurant.merchant_categories.length > 2 && (
+                    {validCategories.length > 2 && (
                       <Badge 
                         variant="outline" 
                         className="text-xs px-2 py-0.5 font-medium text-muted-foreground border-muted-foreground/20 bg-background/50"
                       >
-                        +{restaurant.merchant_categories.length - 2}
+                        +{validCategories.length - 2}
                       </Badge>
                     )}
                   </div>
-                )}
+                  ) : null;
+                })()}
               </div>
             </div>
           </div>
