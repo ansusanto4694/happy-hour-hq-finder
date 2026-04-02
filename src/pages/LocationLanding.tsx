@@ -19,6 +19,7 @@ import { MobileResultsSearchBar } from '@/components/MobileResultsSearchBar';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import NotFound from '@/pages/NotFound';
 import { PageHeader } from '@/components/PageHeader';
+import { useDrawerScrollRestoration } from '@/hooks/useDrawerScrollRestoration';
 import { RadiusOption, getRadiusMiles, getSmartDefaultRadius, inferLocationTypeFromInput } from '@/components/RadiusFilter';
 
 // Map of full state names to 2-letter codes for fallback parsing
