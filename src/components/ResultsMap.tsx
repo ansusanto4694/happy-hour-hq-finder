@@ -45,6 +45,7 @@ interface ResultsMapProps {
   hoveredRestaurantId?: number | null;
   searchLocation?: string;
   isLoading?: boolean;
+  skipAutoFit?: boolean;
 }
 
 const ResultsMapComponent: React.FC<ResultsMapProps> = ({ 
