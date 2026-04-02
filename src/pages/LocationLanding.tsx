@@ -1,5 +1,5 @@
-import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
-import React, { useMemo, useState, useCallback, useLayoutEffect } from 'react';
+import { useParams, Link, useNavigate, useSearchParams, useNavigationType } from 'react-router-dom';
+import React, { useMemo, useState, useCallback, useLayoutEffect, useRef, useEffect } from 'react';
 import { SEOHead } from '@/components/SEOHead';
 import { useMerchants } from '@/hooks/useMerchants';
 import { SearchResults } from '@/components/SearchResults';
