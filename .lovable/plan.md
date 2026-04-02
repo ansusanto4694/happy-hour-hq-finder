@@ -1,51 +1,57 @@
 
 
-## Phase 4: Mobile UX Audit & Fixes
+## Phase 6: Performance Fixes for High-Density Pages
 
-This phase uses browser testing at a mobile viewport to walk through the 3 key user journeys on a phone-sized screen, identify real issues, and fix them.
+### What this solves
 
-### What we'll do
+NYC and other dense city pages load 600+ map markers simultaneously, risking memory crashes on mobile. Broken merchant images can cause layout glitches. And if Mapbox itself crashes (WebGL failure), the whole page goes down.
 
-**Step 1: Browser-based mobile testing of all 3 journeys**
+---
 
-Using the browser tools at a 390x844 viewport (iPhone 14), manually walk through:
+### Fix 1: Viewport-based marker filtering
 
-1. **Homepage → "NYC Happy Hours" → Merchant Profile → Back**
-   - Verify homepage carousels render and are swipeable
-   - Tap a city link, confirm the map + peek handle load
-   - Swipe up to open the drawer, tap a merchant
-   - Hit back button, confirm drawer reopens and scroll position restores
+Only render markers visible on the current map viewport (plus a 20% buffer). Cuts ~600 mounted React components down to ~30-80.
 
-2. **Homepage → Search → Results → Merchant Profile**
-   - Use the mobile search bar, enter a location, submit
-   - Verify results page loads with map + drawer
-   - Tap a merchant card, confirm profile loads
-   - Hit back, verify state restores
+**File: `src/components/ResultsMap.tsx`**
 
-3. **Direct link to merchant profile (e.g. /restaurant/some-slug)**
-   - Verify profile loads, CTA bar shows, no crash
+Add a `useMemo` that computes viewport bounds from the current `viewState` and filters the restaurants array to only those within bounds. Apply this filtered list in both the mobile and desktop marker render loops. The bounds calculation uses simple lat/lng math based on zoom level to estimate the visible area, with a 20% padding so markers don't pop in/out right at the edge.
 
-**Step 2: Fix any issues found during testing**
+---
 
-Based on what the testing reveals. Likely areas from code review:
+### Fix 2: Map error boundary
 
-- **Drawer scroll restoration**: The `useDrawerScrollRestoration` hook saves/restores scroll but `LocationLanding.tsx` uses its own `isListDrawerOpen` state instead of this hook -- scroll position is likely lost on back navigation
-- **`useLayoutEffect` scroll-to-top**: Line 211 in `LocationLanding.tsx` calls `window.scrollTo(0, 0)` on every render when `citySlug` or `neighborhoodSlug` changes, but does NOT check `navigationType` -- so it scrolls to top even on back button presses, contradicting the comment above it
-- **Touch event listener cleanup**: The peek handle's `onTouchStart` (line 650) adds `touchmove`/`touchend` listeners to `document` but relies on the touch ending to clean up -- rapid interactions could leak listeners
+Wrap the `<ResultsMap>` in a dedicated error boundary inside `LazyResultsMap.tsx`. If Mapbox crashes (WebGL context loss, OOM), users see "Map couldn't load" with a retry button instead of a full-page "Something went wrong."
 
-### Implementation approach
+**File: `src/components/LazyResultsMap.tsx`**
 
-1. Start by testing in the browser at mobile viewport
-2. Document each issue found
-3. Fix the scroll-to-top bug in `LocationLanding.tsx` (check `navigationType` before scrolling)
-4. Integrate `useDrawerScrollRestoration` into `LocationLanding.tsx` for proper drawer state persistence
-5. Fix any other issues found during testing
+Add a `MapErrorBoundary` class component that catches errors, renders a friendly fallback with a "Try Again" button that resets the error state, and logs the error for debugging.
 
-### Files likely affected
+---
+
+### Fix 3: Image error fallbacks
+
+Add `onError` handlers to the two `<img>` tags (mobile and desktop) in `SearchResultCard.tsx`. When a `logo_url` fails to load, hide the broken image and show the `<Store>` icon placeholder instead.
+
+**File: `src/components/SearchResultCard.tsx`**
+
+Add a `const [imgError, setImgError] = useState(false)` state. Change the conditional from `restaurant.logo_url ?` to `restaurant.logo_url && !imgError ?` and add `onError={() => setImgError(true)}` to both `<img>` tags.
+
+---
+
+### Fix 4: Cache buster bump
+
+**File: `src/App.tsx`**
+
+Change `buster: 'v7'` → `'v8'` to force all users to get the performance-optimized code.
+
+---
+
+### Files changed
 
 | File | Change |
 |------|--------|
-| `src/pages/LocationLanding.tsx` | Fix scroll-to-top to respect back navigation; integrate drawer scroll restoration |
-| `src/hooks/useDrawerScrollRestoration.ts` | May need adjustments based on testing |
-| `src/components/MobileListDrawer.tsx` | May need `data-vaul-drawer-scroll` or scroll container fixes |
+| `src/components/ResultsMap.tsx` | Add viewport-bounds `useMemo` filter for markers |
+| `src/components/LazyResultsMap.tsx` | Add `MapErrorBoundary` wrapper |
+| `src/components/SearchResultCard.tsx` | Add `imgError` state + `onError` fallback on logo images |
+| `src/App.tsx` | Bump cache buster `v7` → `v8` |
 
