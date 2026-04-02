@@ -209,9 +209,7 @@ export const LocationLanding = () => {
   }, [citySlug, neighborhoodSlug]);
   
   // Parse city and state from slug (e.g., "new-york-ny" -> "New York", "NY")
-  const cityParts = citySlug?.split('-') || [];
-  const state = cityParts.pop()?.toUpperCase() || 'NY';
-  const city = slugToDisplayName(cityParts.join('-'));
+  const { city, state } = useMemo(() => parseCitySlug(citySlug || 'new-york-ny'), [citySlug]);
   const neighborhood = neighborhoodSlug ? slugToDisplayName(neighborhoodSlug) : undefined;
 
   // Construct location string for API call
