@@ -132,7 +132,7 @@ export const CarouselCard: React.FC<CarouselCardProps> = ({ merchant, onClick })
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
               <span className="text-primary font-semibold text-xl">
-                {merchant.restaurant_name.charAt(0).toUpperCase()}
+                {(merchant.restaurant_name || '?').charAt(0).toUpperCase()}
               </span>
             </div>
           )}

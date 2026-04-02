@@ -144,13 +144,15 @@ export const HomepageCarousel: React.FC<HomepageCarouselProps> = ({ carousel, hi
         className="w-full"
       >
         <CarouselContent className="-ml-3 md:-ml-4">
-          {carousel.merchants.map((merchantData) => (
-            <CarouselItem key={merchantData.id} className="pl-3 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4 2xl:basis-1/5">
-              <CarouselCard
-                merchant={merchantData.merchant}
-              />
-            </CarouselItem>
-          ))}
+          {carousel.merchants
+            .filter((merchantData) => merchantData?.merchant?.id && merchantData?.merchant?.restaurant_name)
+            .map((merchantData) => (
+              <CarouselItem key={merchantData.id} className="pl-3 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4 2xl:basis-1/5">
+                <CarouselCard
+                  merchant={merchantData.merchant}
+                />
+              </CarouselItem>
+            ))}
         </CarouselContent>
       </Carousel>
     </div>

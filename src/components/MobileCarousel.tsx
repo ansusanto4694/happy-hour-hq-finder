@@ -61,12 +61,14 @@ export const MobileCarousel: React.FC<MobileCarouselProps> = ({ carousel, hideVi
         className="flex overflow-x-auto scrollbar-hide gap-3 px-4 pb-4"
         style={{ scrollSnapType: 'x mandatory' }}
       >
-      {carousel.merchants.map((item) => (
-        <MobileCarouselCard
-          key={item.merchant.id}
-          merchant={item.merchant}
-        />
-      ))}
+      {carousel.merchants
+        .filter((item) => item?.merchant?.id && item?.merchant?.restaurant_name)
+        .map((item) => (
+          <MobileCarouselCard
+            key={item.merchant.id}
+            merchant={item.merchant}
+          />
+        ))}
       </div>
     </div>
   );

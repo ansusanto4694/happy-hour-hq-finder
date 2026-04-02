@@ -29,8 +29,8 @@ const formatTime = (timeString: string): string => {
 };
 
 export const RestaurantHappyHours: React.FC<RestaurantHappyHoursProps> = ({ happyHours }) => {
-  // Sort happy hours by day of week for display
-  const sortedHappyHours = happyHours.sort((a, b) => a.day_of_week - b.day_of_week);
+  // Sort happy hours by day of week for display (copy to avoid mutating props)
+  const sortedHappyHours = [...(happyHours || [])].sort((a, b) => a.day_of_week - b.day_of_week);
 
   return (
     <div>
