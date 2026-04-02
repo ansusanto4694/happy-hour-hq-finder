@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useNavigationType } from 'react-router-dom';
 import { SearchBar } from '@/components/SearchBar';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { MobileResultsSearchBar } from '@/components/MobileResultsSearchBar';
