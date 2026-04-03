@@ -38,6 +38,13 @@ const COLUMN_LABELS: Record<string, string> = {
   profile_shared: 'Shares',
 };
 
+interface DayRow {
+  date: Date;
+  uniqueVisitors: number;
+  totalEvents: number;
+  actions: Record<string, number>;
+}
+
 export const DailyActivityTable: React.FC<DailyActivityTableProps> = ({ merchantId }) => {
   const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
 
@@ -56,13 +63,12 @@ export const DailyActivityTable: React.FC<DailyActivityTableProps> = ({ merchant
     staleTime: 5 * 60 * 1000,
   });
 
-  // Build daily breakdown
   const days = eachDayOfInterval({
     start: subDays(new Date(), 29),
     end: new Date(),
-  }).reverse(); // most recent first
+  }).reverse();
 
-  const dailyData = days.map(day => {
+  const dailyData: DayRow[] = days.map(day => {
     const dayStart = startOfDay(day);
     const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
 
@@ -83,21 +89,20 @@ export const DailyActivityTable: React.FC<DailyActivityTableProps> = ({ merchant
       date: day,
       uniqueVisitors: sessions.size,
       totalEvents: dayEvents.length,
-      ...Object.fromEntries(EVENT_ACTIONS.map(a => [a, counts[a] || 0])),
+      actions: Object.fromEntries(EVENT_ACTIONS.map(a => [a, counts[a] || 0])),
     };
   });
 
-  // Totals row
   const totals = dailyData.reduce(
     (acc, row) => {
       acc.uniqueVisitors += row.uniqueVisitors;
       acc.totalEvents += row.totalEvents;
       EVENT_ACTIONS.forEach(a => {
-        acc[a] = (acc[a] || 0) + ((row as Record<string, number>)[a] || 0);
+        acc.actions[a] = (acc.actions[a] || 0) + row.actions[a];
       });
       return acc;
     },
-    { uniqueVisitors: 0, totalEvents: 0, ...Object.fromEntries(EVENT_ACTIONS.map(a => [a, 0])) } as Record<string, number>,
+    { uniqueVisitors: 0, totalEvents: 0, actions: Object.fromEntries(EVENT_ACTIONS.map(a => [a, 0])) },
   );
 
   if (isLoading) {
@@ -135,7 +140,6 @@ export const DailyActivityTable: React.FC<DailyActivityTableProps> = ({ merchant
               </TableRow>
             </TableHeader>
             <TableBody>
-              {/* Totals row */}
               <TableRow className="bg-muted/50 font-semibold border-b-2">
                 <TableCell className="sticky left-0 bg-muted/50 z-10 font-semibold">
                   30-Day Total
@@ -143,7 +147,7 @@ export const DailyActivityTable: React.FC<DailyActivityTableProps> = ({ merchant
                 <TableCell className="text-right font-semibold">{totals.uniqueVisitors}</TableCell>
                 {EVENT_ACTIONS.map(action => (
                   <TableCell key={action} className="text-right font-semibold">
-                    {totals[action]}
+                    {totals.actions[action]}
                   </TableCell>
                 ))}
                 <TableCell className="text-right font-semibold">{totals.totalEvents}</TableCell>
@@ -159,7 +163,7 @@ export const DailyActivityTable: React.FC<DailyActivityTableProps> = ({ merchant
                     <TableCell className="text-right">{row.uniqueVisitors || '—'}</TableCell>
                     {EVENT_ACTIONS.map(action => (
                       <TableCell key={action} className="text-right">
-                        {(row as Record<string, number>)[action] || '—'}
+                        {row.actions[action] || '—'}
                       </TableCell>
                     ))}
                     <TableCell className="text-right">{row.totalEvents || '—'}</TableCell>
