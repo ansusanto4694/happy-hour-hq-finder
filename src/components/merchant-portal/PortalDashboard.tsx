@@ -209,6 +209,9 @@ export const PortalDashboard: React.FC<PortalDashboardProps> = ({ merchantId, me
           </Card>
         ))}
       </div>
+
+      {/* Daily Activity Table */}
+      <DailyActivityTable merchantId={merchantId} />
     </div>
   );
 };
