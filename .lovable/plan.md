@@ -1,23 +1,19 @@
 
 
-## Bug #3: MobileCTABar — Dead code cleanup (Yellow severity)
+## Fix: Allow NULL values in happy_hour_deals menu_type constraint
 
-### Issues
+### Problem
+The `happy_hour_deals_menu_type_check` constraint rejects `NULL` values for `menu_type`, but the application code intentionally converts `'not_specified'` to `NULL` before inserting. This causes CSV imports and deal creation to fail.
 
-1. **`buttonCount` (line 103)** — Declared but never used anywhere. It was likely intended for dynamic sizing but never wired up.
+### Migration
+A single migration that drops the existing constraint and recreates it to allow `NULL`:
 
-2. **`cn()` wrapping single strings (lines 113, 128, 144)** — `cn()` is a classname merger utility. When called with a single static string (no conditionals, no merging), it's a no-op wrapper. Since `buttonCount` is unused, there's no conditional logic to justify `cn()` here.
+```sql
+ALTER TABLE happy_hour_deals DROP CONSTRAINT happy_hour_deals_menu_type_check;
+ALTER TABLE happy_hour_deals ADD CONSTRAINT happy_hour_deals_menu_type_check 
+  CHECK (menu_type IS NULL OR menu_type IN ('food_and_drinks', 'drinks_only'));
+```
 
-3. **`React` import (line 2)** — Not needed in React 18 with the JSX transform. Minor but worth cleaning up.
-
-### Fix
-
-**File: `src/components/MobileCTABar.tsx`**
-
-- **Remove** line 2: `import React from 'react';`
-- **Remove** line 7: `import { cn } from '@/lib/utils';`
-- **Remove** line 103: `const buttonCount = ...`
-- **Replace** `className={cn("flex-1 bg-success...")}` with `className="flex-1 bg-success..."` on all three buttons (lines 113, 128, 144)
-
-No behavioral changes. Pure cleanup — removes dead code and unnecessary abstractions.
+### Scope
+- One migration file only. No code changes needed -- the app already handles the `NULL` conversion correctly.
 
