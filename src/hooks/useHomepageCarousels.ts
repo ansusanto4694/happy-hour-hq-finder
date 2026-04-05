@@ -49,78 +49,14 @@ export type HomepageCarousel = {
 export const useHomepageCarousels = () => {
   return useQuery({
     queryKey: ['homepage-carousels'],
-    staleTime: 1000 * 60 * 30, // Consider data stale after 30 minutes
+    staleTime: 1000 * 60 * 30,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('homepage_carousels')
-        .select(`
-          id,
-          name,
-          description,
-          display_order,
-          carousel_merchants!inner (
-            id,
-            merchant_id,
-            display_order,
-            Merchant!inner (
-              id,
-              restaurant_name,
-              street_address,
-              street_address_line_2,
-              city,
-              state,
-              zip_code,
-              phone_number,
-              website,
-              latitude,
-              longitude,
-              logo_url,
-              neighborhood,
-              slug,
-              is_active,
-              merchant_happy_hour (
-                day_of_week,
-                happy_hour_start,
-                happy_hour_end
-              ),
-              happy_hour_deals (
-                id,
-                active,
-                menu_type
-              ),
-              merchant_reviews!left (
-                id,
-                status,
-                merchant_review_ratings (
-                  rating
-                )
-              ),
-              merchant_google_ratings (
-                google_rating,
-                google_review_count,
-                google_rating_url,
-                match_confidence
-              )
-            )
-          )
-        `)
-        .eq('is_active', true)
-        .eq('carousel_merchants.is_active', true)
-        .eq('carousel_merchants.Merchant.is_active', true)
-        .order('display_order', { ascending: true });
+      const { data: response, error: invokeError } = await supabase.functions.invoke('merchant-api', {
+        body: { action: 'carousels' },
+      });
 
-      if (error) throw error;
-
-      // Transform the data to match our expected structure
-      return (data || []).map(carousel => ({
-        ...carousel,
-        merchants: (carousel.carousel_merchants || [])
-          .map(cm => ({
-            ...cm,
-            merchant: cm.Merchant
-          }))
-          .sort((a, b) => a.display_order - b.display_order)
-      })) as HomepageCarousel[];
+      if (invokeError) throw invokeError;
+      return (response?.data || []) as HomepageCarousel[];
     },
   });
 };
