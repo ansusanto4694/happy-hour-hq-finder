@@ -17,10 +17,6 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      serviceRoleKey
-    );
 
     const { merchants } = await req.json();
     // merchants: [{ id: number, image_url: string }]
