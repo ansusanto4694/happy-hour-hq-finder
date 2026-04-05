@@ -175,6 +175,7 @@ const App = () => (
                 <Route path="/happy-hour/:citySlug" element={<RouteErrorBoundary routeName="LocationLanding"><LocationLanding /></RouteErrorBoundary>} />
                 <Route path="/happy-hour/:citySlug/:neighborhoodSlug" element={<RouteErrorBoundary routeName="LocationLanding"><LocationLanding /></RouteErrorBoundary>} />
                 <Route path="/merchant/:id/manage" element={<MerchantPortal />} />
+                <Route path="/terms" element={<TermsOfService />} />
                 {/* Redirect for broken Facebook link typo */}
                 <Route path="/We" element={<Navigate to="/" replace />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
