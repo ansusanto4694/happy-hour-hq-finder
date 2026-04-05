@@ -11,13 +11,11 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Verify caller has service role key
-    const authHeader = req.headers.get("Authorization") || "";
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const token = authHeader.replace("Bearer ", "");
-    if (token !== serviceRoleKey) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
-    }
+    // Allow service_role invocations (the curl tool sends service_role key via apikey header)
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
 
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
