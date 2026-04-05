@@ -31,6 +31,7 @@ const Favorites = lazy(() => import("./pages/Favorites"));
 const Account = lazy(() => import("./pages/Account"));
 const LocationLanding = lazy(() => import("./pages/LocationLanding").then(m => ({ default: m.LocationLanding })));
 const MerchantPortal = lazy(() => import("./pages/MerchantPortal"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Loading fallback component
