@@ -21,7 +21,7 @@ const SEARCH_ENGINE_BOTS = [
   'googlebot', 'bingbot', 'yandexbot', 'duckduckbot', 'slurp', 'baiduspider',
 ];
 
-const MAX_RESULTS = 200;
+const MAX_RESULTS = 1000;
 
 function getClientIp(req: Request): string {
   return req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
