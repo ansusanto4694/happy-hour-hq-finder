@@ -341,6 +341,15 @@ Deno.serve(async (req) => {
       case 'carousels':
         result = await handleCarousels(supabase);
         break;
+      case 'deals':
+        result = await handleDeals(supabase, params);
+        break;
+      case 'ratings':
+        result = await handleRatings(supabase, params);
+        break;
+      case 'categories_with_merchants':
+        result = await handleCategoriesWithMerchants(supabase);
+        break;
       default:
         return new Response(JSON.stringify({ error: 'Invalid action' }), {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
