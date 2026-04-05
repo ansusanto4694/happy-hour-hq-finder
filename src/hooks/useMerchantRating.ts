@@ -12,29 +12,15 @@ export const useMerchantRating = (merchantId: number) => {
   return useQuery({
     queryKey: ['merchant-rating-v2', merchantId],
     queryFn: async (): Promise<RatingData> => {
-      // Fetch native reviews and Google rating in parallel
-      const [reviewsResult, googleResult] = await Promise.all([
-        supabase
-          .from('merchant_reviews')
-          .select(`
-            id,
-            ratings:merchant_review_ratings(rating)
-          `)
-          .eq('merchant_id', merchantId)
-          .eq('status', 'published'),
-        supabase
-          .from('merchant_google_ratings')
-          .select('google_rating, google_review_count, google_rating_url, match_confidence')
-          .eq('merchant_id', merchantId)
-          .maybeSingle(),
-      ]);
+      const { data: response, error: invokeError } = await supabase.functions.invoke('merchant-api', {
+        body: { action: 'ratings', params: { merchantId } },
+      });
 
-      if (reviewsResult.error) throw reviewsResult.error;
+      if (invokeError) throw invokeError;
 
-      const reviews = reviewsResult.data || [];
+      const { reviews, google } = response?.data || { reviews: [], google: null };
 
       // Extract Google listing URL before any early returns
-      const google = googleResult.data;
       const googleRatingUrl = google?.match_confidence !== 'no_match'
         ? google?.google_rating_url ?? null
         : null;

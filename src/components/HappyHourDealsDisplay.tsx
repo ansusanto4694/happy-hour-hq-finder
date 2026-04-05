@@ -32,18 +32,16 @@ export const HappyHourDealsDisplay: React.FC<HappyHourDealsDisplayProps> = ({ re
   const { data: deals, isLoading } = useQuery({
     queryKey: ['happy-hour-deals-display', restaurantId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('happy_hour_deals')
-        .select('id, deal_title, deal_description, active, is_verified, verified_at, source_url, source_label, menu_type')
-        .eq('restaurant_id', restaurantId)
-        .eq('active', true)
-        .order('display_order', { ascending: true })
-        .order('created_at', { ascending: false });
+      const { data: response, error: invokeError } = await supabase.functions.invoke('merchant-api', {
+        body: { action: 'deals', params: { restaurantId } },
+      });
 
-      if (error) {
-        console.error('Error fetching happy hour deals:', error);
-        throw error;
+      if (invokeError) {
+        console.error('Error fetching happy hour deals:', invokeError);
+        throw invokeError;
       }
+
+      const data = response?.data || [];
 
       // Track happy hour deal views
       if (data && data.length > 0) {
