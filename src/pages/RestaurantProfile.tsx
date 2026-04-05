@@ -180,62 +180,19 @@ const RestaurantProfile = () => {
     queryFn: async () => {
       if (!id) throw new Error('Restaurant identifier is required');
       
-      let query = supabase
-        .from('Merchant')
-        .select(`
-          *,
-          merchant_happy_hour (
-            id,
-            day_of_week,
-            happy_hour_start,
-            happy_hour_end
-          ),
-          merchant_categories (
-            id,
-            categories (
-              id,
-              name,
-              slug,
-              parent_id
-            )
-          ),
-          happy_hour_deals!happy_hour_deals_restaurant_id_fkey (
-            id,
-            deal_title,
-            deal_description,
-            active,
-            menu_type
-          ),
-          merchant_reviews!left (
-            id,
-            status,
-            merchant_review_ratings (
-              rating
-            )
-          ),
-          merchant_google_ratings (
-            google_rating,
-            google_review_count,
-            match_confidence
-          )
-        `);
-      
-      // Query by ID if numeric, otherwise by slug
-      if (isNumericId) {
-        const restaurantId = parseInt(id, 10);
-        query = query.eq('id', restaurantId);
-      } else {
-        query = query.eq('slug', id);
-      }
-      
-      const { data, error } = await query.maybeSingle();
+      const { data: response, error: invokeError } = await supabase.functions.invoke('merchant-api', {
+        body: {
+          action: 'get',
+          params: { id, isNumericId },
+        },
+      });
 
-      if (error) {
-        console.error('Error fetching restaurant:', error);
-        throw error;
+      if (invokeError) {
+        console.error('Error fetching restaurant:', invokeError);
+        throw invokeError;
       }
 
-      return data;
+      return response?.data || null;
     },
     enabled: !!id,
     placeholderData: keepPreviousData, // Keep previous data during refetch to prevent flash
