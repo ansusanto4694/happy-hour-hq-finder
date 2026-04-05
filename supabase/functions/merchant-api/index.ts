@@ -253,6 +253,54 @@ async function handleCarousels(supabase: any) {
   }));
 }
 
+async function handleDeals(supabase: any, params: any) {
+  const { restaurantId } = params;
+  if (!restaurantId) throw new Error('restaurantId is required');
+
+  const { data, error } = await supabase
+    .from('happy_hour_deals')
+    .select('id, deal_title, deal_description, active, is_verified, verified_at, source_url, source_label, menu_type')
+    .eq('restaurant_id', restaurantId)
+    .eq('active', true)
+    .order('display_order', { ascending: true })
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+}
+
+async function handleRatings(supabase: any, params: any) {
+  const { merchantId } = params;
+  if (!merchantId) throw new Error('merchantId is required');
+
+  const [reviewsResult, googleResult] = await Promise.all([
+    supabase
+      .from('merchant_reviews')
+      .select('id, ratings:merchant_review_ratings(rating)')
+      .eq('merchant_id', merchantId)
+      .eq('status', 'published'),
+    supabase
+      .from('merchant_google_ratings')
+      .select('google_rating, google_review_count, google_rating_url, match_confidence')
+      .eq('merchant_id', merchantId)
+      .maybeSingle(),
+  ]);
+
+  if (reviewsResult.error) throw reviewsResult.error;
+  return { reviews: reviewsResult.data || [], google: googleResult.data };
+}
+
+async function handleCategoriesWithMerchants(supabase: any) {
+  const { data, error } = await supabase
+    .from('merchant_categories')
+    .select('category_id, Merchant!inner(is_active)')
+    .eq('Merchant.is_active', true);
+
+  if (error) throw error;
+  const ids = data?.map((r: any) => r.category_id) || [];
+  return [...new Set(ids)];
+}
+
 // --- Main handler ---
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -292,6 +340,15 @@ Deno.serve(async (req) => {
         break;
       case 'carousels':
         result = await handleCarousels(supabase);
+        break;
+      case 'deals':
+        result = await handleDeals(supabase, params);
+        break;
+      case 'ratings':
+        result = await handleRatings(supabase, params);
+        break;
+      case 'categories_with_merchants':
+        result = await handleCategoriesWithMerchants(supabase);
         break;
       default:
         return new Response(JSON.stringify({ error: 'Invalid action' }), {

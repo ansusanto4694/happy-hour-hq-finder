@@ -5,20 +5,16 @@ export const useCategoriesWithMerchants = () => {
   return useQuery({
     queryKey: ['categories-with-merchants'],
     queryFn: async (): Promise<string[]> => {
-      const { data, error } = await supabase
-        .from('merchant_categories')
-        .select('category_id, Merchant!inner(is_active)')
-        .eq('Merchant.is_active', true);
+      const { data: response, error: invokeError } = await supabase.functions.invoke('merchant-api', {
+        body: { action: 'categories_with_merchants' },
+      });
 
-      if (error) {
-        console.error('Error fetching categories with merchants:', error);
-        throw error;
+      if (invokeError) {
+        console.error('Error fetching categories with merchants:', invokeError);
+        throw invokeError;
       }
 
-      // Return an array (JSON-serializable) instead of a Set,
-      // because react-query-persist-client serializes to localStorage
-      // and Sets become plain objects on deserialization.
-      return [...new Set(data?.map(r => r.category_id) || [])];
+      return response?.data || [];
     },
     staleTime: 5 * 60 * 1000,
   });
