@@ -11,30 +11,18 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Missing auth" }), { status: 401, headers: corsHeaders });
+    // Verify caller has service role key
+    const authHeader = req.headers.get("Authorization") || "";
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const token = authHeader.replace("Bearer ", "");
+    if (token !== serviceRoleKey) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
     }
 
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      serviceRoleKey
     );
-
-    // Verify caller is admin
-    const anonClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
-    const { data: { user } } = await anonClient.auth.getUser();
-    if (!user) {
-      return new Response(JSON.stringify({ error: "Not authenticated" }), { status: 401, headers: corsHeaders });
-    }
-    const { data: isAdmin } = await anonClient.rpc("is_admin");
-    if (!isAdmin) {
-      return new Response(JSON.stringify({ error: "Not admin" }), { status: 403, headers: corsHeaders });
-    }
 
     const { merchants } = await req.json();
     // merchants: [{ id: number, image_url: string }]
