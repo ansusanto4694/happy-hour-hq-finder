@@ -1,14 +1,15 @@
 ## Goal
-Store the Stripe webhook signing secret (`whsec_...`) you just retrieved from your Stripe dashboard so the `stripe-webhook` edge function can verify incoming events from Stripe and mark donations as `completed` in the database.
+Replace the current invalid `STRIPE_SECRET_KEY` (which starts with `mk_` and is being rejected by Stripe as "Invalid API Key") with the correct key you have ready.
 
 ## Steps
-1. **Add the secret** — Use the secrets tool to add `STRIPE_WEBHOOK_SECRET` with the `whsec_...` value you provide. The edge function already reads it via `Deno.env.get("STRIPE_WEBHOOK_SECRET")`, so no code changes are needed.
-2. **Test end-to-end** — From `/donate`, run a small test donation:
-   - Complete a Stripe Checkout session
-   - Land on `/donate/thank-you`
-   - Confirm the matching row in the `donations` table flips from `pending` → `completed`
-3. **Check logs if needed** — If anything looks off, check the `stripe-webhook` edge function logs for signature verification errors.
+1. **Update the secret** — Use the secrets tool to update `STRIPE_SECRET_KEY` with your new value. The `create-donation-checkout` edge function already reads it via `Deno.env.get("STRIPE_SECRET_KEY")`, so no code changes are needed.
+2. **Test the donation flow** — From `/donate`, run a $1 test donation:
+   - Should redirect to Stripe Checkout (no more "non-2xx" error)
+   - Complete payment → land on `/donate/thank-you`
+   - The `donations` row flips from `pending` → `completed` (via the webhook, which is already configured)
+3. **Check logs if needed** — If anything fails, I can pull `create-donation-checkout` and `stripe-webhook` logs to diagnose.
 
 ## Notes
-- ⚠️ You're using a **live** Stripe key, so test donations will charge a real card. Use a small amount (e.g. $1) and refund yourself in the Stripe Dashboard after.
-- After approval, I'll prompt you with a secure secret-input box — paste the `whsec_...` value there, NOT in chat.
+- Expected key prefix: `sk_live_...`, `sk_test_...`, or `rk_live_...` / `rk_test_...` (restricted key with write access to Checkout Sessions, Products, Prices, Customers).
+- After approval, you'll get a secure secret-input box — paste the key there, NOT in chat.
+- ⚠️ Live keys charge real cards. Use $1 and refund yourself in the Stripe Dashboard after.
