@@ -108,6 +108,13 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             >
               Contact
             </Link>
+            <Link 
+              to="/donate" 
+              className="hidden sm:inline-flex items-center gap-1 text-white/90 hover:text-white transition-colors text-xs md:text-sm lg:text-base font-medium"
+              aria-label="Support SipMunchYap"
+            >
+              ❤️ <span>Donate</span>
+            </Link>
             <AuthButton />
           </nav>
         </div>
