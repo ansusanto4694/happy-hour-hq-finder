@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { SEOHead } from "@/components/SEOHead";
 
-const PRESET_AMOUNTS = [5, 10, 25, 50];
+const PRESET_AMOUNTS = [1, 5, 10, 20];
 
 const Donate = () => {
   const [amount, setAmount] = useState<number>(10);
