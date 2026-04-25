@@ -53,6 +53,13 @@ const Hero: React.FC<HeroProps> = ({ recentlyViewedCarousel }) => {
           >
             Contact
           </Link>
+          <Link 
+            to="/donate" 
+            className="hidden sm:inline-flex items-center gap-1 text-white/90 hover:text-white transition-colors text-sm md:text-base font-medium"
+            aria-label="Support SipMunchYap"
+          >
+            ❤️ <span>Donate</span>
+          </Link>
           <AuthButton />
         </nav>
       </div>
