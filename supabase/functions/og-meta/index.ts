@@ -92,10 +92,10 @@ async function getRestaurantMeta(
 
   const address: Record<string, string> = {
     "@type": "PostalAddress",
-    streetAddress: data.street_address,
-    addressLocality: data.city,
-    addressRegion: data.state,
-    postalCode: data.zip_code,
+    streetAddress: String(data.street_address ?? ""),
+    addressLocality: String(data.city ?? ""),
+    addressRegion: String(data.state ?? ""),
+    postalCode: String(data.zip_code ?? ""),
     addressCountry: "US",
   };
 
@@ -121,7 +121,7 @@ async function getRestaurantMeta(
   return {
     title,
     description,
-    ogImage: data.logo_url || DEFAULT_OG_IMAGE,
+    ogImage: (data.logo_url as string) || DEFAULT_OG_IMAGE,
     canonicalUrl: `${SITE_URL}/restaurant/${canonicalSlug}`,
     structuredData,
   };
@@ -219,7 +219,7 @@ Deno.serve(async (req) => {
         }
       }
 
-      const restaurantMeta = await getRestaurantMeta(supabase, slug);
+      const restaurantMeta = await getRestaurantMeta(supabase as any, slug);
       meta = restaurantMeta || getDefaultMeta();
     } else if (locationMatch) {
       meta = getLocationMeta(locationMatch[1], locationMatch[2]);

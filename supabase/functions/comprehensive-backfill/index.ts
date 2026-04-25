@@ -185,8 +185,8 @@ Deno.serve(async (req) => {
             total_sessions: totalSessions,
             total_events: totalEventCount,
             total_page_views: totalPageViews,
-            avg_events_per_session: totalSessions > 0 ? (totalEventCount / totalSessions).toFixed(2) : 0,
-            avg_page_views_per_session: totalSessions > 0 ? (totalPageViews / totalSessions).toFixed(2) : 0,
+            avg_events_per_session: (totalSessions ?? 0) > 0 ? ((totalEventCount ?? 0) / (totalSessions ?? 1)).toFixed(2) : 0,
+            avg_page_views_per_session: (totalSessions ?? 0) > 0 ? ((totalPageViews ?? 0) / (totalSessions ?? 1)).toFixed(2) : 0,
           },
           timestamp: new Date().toISOString(),
         };
@@ -198,7 +198,7 @@ Deno.serve(async (req) => {
     };
 
     // Start background processing without waiting
-    EdgeRuntime.waitUntil(processBackfill());
+    (globalThis as any).EdgeRuntime?.waitUntil(processBackfill()) ?? processBackfill();
 
     // Return immediate response
     return new Response(JSON.stringify({
@@ -214,8 +214,8 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
-        stack: error.stack,
+        error: (error as Error).message,
+        stack: (error as Error).stack,
         timestamp: new Date().toISOString(),
       }),
       {
