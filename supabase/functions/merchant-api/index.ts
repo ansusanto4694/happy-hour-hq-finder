@@ -163,7 +163,7 @@ async function handleSearch(supabase: any, params: any) {
     } else {
       merchantIds = catFilteredIds;
     }
-    if (merchantIds.length === 0) return [];
+    if (!merchantIds || merchantIds.length === 0) return [];
   }
 
   // Main query
