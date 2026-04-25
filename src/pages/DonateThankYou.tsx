@@ -11,7 +11,7 @@ const DonateThankYou = () => {
         title="Thank You — SipMunchYap"
         description="Thank you for supporting SipMunchYap."
         canonical="https://sipmunchyap.com/donate/thank-you"
-        noindex
+        noIndex
       />
       <div className="min-h-screen bg-background flex items-center justify-center px-4">
         <Card className="p-8 md:p-10 max-w-lg w-full text-center">
