@@ -115,7 +115,13 @@ interface UseNearMeLocationReturn {
  */
 export function useNearMeLocation(): UseNearMeLocationReturn {
   const [location, setLocation] = useState<NearMeLocation | null>(() => readPersisted());
-  const [status, setStatus] = useState<LocationStatus>(() => (readPersisted() ? 'granted' : 'idle'));
+  const [status, setStatus] = useState<LocationStatus>(() => {
+    const persisted = readPersisted();
+    if (!persisted) return 'idle';
+    if (persisted.source === 'manual') return 'manual';
+    if (persisted.source === 'ip') return 'ip-fallback';
+    return 'granted';
+  });
   const [error, setError] = useState<string | null>(null);
   const [isResolving, setIsResolving] = useState(false);
   const [promptDismissed, setPromptDismissed] = useState<boolean>(() => {
