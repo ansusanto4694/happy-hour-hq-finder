@@ -108,42 +108,51 @@ interface UseNearMeLocationReturn {
   dismissPrompt: () => void;
 }
 
-/**
- * Resolution chain: persisted → (caller decides) GPS → manual → IP fallback.
- * The hook does NOT auto-trigger anything on mount beyond reading localStorage,
- * so the UI controls the permission prompt timing (avoids surprise prompts).
- */
-export function useNearMeLocation(): UseNearMeLocationReturn {
-  const [location, setLocation] = useState<NearMeLocation | null>(() => readPersisted());
-  const [status, setStatus] = useState<LocationStatus>(() => {
-    const persisted = readPersisted();
-    if (!persisted) return 'idle';
-    if (persisted.source === 'manual') return 'manual';
-    if (persisted.source === 'ip') return 'ip-fallback';
-    return 'granted';
-  });
-  const [error, setError] = useState<string | null>(null);
-  const [isResolving, setIsResolving] = useState(false);
-  const [promptDismissed, setPromptDismissed] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem(PROMPT_DISMISSED_KEY) === '1';
-    } catch {
-      return false;
-    }
-  });
+/* ---- Module-level shared store so all consumers stay in sync ---- */
+type StoreState = {
+  location: NearMeLocation | null;
+  status: LocationStatus;
+  error: string | null;
+  isResolving: boolean;
+  promptDismissed: boolean;
+};
 
-  const mountedRef = useRef(true);
+function initialStatus(loc: NearMeLocation | null): LocationStatus {
+  if (!loc) return 'idle';
+  if (loc.source === 'manual') return 'manual';
+  if (loc.source === 'ip') return 'ip-fallback';
+  return 'granted';
+}
+
+const initialLoc = readPersisted();
+let storeState: StoreState = {
+  location: initialLoc,
+  status: initialStatus(initialLoc),
+  error: null,
+  isResolving: false,
+  promptDismissed: (() => {
+    try { return localStorage.getItem(PROMPT_DISMISSED_KEY) === '1'; } catch { return false; }
+  })(),
+};
+const listeners = new Set<() => void>();
+function setStore(patch: Partial<StoreState>) {
+  storeState = { ...storeState, ...patch };
+  listeners.forEach((l) => l());
+}
+
+export function useNearMeLocation(): UseNearMeLocationReturn {
+  const [, force] = useState(0);
   useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-    };
+    const l = () => force((n) => n + 1);
+    listeners.add(l);
+    return () => { listeners.delete(l); };
   }, []);
 
+  const { location, status, error, isResolving, promptDismissed } = storeState;
+
   const safeSet = useCallback((loc: NearMeLocation) => {
-    if (!mountedRef.current) return;
-    setLocation(loc);
     writePersisted(loc);
+    setStore({ location: loc });
   }, []);
 
   const requestGps = useCallback(async () => {
