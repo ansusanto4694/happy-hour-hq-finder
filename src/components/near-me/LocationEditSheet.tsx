@@ -59,7 +59,7 @@ export function LocationEditSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="rounded-t-2xl max-h-[85vh] overflow-y-auto">
+      <SheetContent side="bottom" className="rounded-t-2xl max-h-[85vh] overflow-y-auto pb-24">
         <SheetHeader className="text-left">
           <SheetTitle>Change location</SheetTitle>
           <SheetDescription>
