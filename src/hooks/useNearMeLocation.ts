@@ -156,21 +156,18 @@ export function useNearMeLocation(): UseNearMeLocationReturn {
   }, []);
 
   const requestGps = useCallback(async () => {
-    setError(null);
+    setStore({ error: null });
     if (!('geolocation' in navigator)) {
-      setStatus('unavailable');
-      setError('Geolocation not supported');
+      setStore({ status: 'unavailable', error: 'Geolocation not supported' });
       return;
     }
-    setStatus('asking');
-    setIsResolving(true);
+    setStore({ status: 'asking', isResolving: true });
 
     await new Promise<void>((resolve) => {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
-          // Optimistic label, refined async
           const optimistic: NearMeLocation = {
             lat,
             lng,
@@ -180,29 +177,19 @@ export function useNearMeLocation(): UseNearMeLocationReturn {
             accuracyMeters: position.coords.accuracy,
           };
           safeSet(optimistic);
-          if (mountedRef.current) {
-            setStatus('granted');
-            setIsResolving(false);
-          }
+          setStore({ status: 'granted', isResolving: false });
           const label = await reverseGeocodeLabel(lat, lng);
-          if (mountedRef.current) {
-            safeSet({ ...optimistic, label });
-          }
+          safeSet({ ...optimistic, label });
           resolve();
         },
         (err) => {
-          if (!mountedRef.current) return resolve();
           if (err.code === err.PERMISSION_DENIED) {
-            setStatus('denied');
-            setError('Location permission denied');
+            setStore({ status: 'denied', error: 'Location permission denied', isResolving: false });
           } else if (err.code === err.POSITION_UNAVAILABLE) {
-            setStatus('unavailable');
-            setError('Position unavailable');
+            setStore({ status: 'unavailable', error: 'Position unavailable', isResolving: false });
           } else {
-            setStatus('error');
-            setError(err.message || 'Geolocation error');
+            setStore({ status: 'error', error: err.message || 'Geolocation error', isResolving: false });
           }
-          setIsResolving(false);
           resolve();
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 5 * 60 * 1000 },
@@ -220,15 +207,13 @@ export function useNearMeLocation(): UseNearMeLocationReturn {
         resolvedAt: Date.now(),
       };
       safeSet(loc);
-      setStatus('manual');
-      setError(null);
+      setStore({ status: 'manual', error: null });
     },
     [safeSet],
   );
 
   const useIpFallback = useCallback(async () => {
-    setError(null);
-    setIsResolving(true);
+    setStore({ error: null, isResolving: true });
     try {
       const { data, error: invokeError } = await supabase.functions.invoke('ip-geolocate', {
         body: {},
@@ -250,21 +235,17 @@ export function useNearMeLocation(): UseNearMeLocationReturn {
         resolvedAt: Date.now(),
       };
       safeSet(loc);
-      if (mountedRef.current) setStatus('ip-fallback');
+      setStore({ status: 'ip-fallback' });
     } catch (e) {
-      if (!mountedRef.current) return;
-      setStatus('error');
-      setError(e instanceof Error ? e.message : 'IP fallback failed');
+      setStore({ status: 'error', error: e instanceof Error ? e.message : 'IP fallback failed' });
     } finally {
-      if (mountedRef.current) setIsResolving(false);
+      setStore({ isResolving: false });
     }
   }, [safeSet]);
 
   const clear = useCallback(() => {
     clearPersisted();
-    setLocation(null);
-    setStatus('idle');
-    setError(null);
+    setStore({ location: null, status: 'idle', error: null });
   }, []);
 
   const dismissPrompt = useCallback(() => {
@@ -273,7 +254,7 @@ export function useNearMeLocation(): UseNearMeLocationReturn {
     } catch {
       /* ignore */
     }
-    setPromptDismissed(true);
+    setStore({ promptDismissed: true });
   }, []);
 
   return {
