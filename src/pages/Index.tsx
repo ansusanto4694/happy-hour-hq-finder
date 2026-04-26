@@ -71,14 +71,12 @@ const Index = () => {
             canonical="https://sipmunchyap.com/"
           />
           <NearMeDebugStrip />
-          <Hero recentlyViewedCarousel={recentlyViewedCarousel} />
 
-          {/* Phase 3 — Near Me feed (mounted below hero, A/B against existing carousels) */}
-          <div className="mt-2 rounded-t-2xl bg-background pt-3 pb-2">
+          {/* Phase 4 preview — new Near Me homepage only (original hero/carousels hidden) */}
+          <div className="rounded-t-2xl bg-background pt-3 pb-2">
             <NearMeFeed />
           </div>
 
-          <HomepageCarousels />
           <Footer />
         </div>
       </div>
