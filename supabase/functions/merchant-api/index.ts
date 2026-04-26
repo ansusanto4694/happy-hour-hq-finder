@@ -547,6 +547,9 @@ Deno.serve(async (req) => {
       case 'categories_with_merchants':
         result = await handleCategoriesWithMerchants(supabase);
         break;
+      case 'near_me_now':
+        result = await handleNearMeNow(supabase, params);
+        break;
       default:
         return new Response(JSON.stringify({ error: 'Invalid action' }), {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -556,7 +559,12 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ data: result }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.status === 400 && error?.fields) {
+      return new Response(JSON.stringify({ error: 'Validation failed', fields: error.fields }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     console.error('merchant-api error:', error);
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
