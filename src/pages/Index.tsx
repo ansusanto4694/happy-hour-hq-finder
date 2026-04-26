@@ -9,6 +9,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { HomepageCarousel } from '@/components/HomepageCarousel';
 import { HomepageCarousel as CarouselType } from '@/hooks/useHomepageCarousels';
+import { NearMeDebugStrip } from '@/components/near-me/NearMeDebugStrip';
 
 const Index = () => {
   const isMobile = useIsMobile();
@@ -68,6 +69,7 @@ const Index = () => {
             keywords="happy hour, bars, restaurants, drinks, food deals, nightlife, local bars, restaurant finder"
             canonical="https://sipmunchyap.com/"
           />
+          <NearMeDebugStrip />
           <Hero recentlyViewedCarousel={recentlyViewedCarousel} />
           
           <HomepageCarousels />
