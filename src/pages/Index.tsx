@@ -10,6 +10,7 @@ import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { HomepageCarousel } from '@/components/HomepageCarousel';
 import { HomepageCarousel as CarouselType } from '@/hooks/useHomepageCarousels';
 import { NearMeDebugStrip } from '@/components/near-me/NearMeDebugStrip';
+import { NearMeFeed } from '@/components/near-me/NearMeFeed';
 
 const Index = () => {
   const isMobile = useIsMobile();
@@ -71,7 +72,12 @@ const Index = () => {
           />
           <NearMeDebugStrip />
           <Hero recentlyViewedCarousel={recentlyViewedCarousel} />
-          
+
+          {/* Phase 3 — Near Me feed (mounted below hero, A/B against existing carousels) */}
+          <div className="mt-2 rounded-t-2xl bg-background pt-3 pb-2">
+            <NearMeFeed />
+          </div>
+
           <HomepageCarousels />
           <Footer />
         </div>
