@@ -72,7 +72,7 @@ export function useNearMeNow({ lat, lng, enabled = true }: Args) {
     refetchOnWindowFocus: false,
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke('merchant-api', {
-        body: { action: 'near_me_now', lat, lng },
+        body: { action: 'near_me_now', params: { lat, lng } },
       });
       if (error) throw error;
       const payload = (data?.data ?? data) as NearMeNowResponse;
