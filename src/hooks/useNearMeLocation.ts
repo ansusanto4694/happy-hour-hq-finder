@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export type LocationSource = 'gps' | 'manual' | 'ip';
@@ -108,60 +108,66 @@ interface UseNearMeLocationReturn {
   dismissPrompt: () => void;
 }
 
-/**
- * Resolution chain: persisted → (caller decides) GPS → manual → IP fallback.
- * The hook does NOT auto-trigger anything on mount beyond reading localStorage,
- * so the UI controls the permission prompt timing (avoids surprise prompts).
- */
-export function useNearMeLocation(): UseNearMeLocationReturn {
-  const [location, setLocation] = useState<NearMeLocation | null>(() => readPersisted());
-  const [status, setStatus] = useState<LocationStatus>(() => {
-    const persisted = readPersisted();
-    if (!persisted) return 'idle';
-    if (persisted.source === 'manual') return 'manual';
-    if (persisted.source === 'ip') return 'ip-fallback';
-    return 'granted';
-  });
-  const [error, setError] = useState<string | null>(null);
-  const [isResolving, setIsResolving] = useState(false);
-  const [promptDismissed, setPromptDismissed] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem(PROMPT_DISMISSED_KEY) === '1';
-    } catch {
-      return false;
-    }
-  });
+/* ---- Module-level shared store so all consumers stay in sync ---- */
+type StoreState = {
+  location: NearMeLocation | null;
+  status: LocationStatus;
+  error: string | null;
+  isResolving: boolean;
+  promptDismissed: boolean;
+};
 
-  const mountedRef = useRef(true);
+function initialStatus(loc: NearMeLocation | null): LocationStatus {
+  if (!loc) return 'idle';
+  if (loc.source === 'manual') return 'manual';
+  if (loc.source === 'ip') return 'ip-fallback';
+  return 'granted';
+}
+
+const initialLoc = readPersisted();
+let storeState: StoreState = {
+  location: initialLoc,
+  status: initialStatus(initialLoc),
+  error: null,
+  isResolving: false,
+  promptDismissed: (() => {
+    try { return localStorage.getItem(PROMPT_DISMISSED_KEY) === '1'; } catch { return false; }
+  })(),
+};
+const listeners = new Set<() => void>();
+function setStore(patch: Partial<StoreState>) {
+  storeState = { ...storeState, ...patch };
+  listeners.forEach((l) => l());
+}
+
+export function useNearMeLocation(): UseNearMeLocationReturn {
+  const [, force] = useState(0);
   useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-    };
+    const l = () => force((n) => n + 1);
+    listeners.add(l);
+    return () => { listeners.delete(l); };
   }, []);
 
+  const { location, status, error, isResolving, promptDismissed } = storeState;
+
   const safeSet = useCallback((loc: NearMeLocation) => {
-    if (!mountedRef.current) return;
-    setLocation(loc);
     writePersisted(loc);
+    setStore({ location: loc });
   }, []);
 
   const requestGps = useCallback(async () => {
-    setError(null);
+    setStore({ error: null });
     if (!('geolocation' in navigator)) {
-      setStatus('unavailable');
-      setError('Geolocation not supported');
+      setStore({ status: 'unavailable', error: 'Geolocation not supported' });
       return;
     }
-    setStatus('asking');
-    setIsResolving(true);
+    setStore({ status: 'asking', isResolving: true });
 
     await new Promise<void>((resolve) => {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
-          // Optimistic label, refined async
           const optimistic: NearMeLocation = {
             lat,
             lng,
@@ -171,29 +177,19 @@ export function useNearMeLocation(): UseNearMeLocationReturn {
             accuracyMeters: position.coords.accuracy,
           };
           safeSet(optimistic);
-          if (mountedRef.current) {
-            setStatus('granted');
-            setIsResolving(false);
-          }
+          setStore({ status: 'granted', isResolving: false });
           const label = await reverseGeocodeLabel(lat, lng);
-          if (mountedRef.current) {
-            safeSet({ ...optimistic, label });
-          }
+          safeSet({ ...optimistic, label });
           resolve();
         },
         (err) => {
-          if (!mountedRef.current) return resolve();
           if (err.code === err.PERMISSION_DENIED) {
-            setStatus('denied');
-            setError('Location permission denied');
+            setStore({ status: 'denied', error: 'Location permission denied', isResolving: false });
           } else if (err.code === err.POSITION_UNAVAILABLE) {
-            setStatus('unavailable');
-            setError('Position unavailable');
+            setStore({ status: 'unavailable', error: 'Position unavailable', isResolving: false });
           } else {
-            setStatus('error');
-            setError(err.message || 'Geolocation error');
+            setStore({ status: 'error', error: err.message || 'Geolocation error', isResolving: false });
           }
-          setIsResolving(false);
           resolve();
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 5 * 60 * 1000 },
@@ -211,15 +207,13 @@ export function useNearMeLocation(): UseNearMeLocationReturn {
         resolvedAt: Date.now(),
       };
       safeSet(loc);
-      setStatus('manual');
-      setError(null);
+      setStore({ status: 'manual', error: null });
     },
     [safeSet],
   );
 
   const useIpFallback = useCallback(async () => {
-    setError(null);
-    setIsResolving(true);
+    setStore({ error: null, isResolving: true });
     try {
       const { data, error: invokeError } = await supabase.functions.invoke('ip-geolocate', {
         body: {},
@@ -241,21 +235,17 @@ export function useNearMeLocation(): UseNearMeLocationReturn {
         resolvedAt: Date.now(),
       };
       safeSet(loc);
-      if (mountedRef.current) setStatus('ip-fallback');
+      setStore({ status: 'ip-fallback' });
     } catch (e) {
-      if (!mountedRef.current) return;
-      setStatus('error');
-      setError(e instanceof Error ? e.message : 'IP fallback failed');
+      setStore({ status: 'error', error: e instanceof Error ? e.message : 'IP fallback failed' });
     } finally {
-      if (mountedRef.current) setIsResolving(false);
+      setStore({ isResolving: false });
     }
   }, [safeSet]);
 
   const clear = useCallback(() => {
     clearPersisted();
-    setLocation(null);
-    setStatus('idle');
-    setError(null);
+    setStore({ location: null, status: 'idle', error: null });
   }, []);
 
   const dismissPrompt = useCallback(() => {
@@ -264,7 +254,7 @@ export function useNearMeLocation(): UseNearMeLocationReturn {
     } catch {
       /* ignore */
     }
-    setPromptDismissed(true);
+    setStore({ promptDismissed: true });
   }, []);
 
   return {
