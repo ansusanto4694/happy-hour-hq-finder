@@ -21,6 +21,8 @@ interface AFrameCardProps {
   urgencyTone: UrgencyTone;
   /** Optional event image to use instead of logo on top */
   imageUrl?: string | null;
+  /** Optional click handler (fires alongside navigation, e.g. for analytics) */
+  onClick?: () => void;
 }
 
 const toneClasses: Record<UrgencyTone, string> = {
@@ -41,6 +43,7 @@ export function AFrameCard({
   urgencyLabel,
   urgencyTone,
   imageUrl,
+  onClick,
 }: AFrameCardProps) {
   const href = `/restaurant/${slug || merchantId}`;
   const topImage = imageUrl || logoUrl;
@@ -48,6 +51,7 @@ export function AFrameCard({
   return (
     <Link
       to={href}
+      onClick={onClick}
       className={cn(
         'group flex w-[260px] shrink-0 flex-col overflow-hidden rounded-xl bg-card text-card-foreground',
         'border border-border/60 transition-colors hover:border-border',
