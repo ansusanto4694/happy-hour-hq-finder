@@ -32,8 +32,8 @@ export function LiveFeedRow({
       {isLoading ? (
         <div className="flex gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="flex w-[260px] shrink-0 flex-col gap-2">
-              <Skeleton className="aspect-[4/3] w-full rounded-xl" />
+            <div key={i} className="flex w-52 shrink-0 flex-col items-center gap-2 rounded-xl border p-3">
+              <Skeleton className="h-20 w-20 rounded-lg" />
               <Skeleton className="h-3 w-3/4" />
               <Skeleton className="h-3 w-1/2" />
             </div>
