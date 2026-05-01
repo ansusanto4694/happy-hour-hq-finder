@@ -12,14 +12,14 @@ interface AFrameCardProps {
   neighborhood: string | null;
   /** e.g. "0.4 mi" */
   distanceLabel: string;
-  /** Headline content for the card body, e.g. "Happy Hour now · until 7pm" */
+  /** Headline content for the card body */
   primaryLine: string;
   /** Optional secondary line (event title, deal preview) */
   secondaryLine?: string;
-  /** Urgency pill text, e.g. "Pouring now", "Starts in 25m", "Tonight 9pm" */
+  /** Urgency pill text */
   urgencyLabel: string;
   urgencyTone: UrgencyTone;
-  /** Optional event image to use instead of logo on top */
+  /** Optional event image (currently unused in compact layout, reserved for future) */
   imageUrl?: string | null;
   /** Optional click handler (fires alongside navigation, e.g. for analytics) */
   onClick?: () => void;
@@ -42,38 +42,64 @@ export function AFrameCard({
   secondaryLine,
   urgencyLabel,
   urgencyTone,
-  imageUrl,
   onClick,
 }: AFrameCardProps) {
   const href = `/restaurant/${slug || merchantId}`;
-  const topImage = imageUrl || logoUrl;
 
   return (
     <Link
       to={href}
       onClick={onClick}
-      className={cn(
-        'group flex w-[260px] shrink-0 flex-col overflow-hidden rounded-xl bg-card text-card-foreground',
-        'border border-border/60 transition-colors hover:border-border',
-      )}
+      className="flex-shrink-0 w-52 bg-card border rounded-xl p-3 cursor-pointer mr-2 active:scale-[0.98] transition-all contain-layout block"
+      style={{ scrollSnapAlign: 'start' }}
+      draggable={false}
     >
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
-        {topImage ? (
-          <img
-            src={topImage}
-            alt={merchantName}
-            loading="lazy"
-            decoding="async"
-            className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.02]"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-            <span className="text-xs">No image</span>
-          </div>
-        )}
+      {/* Logo - compact centered (mirrors MobileCarouselCard) */}
+      <div className="flex justify-center mb-2">
+        <div
+          className={cn(
+            'w-20 h-20 border border-border rounded-lg flex items-center justify-center overflow-hidden',
+            logoUrl ? 'bg-white' : 'bg-gradient-to-br from-orange-100 to-amber-100',
+          )}
+        >
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt={`${merchantName} logo`}
+              className="w-full h-full object-contain p-1.5"
+              width={80}
+              height={80}
+              loading="lazy"
+              decoding="async"
+              fetchPriority="low"
+            />
+          ) : (
+            <span className="text-muted-foreground font-bold text-2xl">
+              {(merchantName || '?').charAt(0).toUpperCase()}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Merchant name */}
+      <h4 className="font-bold text-base text-foreground line-clamp-1 mb-1 text-center">
+        {merchantName}
+      </h4>
+
+      {/* Neighborhood + distance */}
+      <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mb-2">
+        <MapPin className="w-3 h-3" aria-hidden />
+        <span className="truncate">
+          {neighborhood ? `${neighborhood} · ` : ''}
+          {distanceLabel}
+        </span>
+      </div>
+
+      {/* Urgency pill */}
+      <div className="flex justify-center mb-1.5">
         <span
           className={cn(
-            'absolute left-2 top-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium',
+            'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold leading-tight shadow-sm',
             toneClasses[urgencyTone],
           )}
         >
@@ -82,20 +108,11 @@ export function AFrameCard({
         </span>
       </div>
 
-      <div className="flex flex-1 flex-col gap-1 p-3">
-        <h3 className="line-clamp-1 text-sm font-semibold">{merchantName}</h3>
-        <p className="line-clamp-1 text-xs text-foreground/80">{primaryLine}</p>
-        {secondaryLine && (
-          <p className="line-clamp-1 text-xs text-muted-foreground">{secondaryLine}</p>
-        )}
-        <div className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
-          <MapPin className="h-3 w-3" aria-hidden />
-          <span className="line-clamp-1">
-            {neighborhood ? `${neighborhood} · ` : ''}
-            {distanceLabel}
-          </span>
-        </div>
-      </div>
+      {/* Primary / secondary copy */}
+      <p className="line-clamp-1 text-xs text-foreground/80 text-center">{primaryLine}</p>
+      {secondaryLine && (
+        <p className="line-clamp-1 text-[11px] text-muted-foreground text-center">{secondaryLine}</p>
+      )}
     </Link>
   );
 }
