@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Hero from '@/components/Hero';
 import { HomepageCarousels } from '@/components/HomepageCarousels';
 import { SEOHead } from '@/components/SEOHead';
@@ -9,13 +9,15 @@ import { PageHeader } from '@/components/PageHeader';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { HomepageCarousel } from '@/components/HomepageCarousel';
 import { HomepageCarousel as CarouselType } from '@/hooks/useHomepageCarousels';
-import { NearMeDebugStrip } from '@/components/near-me/NearMeDebugStrip';
+import { NearMeNowHero } from '@/components/near-me/NearMeNowHero';
 import { NearMeFeed } from '@/components/near-me/NearMeFeed';
+import { DiscoveryChips, type DiscoveryCategory } from '@/components/near-me/DiscoveryChips';
 
 const Index = () => {
   const isMobile = useIsMobile();
-  const { trackFunnel } = useAnalytics();
+  const { trackFunnel, track } = useAnalytics();
   const { recentlyViewed } = useRecentlyViewed();
+  const [category, setCategory] = useState<DiscoveryCategory>('all');
 
   useEffect(() => {
     trackFunnel({
@@ -24,7 +26,17 @@ const Index = () => {
     });
   }, [trackFunnel]);
 
-  // Shape recently viewed data into the HomepageCarousel type
+  const handleCategoryChange = (next: DiscoveryCategory) => {
+    setCategory(next);
+    track({
+      eventType: 'click',
+      eventCategory: 'filter',
+      eventAction: 'near_me_chip_selected',
+      eventLabel: next,
+      metadata: { category: next },
+    });
+  };
+
   const recentlyViewedCarousel = useMemo((): CarouselType | null => {
     if (recentlyViewed.length === 0) return null;
     return {
@@ -58,27 +70,28 @@ const Index = () => {
     };
   }, [recentlyViewed]);
 
-  // Mobile version
+  // Mobile — Near Me homepage
   if (isMobile) {
     return (
-      <div className="relative min-h-screen pb-16 bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500">
-        <div className="absolute inset-0 bg-black/10"></div>
-        <div className="relative z-10">
-          <SEOHead 
-            title="SipMunchYap - Find the Best Happy Hours Near You"
-            description="Discover amazing happy hour deals, restaurants, and bars in your area. Compare prices, find deals, and plan your perfect night out with SipMunchYap."
-            keywords="happy hour, bars, restaurants, drinks, food deals, nightlife, local bars, restaurant finder"
-            canonical="https://sipmunchyap.com/"
-          />
-          <NearMeDebugStrip />
+      <div className="min-h-screen pb-20 bg-background">
+        <SEOHead
+          title="SipMunchYap - Find the Best Happy Hours Near You"
+          description="Discover amazing happy hour deals, restaurants, and bars in your area. Compare prices, find deals, and plan your perfect night out with SipMunchYap."
+          keywords="happy hour, bars, restaurants, drinks, food deals, nightlife, local bars, restaurant finder"
+          canonical="https://sipmunchyap.com/"
+        />
 
-          {/* Phase 4 preview — new Near Me homepage only (original hero/carousels hidden) */}
-          <div className="rounded-t-2xl bg-background pt-3 pb-2">
-            <NearMeFeed />
+        <NearMeNowHero />
+        <DiscoveryChips active={category} onChange={handleCategoryChange} />
+        <NearMeFeed category={category} />
+
+        {recentlyViewedCarousel && (
+          <div className="mt-4">
+            <HomepageCarousel carousel={recentlyViewedCarousel} hideViewAll />
           </div>
+        )}
 
-          <Footer />
-        </div>
+        <Footer />
       </div>
     );
   }
@@ -89,33 +102,32 @@ const Index = () => {
       <div className="absolute inset-0 bg-black/10"></div>
       <div className="absolute top-20 left-20 w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
       <div className="absolute bottom-32 right-20 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
-      
+
       <div className="relative z-10">
-        <SEOHead 
+        <SEOHead
           title="SipMunchYap - Find the Best Happy Hours Near You"
           description="Discover amazing happy hour deals, restaurants, and bars in your area. Compare prices, find deals, and plan your perfect night out with SipMunchYap."
           keywords="happy hour, bars, restaurants, drinks, food deals, nightlife, local bars, restaurant finder"
           canonical="https://sipmunchyap.com/"
         />
-        
+
         <PageHeader showSearchBar={true} searchBarVariant="results" />
-        
+
         <div className="max-w-6xl mx-auto px-6 pt-44 pb-4 text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
             Find the best happy hours near you
           </h1>
-          
+
           <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto leading-relaxed">
             Discover amazing deals, great drinks, and perfect spots to unwind after work
           </p>
-          
+
           <div className="text-lg text-white/80 mb-12 max-w-2xl mx-auto leading-relaxed">
             <p className="mb-2">We are the best source for discovering and browsing deals in NYC.</p>
             <p>Over 1,000+ verified happy hours with more being added every week.</p>
           </div>
         </div>
-        
-        {/* Recently Viewed + Carousels */}
+
         <div className="w-full px-6 lg:px-8 xl:px-12">
           {recentlyViewedCarousel && (
             <HomepageCarousel carousel={recentlyViewedCarousel} hideViewAll />
