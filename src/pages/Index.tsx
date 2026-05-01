@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import Hero from '@/components/Hero';
+
 import { HomepageCarousels } from '@/components/HomepageCarousels';
 import { SEOHead } from '@/components/SEOHead';
 import { useIsMobile } from '@/hooks/use-mobile';
