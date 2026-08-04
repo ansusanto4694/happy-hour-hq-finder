@@ -34,7 +34,9 @@ const MerchantPortal = lazy(() => import("./pages/MerchantPortal"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const Donate = lazy(() => import("./pages/Donate"));
 const DonateThankYou = lazy(() => import("./pages/DonateThankYou"));
+const OAuthConsent = lazy(() => import("./pages/OAuthConsent"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+
 
 // Loading fallback component
 const PageLoader = () => (
@@ -180,6 +182,8 @@ const App = () => (
                 <Route path="/terms" element={<TermsOfService />} />
                 <Route path="/donate" element={<Donate />} />
                 <Route path="/donate/thank-you" element={<DonateThankYou />} />
+                <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
+
                 {/* Redirect for broken Facebook link typo */}
                 <Route path="/We" element={<Navigate to="/" replace />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
