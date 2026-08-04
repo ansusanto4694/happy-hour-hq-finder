@@ -1,0 +1,179 @@
+{
+  "version": 1,
+  "sdk_version": "0.26.1",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://gohcqazhofdhkghfxfok.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "sipmunchyap",
+      "version": "0.1.0",
+      "title": "sipmunchyap"
+    },
+    "tools": [
+      {
+        "name": "search_merchants",
+        "title": "Search happy hour spots",
+        "description": "Search active happy hour bars and restaurants by name, city, state, or neighborhood.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "query": {
+              "description": "Name text to match, e.g. 'Dai Hachi'.",
+              "type": "string",
+              "minLength": 1
+            },
+            "city": {
+              "description": "City name, e.g. 'Brooklyn'.",
+              "type": "string",
+              "minLength": 1
+            },
+            "state": {
+              "description": "Two-letter state code, e.g. 'NY'.",
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 2
+            },
+            "neighborhood": {
+              "description": "Neighborhood name.",
+              "type": "string",
+              "minLength": 1
+            },
+            "limit": {
+              "default": 20,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_merchant",
+        "title": "Get merchant details",
+        "description": "Get one merchant's profile plus its weekly happy hour windows and upcoming events, by id or slug.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "id": {
+              "description": "Numeric merchant id.",
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "slug": {
+              "description": "Merchant slug from its profile URL.",
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "search_events",
+        "title": "Search events",
+        "description": "Search active bar and restaurant events (trivia, DJ, live music, etc.) by city, neighborhood, category tag, or weekday.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "city": {
+              "description": "City name, e.g. 'Brooklyn'.",
+              "type": "string",
+              "minLength": 1
+            },
+            "neighborhood": {
+              "type": "string",
+              "minLength": 1
+            },
+            "category_tag": {
+              "description": "Category tag such as 'trivia', 'dj', or 'live-music'.",
+              "type": "string",
+              "minLength": 1
+            },
+            "day_of_week": {
+              "description": "Recurring weekday, 0 = Sunday through 6 = Saturday.",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 6
+            },
+            "limit": {
+              "default": 20,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_favorites",
+        "title": "List my favorites",
+        "description": "List the merchants the signed-in user has saved as favorites.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "add_favorite",
+        "title": "Save a favorite",
+        "description": "Save a merchant to the signed-in user's favorites.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "merchant_id": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "description": "Numeric merchant id to save."
+            }
+          },
+          "required": [
+            "merchant_id"
+          ]
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
