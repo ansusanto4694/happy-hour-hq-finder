@@ -104,7 +104,7 @@ const Auth = () => {
       eventAction: activeTab === 'signup' ? 'signup_google_click' : 'signin_google_click',
       eventLabel: 'google',
     });
-    await signInWithGoogle();
+    await signInWithGoogle(returnTo ?? undefined);
     setIsGoogleLoading(false);
   };
 

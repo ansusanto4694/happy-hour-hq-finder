@@ -21,7 +21,7 @@ interface AuthContextType {
   isAdmin: boolean;
   signUp: (email: string, password: string, firstName: string, lastName: string, phoneNumber?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signInWithGoogle: () => Promise<{ error: any }>;
+  signInWithGoogle: (returnTo?: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: any }>;
@@ -265,13 +265,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return { error };
   };
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (returnTo?: string) => {
+    // Only accept same-origin relative paths as the post-login target.
+    const safeReturnTo =
+      returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/';
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/`,
+        redirectTo: `${window.location.origin}${safeReturnTo}`,
       }
     });
+
 
     if (error) {
       // Track Google OAuth failure
