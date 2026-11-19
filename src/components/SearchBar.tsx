@@ -434,7 +434,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
           }
         }}
         onKeyDown={handleSearchKeyDown}
-        className={`pl-12 pr-12 ${isHero ? 'py-4 text-sm border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl bg-gray-50' : 'h-14 text-base border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl leading-none'}`}
+        className={`pl-12 pr-12 ${isHero ? 'py-4 text-sm border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl bg-gray-50' : 'h-10 text-base border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl leading-none'}`}
         autoComplete="off"
       />
       {searchTerm && (
@@ -492,7 +492,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
           });
         }}
         onKeyDown={handleLocationKeyDown}
-        className={`pl-12 ${isHero ? 'pr-12 py-4 text-sm border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl bg-gray-50' : 'pr-24 h-14 text-base border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl leading-none'}`}
+        className={`pl-12 ${isHero ? 'pr-12 py-4 text-sm border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl bg-gray-50' : 'pr-24 h-10 text-base border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl leading-none'}`}
         autoComplete="off"
       />
       
@@ -528,7 +528,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
             type="button"
             aria-label="Use my location"
             onClick={handleLocateMe}
-            className="absolute right-12 text-gray-500 hover:text-gray-700 transition-colors z-20 w-11 h-14 flex items-center justify-center"
+            className="absolute right-12 text-gray-500 hover:text-gray-700 transition-colors z-20 w-11 h-10 flex items-center justify-center"
           >
             {isLocating ? (
               <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
@@ -540,7 +540,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
           {location && (
             <button
               onClick={handleClearLocation}
-              className="absolute right-4 text-gray-400 hover:text-gray-600 transition-colors z-20 flex items-center h-14"
+              className="absolute right-4 text-gray-400 hover:text-gray-600 transition-colors z-20 flex items-center h-10"
               type="button"
             >
               <X className="w-5 h-5" />
@@ -551,7 +551,7 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
       
       {/* Loading indicator */}
       {isLoadingSuggestions && (
-        <div className={`absolute ${isHero ? 'right-4 top-1/2 transform -translate-y-1/2' : 'right-4 flex items-center h-14'}`}>
+        <div className={`absolute ${isHero ? 'right-4 top-1/2 transform -translate-y-1/2' : 'right-4 flex items-center h-10'}`}>
           <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-gray-600"></div>
         </div>
       )}
@@ -605,18 +605,18 @@ export const SearchBar = ({ variant = 'hero' }: SearchBarProps) => {
           </Button>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl shadow-lg p-2 flex flex-col lg:flex-row gap-2 items-stretch">
+        <div className="bg-white rounded-2xl shadow-lg p-1 flex flex-row gap-1 items-stretch">
           {renderSearchInput(false)}
           
           {/* Divider */}
-          <div className="hidden lg:block w-px bg-gray-200 my-2"></div>
+          <div className="w-px bg-gray-200 my-2"></div>
           
           {renderLocationInput(false)}
           
           {/* Search button */}
           <Button
             onClick={() => handleSearch()}
-            className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-8 h-14 text-base font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center"
+            className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-6 h-10 text-base font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center"
           >
             Search
           </Button>

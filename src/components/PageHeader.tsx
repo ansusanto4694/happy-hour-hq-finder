@@ -60,7 +60,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             <img 
               src="/lovable-uploads/f30134b8-b54d-491a-b6bc-fc7a20199dd2.png" 
               alt="SipMunchYap Logo" 
-              className="h-16 md:h-24 lg:h-32 w-auto cursor-pointer"
+              className="h-12 md:h-14 w-auto cursor-pointer"
               onClick={handleLogoClick}
               fetchPriority="high"
               loading="eager"
