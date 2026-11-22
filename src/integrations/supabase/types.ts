@@ -182,6 +182,166 @@ export type Database = {
         }
         Relationships: []
       }
+      event_schedules: {
+        Row: {
+          created_at: string
+          day_of_week: number | null
+          end_time: string
+          event_id: string
+          id: string
+          is_active: boolean
+          legacy_id: string | null
+          legacy_source: string | null
+          recurrence_nth_week: number | null
+          recurrence_rule: string | null
+          schedule_type: string
+          specific_date: string | null
+          start_time: string
+          updated_at: string
+          valid_from: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          created_at?: string
+          day_of_week?: number | null
+          end_time: string
+          event_id: string
+          id?: string
+          is_active?: boolean
+          legacy_id?: string | null
+          legacy_source?: string | null
+          recurrence_nth_week?: number | null
+          recurrence_rule?: string | null
+          schedule_type?: string
+          specific_date?: string | null
+          start_time: string
+          updated_at?: string
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number | null
+          end_time?: string
+          event_id?: string
+          id?: string
+          is_active?: boolean
+          legacy_id?: string | null
+          legacy_source?: string | null
+          recurrence_nth_week?: number | null
+          recurrence_rule?: string | null
+          schedule_type?: string
+          specific_date?: string | null
+          start_time?: string
+          updated_at?: string
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_schedules_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          category_tags: string[] | null
+          created_at: string
+          description: string | null
+          display_order: number
+          event_type: string
+          id: string
+          image_url: string | null
+          is_active: boolean
+          is_verified: boolean
+          legacy_id: string | null
+          legacy_source: string | null
+          menu_type: string | null
+          merchant_id: number
+          source_label: string | null
+          source_url: string | null
+          title: string
+          updated_at: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          category_tags?: string[] | null
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          event_type?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          is_verified?: boolean
+          legacy_id?: string | null
+          legacy_source?: string | null
+          menu_type?: string | null
+          merchant_id: number
+          source_label?: string | null
+          source_url?: string | null
+          title: string
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          category_tags?: string[] | null
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          event_type?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          is_verified?: boolean
+          legacy_id?: string | null
+          legacy_source?: string | null
+          menu_type?: string | null
+          merchant_id?: number
+          source_label?: string | null
+          source_url?: string | null
+          title?: string
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "Merchant"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "profile_display_names"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       favorites: {
         Row: {
           created_at: string
