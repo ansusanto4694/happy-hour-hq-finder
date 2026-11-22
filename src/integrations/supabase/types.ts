@@ -182,6 +182,45 @@ export type Database = {
         }
         Relationships: []
       }
+      event_menus: {
+        Row: {
+          created_at: string
+          display_order: number
+          event_id: string
+          id: string
+          menu_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          event_id: string
+          id?: string
+          menu_id: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          event_id?: string
+          id?: string
+          menu_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_menus_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_menus_menu_id_fkey"
+            columns: ["menu_id"]
+            isOneToOne: false
+            referencedRelation: "menus"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_schedules: {
         Row: {
           created_at: string
@@ -260,7 +299,6 @@ export type Database = {
           is_verified: boolean
           legacy_id: string | null
           legacy_source: string | null
-          menu_type: string | null
           merchant_id: number
           source_label: string | null
           source_url: string | null
@@ -281,7 +319,6 @@ export type Database = {
           is_verified?: boolean
           legacy_id?: string | null
           legacy_source?: string | null
-          menu_type?: string | null
           merchant_id: number
           source_label?: string | null
           source_url?: string | null
@@ -302,7 +339,6 @@ export type Database = {
           is_verified?: boolean
           legacy_id?: string | null
           legacy_source?: string | null
-          menu_type?: string | null
           merchant_id?: number
           source_label?: string | null
           source_url?: string | null
@@ -597,6 +633,63 @@ export type Database = {
           west_lng?: number | null
         }
         Relationships: []
+      }
+      menus: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          legacy_event_id: string | null
+          menu_text: string | null
+          menu_type: string | null
+          merchant_id: number
+          source_label: string | null
+          source_url: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          legacy_event_id?: string | null
+          menu_text?: string | null
+          menu_type?: string | null
+          merchant_id: number
+          source_label?: string | null
+          source_url?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          legacy_event_id?: string | null
+          menu_text?: string | null
+          menu_type?: string | null
+          merchant_id?: number
+          source_label?: string | null
+          source_url?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menus_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "Merchant"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menus_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       Merchant: {
         Row: {
