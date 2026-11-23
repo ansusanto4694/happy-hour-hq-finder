@@ -1873,6 +1873,7 @@ export type Database = {
         Returns: number
       }
       slugify: { Args: { input_text: string }; Returns: string }
+      strip_digit_lexemes: { Args: { v: unknown }; Returns: unknown }
       update_merchant_coordinates: {
         Args: { latitude: number; longitude: number; merchant_id: number }
         Returns: undefined
