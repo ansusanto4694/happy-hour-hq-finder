@@ -300,6 +300,8 @@ export type Database = {
           legacy_id: string | null
           legacy_source: string | null
           merchant_id: number
+          search_vector: unknown
+          search_vector_updated_at: string | null
           source_label: string | null
           source_url: string | null
           title: string
@@ -320,6 +322,8 @@ export type Database = {
           legacy_id?: string | null
           legacy_source?: string | null
           merchant_id: number
+          search_vector?: unknown
+          search_vector_updated_at?: string | null
           source_label?: string | null
           source_url?: string | null
           title: string
@@ -340,6 +344,8 @@ export type Database = {
           legacy_id?: string | null
           legacy_source?: string | null
           merchant_id?: number
+          search_vector?: unknown
+          search_vector_updated_at?: string | null
           source_label?: string | null
           source_url?: string | null
           title?: string
@@ -1862,6 +1868,10 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       is_merchant_owner: { Args: { _merchant_id: number }; Returns: boolean }
       maintain_user_events_partitions: { Args: never; Returns: undefined }
+      refresh_event_search_vectors: {
+        Args: { target_event_id?: string }
+        Returns: number
+      }
       slugify: { Args: { input_text: string }; Returns: string }
       update_merchant_coordinates: {
         Args: { latitude: number; longitude: number; merchant_id: number }
